@@ -1,0 +1,4 @@
+body { margin: 0; font-family: var(--mecanu-font-family); font-size: var(--mecanu-font-size-body); line-height: var(--mecanu-line-height-body); color: var(--mecanu-text-primary-light); background: var(--mecanu-bg-primary-light); -webkit-font-smoothing: antialiased; }
+a { color: var(--mecanu-electric-600); text-decoration: none; }
+a:hover { color: var(--mecanu-emerald-800); text-decoration: underline; }
+* { box-sizing: border-box; }

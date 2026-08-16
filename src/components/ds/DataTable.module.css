@@ -1,0 +1,53 @@
+.wrap {
+  border: 1px solid var(--mecanu-border);
+  border-radius: var(--mecanu-radius-200);
+  overflow: auto;
+  background: var(--mecanu-neutral-0);
+  font-family: var(--mecanu-font-family);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--mecanu-font-size-h5);
+  line-height: var(--mecanu-line-height-h5);
+}
+.table th {
+  position: sticky;
+  top: 0;
+  background: var(--mecanu-neutral-0);
+  text-align: left;
+  font-size: var(--mecanu-font-size-label);
+  line-height: var(--mecanu-line-height-label);
+  font-weight: var(--mecanu-font-weight-black);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mecanu-text-secondary-light);
+  padding: var(--mecanu-space-3) var(--mecanu-space-4);
+  border-bottom: 1px solid var(--mecanu-border);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.table td {
+  padding: 14px var(--mecanu-space-4);
+  border-bottom: 1px solid var(--mecanu-border-subtle);
+  white-space: nowrap;
+}
+.table tr:last-child td {
+  border-bottom: none;
+}
+.table tbody tr {
+  transition: background-color 200ms var(--mecanu-ease-linear);
+}
+.table tbody tr:hover {
+  background: var(--mecanu-bg-secondary-light);
+}
+.table tbody tr.selected {
+  background: var(--mecanu-electric-100);
+}
+.zebra tbody tr:nth-child(even) {
+  background: var(--mecanu-bg-secondary-light);
+}
+.table tbody tr.clickable {
+  cursor: pointer;
+}

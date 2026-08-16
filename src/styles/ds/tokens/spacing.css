@@ -1,0 +1,7 @@
+:root {
+  --mecanu-space-1: 4px; --mecanu-space-2: 8px; --mecanu-space-3: 12px; --mecanu-space-4: 16px;
+  --mecanu-space-5: 20px; --mecanu-space-6: 24px; --mecanu-space-8: 32px; --mecanu-space-10: 40px;
+  --mecanu-space-12: 48px; --mecanu-space-16: 64px;
+  --mecanu-navbar-height-ios: 44px; --mecanu-navbar-height-android: 48px;
+  --mecanu-mobile-margin: 16px; --mecanu-touch-target-min: 48px;
+}

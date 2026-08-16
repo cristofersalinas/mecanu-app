@@ -1,0 +1,60 @@
+.wrap {
+  display: inline-block;
+  font-family: var(--mecanu-font-family);
+}
+.fullWidth {
+  display: block;
+  width: 100%;
+  font-family: var(--mecanu-font-family);
+}
+.label {
+  display: block;
+  font-size: var(--mecanu-font-size-h5);
+  line-height: var(--mecanu-line-height-h5);
+  font-weight: var(--mecanu-font-weight-bold);
+  margin-bottom: var(--mecanu-space-1);
+}
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mecanu-space-2);
+  border: 1px solid var(--mecanu-border);
+  border-radius: var(--mecanu-radius-100);
+  background: var(--mecanu-neutral-0);
+  padding: 0 var(--mecanu-space-3);
+  height: 48px;
+  transition: border-color 200ms var(--mecanu-ease-linear);
+}
+.field:focus-within {
+  border-color: var(--mecanu-brand-primary-light);
+  outline: 1px solid var(--mecanu-brand-primary-light);
+}
+.error {
+  border-color: var(--mecanu-alert);
+}
+.disabled {
+  background: var(--mecanu-bg-secondary-light);
+}
+.field input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--mecanu-font-family);
+  font-size: var(--mecanu-font-size-body);
+  color: var(--mecanu-text-primary-light);
+  width: 100%;
+  min-width: 0;
+}
+.field input::placeholder {
+  color: var(--mecanu-text-disabled-light);
+}
+.caption {
+  display: block;
+  font-size: var(--mecanu-font-size-caption);
+  line-height: var(--mecanu-line-height-caption);
+  color: var(--mecanu-text-secondary-light);
+  margin-top: var(--mecanu-space-1);
+}
+.captionError {
+  color: var(--mecanu-alert);
+}

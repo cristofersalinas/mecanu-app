@@ -1,0 +1,18 @@
+:root {
+  --mecanu-font-family: "Plus Jakarta Sans", "Inter", -apple-system, sans-serif;
+  --mecanu-font-weight-regular: 400;
+  --mecanu-font-weight-medium: 500;
+  --mecanu-font-weight-bold: 700;
+  --mecanu-font-weight-black: 800; /* ExtraBold — sustituye Škoda Black 900, uso exclusivo en Label */
+  --mecanu-font-size-display: 40px; --mecanu-line-height-display: 48px; /* Bold */
+  --mecanu-font-size-h1: 28px; --mecanu-line-height-h1: 36px; /* Bold */
+  --mecanu-font-size-h2: 24px; --mecanu-line-height-h2: 32px; /* Bold */
+  --mecanu-font-size-h3: 20px; --mecanu-line-height-h3: 24px; /* Bold */
+  --mecanu-font-size-h4: 16px; --mecanu-line-height-h4: 24px; /* Bold */
+  --mecanu-font-size-h5: 14px; --mecanu-line-height-h5: 20px; /* Bold */
+  --mecanu-font-size-h6: 14px; --mecanu-line-height-h6: 20px; /* Regular */
+  --mecanu-font-size-body: 16px; --mecanu-line-height-body: 24px; /* Regular */
+  --mecanu-font-size-body2: 10px; --mecanu-line-height-body2: 14px; /* Regular */
+  --mecanu-font-size-caption: 12px; --mecanu-line-height-caption: 16px; /* Regular */
+  --mecanu-font-size-label: 11px; --mecanu-line-height-label: 14px; /* ExtraBold, UPPERCASE */
+}

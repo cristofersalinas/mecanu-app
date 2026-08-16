@@ -1,0 +1,45 @@
+@keyframes upsellIn {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes upsellPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.card {
+  display: flex;
+  gap: var(--mecanu-space-3);
+  align-items: flex-start;
+  background: var(--mecanu-neutral-0);
+  border: 1px solid var(--mecanu-border);
+  border-left: none;
+  border-radius: var(--mecanu-radius-300);
+  box-shadow: var(--mecanu-shadow-deep);
+  padding: var(--mecanu-space-4);
+  font-family: var(--mecanu-font-family);
+  max-width: 420px;
+  animation: upsellIn 500ms var(--mecanu-ease-decelerate);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--mecanu-warning);
+}
+.card.isNew .dot {
+  animation: upsellPulse 1.6s var(--mecanu-ease-linear) infinite;
+}

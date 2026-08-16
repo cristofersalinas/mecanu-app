@@ -1,0 +1,24 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mecanu-space-1);
+  border: 1px solid var(--mecanu-border);
+  border-radius: var(--mecanu-radius-full);
+  background: var(--mecanu-neutral-0);
+  font-family: var(--mecanu-font-family);
+  font-size: var(--mecanu-font-size-h5);
+  line-height: var(--mecanu-line-height-h5);
+  font-weight: var(--mecanu-font-weight-medium);
+  color: var(--mecanu-text-primary-light);
+  padding: 6px 12px 6px 16px;
+  cursor: pointer;
+  transition: background-color 200ms var(--mecanu-ease-linear), border-color 200ms var(--mecanu-ease-linear);
+  white-space: nowrap;
+}
+.chip:hover {
+  background: var(--mecanu-bg-secondary-light);
+}
+.selected {
+  border-color: var(--mecanu-neutral-900);
+  font-weight: var(--mecanu-font-weight-bold);
+}

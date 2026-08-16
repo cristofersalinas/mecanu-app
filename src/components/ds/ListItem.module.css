@@ -1,0 +1,42 @@
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.li {
+  display: flex;
+  align-items: center;
+  gap: var(--mecanu-space-3);
+  padding: 14px var(--mecanu-space-4);
+  background: var(--mecanu-neutral-0);
+  font-family: var(--mecanu-font-family);
+  text-align: left;
+  width: 100%;
+  border: none;
+  position: relative;
+}
+.tappable {
+  cursor: pointer;
+  transition: background-color 200ms var(--mecanu-ease-linear);
+}
+.tappable:hover {
+  background: var(--mecanu-bg-secondary-light);
+}
+.hasDivider::after {
+  content: '';
+  position: absolute;
+  left: var(--mecanu-space-4);
+  right: var(--mecanu-space-4);
+  bottom: 0;
+  height: 1px;
+  background: var(--mecanu-border-subtle);
+}
+.spin {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 2.5px solid var(--mecanu-neutral-25);
+  border-top-color: var(--mecanu-brand-primary-light);
+  animation: spin 0.9s linear infinite;
+  flex: none;
+}

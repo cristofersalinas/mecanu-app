@@ -1,0 +1,28 @@
+.card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mecanu-space-4);
+  border-radius: var(--mecanu-radius-300);
+  padding: var(--mecanu-space-4) var(--mecanu-space-5);
+  font-family: var(--mecanu-font-family);
+  border: 1px solid transparent;
+}
+.light {
+  background: var(--mecanu-neutral-0);
+  border-color: var(--mecanu-border);
+}
+.dark {
+  background: var(--mecanu-bg-tertiary-dark);
+  color: var(--mecanu-text-primary-dark);
+}
+.tappable {
+  cursor: pointer;
+  transition: background-color 200ms var(--mecanu-ease-linear);
+}
+.light.tappable:hover {
+  background: var(--mecanu-bg-secondary-light);
+}
+.dark.tappable:hover {
+  background: var(--mecanu-neutral-800);
+}

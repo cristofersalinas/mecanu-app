@@ -1,0 +1,24 @@
+@keyframes connSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--mecanu-space-2);
+  padding: var(--mecanu-space-2) var(--mecanu-space-4);
+  font-family: var(--mecanu-font-family);
+  font-size: var(--mecanu-font-size-caption);
+  line-height: var(--mecanu-line-height-caption);
+  font-weight: 700;
+}
+.spin {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: currentColor;
+  animation: connSpin 0.9s linear infinite;
+  flex: none;
+}

@@ -1,0 +1,50 @@
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mecanu-space-3);
+  cursor: pointer;
+  font-family: var(--mecanu-font-family);
+  font-size: var(--mecanu-font-size-body);
+  user-select: none;
+  min-height: var(--mecanu-touch-target-min);
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+}
+.track {
+  width: 52px;
+  height: 32px;
+  border-radius: var(--mecanu-radius-full);
+  background: var(--mecanu-neutral-200);
+  position: relative;
+  transition: background-color 200ms var(--mecanu-ease-linear);
+  flex: none;
+}
+.track::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--mecanu-neutral-0);
+  box-shadow: var(--mecanu-shadow-shallow-down);
+  transition: transform 200ms var(--mecanu-ease-linear);
+}
+.switch input:checked + .track {
+  background: var(--mecanu-brand-primary-light);
+}
+.switch input:checked + .track::after {
+  transform: translateX(20px);
+}
+.switch input:focus-visible + .track {
+  outline: 2px solid var(--mecanu-brand-primary-light);
+  outline-offset: 2px;
+}
+.disabled {
+  color: var(--mecanu-text-disabled-light);
+  cursor: not-allowed;
+}

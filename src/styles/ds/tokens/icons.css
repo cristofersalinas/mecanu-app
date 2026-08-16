@@ -1,0 +1,6 @@
+:root {
+  --mecanu-icon-sm: 16px; --mecanu-icon-md: 20px; --mecanu-icon-lg: 24px; --mecanu-icon-xl: 32px;
+}
+/* Material Symbols Rounded: outlined default; .is-filled solo para estado activo */
+.mecanu-icon { font-family: 'Material Symbols Rounded'; font-weight: 400; font-style: normal; display: inline-block; line-height: 1; letter-spacing: normal; text-transform: none; white-space: nowrap; direction: ltr; -webkit-font-smoothing: antialiased; font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; font-size: var(--mecanu-icon-lg); }
+.mecanu-icon.is-filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }

@@ -1,69 +1,74 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "var(--mecanu-space-6)",
+        background: "var(--mecanu-neutral-25)",
+        padding: "var(--mecanu-space-8)",
+      }}
+    >
+      <h1
+        style={{
+          fontSize: "var(--mecanu-font-size-h1)",
+          lineHeight: "var(--mecanu-line-height-h1)",
+          fontWeight: "var(--mecanu-font-weight-bold)",
+          color: "var(--mecanu-neutral-900)",
+        }}
+      >
+        Mecanu
+      </h1>
+      <p
+        style={{
+          fontSize: "var(--mecanu-font-size-body)",
+          color: "var(--mecanu-text-secondary-light)",
+          maxWidth: 420,
+          textAlign: "center",
+        }}
+      >
+        La landing pública todavía no está diseñada. Entra directamente a uno de los
+        dos portales del prototipo:
+      </p>
+      <div style={{ display: "flex", gap: "var(--mecanu-space-4)" }}>
+        <Link
+          href="/panel"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            height: 48,
+            padding: "0 var(--mecanu-space-6)",
+            borderRadius: "var(--mecanu-radius-200)",
+            background: "var(--mecanu-neutral-900)",
+            color: "var(--mecanu-neutral-0)",
+            fontWeight: "var(--mecanu-font-weight-bold)",
+            textDecoration: "none",
+          }}
+        >
+          Panel del taller
+        </Link>
+        <Link
+          href="/conductor"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            height: 48,
+            padding: "0 var(--mecanu-space-6)",
+            borderRadius: "var(--mecanu-radius-200)",
+            background: "var(--mecanu-electric-300)",
+            color: "var(--mecanu-neutral-900)",
+            fontWeight: "var(--mecanu-font-weight-bold)",
+            textDecoration: "none",
+          }}
+        >
+          App del conductor
+        </Link>
+      </div>
     </div>
   );
 }

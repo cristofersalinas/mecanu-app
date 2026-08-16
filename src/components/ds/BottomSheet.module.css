@@ -1,0 +1,36 @@
+@keyframes sheetIn {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--mecanu-neutral-0);
+  border-radius: var(--mecanu-radius-400) var(--mecanu-radius-400) 0 0;
+  box-shadow: var(--mecanu-shadow-shallow-up);
+  font-family: var(--mecanu-font-family);
+  animation: sheetIn 500ms var(--mecanu-ease-decelerate);
+  z-index: 50;
+}
+.handle {
+  width: 40px;
+  height: 4px;
+  border-radius: var(--mecanu-radius-full);
+  background: var(--mecanu-neutral-200);
+  margin: var(--mecanu-space-2) auto var(--mecanu-space-1);
+}
+.title {
+  padding: var(--mecanu-space-2) var(--mecanu-space-4) 0;
+  font-weight: var(--mecanu-font-weight-bold);
+  font-size: var(--mecanu-font-size-h4);
+  line-height: var(--mecanu-line-height-h4);
+}
+.body {
+  padding: var(--mecanu-space-3) var(--mecanu-space-4) var(--mecanu-space-4);
+}

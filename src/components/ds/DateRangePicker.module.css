@@ -1,0 +1,100 @@
+.wrap {
+  background: var(--mecanu-neutral-0);
+  border: 1px solid var(--mecanu-border);
+  border-radius: var(--mecanu-radius-300);
+  box-shadow: var(--mecanu-shadow-shallow-down);
+  padding: var(--mecanu-space-4);
+  width: 300px;
+  font-family: var(--mecanu-font-family);
+  user-select: none;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--mecanu-space-3);
+}
+.navBtn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--mecanu-radius-100);
+  display: inline-flex;
+  color: var(--mecanu-text-primary-light);
+}
+.navBtn:hover {
+  background: var(--mecanu-bg-secondary-light);
+}
+.monthLabel {
+  font-weight: var(--mecanu-font-weight-bold);
+  font-size: var(--mecanu-font-size-h5);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.dow {
+  font-size: var(--mecanu-font-size-caption);
+  color: var(--mecanu-text-disabled-light);
+  text-align: center;
+  padding: 4px 0;
+}
+.day {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--mecanu-font-size-h5);
+  color: var(--mecanu-text-primary-light);
+  height: 34px;
+  border-radius: var(--mecanu-radius-100);
+  position: relative;
+}
+.day:hover:not(:disabled) {
+  background: var(--mecanu-bg-secondary-light);
+}
+.day:disabled {
+  color: var(--mecanu-text-disabled-light);
+  cursor: default;
+}
+.inRange {
+  background: var(--mecanu-electric-100);
+  border-radius: 0;
+}
+.isEdge {
+  background: var(--mecanu-brand-primary-dark);
+  color: var(--mecanu-text-primary-light);
+  font-weight: var(--mecanu-font-weight-bold);
+  border-radius: var(--mecanu-radius-100);
+}
+.timeSection {
+  margin-top: var(--mecanu-space-3);
+  padding-top: var(--mecanu-space-3);
+  border-top: 1px solid var(--mecanu-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mecanu-space-2);
+}
+.timeSection label {
+  font-size: var(--mecanu-font-size-h5);
+  font-weight: var(--mecanu-font-weight-bold);
+}
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--mecanu-space-2);
+  border: 1px solid var(--mecanu-border);
+  border-radius: var(--mecanu-radius-100);
+  padding: 0 var(--mecanu-space-3);
+  height: 40px;
+}
+.timeRow input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--mecanu-font-size-h5);
+  color: var(--mecanu-text-primary-light);
+  width: 100%;
+}

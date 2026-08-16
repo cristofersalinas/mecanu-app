@@ -1,0 +1,33 @@
+:root {
+  /* BRAND */
+  --mecanu-electric-600: #419468; /* Primary Light */
+  --mecanu-electric-300: #78FAAE; /* Primary Dark */
+  --mecanu-electric-100: #CFFFE3; /* tint único */
+  --mecanu-emerald-800: #0E3A2F;  /* superficie oscura de marca */
+  /* NEUTRAL (7 pasos) */
+  --mecanu-neutral-900: #161718; --mecanu-neutral-800: #303132; --mecanu-neutral-700: #464748;
+  --mecanu-neutral-300: #9E9FA0; --mecanu-neutral-200: #C4C6C7; --mecanu-neutral-25: #F1F1F1; --mecanu-neutral-0: #FFFFFF;
+  /* SEMÁNTICOS */
+  --mecanu-alert: #E82B37; --mecanu-warning: #EC6513; --mecanu-positive: #1E7300; --mecanu-info: #2D71D7;
+  /* ALIASES */
+  --mecanu-brand-primary-light: var(--mecanu-electric-600);
+  --mecanu-brand-primary-dark: var(--mecanu-electric-300);
+  --mecanu-brand-secondary-light: var(--mecanu-electric-100);
+  --mecanu-brand-secondary-dark: var(--mecanu-electric-100);
+  --mecanu-brand-hover: color-mix(in oklab, #78FAAE, #161718 10%);
+  --mecanu-brand-active: color-mix(in oklab, #78FAAE, #161718 18%);
+  --mecanu-bg-primary-light: var(--mecanu-neutral-0);
+  --mecanu-bg-secondary-light: var(--mecanu-neutral-25);
+  --mecanu-bg-tertiary-light: var(--mecanu-neutral-25);
+  --mecanu-bg-primary-dark: var(--mecanu-neutral-900);
+  --mecanu-bg-secondary-dark: var(--mecanu-neutral-800);
+  --mecanu-bg-tertiary-dark: var(--mecanu-neutral-800);
+  --mecanu-text-primary-light: var(--mecanu-neutral-900);
+  --mecanu-text-secondary-light: var(--mecanu-neutral-700);
+  --mecanu-text-disabled-light: var(--mecanu-neutral-300);
+  --mecanu-text-primary-dark: var(--mecanu-neutral-0);
+  --mecanu-text-secondary-dark: var(--mecanu-neutral-200);
+  --mecanu-text-disabled-dark: var(--mecanu-neutral-700);
+  --mecanu-border: var(--mecanu-neutral-200);
+  --mecanu-border-subtle: var(--mecanu-neutral-25);
+}

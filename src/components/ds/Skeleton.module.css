@@ -1,0 +1,15 @@
+@keyframes shimmer {
+  0%,
+  100% {
+    background-color: var(--mecanu-neutral-25);
+  }
+  50% {
+    background-color: var(--mecanu-neutral-25);
+  }
+}
+.skeleton {
+  display: block;
+  background: var(--mecanu-neutral-25);
+  border-radius: var(--mecanu-radius-100);
+  animation: shimmer 1.4s var(--mecanu-ease-linear) infinite;
+}

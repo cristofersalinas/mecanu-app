@@ -1,0 +1,10 @@
+:root {
+  --mecanu-ease-accelerate-decelerate: cubic-bezier(0.83, 0, 0.17, 1); /* @kind other */ /* 500ms — mover, empujar (default) */
+  --mecanu-ease-decelerate: cubic-bezier(0.22, 1, 0.36, 1); /* @kind other */ /* 500ms — entrar, encajar */
+  --mecanu-ease-accelerate: cubic-bezier(0.64, 0, 0.78, 0); /* @kind other */ /* 400ms — salida pasiva */
+  --mecanu-ease-responsive-accelerate: cubic-bezier(0.11, 0, 0.5, 0); /* @kind other */ /* 200ms — descarte del usuario */
+  --mecanu-ease-linear: cubic-bezier(0, 0, 1, 1); /* @kind other */ /* 200ms — solo opacidad/color */
+  --mecanu-duration-default: 500ms; /* @kind other */
+  --mecanu-duration-exit: 400ms; /* @kind other */
+  --mecanu-duration-quick: 200ms; /* @kind other */
+}

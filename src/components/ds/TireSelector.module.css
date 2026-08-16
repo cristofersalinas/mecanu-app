@@ -1,0 +1,31 @@
+.wrap {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--mecanu-border);
+  border-radius: var(--mecanu-radius-200);
+  overflow: hidden;
+  font-family: var(--mecanu-font-family);
+}
+.wrap button {
+  flex: 1;
+  border: none;
+  background: var(--mecanu-neutral-0);
+  font-family: inherit;
+  font-size: var(--mecanu-font-size-body);
+  font-weight: var(--mecanu-font-weight-medium);
+  color: var(--mecanu-text-primary-light);
+  min-height: var(--mecanu-touch-target-min);
+  cursor: pointer;
+  transition: background-color 200ms var(--mecanu-ease-linear);
+}
+.wrap button + button {
+  border-left: 1px solid var(--mecanu-border);
+}
+.wrap button:hover {
+  background: var(--mecanu-bg-secondary-light);
+}
+.selected {
+  background: var(--mecanu-brand-primary-light) !important;
+  color: var(--mecanu-neutral-0) !important;
+  font-weight: var(--mecanu-font-weight-bold) !important;
+}

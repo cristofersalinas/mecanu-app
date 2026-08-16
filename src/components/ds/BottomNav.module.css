@@ -1,0 +1,26 @@
+.nav {
+  display: flex;
+  background: var(--mecanu-neutral-0);
+  border-top: 1px solid var(--mecanu-border-subtle);
+  font-family: var(--mecanu-font-family);
+}
+.nav button {
+  flex: 1;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--mecanu-space-2) 0 var(--mecanu-space-2);
+  min-height: var(--mecanu-touch-target-min);
+  color: var(--mecanu-text-secondary-light);
+  font-size: var(--mecanu-font-size-caption);
+  line-height: var(--mecanu-line-height-caption);
+}
+.active {
+  color: var(--mecanu-electric-600);
+  font-weight: var(--mecanu-font-weight-bold);
+}

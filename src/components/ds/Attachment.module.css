@@ -1,0 +1,40 @@
+@keyframes attachSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.attach {
+  display: flex;
+  align-items: center;
+  gap: var(--mecanu-space-3);
+  border: 1px solid var(--mecanu-border);
+  border-radius: var(--mecanu-radius-200);
+  background: var(--mecanu-neutral-0);
+  padding: var(--mecanu-space-3) var(--mecanu-space-4);
+  font-family: var(--mecanu-font-family);
+}
+.attach.error {
+  border-color: var(--mecanu-alert);
+}
+.x {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--mecanu-radius-100);
+  display: inline-flex;
+  color: var(--mecanu-text-secondary-light);
+}
+.x:hover {
+  background: var(--mecanu-bg-secondary-light);
+  color: var(--mecanu-text-primary-light);
+}
+.spin {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 2.5px solid var(--mecanu-neutral-25);
+  border-top-color: var(--mecanu-brand-primary-light);
+  animation: attachSpin 0.9s linear infinite;
+  flex: none;
+}
