@@ -1,0 +1,160 @@
+# Preguntas abiertas
+
+Todo lo que el frontend deja ambiguo y que el backend real tendrá que decidir.
+Cada punto sin anotar aquí es un bug futuro — por eso esta lista intenta ser
+exhaustiva en vez de solo cómoda. Ordenada de más a menos urgente/bloqueante.
+
+## Bloqueantes para un backend real
+
+### 1. No hay autenticación, roles ni permisos
+El prototipo entero (panel y conductor) asume un único usuario implícito por
+superficie: el operador del taller en `/panel`, el conductor `d1` (Javier Molina)
+hardcodeado en `/conductor` (`MI_ID = 'd1'` en `src/components/conductor/constants.ts`).
+Ninguna API route verifica quién llama. Antes de tener datos reales de clientes en
+producción esto tiene que existir. Preguntas concretas sin responder:
+- ¿Un taller = un tenant, o puede haber varios talleres en la misma instancia? El
+  mock asume un único taller ("Talleres Rodríguez") en todas partes.
+- ¿Qué puede ver un conductor de red externa vs interna? `HANDOFF.md` §7.6 lo
+  menciona (`esExterno()`, `_dirVaga()`) pero es lógica de cliente hoy — debe
+  moverse al backend/RLS, nunca confiar en que el cliente se autolimite.
+- ¿Cómo se autentica un conductor en su móvil? ¿Magic link, código, app store?
+
+### 2. `crearRutaDesdeCampana` no está implementado en el mock
+`src/lib/mecanu/repo/repo-mock.ts` lanza un error explícito si se llama. El modelo
+en memoria construye TODAS las rutas de golpe al arrancar el proceso
+(`mecanu-rutas.ts`, el bucle sobre `RUTAS_RAW`) — no hay una función aislada que
+sepa construir una ruta nueva completa (paradas + tramos + presupuesto) a partir de
+una campaña aceptada en runtime. Esa función hay que escribirla desde cero contra
+Postgres, no portarla del mock (no existe la pieza equivalente). Es el flujo
+"Campaña aceptada → modal Crear ruta" (`CLAUDE.md` decisión #9) — probablemente el
+primer caso de uso real de escritura compleja que toque el backend.
+
+### 3. Los `data.ts` de los portales no pasan por `repo` todavía
+`src/components/taller/data.ts` y `src/components/conductor/data.ts` siguen
+leyendo síncronamente de `mecanu-rutas.ts`/`mecanu-whatsapp.ts` en el momento del
+import, no vía `await repo.algo()`. Es la única excepción documentada a la regla
+"todo pasa por el repo" (ver `ARQUITECTURA.md`). Migrar esto implica convertir esos
+~30 componentes de UI ya construidos a un patrón async con estados de
+carga/error — trabajo de UI real, no de infraestructura, y deliberadamente fuera
+del alcance de este bloque. Plan concreto sugerido:
+- Panel: los componentes que hoy leen constantes síncronas (`RUTAS_VISTA`,
+  `CLIENTES`...) pasan a Server Components que llaman `await repo.listX()` y pasan
+  los datos como props, o a Client Components con `useEffect`/una librería de
+  fetching (React Query, SWR) si necesitan revalidar tras una Server Action.
+- Conductor: mismo problema pero con el añadido de la cola offline — el momento de
+  leer datos "frescos" del servidor vs. servir del caché local necesita diseño
+  explícito (no es solo "añadir un loading spinner").
+- Ninguno de los dos debería tocar `mecanu-rutas.ts` directamente después de esta
+  migración — solo `repo/repo-mock.ts` (y luego `repo-supabase.ts`) lo hacen.
+
+### 4. `getTrasladosDisponibles` es una aproximación, no el modelo real
+No existe un campo "disponible" en `Tramo`. El mock aproxima con "agendado y sin
+conductor asignado" (`repo-mock.ts`). El prototipo del conductor
+(`src/components/conductor/constants.ts`, `POOL`) usa una lista hardcodeada
+completamente distinta. Hay que decidir: ¿es un booleano explícito
+(`traslados.disponible`) que el taller activa a mano, o se deriva de reglas
+(agendado + sin conductor + dentro de X horas)? Afecta directamente a R8 (solape al
+tomar un disponible) y a la métrica "Disponibles" del header del conductor.
+
+### 5. `registrarHallazgoCampana` no crea una `Campana` real
+El mock devuelve `null` siempre. Falta un catálogo testigo→servicio de tempario
+resuelto en tiempo de ejecución (`CATALOGO_DETECCION` en `mecanu-data.ts` mapea
+*tipos* de oportunidad a servicios, pero los 8 testigos del check-in del conductor
+no tienen ese mapeo hoy — hay que decidir a qué servicio de tempario corresponde
+cada testigo ámbar).
+
+## Casos borde del modelo sin cubrir explícitamente
+
+### 6. Kilometraje descendente
+`HANDOFF.md` describe una UI que "avisa, no bloquea" si el km nuevo es menor que el
+actual (`PRUEBA-MANUAL.md` bloque A, paso 7). El mock (`repo-mock.actualizarKmVehiculo`)
+no valida nada — acepta cualquier valor. `LOOP-ESTADO.md` (hallazgo [C] número 3)
+ya señalaba: "Kilometraje a la baja solo avisa, no bloquea — es lo correcto, pero
+el panel debería marcarlo en rojo." Sin resolver: ¿qué hace el backend? ¿Solo
+registra un log de anomalía, o hay un umbral que sí bloquea (ej. -1000 km)?
+
+### 7. Testigo rojo → "no rodante": ¿cuánto puede tardar el taller en responder?
+`LOOP-ESTADO.md` hallazgo [C] número 2: "el conductor queda parado sin plazo".
+No hay un SLA ni una escalada definida. Bloquea al conductor indefinidamente si el
+taller no contesta.
+
+### 8. Vídeo obligatorio en el check-in: ¿siempre?
+`LOOP-ESTADO.md` [C] número 1 y `PRUEBA-MANUAL.md` lo marcan como pregunta de
+producto abierta, no de ingeniería — "30 s son ~25 MB, con 9 traslados y sin wifi
+es mucha cola". Recomendación ya escrita en el propio material: exigirlo solo en
+vehículos de más de 10 años o valor declarado alto. No implementado.
+
+### 9. Inspección repetida en cada recogida para un mismo cliente recurrente
+`LOOP-ESTADO.md` [C] número 4: no hay pre-relleno con la última inspección. Afecta
+tiempo por check-in, que el propio material de pruebas identifica como la métrica
+crítica ("si son más de 3-4 minutos por coche... el flujo no aguanta").
+
+### 10. Nota de voz sin transcripción
+`LOOP-ESTADO.md` [C] número 5: el taller la escucha entera hoy. Transcribir en
+servidor (Whisper API o similar) es una decisión de producto + costo, no tomada.
+
+### 11. Sin foto de ejemplo/silueta guía en la cámara del check-in
+`LOOP-ESTADO.md` [C] número 6. Afecta calidad de evidencia, no lógica de negocio.
+
+## Preguntas de infraestructura
+
+### 12. Multi-tenancy de Supabase
+Si Mecanu vende a más de un taller, el schema de `MODELO-DATOS.md` necesita una
+columna `taller_id`/`tenant_id` en (casi) todas las tablas y políticas RLS por
+tenant. Hoy no existe ese concepto en ningún sitio del modelo — todo asume un único
+taller. Decidir esto ANTES de escribir migraciones reales; añadirlo después es
+mucho más caro.
+
+### 13. Almacenamiento de fotos/vídeo/firmas
+Hoy son URLs/data-URIs simulados (`picsum.photos`, SVG inline). En producción:
+¿Supabase Storage? ¿Qué política de retención (evidencia legal de siniestros,
+¿cuánto tiempo se guarda)? ¿Se comprimen antes de subir (relevante para la cola
+offline con datos móviles)?
+
+### 14. Cola offline: hoy vive solo en memoria de React
+El agente que construyó `/conductor` lo señaló explícitamente en su reporte: la
+cola de sincronización no sobrevive un cierre de pestaña/recarga — no hay
+IndexedDB ni `localStorage` detrás. `HANDOFF.md` §7.5 exige que "nunca se pierden
+ni bloquean al conductor", lo que en la práctica requiere persistencia local real
+antes de production-ready. Es la brecha más grande entre "lo que dice el
+handoff" y "lo que hay construido" en toda la app del conductor.
+
+### 15. Idempotencia hoy es un `Map` en memoria del proceso
+`src/lib/mecanu/idempotency.ts` lo dice explícitamente en su comentario — se vacía
+en cada redeploy, no se comparte entre instancias serverless. Para Vercel
+(serverless, múltiples instancias) esto necesita una tabla Postgres real (ver
+`MODELO-DATOS.md` nota sobre esto) antes de confiar en la idempotencia en
+producción con más de una instancia sirviendo tráfico a la vez.
+
+### 16. Notificaciones (WhatsApp real, push al conductor)
+`readme.md` del design system y `HANDOFF.md` §8 son explícitos: "fuera del scope
+de este design system, lo gestiona otra capa". `mecanu-whatsapp.ts` es una
+simulación completa de la API de WhatsApp Cloud (payloads, ventana de 24h, estados
+de entrega) pero `enviar()` nunca llama a Meta de verdad. Conectar la API real es
+straightforward (el propio código lo dice: "solo se sustituye `enviar()` por el
+POST a /messages") pero requiere credenciales de WABA que no existen todavía.
+Notificaciones push al móvil del conductor (para solicitudes resueltas, nuevos
+traslados) no están ni simuladas.
+
+## Ambigüedades menores de tipo/forma
+
+### 17. Config del pipeline (`ESTADOS`, `TAGS_*`, `PRESUPUESTO_ESTADOS`) no tiene Zod
+`src/lib/mecanu/types.ts` solo valida entidades de datos (lo que sería una fila de
+tabla). La configuración declarativa de `mecanu-pipeline.ts` se tipó con TS plano,
+no Zod — es intencional (es config de código, no datos de usuario) pero significa
+que no hay validación en runtime si alguien edita mal ese archivo. Aceptable
+mientras sea código versionado; reconsiderar si algún día se vuelve editable desde
+un panel de administración.
+
+### 18. `Ruta.subestado` es `string`, no una unión estricta por estado
+En `types.ts`, `RutaSchema.subestado` es `z.string()` en vez de un enum, porque los
+subestados válidos dependen del `estado` (una unión discriminada sería más
+correcta pero bastante más compleja de mantener sincronizada con
+`mecanu-pipeline.ts`). La validación real de "este subestado es válido para este
+estado" vive en código (`subestadoMeta`), no en el schema. Documentado aquí para
+que quien construya el backend no asuma que el schema ya garantiza esa invariante.
+
+### 19. Prefijos de id duplicados en campañas (`OP-*` vs `CMP-*`)
+Ver nota en `MODELO-DATOS.md` tabla `campanas` — dos prefijos sin diferencia
+semántica clara en el mock (oportunidades auto-detectadas vs. creadas a mano).
+Unificar antes de que el prefijo se filtre a lógica de negocio real en algún sitio.
