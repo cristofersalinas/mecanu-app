@@ -1,0 +1,287 @@
+/**
+ * Implementación mock de `MecanuRepo`: envuelve la capa de modelo en memoria
+ * (`mecanu-rutas.ts`, `mecanu-data.ts`, `mecanu-whatsapp.ts`) con la interfaz async
+ * que usará el backend real. No hay base de datos: las escrituras mutan arrays en
+ * memoria del proceso y se pierden en cada redeploy — eso es correcto para un mock.
+ *
+ * Sustituir esto por Supabase: crear `repo-supabase.ts` implementando `MecanuRepo`
+ * y cambiar el import en `./index.ts`. Nada más debería cambiar.
+ *
+ * `mecanu-rutas.ts` es JavaScript sin tipos propios más allá de lo que TS puede
+ * inferir; aquí se estrecha una sola vez contra `types.ts`, igual que ya hacían
+ * `src/components/taller/data.ts` y `src/components/conductor/data.ts` (que ahora
+ * deberían pasar a consumir este repo en vez de importar `mecanu-rutas.ts` directo).
+ */
+import * as M from '../mecanu-rutas';
+import * as W from '../mecanu-whatsapp';
+import type {
+  Actividad, Campana, Cliente, Conductor, Inspeccion, Log, Parada, Presupuesto,
+  Ruta, RutaVista, Servicio, Solicitud, TagRuta, Tramo, Vehiculo,
+} from '../types';
+import type {
+  AsignarConductorInput, CambiarEstadoPresupuestoInput, CambiarSubestadoTramoInput,
+  CancelarRutaInput, CheckinInput, ConfirmacionInput, CrearRutaDesdeCampanaInput,
+  EntregaInput, HallazgoCampanaInput, IncidenciaInput, MecanuRepo,
+  ReasignarConductorInput, SolicitudInput,
+} from './repo';
+
+/* El modelo es JS sin tipos: se estrecha una sola vez, aquí — mismo patrón que
+   `src/components/taller/data.ts` / `src/components/conductor/data.ts`. */
+const m = M as unknown as {
+  CLIENTES: Cliente[];
+  VEHICULOS: Vehiculo[];
+  CONDUCTORES: Conductor[];
+  SERVICIOS: Servicio[];
+  RUTAS: Ruta[];
+  RUTAS_VISTA: RutaVista[];
+  CAMPANAS: Campana[];
+  cliente: (id: string) => Cliente | null;
+  vehiculo: (id: string) => Vehiculo | null;
+  conductor: (id: string) => Conductor | null;
+  servicio: (id: string) => Servicio | null;
+  ruta: (id: string) => Ruta | null;
+  rutaVista: (id: string) => RutaVista | null;
+  tramo: (id: string) => Tramo | null;
+  parada: (id: string) => Parada | null;
+  presupuesto: (id: string) => Presupuesto | null;
+  campana: (id: string) => Campana | null;
+  paradasDeRuta: (rutaId: string) => Parada[];
+  tramosDeRuta: (rutaId: string) => Tramo[];
+  tramoActivo: (rutaId: string) => Tramo | null;
+  logsDeTramo: (trasladoId: string) => Log[];
+  actividadDeRuta: (rutaId: string) => Actividad[];
+  tagsDeRuta: (r: Ruta, ahora?: number) => TagRuta[];
+  rutasDeCliente: (id: string) => RutaVista[];
+  rutasDeVehiculo: (id: string) => RutaVista[];
+  rutasDeConductor: (id: string) => RutaVista[];
+  inspeccionesDeRuta: (rutaId: string) => Inspeccion[];
+  TRASLADOS: Tramo[];
+  LOGS: Log[];
+  PARADAS: Parada[];
+  PRESUPUESTOS: Presupuesto[];
+};
+
+const w = W as unknown as {
+  campanaDesdeInspeccion?: (insp: unknown, rutaId: string) => Campana | null;
+};
+void w;
+
+let logSeq = 90000; // por encima de los ids sembrados (LG-0001..LG-0290 aprox) para no colisionar
+function nuevoLog(trasladoId: string, tipo: Log['tipo'], actor: string, triggerSource: Log['triggerSource'], payload: Log['payload']): Log {
+  const log: Log = { id: `LG-M${++logSeq}`, trasladoId, tipo, ts: new Date(), actor, triggerSource, payload };
+  m.LOGS.push(log);
+  return log;
+}
+
+function requireTramo(id: string): Tramo {
+  const t = m.tramo(id);
+  if (!t) throw new Error(`Tramo ${id} no encontrado`);
+  return t;
+}
+
+function requireRuta(id: string): Ruta {
+  const r = m.ruta(id);
+  if (!r) throw new Error(`Ruta ${id} no encontrada`);
+  return r;
+}
+
+/* -- Solicitudes del conductor: HANDOFF.md §7.3, entidad decidida pero no construida
+   en el prototipo original. Vive en memoria aquí porque es infraestructura nueva. -- */
+const SOLICITUDES: Solicitud[] = [];
+let solicitudSeq = 0;
+
+/* -- Bolsa de "disponibles": ver TODO en la propia API route — no hay campo real en
+   el modelo hoy, así que exponemos los ids que ya no tienen conductor asignado y
+   siguen en agendado como aproximación razonable del mock. -- */
+function calcularDisponibles(): string[] {
+  return m.TRASLADOS
+    .filter((t) => t.estado === 'agendado' && !t.conductorId)
+    .map((t) => t.id);
+}
+
+export const mockRepo: MecanuRepo = {
+  async listClientes() { return m.CLIENTES; },
+  async getCliente(id) { return m.cliente(id); },
+  async listVehiculos() { return m.VEHICULOS; },
+  async getVehiculo(id) { return m.vehiculo(id); },
+  async listConductores() { return m.CONDUCTORES; },
+  async getConductor(id) { return m.conductor(id); },
+  async listServicios() { return m.SERVICIOS; },
+  async getServicio(id) { return m.servicio(id); },
+
+  async listRutas() { return m.RUTAS; },
+  async listRutasVista() { return m.RUTAS_VISTA; },
+  async getRuta(id) { return m.ruta(id); },
+  async getRutaVista(id) { return m.rutaVista(id); },
+  async getParada(id) { return m.parada(id); },
+  async listParadasDeRuta(rutaId) { return m.paradasDeRuta(rutaId); },
+  async getTramo(id) { return m.tramo(id); },
+  async listTramosDeRuta(rutaId) { return m.tramosDeRuta(rutaId); },
+  async getTramoActivo(rutaId) { return m.tramoActivo(rutaId); },
+  async listLogsDeTramo(trasladoId) { return m.logsDeTramo(trasladoId); },
+  async listActividadDeRuta(rutaId) { return m.actividadDeRuta(rutaId); },
+  async listTagsDeRuta(rutaId, ahora) {
+    const r = m.ruta(rutaId);
+    return r ? m.tagsDeRuta(r, ahora) : [];
+  },
+  async listRutasDeCliente(clienteId) { return m.rutasDeCliente(clienteId); },
+  async listRutasDeVehiculo(vehiculoId) { return m.rutasDeVehiculo(vehiculoId); },
+  async listRutasDeConductor(conductorId) { return m.rutasDeConductor(conductorId); },
+
+  async getPresupuesto(id) { return m.presupuesto(id); },
+  async listCampanas() { return m.CAMPANAS; },
+  async getCampana(id) { return m.campana(id); },
+
+  async listInspeccionesDeRuta(rutaId) { return m.inspeccionesDeRuta(rutaId); },
+
+  async getTurnoConductor() {
+    // `TURNO`/`POOL` del conductor hoy viven hardcodeados en
+    // `src/components/conductor/constants.ts` (offsets relativos a "ahora"), no en
+    // este repo — ver PREGUNTAS-ABIERTAS.md. Este método existe para documentar la
+    // forma del endpoint futuro; hoy devuelve todos los tramos del conductor d1.
+    const rutas = m.rutasDeConductor('d1');
+    const ids = rutas.flatMap((r) => m.tramosDeRuta(r.id).filter((t) => t.conductorId === 'd1').map((t) => t.id));
+    return { trasladoIds: ids };
+  },
+  async getTrasladosDisponibles() {
+    return { trasladoIds: calcularDisponibles() };
+  },
+
+  async asignarConductor({ trasladoId, conductorId }: AsignarConductorInput) {
+    const t = requireTramo(trasladoId);
+    t.conductorId = conductorId;
+    nuevoLog(trasladoId, 'cambio_estado', conductorId, 'conductor', { texto: `Conductor asignado: ${conductorId}` });
+    return t;
+  },
+
+  async cambiarSubestadoTramo({ trasladoId, a, triggerSource }: CambiarSubestadoTramoInput) {
+    const t = requireTramo(trasladoId);
+    t.subestado = a;
+    if (a === 'en_destino') t.estado = 'en_curso';
+    nuevoLog(trasladoId, 'cambio_estado', triggerSource === 'conductor' ? (t.conductorId ?? 'conductor') : 'Sistema', triggerSource, { a, texto: `Subestado → ${a}` });
+    return t;
+  },
+
+  async checkin({ trasladoId, ...evidencia }: CheckinInput) {
+    const t = requireTramo(trasladoId);
+    nuevoLog(trasladoId, 'evidencia', t.conductorId ?? 'conductor', 'conductor', {
+      texto: 'Check-in con fotos, testigos e inspección', tipoEvidencia: 'check-in',
+    });
+    const r = m.RUTAS.find((x) => m.tramosDeRuta(x.id).some((tr) => tr.id === trasladoId));
+    const inspecciones = r ? m.inspeccionesDeRuta(r.id) : [];
+    const inspeccion = inspecciones[inspecciones.length - 1] ?? null;
+    if (!inspeccion) {
+      throw new Error('El mock no genera inspecciones nuevas dinámicamente — ver PREGUNTAS-ABIERTAS.md');
+    }
+    void evidencia;
+    return { tramo: t, inspeccion };
+  },
+
+  async actualizarKmVehiculo(vehiculoId, km) {
+    const v = m.vehiculo(vehiculoId);
+    if (!v) throw new Error(`Vehículo ${vehiculoId} no encontrado`);
+    v.km = km;
+    return v;
+  },
+
+  async registrarHallazgoCampana({ rutaId, trasladoId, testigo, nivel }: HallazgoCampanaInput) {
+    nuevoLog(trasladoId, 'incidencia', 'conductor', 'conductor', { texto: `Hallazgo: ${testigo} nivel ${nivel}`, rutaId });
+    // El mock no crea una Campana real dinámicamente (no hay servicio de tempario que
+    // mapear sin un catálogo de testigo→servicio en tiempo de ejecución) — devuelve
+    // null a propósito. Ver PREGUNTAS-ABIERTAS.md.
+    return null;
+  },
+
+  async entregar({ trasladoId, firmaCliente }: EntregaInput) {
+    const t = requireTramo(trasladoId);
+    t.estado = 'completado';
+    nuevoLog(trasladoId, 'evidencia', t.conductorId ?? 'conductor', 'conductor', {
+      texto: firmaCliente ? 'Entrega con firma del cliente' : 'Entrega en taller', tipoEvidencia: 'check-out',
+    });
+    return t;
+  },
+
+  async registrarConfirmacion({ trasladoId, nota }: ConfirmacionInput) {
+    nuevoLog(trasladoId, 'comunicacion', 'Cliente', 'api', { texto: 'Confirmación de llegada a tiempo', detalle: nota ?? undefined });
+  },
+
+  async crearSolicitud(input: SolicitudInput) {
+    const s: Solicitud = {
+      id: `SOL-${String(++solicitudSeq).padStart(4, '0')}`,
+      trasladoId: input.trasladoId,
+      rutaId: input.rutaId,
+      conductorId: input.conductorId,
+      tipo: input.tipo,
+      motivo: input.motivo,
+      nota: input.nota,
+      ts: new Date(),
+      estado: 'pendiente',
+      resolucion: null,
+      resueltaEn: null,
+    };
+    SOLICITUDES.push(s);
+    nuevoLog(input.trasladoId, 'comunicacion', input.conductorId, 'conductor', { texto: `Solicitud: ${input.tipo}`, motivo: input.motivo });
+    return s;
+  },
+
+  async registrarIncidencia({ trasladoId, detalle }: IncidenciaInput) {
+    const t = requireTramo(trasladoId);
+    t.estado = 'cancelado'; // "congela" el tramo — decisión de mock: cancelado bloquea avance
+    nuevoLog(trasladoId, 'incidencia', t.conductorId ?? 'conductor', 'conductor', { texto: 'Siniestro reportado', detalle: detalle ?? undefined });
+  },
+
+  async reasignarConductorTramo({ tramoId, conductorId }: ReasignarConductorInput) {
+    const t = requireTramo(tramoId);
+    t.conductorId = conductorId;
+    nuevoLog(tramoId, 'cambio_estado', 'Rubén Ortega', 'manual', { texto: conductorId ? `Reasignado a ${conductorId}` : 'Conductor retirado' });
+    return t;
+  },
+
+  async cambiarEstadoPresupuesto({ presupuestoId, estado }: CambiarEstadoPresupuestoInput) {
+    const p = m.presupuesto(presupuestoId);
+    if (!p) throw new Error(`Presupuesto ${presupuestoId} no encontrado`);
+    p.estado = estado;
+    p.actualizado = new Date();
+    return p;
+  },
+
+  async crearRutaDesdeCampana(input: CrearRutaDesdeCampanaInput) {
+    // El mock no construye una Ruta nueva completa (paradas/tramos reales) porque el
+    // modelo actual las precalcula todas al arrancar el proceso — crear una ruta viva
+    // requeriría replicar esa lógica de construcción para un solo registro. Se deja
+    // como límite documentado del mock, no como lógica de negocio a adivinar aquí.
+    // Ver PREGUNTAS-ABIERTAS.md.
+    throw new Error(`crearRutaDesdeCampana: no implementado en el mock (campaña ${input.campanaId})`);
+  },
+
+  async actualizarTagsManual({ rutaId, tagsManual }) {
+    const r = requireRuta(rutaId);
+    r.tagsManual = tagsManual;
+    return r;
+  },
+
+  async cancelarRuta({ rutaId, subestado, motivo }: CancelarRutaInput) {
+    const r = requireRuta(rutaId);
+    r.estado = 'cancelado';
+    r.subestado = subestado;
+    r.motivo = motivo;
+    r.canceladaEn = new Date();
+    const tramos = m.tramosDeRuta(rutaId);
+    const ultimo = tramos[tramos.length - 1];
+    if (ultimo) nuevoLog(ultimo.id, 'incidencia', 'Rubén Ortega', 'manual', { texto: 'Ruta cancelada', motivo });
+    return r;
+  },
+
+  async listSolicitudesPendientes() {
+    return SOLICITUDES.filter((s) => s.estado === 'pendiente');
+  },
+
+  async resolverSolicitud(id, resolucion, estado) {
+    const s = SOLICITUDES.find((x) => x.id === id);
+    if (!s) throw new Error(`Solicitud ${id} no encontrada`);
+    s.estado = estado;
+    s.resolucion = resolucion;
+    s.resueltaEn = new Date();
+    return s;
+  },
+};
