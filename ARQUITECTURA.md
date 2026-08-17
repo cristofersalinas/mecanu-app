@@ -120,15 +120,35 @@ navegación y lecturas GET; nunca intercepta POST/PATCH, porque esas ya tienen s
 propia cola offline en memoria de React (duplicar la cola en el Service Worker
 generaría dos sistemas de reintento compitiendo entre sí).
 
-## Nota sobre el orden de imports en `globals.css`
+## Cómo cargan las fuentes (y cómo NO cargarlas)
 
-`src/app/globals.css` importa `../styles/ds/styles.css` **antes** que
-`"tailwindcss"`. Es intencional: `styles.css` empieza con un `@import url(...)`
-remoto (Google Fonts) y el bundler (Turbopack) exige que todo `@import` preceda a
-cualquier otra regla en el CSS ya aplanado — si Tailwind fuera primero, sus reglas
-quedarían antes que ese `@import` remoto y Turbopack lo descarta silenciosamente
-(se comprobó en vivo: sin este orden, las tipografías Plus Jakarta Sans/Material
-Symbols Rounded no cargan). No cambiar el orden sin volver a verificar esto.
+`src/styles/ds/tokens/fonts.css` está deliberadamente vacío de `@import url(...)`.
+Se probó primero con un `@import` remoto a Google Fonts ahí dentro (con el orden de
+`globals.css` ajustado para que precediera a `"tailwindcss"`, ya que Turbopack
+exige que todo `@import` vaya antes que cualquier otra regla en el CSS aplanado).
+Funcionaba en `next dev` — pero **no sobrevive a `next build`**: se inspeccionó el
+CSS de producción compilado y el `@import` simplemente no está en el archivo final,
+aunque todos los demás tokens sí. Turbopack lo descarta en el paso de build, no en
+dev. Esto se descubrió comparando el proyecto contra los `.dc.html` originales: los
+iconos se veían como texto literal (`arrow_back`, `search`...) y la tipografía caía
+al system font — solo en el build de producción, nunca en dev, lo que llevó a
+comparar ambos CSS compilados directamente.
+
+La carga real hoy, en `src/app/layout.tsx`:
+- **Plus Jakarta Sans** vía `next/font/google` — se descarga y autoaloja en build
+  time (queda en `.next/static/media/*.woff2`), cero dependencia de red en
+  runtime. Expone `var(--font-plus-jakarta-sans)`, que `tokens/typography.css`
+  usa dentro de `--mecanu-font-family`.
+- **Material Symbols Rounded** vía un `<link rel="stylesheet">` real en el
+  `<head>` del layout raíz — un `<link>` nativo lo resuelve el navegador en
+  runtime y nunca pasa por el bundler de CSS, así que sí sobrevive al build. Es
+  además el mismo patrón que usaban los `.dc.html` originales (un `<link>` de
+  verdad en su `<helmet>`, nunca una importación empaquetada).
+
+Regla para quien toque esto: **cualquier fuente/recurso remoto nuevo va como
+`<link>` en el `<head>` o vía `next/font`, nunca como `@import url()` dentro de un
+archivo CSS que pase por el pipeline de Turbopack.** Verificar siempre contra
+`next build` + `next start`, no solo contra `next dev` — el comportamiento difiere.
 
 ## Qué NO cubre este bloque de trabajo
 

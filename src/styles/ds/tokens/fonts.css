@@ -1,6 +1,18 @@
 /* Plus Jakarta Sans — sustituta oficial de Škoda Next (spec §1.2) — y Material Symbols Rounded —
-   set de iconografía sustituto de Uber Base Icons: geométrico, curvas suaves, outlined default +
-   filled (FILL 1) para estado activo. Ambas servidas desde Google Fonts en una sola petición
-   (Turbopack's CSS bundler colapsa/descarta un segundo @import url() remoto consecutivo, así que
-   se combinan aquí con &family= en vez de dos @import separados). Sin binarios propios. */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=swap');
+   set de iconografía sustituto de Uber Base Icons.
+
+   Deliberadamente vacío de @import: un `@import url(...)` remoto dentro del CSS
+   bundleado por Turbopack NO sobrevive al build de producción (confirmado
+   inspeccionando el CSS compilado — el import simplemente no está, aunque
+   funcionaba en `next dev`). Las dos fuentes se cargan por vías que si sobreviven:
+
+   - Plus Jakarta Sans: next/font/google en src/app/layout.tsx (autoalojada en
+     build time, expone `var(--font-plus-jakarta-sans)` que consume
+     `--mecanu-font-family` en tokens/typography.css).
+   - Material Symbols Rounded: <link rel="stylesheet"> real en el <head> de
+     src/app/layout.tsx (un <link> nativo lo resuelve el navegador en runtime,
+     no pasa por el bundler de CSS — mismo patrón que usaban los .dc.html
+     originales, que también cargaban sus fuentes vía <link>, no vía import
+     empaquetado).
+
+   Ver ARQUITECTURA.md para el detalle completo de este diagnóstico. */

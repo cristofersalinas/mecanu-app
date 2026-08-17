@@ -76,6 +76,13 @@ un cambio de infraestructura (no de producto): `npm run dev`, abre `/panel` y
 `/conductor`, compara con capturas anteriores si las tienes. No hay tests
 visuales/e2e todavía — es una `PREGUNTA-ABIERTA` sobre si merece la pena montarlos.
 
+**`next dev` y `next build` no siempre se comportan igual** — ya pasó una vez con
+la carga de fuentes (ver `ARQUITECTURA.md`, "Cómo cargan las fuentes"): algo
+funcionaba en dev y se rompía en el build de producción sin ningún error visible,
+solo un CSS distinto. Si tocas `globals.css`, `layout.tsx`, o cualquier cosa que
+cargue un recurso externo, verifica contra `npm run build && npx next start`, no
+solo contra `npm run dev`.
+
 ## Ramas
 
 `feature/<nombre>` → PR a `staging` → verificar en el preview de Vercel de

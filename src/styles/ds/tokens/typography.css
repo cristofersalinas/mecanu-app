@@ -1,5 +1,7 @@
 :root {
-  --mecanu-font-family: "Plus Jakarta Sans", "Inter", -apple-system, sans-serif;
+  /* var(--font-plus-jakarta-sans) la expone next/font/google en src/app/layout.tsx —
+     autoalojada en build time, no depende de red en runtime (ver esa nota para el porqué). */
+  --mecanu-font-family: var(--font-plus-jakarta-sans), "Inter", -apple-system, sans-serif;
   --mecanu-font-weight-regular: 400;
   --mecanu-font-weight-medium: 500;
   --mecanu-font-weight-bold: 700;
