@@ -43,6 +43,16 @@ criterio implícito.
    el servidor vía `Idempotency-Key` (`src/lib/mecanu/api-helpers.ts`), (c)
    ofrecer "reintentar la misma tarea" en la UI, nunca "empezar de cero".
 
+9. **El seguro Mecanu bajo demanda (`seguro_demanda`) está en espera de
+   producto.** El modelo de datos, el precio, el flujo de asignación y el escudo
+   de cobertura están completamente diseñados (`SEGUROS.md`), pero
+   `feature_switches_catalog.activo_global = false` a propósito — Mecanu todavía
+   no tiene el producto asegurador listo. No lo actives ni construyas atajos
+   alrededor del switch para "verlo funcionar" en desarrollo normal. Cuando se
+   escriban los tests de esta ruta, al menos uno debe forzar el switch a `true`
+   en el entorno de test (no en el catálogo real) para mantener el flujo
+   ejercitado y detectar regresiones aunque en producción permanezca apagado.
+
 ## Qué leer primero, en orden
 
 1. `CLAUDE.md` — contexto de producto y decisiones cerradas. Léelo antes que nada:

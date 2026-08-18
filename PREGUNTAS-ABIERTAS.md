@@ -2,159 +2,237 @@
 
 Todo lo que el frontend deja ambiguo y que el backend real tendrá que decidir.
 Cada punto sin anotar aquí es un bug futuro — por eso esta lista intenta ser
-exhaustiva en vez de solo cómoda. Ordenada de más a menos urgente/bloqueante.
+exhaustiva en vez de solo cómoda.
+
+Las §1–19 son las preguntas originales del modelo de conductores y rutas.
+Las §20+ son preguntas nuevas surgidas del diseño del backend (jerarquía
+organizativa, planes, seguros, auditoría). Ordenadas de más a menos urgente.
+
+---
 
 ## Bloqueantes para un backend real
 
 ### 1. No hay autenticación, roles ni permisos
-El prototipo entero (panel y conductor) asume un único usuario implícito por
-superficie: el operador del taller en `/panel`, el conductor `d1` (Javier Molina)
-hardcodeado en `/conductor` (`MI_ID = 'd1'` en `src/components/conductor/constants.ts`).
-Ninguna API route verifica quién llama. Antes de tener datos reales de clientes en
-producción esto tiene que existir. Preguntas concretas sin responder:
-- ¿Un taller = un tenant, o puede haber varios talleres en la misma instancia? El
-  mock asume un único taller ("Talleres Rodríguez") en todas partes.
-- ¿Qué puede ver un conductor de red externa vs interna? `HANDOFF.md` §7.6 lo
-  menciona (`esExterno()`, `_dirVaga()`) pero es lógica de cliente hoy — debe
-  moverse al backend/RLS, nunca confiar en que el cliente se autolimite.
-- ¿Cómo se autentica un conductor en su móvil? ¿Magic link, código, app store?
+El prototipo entero asume un único usuario implícito por superficie: el operador
+del taller en `/panel`, el conductor `d1` (Javier Molina) hardcodeado en
+`/conductor` (`MI_ID = 'd1'` en `src/components/conductor/constants.ts`).
+Ninguna API route verifica quién llama. Antes de tener datos reales de clientes
+en producción esto tiene que existir. Preguntas concretas sin responder:
+- El diseño de jerarquía Grupo → Sucursal está en `MODELO-DATOS.md`, pero el
+  primer Grupo / Sucursal / usuario real hay que crearlo manualmente — ¿hay un
+  flujo de onboarding (signup del taller)? ¿Quién hace el primer `INSERT`?
+- ¿Cómo se autentica un conductor en su móvil? ¿Magic link, código SMS, app?
 
 ### 2. `crearRutaDesdeCampana` no está implementado en el mock
-`src/lib/mecanu/repo/repo-mock.ts` lanza un error explícito si se llama. El modelo
-en memoria construye TODAS las rutas de golpe al arrancar el proceso
-(`mecanu-rutas.ts`, el bucle sobre `RUTAS_RAW`) — no hay una función aislada que
-sepa construir una ruta nueva completa (paradas + tramos + presupuesto) a partir de
-una campaña aceptada en runtime. Esa función hay que escribirla desde cero contra
-Postgres, no portarla del mock (no existe la pieza equivalente). Es el flujo
-"Campaña aceptada → modal Crear ruta" (`CLAUDE.md` decisión #9) — probablemente el
-primer caso de uso real de escritura compleja que toque el backend.
+`src/lib/mecanu/repo/repo-mock.ts` lanza un error explícito si se llama. El
+modelo en memoria construye TODAS las rutas al arrancar — no hay una función que
+sepa construir una ruta nueva completa (paradas + tramos + presupuesto) desde una
+campaña aceptada en runtime. Hay que escribirla desde cero contra Postgres.
 
 ### 3. Los `data.ts` de los portales no pasan por `repo` todavía
-`src/components/taller/data.ts` y `src/components/conductor/data.ts` siguen
-leyendo síncronamente de `mecanu-rutas.ts`/`mecanu-whatsapp.ts` en el momento del
-import, no vía `await repo.algo()`. Es la única excepción documentada a la regla
-"todo pasa por el repo" (ver `ARQUITECTURA.md`). Migrar esto implica convertir esos
-~30 componentes de UI ya construidos a un patrón async con estados de
-carga/error — trabajo de UI real, no de infraestructura, y deliberadamente fuera
-del alcance de este bloque. Plan concreto sugerido:
-- Panel: los componentes que hoy leen constantes síncronas (`RUTAS_VISTA`,
-  `CLIENTES`...) pasan a Server Components que llaman `await repo.listX()` y pasan
-  los datos como props, o a Client Components con `useEffect`/una librería de
-  fetching (React Query, SWR) si necesitan revalidar tras una Server Action.
-- Conductor: mismo problema pero con el añadido de la cola offline — el momento de
-  leer datos "frescos" del servidor vs. servir del caché local necesita diseño
-  explícito (no es solo "añadir un loading spinner").
-- Ninguno de los dos debería tocar `mecanu-rutas.ts` directamente después de esta
-  migración — solo `repo/repo-mock.ts` (y luego `repo-supabase.ts`) lo hacen.
+Ver `ARQUITECTURA.md` — excepción documentada y deliberada de esta etapa.
+Plan de migración: Server Components para el panel, diseño explícito de
+caché/offline para el conductor.
 
-### 4. `getTrasladosDisponibles` es una aproximación, no el modelo real
-No existe un campo "disponible" en `Tramo`. El mock aproxima con "agendado y sin
-conductor asignado" (`repo-mock.ts`). El prototipo del conductor
-(`src/components/conductor/constants.ts`, `POOL`) usa una lista hardcodeada
-completamente distinta. Hay que decidir: ¿es un booleano explícito
-(`traslados.disponible`) que el taller activa a mano, o se deriva de reglas
-(agendado + sin conductor + dentro de X horas)? Afecta directamente a R8 (solape al
-tomar un disponible) y a la métrica "Disponibles" del header del conductor.
+### 4. `getTrasladosDisponibles` es una aproximación
+No existe campo "disponible" en `Tramo`. El mock aproxima con "agendado + sin
+conductor". ¿Booleano explícito que el taller activa, o regla derivada?
 
 ### 5. `registrarHallazgoCampana` no crea una `Campana` real
-El mock devuelve `null` siempre. Falta un catálogo testigo→servicio de tempario
-resuelto en tiempo de ejecución (`CATALOGO_DETECCION` en `mecanu-data.ts` mapea
-*tipos* de oportunidad a servicios, pero los 8 testigos del check-in del conductor
-no tienen ese mapeo hoy — hay que decidir a qué servicio de tempario corresponde
-cada testigo ámbar).
+El mock devuelve `null` siempre. Falta catálogo testigo → servicio de tempario.
 
-## Casos borde del modelo sin cubrir explícitamente
+---
+
+## Casos borde del modelo
 
 ### 6. Kilometraje descendente
-`HANDOFF.md` describe una UI que "avisa, no bloquea" si el km nuevo es menor que el
-actual (`PRUEBA-MANUAL.md` bloque A, paso 7). El mock (`repo-mock.actualizarKmVehiculo`)
-no valida nada — acepta cualquier valor. `LOOP-ESTADO.md` (hallazgo [C] número 3)
-ya señalaba: "Kilometraje a la baja solo avisa, no bloquea — es lo correcto, pero
-el panel debería marcarlo en rojo." Sin resolver: ¿qué hace el backend? ¿Solo
-registra un log de anomalía, o hay un umbral que sí bloquea (ej. -1000 km)?
+¿El servidor solo logea anomalía, o hay un umbral que sí bloquea (ej. -1000 km)?
 
 ### 7. Testigo rojo → "no rodante": ¿cuánto puede tardar el taller en responder?
-`LOOP-ESTADO.md` hallazgo [C] número 2: "el conductor queda parado sin plazo".
-No hay un SLA ni una escalada definida. Bloquea al conductor indefinidamente si el
-taller no contesta.
+No hay SLA ni escalada definida. El conductor queda parado indefinidamente.
 
-### 8. Vídeo obligatorio en el check-in: ¿siempre?
-`LOOP-ESTADO.md` [C] número 1 y `PRUEBA-MANUAL.md` lo marcan como pregunta de
-producto abierta, no de ingeniería — "30 s son ~25 MB, con 9 traslados y sin wifi
-es mucha cola". Recomendación ya escrita en el propio material: exigirlo solo en
-vehículos de más de 10 años o valor declarado alto. No implementado.
+### 8. Vídeo obligatorio en el check-in: ¿siempre o condicionado?
+"30 s ≈ 25 MB con datos móviles" — recomendación previa: exigirlo solo en
+vehículos de más de 10 años o valor declarado alto.
 
-### 9. Inspección repetida en cada recogida para un mismo cliente recurrente
-`LOOP-ESTADO.md` [C] número 4: no hay pre-relleno con la última inspección. Afecta
-tiempo por check-in, que el propio material de pruebas identifica como la métrica
-crítica ("si son más de 3-4 minutos por coche... el flujo no aguanta").
+### 9. Inspección repetida para un cliente recurrente sin pre-relleno
+No hay reutilización de la última inspección del mismo vehículo.
 
 ### 10. Nota de voz sin transcripción
-`LOOP-ESTADO.md` [C] número 5: el taller la escucha entera hoy. Transcribir en
-servidor (Whisper API o similar) es una decisión de producto + costo, no tomada.
+¿Transcribir con Whisper API? Decisión de producto + coste.
 
-### 11. Sin foto de ejemplo/silueta guía en la cámara del check-in
-`LOOP-ESTADO.md` [C] número 6. Afecta calidad de evidencia, no lógica de negocio.
+### 11. Sin foto guía en la cámara del check-in
+Afecta calidad de evidencia, no lógica de negocio.
 
-## Preguntas de infraestructura
+---
+
+## Preguntas de infraestructura (originales)
 
 ### 12. Multi-tenancy de Supabase
-Si Mecanu vende a más de un taller, el schema de `MODELO-DATOS.md` necesita una
-columna `taller_id`/`tenant_id` en (casi) todas las tablas y políticas RLS por
-tenant. Hoy no existe ese concepto en ningún sitio del modelo — todo asume un único
-taller. Decidir esto ANTES de escribir migraciones reales; añadirlo después es
-mucho más caro.
+**Parcialmente respondida**: la jerarquía Grupo → Sucursal y la columna
+`sucursal_id` en todas las tablas operativas están diseñadas en `MODELO-DATOS.md`.
+Lo que queda abierto: el primer tenant se registra manualmente (ver §1). El
+diseño asume un solo Supabase project para todos los grupos, con RLS separando
+los datos — confirmar que esta es la arquitectura elegida vs. un proyecto Supabase
+por tenant.
 
-### 13. Almacenamiento de fotos/vídeo/firmas
-Hoy son URLs/data-URIs simulados (`picsum.photos`, SVG inline). En producción:
-¿Supabase Storage? ¿Qué política de retención (evidencia legal de siniestros,
-¿cuánto tiempo se guarda)? ¿Se comprimen antes de subir (relevante para la cola
-offline con datos móviles)?
+### 13. Almacenamiento de fotos / vídeo / firmas
+¿Supabase Storage? La política de retención está documentada en `MODELO-DATOS.md`
+(14 meses para evidencia de check-in). Queda abierto: ¿se comprimen antes de
+subir desde el móvil del conductor?
 
 ### 14. Cola offline: hoy vive solo en memoria de React
-El agente que construyó `/conductor` lo señaló explícitamente en su reporte: la
-cola de sincronización no sobrevive un cierre de pestaña/recarga — no hay
-IndexedDB ni `localStorage` detrás. `HANDOFF.md` §7.5 exige que "nunca se pierden
-ni bloquean al conductor", lo que en la práctica requiere persistencia local real
-antes de production-ready. Es la brecha más grande entre "lo que dice el
-handoff" y "lo que hay construido" en toda la app del conductor.
+La cola no sobrevive un cierre de pestaña. Se necesita IndexedDB o `localStorage`
+antes de production-ready.
 
 ### 15. Idempotencia hoy es un `Map` en memoria del proceso
-`src/lib/mecanu/idempotency.ts` lo dice explícitamente en su comentario — se vacía
-en cada redeploy, no se comparte entre instancias serverless. Para Vercel
-(serverless, múltiples instancias) esto necesita una tabla Postgres real (ver
-`MODELO-DATOS.md` nota sobre esto) antes de confiar en la idempotencia en
-producción con más de una instancia sirviendo tráfico a la vez.
+La tabla `idempotency_keys` de `MODELO-DATOS.md` resuelve esto. Migración:
+cambiar `src/lib/mecanu/idempotency.ts` para leer/escribir en Postgres en vez
+del Map.
 
 ### 16. Notificaciones (WhatsApp real, push al conductor)
-`readme.md` del design system y `HANDOFF.md` §8 son explícitos: "fuera del scope
-de este design system, lo gestiona otra capa". `mecanu-whatsapp.ts` es una
-simulación completa de la API de WhatsApp Cloud (payloads, ventana de 24h, estados
-de entrega) pero `enviar()` nunca llama a Meta de verdad. Conectar la API real es
-straightforward (el propio código lo dice: "solo se sustituye `enviar()` por el
-POST a /messages") pero requiere credenciales de WABA que no existen todavía.
-Notificaciones push al móvil del conductor (para solicitudes resueltas, nuevos
-traslados) no están ni simuladas.
+`mecanu-whatsapp.ts` es simulación. El switch `notificaciones_push` está en el
+catálogo pero no implementado. Conectar Kapso / Meta requiere credenciales de
+WABA aún no disponibles.
 
-## Ambigüedades menores de tipo/forma
+---
 
-### 17. Config del pipeline (`ESTADOS`, `TAGS_*`, `PRESUPUESTO_ESTADOS`) no tiene Zod
-`src/lib/mecanu/types.ts` solo valida entidades de datos (lo que sería una fila de
-tabla). La configuración declarativa de `mecanu-pipeline.ts` se tipó con TS plano,
-no Zod — es intencional (es config de código, no datos de usuario) pero significa
-que no hay validación en runtime si alguien edita mal ese archivo. Aceptable
-mientras sea código versionado; reconsiderar si algún día se vuelve editable desde
-un panel de administración.
+## Ambigüedades menores de tipo/forma (originales)
 
-### 18. `Ruta.subestado` es `string`, no una unión estricta por estado
-En `types.ts`, `RutaSchema.subestado` es `z.string()` en vez de un enum, porque los
-subestados válidos dependen del `estado` (una unión discriminada sería más
-correcta pero bastante más compleja de mantener sincronizada con
-`mecanu-pipeline.ts`). La validación real de "este subestado es válido para este
-estado" vive en código (`subestadoMeta`), no en el schema. Documentado aquí para
-que quien construya el backend no asuma que el schema ya garantiza esa invariante.
+### 17. Config del pipeline sin Zod
+`mecanu-pipeline.ts` se tipó con TS plano, no Zod. Aceptable mientras sea código
+versionado; reconsiderar si se vuelve editable desde un panel de admin.
+
+### 18. `Ruta.subestado` es `string`, no unión estricta por estado
+La validación real de "este subestado es válido para este estado" vive en código
+(`subestadoMeta`), no en el schema.
 
 ### 19. Prefijos de id duplicados en campañas (`OP-*` vs `CMP-*`)
-Ver nota en `MODELO-DATOS.md` tabla `campanas` — dos prefijos sin diferencia
-semántica clara en el mock (oportunidades auto-detectadas vs. creadas a mano).
-Unificar antes de que el prefijo se filtre a lógica de negocio real en algún sitio.
+Unificar antes de que el prefijo filtre a lógica de negocio.
+
+---
+
+## Preguntas surgidas del diseño del backend (§20+)
+
+### 20. ~~¿A qué nivel viven clientes y vehículos — sucursal o grupo?~~ — RESUELTA
+**Decisión cerrada**: cliente y vehículo cuelgan del **grupo** (`grupo_id`), no de
+la sucursal. Un cliente habitual que va a dos sucursales del mismo grupo es un
+solo registro — nunca se duplica. Cada traslado sigue registrando en qué
+sucursal ocurrió (`rutas.sucursal_id`), pero el cliente/vehículo en sí es un pool
+compartido a nivel de grupo. Ver `MODELO-DATOS.md` tablas `clientes`/`vehiculos`.
+
+### 21. ¿Qué muestra exactamente la degustación de IA en plan Alta?
+El switch `ia_diagnostico` está documentado pero el comportamiento Alta vs. Lujo
+no está decidido. ¿El plan Alta ve un bloque de IA con resultado visible pero
+"bloqueado" (requiere Lujo)? ¿O ve el resultado completo pero con marca "beta"?
+¿O no ve nada del módulo IA hasta Lujo? Afecta al diseño del componente
+`HallazgosIA` (por construir).
+
+### 22. ¿La UI advierte al asignar `conductor_flota` a traslado con seguro propio?
+Un conductor de la flota Mecanu asignado a un traslado cubierto por el seguro
+propio del Grupo puede no estar cubierto por esa póliza — depende de cada
+aseguradora. ¿Muestra la UI una advertencia en el paso de asignación?
+¿Es un soft-warning o bloquea hasta que el operador confirme explícitamente?
+Ver `SEGUROS.md` matriz de responsabilidad.
+
+### 23. `conductor_flota` + sin cobertura Mecanu: ¿hard block o soft warning?
+`SEGUROS.md` propone bloquear en el servidor. ¿O el operador puede ignorar la
+advertencia bajo su responsabilidad? (Hay casos de urgencia donde el taller
+quiere asignar al conductor que tiene disponible aunque no haya cobertura.)
+
+### 24. ¿El precio del seguro bajo demanda varía o es fijo por traslado?
+El diseño actual usa un único `precio_unitario_cents` en `plan_precios_overage`.
+Si el precio varía por tipo de vehículo, distancia o valor declarado, se necesita
+una función de tarificación, no un precio plano.
+
+### 25. ¿El contador de WhatsApp de 10 msgs (plan Alta) es por grupo o por sucursal?
+El diseño de `PLANES.md` propone contadores al nivel del Grupo (un pool de 10
+msgs compartido entre todas las sucursales del mismo Grupo en plan Alta). ¿Es
+correcto? ¿O cada sucursal tiene sus 10 mensajes independientes?
+
+### 26. ¿Qué pasa con el asiento de un conductor cuando se desactiva a mitad de mes?
+Un `conductor_interno` desactivado en `user_org_roles.activo = false` libera un
+asiento del contador `conductores_activos`. Si el Grupo en plan Alta tiene 3
+conductores activos, desactiva uno (bajando a 2) y activa uno nuevo al día siguiente:
+¿se registra un overage por el día del 4.º conductor, o no?
+El gauge de conductores activos no acumula días — revisa el estado actual.
+La respuesta correcta probablemente sea "no hay overage si nunca se superó el
+límite simultáneamente", pero hay que explicitarlo para el código del contador.
+
+### 27. ¿Los precios de los planes Alta y Lujo ya están decididos?
+`planes_config.precio_mensual_cents = 0` en los valores iniciales de `PLANES.md`
+— es un placeholder. Antes de la primera factura real, los precios tienen que
+estar en la BD. ¿Cuándo se toma esa decisión? **Ampliada tras la revisión de
+`MODELO-DATOS.md`**: la misma pregunta aplica a
+`plan_precios_flota.tarifa_base_cents` para `'lujo'` — el recargo de flota de
+Alta (35%, ver `PLANES.md` "Recargo de flota Mecanu") se calcula sobre esa
+tarifa, así que tampoco se puede facturar de verdad hasta que tenga un valor.
+
+### 28. ¿El modelo de Flota Mecanu (`conductor_flota`) requiere nuevas tablas?
+Hoy el rol `conductor_flota` en `user_org_roles` (con `grupo_id` = grupo
+`tipo='mecanu'`) es el único marcador. En el futuro, ¿Mecanu gestiona su propia
+lista de conductores freelance (con sus propias calificaciones, disponibilidad,
+zonas de cobertura)? Si es así, la tabla `conductores` no es suficiente — se
+necesita una entidad `flota_mecanu` separada. ¿Se construye algo ahora o se
+pospone? Relacionado: si algún día Mecanu cobra por uso de flota, `PLANES.md`
+señala que sería un `dimension` nuevo en `usage_counters`, no una variante de
+`conductores_activos`.
+
+### 29. Tabla `audit_events` es inmutable: ¿cómo se gestiona el derecho de supresión RGPD?
+**Dirección decidida, sin resolver del todo todavía**: la solución futura es
+**anonimizar `actor_id`** (ponerlo a `null`, preservando `actor_rol` como
+snapshot) en vez de borrar o modificar la fila — la tabla sigue siendo
+`INSERT`-only en el sentido de que ninguna fila desaparece; el paso de anonimización
+sería una operación administrativa aparte, fuera del flujo normal de escritura,
+ejecutada una sola vez por solicitud de supresión. Lo que falta decidir: ¿quién
+dispara ese proceso (automático al procesar la baja del usuario, o manual por
+`mecanu_admin`)? ¿Se anonimiza también `entidad_id` cuando la entidad referenciada
+es la persona que pide la supresión (ej. un `cliente_id`), o solo `actor_id`?
+No bloquea el diseño actual — se resuelve antes de que entre en producción el
+primer usuario real, no antes.
+
+### 30. ¿Quién crea el usuario del conductor — el taller o el conductor mismo?
+El diseño propone que `conductores.usuario_id` apunte a `usuarios.id` (nullable
+durante onboarding). Flujos posibles: (a) el taller invita al conductor por email
+(Supabase Auth magic link), (b) el conductor se registra solo con un código que
+le da el taller, (c) el taller crea la cuenta directamente. Afecta al onboarding
+y a qué datos introduce quién.
+
+---
+
+## Preguntas surgidas del rediseño del modelo de acceso (§31+)
+
+### 31. ~~Conductor sin cuenta de usuario todavía (onboarding)~~ — RESUELTA
+**Decisión cerrada**: la cuenta del conductor se crea desde el **primer paso**
+del onboarding, no después. Flujo: invitación → creación de cuenta con
+`usuario_id`, rol (`conductor_interno`/`conductor_flota`), `grupo_id` y alcance
+de sucursales, todo en la misma transacción → `conductores.proceso =
+'documentos_pendientes'`. No existe columna transitoria ni estado intermedio sin
+cuenta. `conductores.usuario_id` es `not null`. El estado (`proceso`) controla
+qué puede hacer el conductor, no quién es — el bloqueo de operar mientras está
+`documentos_pendientes` vive como un chequeo explícito dentro de `autorizar()`
+(motivo `conductor_no_activo`), no como ausencia de fila. Ver `MODELO-DATOS.md`
+"Onboarding de un conductor" y `PERMISOS.md` función `autorizar()`.
+
+### 32. ~~`user_sucursal_access` con cero filas = todas las sucursales: riesgo de fail-open~~ — RESUELTA
+**Decisión cerrada, riesgo corregido**: se reemplazó el diseño por una columna
+explícita `user_org_roles.alcance_todas_sucursales boolean not null default
+false`. `true` → ve todas las sucursales del grupo, se ignora
+`user_sucursal_access`. `false` (default) → el alcance es exactamente lo que
+haya en `user_sucursal_access`; cero filas ahí significa **cero acceso**, no
+acceso total. El default restrictivo es deliberado: un fallo de alta deja al
+usuario sin acceso y visible como tal, nunca con acceso ampliado en silencio.
+Test obligatorio añadido en `PERMISOS.md` ("Tests obligatorios de
+`autorizacion.ts`", punto 1): un `sucursal_admin` sin filas de acceso no debe
+ver ningún traslado.
+
+### 33. ~~¿`grupo_admin` con visión reducida necesita un rol nuevo?~~ — RESUELTA
+**Decisión cerrada**: no. Se resuelve con la misma columna de §32 —
+`alcance_todas_sucursales = false` más las filas correspondientes en
+`user_sucursal_access`, sobre el rol `grupo_admin` existente. No se crea un
+sexto rol. Como consecuencia, la política RLS ya no trata a `grupo_admin` como
+caso especial: `sucursal_admin` y `grupo_admin` comparten exactamente la misma
+regla de alcance (`sucursal_id IN alcance_sucursales(...)`), y lo que distingue
+a un admin de grupo completo de uno con visión reducida es el valor de la
+columna en su fila de `user_org_roles`, no el rol. Ver `MODELO-DATOS.md` sección
+RLS y `PERMISOS.md`.

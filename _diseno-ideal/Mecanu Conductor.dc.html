@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/tokens/elevation.css">
+  <link rel="stylesheet" href="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/tokens/motion.css">
+  <link rel="stylesheet" href="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/tokens/icons.css">
+  <link rel="stylesheet" href="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/tokens/base.css">
+  <link rel="stylesheet" href="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/styles.css">
+  <script src="_ds/mecanu-design-system-bf03e05c-be32-4c2f-a9a5-ed714f5f188a/_ds_bundle.js"></script>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    body { background: #E6E7E9; color: var(--mecanu-text-primary-light); font-family: var(--mecanu-font-family); -webkit-font-smoothing: antialiased; }
+    a { color: var(--mecanu-electric-600); text-decoration: none; }
+    a:hover { color: var(--mecanu-emerald-800); }
+    .mcnc-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+    .mcnc-scroll::-webkit-scrollbar { display: none; width: 0; }
+    @keyframes mcncGateIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes mcncFade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes mcncToastIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    @keyframes mcncFlash { 0% { box-shadow: 0 0 0 3px rgba(65,148,104,.85); } 70% { box-shadow: 0 0 0 3px rgba(65,148,104,.85); } 100% { box-shadow: 0 0 0 3px rgba(65,148,104,0); } }
+    @keyframes mcncRec { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+    .mcnc-view { animation: mcncFade 200ms linear; }
+    .mcnc-gate { animation: mcncGateIn 400ms cubic-bezier(.22,1,.36,1); }
+    .mcnc-fade { animation: mcncFade 200ms linear; }
+    .mcnc-flash { animation: mcncFlash 2600ms cubic-bezier(.83,0,.17,1); }
+    .mcnc-rec { animation: mcncRec 1s linear infinite; }
+    .mcnc-tap { transition: background-color 90ms linear, border-color 90ms linear, transform 90ms linear; }
+    .mcnc-tap:active { transform: scale(.985); }
+    .mcnc-slide { touch-action: pan-y; transition: transform 180ms cubic-bezier(.22,1,.36,1); }
+    .mcnc-slide.is-dragging { transition: none; }
+  </style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px 16px;box-sizing:border-box">
+
+  <div style="position:relative;width:414px;height:868px;flex:none;background:#0B0C0C;border-radius:54px;padding:12px;box-sizing:border-box;box-shadow:0 40px 90px -24px rgba(11,12,12,.55), 0 0 0 2px rgba(255,255,255,.04) inset">
+    <div style="position:relative;width:390px;height:844px;background:var(--mecanu-neutral-0);border-radius:42px;overflow:hidden;display:flex;flex-direction:column">
+
+      <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);width:110px;height:28px;background:#0B0C0C;border-radius:0 0 16px 16px;z-index:60;display:flex;align-items:center;justify-content:center;gap:14px">
+        <span style="width:8px;height:8px;border-radius:999px;background:#1c2b26"></span>
+        <span style="width:32px;height:5px;border-radius:999px;background:#141516"></span>
+      </div>
+
+      <div style="flex:none;height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 5px;font-size:14px;font-weight:700;color:var(--mecanu-neutral-900);z-index:50">
+        <span>{{ clock }}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="mecanu-icon" style="font-size:17px">{{ wifiIcon }}</span>
+          <span class="mecanu-icon" style="font-size:19px">battery_full</span>
+        </div>
+      </div>
+
+      <sc-if value="{{ mostrarBanner }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:none">
+          <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.ConnectionBanner" status="{{ sync }}" queued-count="{{ syncQueue }}" hint-size="100%,30px"></x-import>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ avisoCola }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:none;display:flex;align-items:center;gap:8px;background:#FDEBDD;padding:8px 16px">
+          <span class="mecanu-icon" style="flex:none;font-size:17px;color:#9C420B">cloud_upload</span>
+          <span style="font-size:12px;line-height:16px;font-weight:700;color:#9C420B">{{ avisoColaTexto }}</span>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ cargando }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ skeletons }}" as="s" hint-placeholder-count="6">
+            <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.Skeleton" height="{{ s.h }}" hint-size="100%,80px"></x-import>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ esLista }}" hint-placeholder-val="{{ true }}">
+        <div data-screen-label="Jornada" style="flex:none;height:44px;display:flex;align-items:center;gap:10px;padding:0 16px">
+          <button type="button" onClick="{{ irADisponibles }}" style="display:flex;align-items:baseline;gap:6px;border:none;background:none;padding:0;cursor:pointer;font:inherit;min-height:48px">
+            <span style="font-size:20px;line-height:1;font-weight:700;color:{{ kpiDispColor }}">{{ kpiDisponibles }}</span>
+            <span style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mecanu-neutral-700)">Disponibles</span>
+          </button>
+          <span style="flex:1"></span>
+          <button type="button" onClick="{{ goEmg }}" aria-label="Emergencias" style="flex:none;width:48px;height:48px;margin-right:-10px;border-radius:12px;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#A81823">
+            <span class="mecanu-icon" style="font-size:28px">sos</span>
+          </button>
+        </div>
+
+        <div class="mcnc-view mcnc-scroll" ref="{{ listaRef }}" style="flex:1;overflow-y:auto;padding:0 16px 26px">
+
+          <sc-if value="{{ hayActivo }}" hint-placeholder-val="{{ false }}">
+            <div data-tid="{{ act.tid }}" class="{{ act.flashCls }}" style="background:linear-gradient(135deg, var(--mecanu-neutral-700) 0%, #000000 50%, var(--mecanu-emerald-800) 100%);border-radius:12px;padding:10px 12px 11px;margin-bottom:8px;display:flex;align-items:stretch;gap:8px">
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="width:7px;height:7px;border-radius:999px;background:var(--mecanu-brand-primary-dark)"></span>
+                  <span style="min-width:0;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mecanu-brand-primary-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ act.ribbon }}</span>
+                  <span class="mecanu-icon is-filled" title="{{ act.segTitulo }}" aria-label="{{ act.segTitulo }}" style="flex:none;font-size:18px;color:{{ act.segColorDark }}">{{ act.segIcon }}</span>
+                </div>
+                <button type="button" onClick="{{ act.abrir }}" style="text-align:left;border:none;background:none;padding:2px 0;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:20px;line-height:25px;font-weight:700;color:var(--mecanu-neutral-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ act.matricula }} · {{ act.veh }}</span>
+                  <span style="display:flex;align-items:center;gap:7px;font-size:13px;line-height:18px;min-width:0">
+                    <span style="flex:none;font-weight:700;color:{{ act.ventanaColorDark }}">{{ act.ventana }}</span>
+                    <span style="flex:1;min-width:0;color:var(--mecanu-neutral-300);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ act.dir }}</span>
+                  </span>
+                </button>
+                <button type="button" class="mcnc-tap" onClick="{{ act.avanzar }}" style="flex:1;min-height:48px;border:none;border-radius:8px;background:var(--mecanu-brand-primary-dark);color:var(--mecanu-neutral-900);font:inherit;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 10px;margin-top:3px">
+                  <span class="mecanu-icon" style="font-size:20px">{{ act.accionIcon }}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ act.accionCorta }}</span>
+                </button>
+              </div>
+              <div style="flex:none;width:52px;display:flex;flex-direction:column;gap:8px">
+                <button type="button" class="mcnc-tap" onClick="{{ act.navegar }}" aria-label="Navegar con Google Maps" style="flex:1;min-height:48px;border:1px solid var(--mecanu-neutral-700);border-radius:8px;background:none;color:var(--mecanu-neutral-0);cursor:pointer;display:flex;align-items:center;justify-content:center">
+                  <span class="mecanu-icon" style="font-size:24px">navigation</span>
+                </button>
+                <button type="button" class="mcnc-tap" onClick="{{ act.llamar }}" aria-label="Llamar al cliente" style="flex:1;min-height:48px;border:1px solid var(--mecanu-neutral-700);border-radius:8px;background:none;color:var(--mecanu-neutral-0);cursor:pointer;display:flex;align-items:center;justify-content:center">
+                  <span class="mecanu-icon" style="font-size:24px">call</span>
+                </button>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <sc-for list="{{ filas }}" as="f" hint-placeholder-count="5">
+              <div>
+                <sc-if value="{{ f.esLabel }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);padding:6px 0 2px">{{ f.label }}</div>
+                </sc-if>
+                <sc-if value="{{ f.esCard }}" hint-placeholder-val="{{ true }}">
+                  <div data-tid="{{ f.tid }}" class="{{ f.flashCls }}" style="position:relative;background:{{ f.bg }};border:1px solid {{ f.borde }};border-radius:12px;overflow:hidden">
+                    <div style="position:relative;overflow:hidden">
+                    <div class="mcnc-slide" style="position:absolute;top:0;bottom:0;right:0;width:78px;transform:{{ f.slide }};background:var(--mecanu-brand-primary-dark)">
+                      <button type="button" onClick="{{ f.llamar }}" tabindex="{{ f.tabCall }}" aria-hidden="{{ f.ocultoCall }}" aria-label="Llamar al cliente" style="width:100%;height:100%;border:none;background:none;color:var(--mecanu-neutral-900);cursor:pointer;font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+                        <span class="mecanu-icon" style="font-size:23px">call</span>
+                        <span style="font-size:11px;font-weight:800;letter-spacing:.03em">Llamar</span>
+                      </button>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;gap:6px;padding:8px 4px 8px 10px" onPointerDown="{{ f.down }}" onPointerMove="{{ f.move }}" onPointerUp="{{ f.up }}" onPointerCancel="{{ f.up }}">
+                      <button type="button" onClick="{{ f.abrir }}" style="flex:1;min-width:0;text-align:left;border:none;background:none;padding:2px 0;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:4px">
+                        <span style="display:flex;align-items:center;gap:7px">
+                          <span style="flex:1;min-width:0;display:flex;align-items:center;gap:4px">
+                            <span style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mecanu-neutral-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.rol }}</span>
+                            <span class="mecanu-icon is-filled" title="{{ f.segTitulo }}" aria-label="{{ f.segTitulo }}" style="flex:none;font-size:18px;color:{{ f.segColor }}">{{ f.segIcon }}</span>
+                          </span>
+                          <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.Badge" kind="{{ f.estadoKind }}" hint-size="auto,20px">{{ f.estado }}</x-import>
+                        </span>
+                        <span style="display:flex;align-items:center;gap:7px;min-width:0">
+                          <span style="flex:1;min-width:0;font-size:15px;line-height:20px;font-weight:700;color:var(--mecanu-neutral-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.matricula }} · {{ f.veh }}</span>
+                        </span>
+                        <span style="display:flex;align-items:center;gap:6px;font-size:13px;line-height:18px;min-width:0">
+                          <span style="flex:none;font-weight:700;color:{{ f.ventanaColor }}">{{ f.ventana }}</span>
+                          <span style="flex:1;min-width:0;color:var(--mecanu-neutral-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.dir }}</span>
+                        </span>
+                      </button>
+                      <sc-if value="{{ f.hayRiesgo }}" hint-placeholder-val="{{ false }}">
+                        <button type="button" class="mcnc-tap" onClick="{{ f.alertar }}" aria-label="Vas atrasado · ver aviso" style="flex: none; width: 48px; height: 48px; margin-top: 2px; border: 1px solid #DDA57A; border-radius: 8px; background: #FDEBDD; color: #9C420B; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-right: 5px">
+                          <span class="mecanu-icon is-filled" style="font-size:22px">warning</span>
+                        </button>
+                      </sc-if>
+                      <sc-if value="{{ f.sinRiesgo }}" hint-placeholder-val="{{ true }}">
+                        <button type="button" class="mcnc-tap" onClick="{{ f.navegar }}" aria-label="Navegar con Google Maps" style="flex: none; width: 48px; height: 48px; margin-top: 2px; border: 1px solid var(--mecanu-border); border-radius: 8px; background: var(--mecanu-neutral-0); color: var(--mecanu-neutral-900); cursor: pointer; display: flex; align-items: center; justify-content: center; margin-right: 5px">
+                          <span class="mecanu-icon" style="font-size:22px">navigation</span>
+                        </button>
+                      </sc-if>
+                    </div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ jornadaVacia }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:26px 0">
+              <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.ErrorState" variant="empty" title="Sin traslados agendados" message="El taller no te ha asignado traslados con ventana horaria. Los que aún no tienen fecha no se muestran aquí." hint-size="100%,180px"></x-import>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ hayPool }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:18px 0 2px">
+              <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);padding-bottom:8px">Disponibles para tomar</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ pool }}" as="p" hint-placeholder-count="1">
+                  <div style="background:var(--mecanu-neutral-0);border:1px dashed var(--mecanu-border);border-radius:12px;padding:11px 12px">
+                    <div style="display:flex;align-items:flex-start;gap:8px">
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+                        <span style="display:flex;align-items:center;gap:4px">
+                          <span style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mecanu-neutral-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.rol }}</span>
+                          <span class="mecanu-icon is-filled" title="{{ p.segTitulo }}" aria-label="{{ p.segTitulo }}" style="flex:none;font-size:18px;color:{{ p.segColor }}">{{ p.segIcon }}</span>
+                        </span>
+                        <span style="font-size:15px;line-height:20px;font-weight:700;color:var(--mecanu-neutral-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.matricula }} · {{ p.veh }}</span>
+                        <span style="font-size:13px;line-height:17px">
+                          <span style="font-weight:700;color:{{ p.ventanaColor }}">{{ p.ventana }}</span>
+                          <span style="color:var(--mecanu-neutral-700)"> {{ p.dir }}</span>
+                        </span>
+                      </div>
+                      <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.Button" kind="primary" on-click="{{ p.tomar }}" hint-size="auto,48px">Tomar</x-import>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;flex-direction:column;gap:2px;padding-top:16px">
+            <sc-if value="{{ hayHechos }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <button type="button" onClick="{{ toggleHechos }}" style="width:100%;display:flex;align-items:center;gap:8px;border:none;background:none;padding:12px 0;cursor:pointer;font:inherit;border-top:1px solid var(--mecanu-border-subtle)">
+                  <span class="mecanu-icon is-filled" style="font-size:18px;color:#1E7300">check_circle</span>
+                  <span style="flex:1;text-align:left;font-size:13px;font-weight:700;color:var(--mecanu-neutral-900)">{{ hechosLbl }}</span>
+                  <span class="mecanu-icon" style="font-size:20px;color:var(--mecanu-neutral-700)">{{ hechosChevron }}</span>
+                </button>
+                <sc-if value="{{ verHechos }}" hint-placeholder-val="{{ false }}">
+                  <div class="mcnc-fade" style="display:flex;flex-direction:column;gap:6px;padding-bottom:10px">
+                    <sc-for list="{{ hechos }}" as="h" hint-placeholder-count="2">
+                      <button type="button" onClick="{{ h.abrir }}" style="width:100%;min-height:48px;text-align:left;display:flex;align-items:center;gap:8px;background:var(--mecanu-neutral-25);border:none;border-radius:10px;padding:9px 11px;cursor:pointer;font:inherit">
+                        <span style="flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--mecanu-neutral-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ h.matricula }} · {{ h.veh }}</span>
+                        <span style="flex:none;font-size:12px;color:var(--mecanu-neutral-700)">{{ h.ventana }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ haySinFecha }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <button type="button" onClick="{{ toggleSinFecha }}" style="width:100%;display:flex;align-items:center;gap:8px;border:none;background:none;padding:12px 0;cursor:pointer;font:inherit;border-top:1px solid var(--mecanu-border-subtle)">
+                  <span class="mecanu-icon" style="font-size:18px;color:#9C420B">event_busy</span>
+                  <span style="flex:1;text-align:left;font-size:13px;font-weight:700;color:var(--mecanu-neutral-900)">{{ sinFechaLbl }}</span>
+                  <span class="mecanu-icon" style="font-size:20px;color:var(--mecanu-neutral-700)">{{ sinFechaChevron }}</span>
+                </button>
+                <sc-if value="{{ verSinFecha }}" hint-placeholder-val="{{ false }}">
+                  <div class="mcnc-fade" style="display:flex;flex-direction:column;gap:6px;padding-bottom:10px">
+                    <sc-for list="{{ sinFecha }}" as="s" hint-placeholder-count="1">
+                      <button type="button" onClick="{{ s.abrir }}" style="width:100%;min-height:48px;text-align:left;display:flex;align-items:center;gap:8px;background:var(--mecanu-neutral-25);border:none;border-radius:10px;padding:9px 11px;cursor:pointer;font:inherit">
+                        <span style="flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--mecanu-neutral-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.matricula }} · {{ s.veh }}</span>
+                        <span style="flex:none;font-size:12px;color:#9C420B;font-weight:700">Pendiente de agendar</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ esDetalle }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Traslado" class="mcnc-view mcnc-scroll" style="flex:1;overflow-y:auto;padding:0 16px 20px">
+          <div style="display:flex;align-items:center;gap:4px;padding:2px 0 12px">
+            <button type="button" onClick="{{ volver }}" aria-label="Volver" style="flex:none;width:48px;height:48px;margin-left:-13px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mecanu-neutral-900)"><span class="mecanu-icon" style="font-size:25px">arrow_back</span></button>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mecanu-neutral-700)">{{ dt.rol }}</div>
+              <div style="font-size:18px;line-height:23px;font-weight:700;color:var(--mecanu-neutral-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ dt.matricula }} · {{ dt.veh }}</div>
+            </div>
+            <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.Badge" kind="{{ dt.estadoKind }}" hint-size="auto,20px">{{ dt.estado }}</x-import>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:9px;background:{{ dt.segBg }};border-radius:12px;padding:10px 12px;margin-bottom:10px">
+            <span class="mecanu-icon is-filled" style="flex:none;font-size:20px;color:{{ dt.segColor }}">{{ dt.segIcon }}</span>
+            <div style="font-size:13px;line-height:18px;color:var(--mecanu-neutral-900)">{{ dt.segTexto }}</div>
+          </div>
+
+          <sc-if value="{{ dt.bloqueoRojo }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#FCE0E2;border-radius:12px;padding:11px 12px;margin-bottom:10px">
+              <div style="display:flex;align-items:flex-start;gap:9px">
+                <span class="mecanu-icon is-filled" style="flex:none;font-size:20px;color:#A81823">error</span>
+                <div style="font-size:13px;line-height:18px;font-weight:700;color:#A81823">{{ dt.rojoTexto }}</div>
+              </div>
+              <div style="font-size:12px;line-height:17px;color:#7E1218;margin-top:6px">{{ dt.rojoEstado }}</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ dt.congelado }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:flex-start;gap:9px;background:#FCE0E2;border-radius:12px;padding:11px 12px;margin-bottom:10px">
+              <span class="mecanu-icon is-filled" style="flex:none;font-size:20px;color:#A81823">ac_unit</span>
+              <div style="font-size:13px;line-height:18px;font-weight:700;color:#A81823">Viaje congelado por siniestro. No avances hasta que Mecanu te dé instrucciones.</div>
+            </div>
+          </sc-if>
+
+          <div style="border:1px solid var(--mecanu-border);border-radius:12px;padding:13px 12px;margin-bottom:10px">
+            <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.StatusTimeline" steps="{{ dt.steps }}" current="{{ dt.current }}" hint-size="100%,52px"></x-import>
+          </div>
+
+          <div style="background:var(--mecanu-neutral-25);border-radius:12px;padding:12px;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mecanu-neutral-700);margin-bottom:4px">Ventana con el cliente</div>
+                <sc-if value="{{ dt.hayVentana }}" hint-placeholder-val="{{ true }}">
+                  <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.TimeWindow" start="{{ dt.vIni }}" end="{{ dt.vFin }}" date="{{ dt.vDia }}" size="large" hint-size="auto,26px"></x-import>
+                </sc-if>
+                <sc-if value="{{ dt.sinVentana }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:16px;font-weight:700;color:#9C420B">Pendiente de agendar</div>
+                </sc-if>
+              </div>
+              <button type="button" class="mcnc-tap" onClick="{{ dt.pedirReagenda }}" style="flex:none;min-height:48px;display:flex;align-items:center;gap:6px;border:1px solid var(--mecanu-border);border-radius:8px;background:var(--mecanu-neutral-0);color:var(--mecanu-neutral-900);font:inherit;font-size:13px;font-weight:700;padding:0 12px;cursor:pointer"><span class="mecanu-icon" style="font-size:19px">event_repeat</span>Reagendar</button>
+            </div>
+            <sc-if value="{{ dt.hayRiesgo }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:flex-start;gap:8px;border-top:1px solid var(--mecanu-border);margin-top:10px;padding-top:10px">
+                <span class="mecanu-icon" style="flex:none;font-size:18px;color:#9C420B">warning</span>
+                <div style="font-size:12px;line-height:17px;font-weight:600;color:#9C420B">{{ dt.riesgoTexto }}</div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ dt.haySolicitud }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:flex-start;gap:8px;border-top:1px solid var(--mecanu-border);margin-top:10px;padding-top:10px">
+                <span class="mecanu-icon" style="flex:none;font-size:18px;color:var(--mecanu-info)">hourglass_top</span>
+                <div style="font-size:12px;line-height:17px;color:var(--mecanu-neutral-700)">{{ dt.solicitudTexto }}</div>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="display:flex;gap:11px;padding:2px 2px 12px">
+            <div style="flex:none;display:flex;flex-direction:column;align-items:center;padding-top:3px">
+              <span class="mecanu-icon" style="font-size:19px;color:{{ dt.oColor }}">{{ dt.oIcon }}</span>
+              <span style="width:2px;flex:1;min-height:22px;background:var(--mecanu-border);margin:4px 0"></span>
+              <span class="mecanu-icon" style="font-size:19px;color:{{ dt.dColor }}">{{ dt.dIcon }}</span>
+            </div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px">
+              <div>
+                <div style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mecanu-neutral-700)">Recoger · {{ dt.oEtiqueta }}</div>
+                <div style="font-size:14px;line-height:19px;font-weight:600;color:var(--mecanu-neutral-900);margin-top:2px">{{ dt.oDireccion }}</div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mecanu-neutral-700)">Entregar · {{ dt.dEtiqueta }}</div>
+                <div style="font-size:14px;line-height:19px;font-weight:600;color:var(--mecanu-neutral-900);margin-top:2px">{{ dt.dDireccion }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <button type="button" class="mcnc-tap" onClick="{{ dt.navegar }}" style="flex:1;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:8px;background:var(--mecanu-neutral-900);color:var(--mecanu-neutral-0);font:inherit;font-size:14px;font-weight:700;cursor:pointer"><span class="mecanu-icon" style="font-size:20px">navigation</span>{{ dt.navLabel }}</button>
+            <button type="button" class="mcnc-tap" onClick="{{ dt.llamar }}" aria-label="Llamar al cliente" style="flex:none;width:56px;min-height:48px;border:none;border-radius:8px;background:var(--mecanu-brand-primary-dark);color:var(--mecanu-neutral-900);display:flex;align-items:center;justify-content:center;cursor:pointer"><span class="mecanu-icon" style="font-size:22px">call</span></button>
+          </div>
+
+          <div style="border:1px solid var(--mecanu-border);border-radius:12px;padding:12px;margin-bottom:10px">
+            <div style="font-size:14px;font-weight:700;color:var(--mecanu-neutral-900)">{{ dt.cliente }}</div>
+            <div style="font-size:12px;color:var(--mecanu-neutral-700);margin-top:1px">{{ dt.telefono }}</div>
+            <div style="border-top:1px solid var(--mecanu-border-subtle);margin-top:10px;padding-top:10px;font-size:13px;line-height:18px;color:var(--mecanu-neutral-700)">{{ dt.servicio }}</div>
+          </div>
+
+          <sc-if value="{{ dt.hayCheckin }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid var(--mecanu-border);border-radius:12px;padding:11px 12px;margin-bottom:10px;display:flex;align-items:flex-start;gap:9px">
+              <span class="mecanu-icon is-filled" style="flex:none;font-size:20px;color:#1E7300">verified</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:700;color:var(--mecanu-neutral-900)">{{ dt.checkinLbl }}</div>
+                <div style="font-size:12px;line-height:17px;color:var(--mecanu-neutral-700);margin-top:1px">{{ dt.checkinMeta }}</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <button type="button" onClick="{{ toggleHistorial }}" style="width:100%;min-height:48px;display:flex;align-items:center;gap:8px;border:none;background:none;padding:11px 0;cursor:pointer;font:inherit;border-top:1px solid var(--mecanu-border-subtle)">
+            <span class="mecanu-icon" style="font-size:18px;color:var(--mecanu-neutral-700)">history</span>
+            <span style="flex:1;text-align:left;font-size:13px;font-weight:700;color:var(--mecanu-neutral-900)">{{ dt.historialLbl }}</span>
+            <span class="mecanu-icon" style="font-size:20px;color:var(--mecanu-neutral-700)">{{ historialChevron }}</span>
+          </button>
+          <sc-if value="{{ verHistorial }}" hint-placeholder-val="{{ false }}">
+            <div class="mcnc-fade" style="display:flex;flex-direction:column;gap:9px;padding:2px 0 12px">
+              <sc-for list="{{ dt.historial }}" as="l" hint-placeholder-count="3">
+                <div style="display:flex;gap:9px">
+                  <span class="mecanu-icon" style="flex:none;font-size:16px;color:{{ l.color }};padding-top:1px">{{ l.icono }}</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:12px;line-height:17px;color:var(--mecanu-neutral-900)">{{ l.texto }}</div>
+                    <div style="font-size:11px;color:var(--mecanu-neutral-700)">{{ l.meta }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px">
+            <button type="button" class="mcnc-tap" onClick="{{ dt.abrirMenuSol }}" style="width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--mecanu-border);border-radius:12px;background:none;color:var(--mecanu-neutral-900);font:inherit;font-size:13px;font-weight:700;padding:12px;cursor:pointer"><span class="mecanu-icon" style="font-size:20px">forward_to_inbox</span>Solicitar al taller</button>
+            <button type="button" class="mcnc-tap" onClick="{{ goEmg }}" style="width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--mecanu-border);border-radius:12px;background:none;color:#A81823;font:inherit;font-size:13px;font-weight:700;padding:12px;cursor:pointer"><span class="mecanu-icon" style="font-size:20px">sos</span>Reportar incidencia o siniestro</button>
+          </div>
+
+          <div style="padding-top:14px;font-size:11px;color:var(--mecanu-neutral-300);text-align:center">{{ dt.soporte }}</div>
+        </div>
+
+        <sc-if value="{{ dt.sinAgenda }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:none;display:flex;align-items:flex-start;gap:9px;background:#FDEBDD;padding:12px 16px 14px">
+            <span class="mecanu-icon" style="flex:none;font-size:19px;color:#9C420B">event_busy</span>
+            <div style="font-size:13px;line-height:18px;font-weight:600;color:#9C420B">El taller aún no ha acordado la ventana con el cliente. No lo inicies: no hay hora comprometida.</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ dt.hayAccion }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:none">
+            <sc-if value="{{ dt.bloqueado }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:8px 16px 0;font-size:13px;line-height:18px;color:var(--mecanu-neutral-700)">{{ dt.bloqueoTexto }}</div>
+            </sc-if>
+            <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.OversizedButton" anchored="{{ si }}" kind="primary" icon="{{ dt.accionIcon }}" disabled="{{ dt.bloqueado }}" on-click="{{ dt.avanzar }}" hint-size="100%,56px">{{ dt.accionLabel }}</x-import>
+          </div>
+        </sc-if>
+        <sc-if value="{{ dt.completado }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:none;display:flex;align-items:center;justify-content:center;gap:8px;background:#E4FBDA;color:#1E7300;padding:17px;font-size:15px;font-weight:700">
+            <span class="mecanu-icon is-filled" style="font-size:21px">check_circle</span>Traslado completado
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ esEmergencias }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Emergencias" class="mcnc-view mcnc-scroll" style="flex:1;overflow-y:auto;padding:0 16px 26px">
+          <div style="display:flex;align-items:center;gap:4px;padding:2px 0 10px">
+            <button type="button" onClick="{{ volver }}" aria-label="Volver" style="flex:none;width:48px;height:48px;margin-left:-13px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mecanu-neutral-900)"><span class="mecanu-icon" style="font-size:25px">arrow_back</span></button>
+            <div style="font-size:18px;font-weight:700;color:var(--mecanu-neutral-900)">Emergencias</div>
+          </div>
+
+          <div style="background:var(--mecanu-neutral-900);border-radius:12px;padding:14px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:700;color:var(--mecanu-neutral-0)">Central de Mecanu · 24 h</div>
+              <div style="font-size:12px;line-height:17px;color:var(--mecanu-neutral-200);margin-top:2px">Asistencia en carretera y parte del seguro</div>
+            </div>
+            <button type="button" class="mcnc-tap" onClick="{{ llamarMecanu }}" aria-label="Llamar a Mecanu" style="flex:none;width:56px;height:56px;border-radius:999px;border:none;background:var(--mecanu-alert);color:var(--mecanu-neutral-0);display:flex;align-items:center;justify-content:center;cursor:pointer"><span class="mecanu-icon" style="font-size:24px">call</span></button>
+          </div>
+
+          <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);margin-bottom:10px">Con el vehículo a tu cargo</div>
+          <sc-if value="{{ hayEmgJobs }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <sc-for list="{{ emgJobs }}" as="job" hint-placeholder-count="1">
+                <div style="border:1px solid var(--mecanu-border);border-radius:12px;padding:12px">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:15px;font-weight:700;color:var(--mecanu-neutral-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ job.matricula }} · {{ job.veh }}</div>
+                      <div style="font-size:12px;color:var(--mecanu-neutral-700);margin-top:1px">{{ job.rol }}</div>
+                    </div>
+                    <span class="mecanu-icon is-filled" title="{{ job.segTitulo }}" aria-label="{{ job.segTitulo }}" style="flex:none;font-size:19px;color:{{ job.segColor }}">{{ job.segIcon }}</span>
+                  </div>
+                  <sc-if value="{{ job.puedeReportar }}" hint-placeholder-val="{{ true }}">
+                    <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.IncidentButton" label="Mantén pulsado para reportar" on-activate="{{ job.reportar }}" hint-size="100%,56px"></x-import>
+                  </sc-if>
+                  <sc-if value="{{ job.congelado }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;align-items:center;gap:8px;background:#FCE0E2;border-radius:8px;padding:10px;font-size:13px;line-height:18px;font-weight:700;color:#A81823">
+                      <span class="mecanu-icon is-filled" style="flex:none;font-size:19px">ac_unit</span>Siniestro reportado · {{ job.cuando }}
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ sinEmgJobs }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px dashed var(--mecanu-border);border-radius:12px;padding:20px 14px;font-size:13px;line-height:19px;color:var(--mecanu-neutral-700);text-align:center">Ahora mismo no tienes ningún vehículo a tu cargo. El botón de siniestro aparece cuando inicias un viaje.</div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;z-index:80;background:rgba(22,23,24,.5);display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ cerrarSheet }}">
+          <div class="mcnc-gate mcnc-scroll" onClick="{{ stop }}" style="background:var(--mecanu-neutral-0);border-radius:16px 16px 0 0;padding:8px 16px 22px;max-height:78%;overflow-y:auto;box-shadow:var(--mecanu-shadow-deep)">
+            <div style="width:38px;height:4px;border-radius:999px;background:var(--mecanu-neutral-200);margin:0 auto 14px"></div>
+            <div style="font-size:17px;font-weight:700;color:var(--mecanu-neutral-900)">{{ sh.titulo }}</div>
+            <div style="font-size:13px;line-height:18px;color:var(--mecanu-neutral-700);margin-top:5px">{{ sh.sub }}</div>
+            <sc-if value="{{ sh.esAtraso }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:14px">
+                <textarea value="{{ sh.atrasoNota }}" onChange="{{ sh.setAtrasoNota }}" placeholder="Opcional: p. ej. &quot;hablé con el cliente y puede recibirlo&quot;" aria-label="Comentario para el taller" style="width:100%;min-height:64px;border:1px solid var(--mecanu-border);border-radius:8px;padding:10px 12px;font:inherit;font-size:13px;line-height:18px;color:var(--mecanu-neutral-900);background:var(--mecanu-neutral-0);box-sizing:border-box;resize:none"></textarea>
+                <button type="button" class="mcnc-tap" onClick="{{ sh.confirmar }}" style="width:100%;min-height:52px;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:9px;background:var(--mecanu-brand-primary-dark);color:var(--mecanu-neutral-900);font:inherit;font-size:14px;font-weight:700;cursor:pointer"><span class="mecanu-icon" style="font-size:20px">check_circle</span>Confirmo que llegaré a la hora</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:9px;margin:16px 0 2px">
+                <span style="flex:1;height:1px;background:var(--mecanu-border-subtle)"></span>
+                <span style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mecanu-neutral-700)">O pide reagendar</span>
+                <span style="flex:1;height:1px;background:var(--mecanu-border-subtle)"></span>
+              </div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+              <sc-for list="{{ sh.opciones }}" as="o" hint-placeholder-count="4">
+                <button type="button" class="mcnc-tap" onClick="{{ o.onClick }}" style="width:100%;min-height:56px;display:flex;align-items:center;gap:11px;border:1px solid var(--mecanu-border);border-radius:10px;background:var(--mecanu-neutral-0);padding:12px 13px;cursor:pointer;font:inherit;text-align:left">
+                  <span class="mecanu-icon" style="flex:none;font-size:21px;color:{{ o.color }}">{{ o.icono }}</span>
+                  <span style="flex:1;min-width:0;font-size:14px;font-weight:700;color:var(--mecanu-neutral-900)">{{ o.label }}</span>
+                  <span class="mecanu-icon" style="flex:none;font-size:20px;color:var(--mecanu-neutral-300)">chevron_right</span>
+                </button>
+              </sc-for>
+            </div>
+            <button type="button" onClick="{{ cerrarSheet }}" style="width:100%;min-height:48px;margin-top:12px;border:none;background:none;cursor:pointer;font:inherit;font-size:14px;font-weight:700;color:var(--mecanu-neutral-700)">Cancelar</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hayDialogo }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;z-index:85;background:rgba(22,23,24,.55);display:flex;align-items:center;justify-content:center;padding:24px">
+          <div class="mcnc-fade" style="width:100%;background:var(--mecanu-neutral-0);border-radius:14px;padding:18px;box-shadow:var(--mecanu-shadow-deep)">
+            <div style="font-size:17px;font-weight:700;color:var(--mecanu-neutral-900)">{{ dlg.titulo }}</div>
+            <div style="font-size:13px;line-height:19px;color:var(--mecanu-neutral-700);margin-top:7px">{{ dlg.texto }}</div>
+            <div style="display:flex;gap:8px;margin-top:16px">
+              <button type="button" onClick="{{ dlgCancelar }}" style="flex:1;min-height:48px;border:1px solid var(--mecanu-border);border-radius:8px;background:var(--mecanu-neutral-0);color:var(--mecanu-neutral-900);font:inherit;font-size:14px;font-weight:700;cursor:pointer">Cancelar</button>
+              <button type="button" onClick="{{ dlgConfirmar }}" style="flex:1;min-height:48px;border:none;border-radius:8px;background:var(--mecanu-neutral-900);color:var(--mecanu-neutral-0);font:inherit;font-size:14px;font-weight:700;cursor:pointer">{{ dlg.boton }}</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ wizOpen }}" hint-placeholder-val="{{ false }}">
+        <div class="mcnc-gate" style="position:absolute;inset:0;z-index:70;background:var(--mecanu-neutral-0);display:flex;flex-direction:column">
+          <div style="flex:none;display:flex;align-items:center;gap:6px;padding:46px 14px 10px;border-bottom:1px solid var(--mecanu-border-subtle)">
+            <button type="button" onClick="{{ wz.salir }}" aria-label="Salir del check-in" style="flex:none;width:48px;height:48px;margin-left:-10px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mecanu-neutral-900)"><span class="mecanu-icon" style="font-size:25px">{{ wz.salirIcon }}</span></button>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mecanu-neutral-700)">{{ wz.paso }}</div>
+              <div style="font-size:16px;line-height:21px;font-weight:700;color:var(--mecanu-neutral-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ wz.matricula }} · {{ wz.veh }}</div>
+            </div>
+            <div style="flex:none;display:flex;gap:4px">
+              <span style="width:20px;height:4px;border-radius:999px;background:var(--mecanu-neutral-900)"></span>
+              <span style="width:20px;height:4px;border-radius:999px;background:{{ wz.dot2 }}"></span>
+            </div>
+          </div>
+
+          <div class="mcnc-scroll" style="flex:1;overflow-y:auto;padding:14px 16px 18px">
+            <sc-if value="{{ wz.p1 }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:18px">
+                <div>
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);margin-bottom:8px">{{ wz.fotosLbl }}</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <sc-for list="{{ wz.slots }}" as="s" hint-placeholder-count="4">
+                      <button type="button" onClick="{{ s.abrir }}" style="position:relative;height:104px;border:1px {{ s.borde }};border-radius:10px;background:{{ s.bg }};cursor:pointer;font:inherit;padding:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px">
+                        <sc-if value="{{ s.hecha }}" hint-placeholder-val="{{ false }}">
+                          <span role="img" aria-label="{{ s.label }}" style="position:absolute;inset:0;background-image:{{ s.img }};background-size:cover;background-position:center"></span>
+                        </sc-if>
+                        <sc-if value="{{ s.hecha }}" hint-placeholder-val="{{ false }}">
+                          <span style="position:absolute;left:0;right:0;bottom:0;background:rgba(22,23,24,.72);color:var(--mecanu-neutral-0);font-size:10px;line-height:13px;font-weight:700;padding:4px 6px;text-align:left">{{ s.label }} · sellada</span>
+                        </sc-if>
+                        <sc-if value="{{ s.vacia }}" hint-placeholder-val="{{ true }}">
+                          <span class="mecanu-icon" style="font-size:26px;color:var(--mecanu-neutral-700)">photo_camera</span>
+                        </sc-if>
+                        <sc-if value="{{ s.vacia }}" hint-placeholder-val="{{ true }}">
+                          <span style="font-size:12px;font-weight:700;color:var(--mecanu-neutral-700)">{{ s.label }}</span>
+                        </sc-if>
+                      </button>
+                    </sc-for>
+                  </div>
+                  <button type="button" onClick="{{ wz.addExtra }}" style="width:100%;min-height:48px;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px dashed var(--mecanu-border);border-radius:10px;background:none;cursor:pointer;font:inherit;font-size:13px;font-weight:700;color:var(--mecanu-neutral-700)"><span class="mecanu-icon" style="font-size:19px">add_a_photo</span>{{ wz.extrasLbl }}</button>
+                </div>
+
+                <div>
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);margin-bottom:8px">Vídeo obligatorio</div>
+                  <button type="button" onClick="{{ wz.grabarVideo }}" style="width:100%;min-height:60px;display:flex;align-items:center;gap:11px;border:1px {{ wz.videoBorde }};border-radius:10px;background:{{ wz.videoBg }};padding:11px 12px;cursor:pointer;font:inherit;text-align:left">
+                    <span class="mecanu-icon is-filled" style="flex:none;font-size:24px;color:{{ wz.videoColor }}">{{ wz.videoIcon }}</span>
+                    <span style="flex:1;min-width:0;font-size:14px;font-weight:700;color:var(--mecanu-neutral-900)">{{ wz.videoLbl }}</span>
+                  </button>
+                </div>
+
+                <div>
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);margin-bottom:8px">Kilometraje</div>
+                  <input type="tel" inputmode="numeric" value="{{ wz.km }}" onChange="{{ wz.setKm }}" aria-label="Kilometraje" style="width:100%;min-height:56px;border:1px solid {{ wz.kmBorde }};border-radius:4px;padding:0 13px;font:inherit;font-size:22px;font-weight:700;color:var(--mecanu-neutral-900);background:var(--mecanu-neutral-0);box-sizing:border-box">
+                  <div style="font-size:12px;line-height:17px;color:{{ wz.kmNotaColor }};margin-top:6px">{{ wz.kmNota }}</div>
+                </div>
+
+                <div>
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);margin-bottom:8px">Nivel de combustible</div>
+                  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+                    <sc-for list="{{ wz.combustibles }}" as="c" hint-placeholder-count="4">
+                      <button type="button" onClick="{{ c.elegir }}" style="min-height:52px;border:1px solid {{ c.borde }};border-radius:9px;background:{{ c.bg }};color:{{ c.color }};font:inherit;font-size:14px;font-weight:700;cursor:pointer">{{ c.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);margin-bottom:4px">Testigos encendidos</div>
+                  <div style="font-size:12px;line-height:17px;color:var(--mecanu-neutral-700);margin-bottom:9px">Toca los que veas iluminados en el cuadro. Si no hay ninguno, no toques nada.</div>
+                  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+                    <sc-for list="{{ wz.testigos }}" as="t" hint-placeholder-count="8">
+                      <button type="button" onClick="{{ t.toggle }}" aria-label="{{ t.label }}" style="min-height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid {{ t.borde }};border-radius:10px;background:{{ t.bg }};cursor:pointer;font:inherit;padding:6px 2px">
+                        <span class="mecanu-icon is-filled" style="font-size:24px;color:{{ t.color }}">{{ t.icono }}</span>
+                        <span style="font-size:10px;line-height:12px;font-weight:800;text-align:center;color:{{ t.txtColor }}">{{ t.corto }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ wz.p2 }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="font-size:13px;line-height:18px;color:var(--mecanu-neutral-700)">No preguntamos cuánto le queda a una pieza, sino hasta cuándo aguanta. Solo lo que se ve desde fuera o desde el asiento.</div>
+
+                <sc-for list="{{ wz.items }}" as="it" hint-placeholder-count="6">
+                  <div style="border:1px solid {{ it.borde }};border-radius:12px;overflow:hidden">
+                    <button type="button" onClick="{{ it.toggle }}" style="width:100%;min-height:56px;display:flex;align-items:center;gap:10px;border:none;background:{{ it.headBg }};padding:9px 11px;cursor:pointer;font:inherit;text-align:left">
+                      <span class="mecanu-icon" style="flex:none;font-size:21px;color:{{ it.iconColor }}">{{ it.icono }}</span>
+                      <span style="flex:1;min-width:0">
+                        <span style="display:block;font-size:14px;font-weight:700;color:var(--mecanu-neutral-900)">{{ it.label }}</span>
+                        <span style="display:block;font-size:12px;line-height:16px;font-weight:700;color:{{ it.estadoColor }};margin-top:1px">{{ it.estadoTexto }}</span>
+                      </span>
+                      <span class="mecanu-icon" style="flex:none;font-size:20px;color:var(--mecanu-neutral-300)">{{ it.chevron }}</span>
+                    </button>
+                    <sc-if value="{{ it.abierto }}" hint-placeholder-val="{{ false }}">
+                      <div class="mcnc-fade" style="display:flex;flex-direction:column;gap:6px;padding:2px 9px 9px">
+                        <sc-for list="{{ it.opciones }}" as="o" hint-placeholder-count="4">
+                          <button type="button" onClick="{{ o.elegir }}" style="width:100%;min-height:52px;display:flex;align-items:center;gap:10px;border:1px solid {{ o.borde }};border-radius:9px;background:{{ o.bg }};padding:7px 10px;cursor:pointer;font:inherit;text-align:left">
+                            <span style="flex:none;width:26px;height:26px;border-radius:999px;background:{{ o.pastilla }};color:{{ o.numColor }};font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ o.n }}</span>
+                            <span style="flex:1;min-width:0">
+                              <span style="display:block;font-size:13px;line-height:17px;font-weight:700;color:var(--mecanu-neutral-900)">{{ o.copy }}</span>
+                              <span style="display:block;font-size:10px;line-height:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:{{ o.titColor }}">{{ o.titulo }}</span>
+                            </span>
+                            <sc-if value="{{ o.elegido }}" hint-placeholder-val="{{ false }}">
+                              <span class="mecanu-icon is-filled" style="flex:none;font-size:20px;color:{{ o.titColor }}">check_circle</span>
+                            </sc-if>
+                          </button>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+
+                <div style="border:1px solid {{ wz.ruedasBorde }};border-radius:12px;padding:11px">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span class="mecanu-icon" style="flex:none;font-size:21px;color:{{ wz.ruedasIconColor }}">tire_repair</span>
+                    <span style="flex:1;min-width:0">
+                      <span style="display:block;font-size:14px;font-weight:700;color:var(--mecanu-neutral-900)">Neumáticos</span>
+                      <span style="display:block;font-size:12px;line-height:16px;font-weight:700;color:{{ wz.ruedasEstadoColor }};margin-top:1px">{{ wz.ruedasEstado }}</span>
+                    </span>
+                  </div>
+                  <div style="position:relative;width:178px;height:196px;margin:12px auto 2px">
+                    <div style="position:absolute;top:14px;bottom:14px;left:38px;right:38px;border:2px solid var(--mecanu-neutral-200);border-radius:30px 30px 22px 22px;background:var(--mecanu-neutral-25)"></div>
+                    <div style="position:absolute;top:52px;left:52px;right:52px;height:38px;border-radius:10px;background:var(--mecanu-neutral-0);border:1px solid var(--mecanu-border)"></div>
+                    <sc-for list="{{ wz.ruedas }}" as="r" hint-placeholder-count="4">
+                      <button type="button" onClick="{{ r.abrir }}" aria-label="{{ r.label }}" style="position:absolute;top:{{ r.top }};{{ r.lado }}:0;width:50px;height:64px;border:2px solid {{ r.borde }};border-radius:10px;background:{{ r.bg }};cursor:pointer;font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
+                        <span style="font-size:17px;font-weight:800;color:{{ r.color }}">{{ r.n }}</span>
+                        <span style="font-size:9px;line-height:11px;font-weight:800;color:{{ r.color }}">{{ r.corto }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                  <sc-if value="{{ wz.ruedaAbierta }}" hint-placeholder-val="{{ false }}">
+                    <div class="mcnc-fade" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;border-top:1px solid var(--mecanu-border-subtle);padding-top:10px">
+                      <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700)">{{ wz.ruedaLabel }}</div>
+                      <sc-for list="{{ wz.ruedaOpciones }}" as="o" hint-placeholder-count="4">
+                        <button type="button" onClick="{{ o.elegir }}" style="width:100%;min-height:52px;display:flex;align-items:center;gap:10px;border:1px solid {{ o.borde }};border-radius:9px;background:{{ o.bg }};padding:7px 10px;cursor:pointer;font:inherit;text-align:left">
+                          <span style="flex:none;width:26px;height:26px;border-radius:999px;background:{{ o.pastilla }};color:{{ o.numColor }};font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ o.n }}</span>
+                          <span style="flex:1;min-width:0">
+                            <span style="display:block;font-size:13px;line-height:17px;font-weight:700;color:var(--mecanu-neutral-900)">{{ o.copy }}</span>
+                            <span style="display:block;font-size:10px;line-height:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:{{ o.titColor }}">{{ o.titulo }}</span>
+                          </span>
+                          <sc-if value="{{ o.elegido }}" hint-placeholder-val="{{ false }}">
+                            <span class="mecanu-icon is-filled" style="flex:none;font-size:20px;color:{{ o.titColor }}">check_circle</span>
+                          </sc-if>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+
+                <div style="border:1px solid var(--mecanu-border);border-radius:12px;padding:11px">
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);margin-bottom:8px">Fecha de ITV</div>
+                  <input type="month" value="{{ wz.itv }}" onChange="{{ wz.setItv }}" disabled="{{ wz.itvSinDato }}" aria-label="Fecha de ITV" style="width:100%;min-height:52px;border:1px solid var(--mecanu-border);border-radius:4px;padding:0 12px;font:inherit;font-size:16px;font-weight:700;color:var(--mecanu-neutral-900);background:var(--mecanu-neutral-0);box-sizing:border-box">
+                  <sc-if value="{{ wz.itvHay }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;align-items:center;gap:7px;margin-top:8px">
+                      <span class="mecanu-icon is-filled" style="font-size:18px;color:{{ wz.itvColor }}">{{ wz.itvIcon }}</span>
+                      <span style="font-size:13px;font-weight:700;color:{{ wz.itvColor }}">{{ wz.itvTexto }}</span>
+                    </div>
+                  </sc-if>
+                  <button type="button" onClick="{{ wz.toggleItvSinDato }}" style="width:100%;min-height:48px;margin-top:6px;display:flex;align-items:center;gap:9px;border:none;background:none;padding:0;cursor:pointer;font:inherit;text-align:left">
+                    <span class="mecanu-icon" style="flex:none;font-size:21px;color:{{ wz.itvSinDatoColor }}">{{ wz.itvSinDatoIcon }}</span>
+                    <span style="font-size:13px;font-weight:700;color:var(--mecanu-neutral-900)">No veo la pegatina en el parabrisas</span>
+                  </button>
+                </div>
+
+                <div style="border:1px solid var(--mecanu-border);border-radius:12px;padding:11px">
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);margin-bottom:8px">Contexto · opcional</div>
+                  <textarea value="{{ wz.nota }}" onChange="{{ wz.setNota }}" placeholder="Lo que te haya contado el cliente" aria-label="Nota de texto" style="width:100%;min-height:76px;border:1px solid var(--mecanu-border);border-radius:4px;padding:10px 12px;font:inherit;font-size:14px;line-height:19px;color:var(--mecanu-neutral-900);background:var(--mecanu-neutral-0);box-sizing:border-box;resize:none"></textarea>
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+                    <sc-if value="{{ wz.vozIdle }}" hint-placeholder-val="{{ true }}">
+                      <button type="button" onClick="{{ wz.vozGrabar }}" style="flex:1;min-height:52px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--mecanu-border);border-radius:9px;background:var(--mecanu-neutral-0);cursor:pointer;font:inherit;font-size:14px;font-weight:700;color:var(--mecanu-neutral-900)"><span class="mecanu-icon" style="font-size:21px">mic</span>Grabar nota de voz</button>
+                    </sc-if>
+                    <sc-if value="{{ wz.vozGrabando }}" hint-placeholder-val="{{ false }}">
+                      <button type="button" onClick="{{ wz.vozParar }}" style="flex:1;min-height:52px;display:flex;align-items:center;justify-content:center;gap:9px;border:1px solid #F3C2C6;border-radius:9px;background:#FCE0E2;cursor:pointer;font:inherit;font-size:15px;font-weight:800;color:#A81823"><span class="mcnc-rec" style="width:11px;height:11px;border-radius:999px;background:#A81823"></span>{{ wz.vozContador }} · Detener</button>
+                    </sc-if>
+                    <sc-if value="{{ wz.vozHecha }}" hint-placeholder-val="{{ false }}">
+                      <button type="button" onClick="{{ wz.vozPlay }}" style="flex:1;min-height:52px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--mecanu-border);border-radius:9px;background:var(--mecanu-neutral-25);cursor:pointer;font:inherit;font-size:14px;font-weight:700;color:var(--mecanu-neutral-900)"><span class="mecanu-icon is-filled" style="font-size:21px">play_arrow</span>{{ wz.vozDur }}</button>
+                    </sc-if>
+                    <sc-if value="{{ wz.vozHecha }}" hint-placeholder-val="{{ false }}">
+                      <button type="button" onClick="{{ wz.vozBorrar }}" aria-label="Borrar nota de voz" style="flex:none;width:52px;min-height:52px;border:1px solid var(--mecanu-border);border-radius:9px;background:var(--mecanu-neutral-0);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mecanu-neutral-700)"><span class="mecanu-icon" style="font-size:21px">delete</span></button>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="flex:none">
+            <sc-if value="{{ wz.hayAviso }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:flex-start;gap:8px;background:{{ wz.avisoBg }};padding:10px 16px">
+                <span class="mecanu-icon" style="flex:none;font-size:18px;color:{{ wz.avisoColor }}">{{ wz.avisoIcon }}</span>
+                <span style="font-size:12px;line-height:17px;font-weight:700;color:{{ wz.avisoColor }}">{{ wz.aviso }}</span>
+              </div>
+            </sc-if>
+            <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.OversizedButton" anchored="{{ si }}" kind="primary" icon="{{ wz.pieIcon }}" disabled="{{ wz.pieBloqueado }}" on-click="{{ wz.siguiente }}" hint-size="100%,56px">{{ wz.pieLabel }}</x-import>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ entOpen }}" hint-placeholder-val="{{ false }}">
+        <div class="mcnc-gate" style="position:absolute;inset:0;z-index:70;background:var(--mecanu-neutral-0);display:flex;flex-direction:column">
+          <div style="flex:none;display:flex;align-items:center;gap:6px;padding:46px 14px 10px;border-bottom:1px solid var(--mecanu-border-subtle)">
+            <button type="button" onClick="{{ en.salir }}" aria-label="Salir" style="flex:none;width:48px;height:48px;margin-left:-10px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mecanu-neutral-900)"><span class="mecanu-icon" style="font-size:25px">close</span></button>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mecanu-neutral-700)">{{ en.paso }}</div>
+              <div style="font-size:16px;line-height:21px;font-weight:700;color:var(--mecanu-neutral-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ en.matricula }} · {{ en.veh }}</div>
+            </div>
+          </div>
+          <div class="mcnc-scroll" style="flex:1;overflow-y:auto;padding:14px 16px 18px;display:flex;flex-direction:column;gap:18px">
+            <div>
+              <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700);margin-bottom:8px">{{ en.fotosLbl }}</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <sc-for list="{{ en.slots }}" as="s" hint-placeholder-count="2">
+                  <button type="button" onClick="{{ s.abrir }}" style="position:relative;height:112px;border:1px {{ s.borde }};border-radius:10px;background:{{ s.bg }};cursor:pointer;font:inherit;padding:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px">
+                    <sc-if value="{{ s.hecha }}" hint-placeholder-val="{{ false }}">
+                      <span role="img" aria-label="{{ s.label }}" style="position:absolute;inset:0;background-image:{{ s.img }};background-size:cover;background-position:center"></span>
+                    </sc-if>
+                    <sc-if value="{{ s.hecha }}" hint-placeholder-val="{{ false }}">
+                      <span style="position:absolute;left:0;right:0;bottom:0;background:rgba(22,23,24,.72);color:var(--mecanu-neutral-0);font-size:10px;line-height:13px;font-weight:700;padding:4px 6px;text-align:left">{{ s.label }} · sellada</span>
+                    </sc-if>
+                    <sc-if value="{{ s.vacia }}" hint-placeholder-val="{{ true }}">
+                      <span class="mecanu-icon" style="font-size:26px;color:var(--mecanu-neutral-700)">photo_camera</span>
+                    </sc-if>
+                    <sc-if value="{{ s.vacia }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-size:12px;font-weight:700;color:var(--mecanu-neutral-700);text-align:center;padding:0 6px">{{ s.label }}</span>
+                    </sc-if>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <sc-if value="{{ en.pideFirma }}" hint-placeholder-val="{{ true }}">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span style="flex:1;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mecanu-neutral-700)">Firma de {{ en.cliente }}</span>
+                  <button type="button" onClick="{{ en.borrarFirma }}" style="flex:none;min-height:40px;border:none;background:none;cursor:pointer;font:inherit;font-size:12px;font-weight:700;color:var(--mecanu-neutral-700);padding:0 4px">Borrar</button>
+                </div>
+                <canvas ref="{{ firmaRef }}" style="display:block;width:100%;height:172px;border:1px solid {{ en.firmaBorde }};border-radius:10px;background:var(--mecanu-neutral-25);touch-action:none"></canvas>
+                <div style="font-size:12px;line-height:17px;color:var(--mecanu-neutral-700);margin-top:7px">{{ en.firmaNota }}</div>
+              </div>
+            </sc-if>
+          </div>
+          <div style="flex:none">
+            <x-import component-from-global-scope="MecanuDesignSystem_bf03e0.OversizedButton" anchored="{{ si }}" kind="primary" icon="check" disabled="{{ en.bloqueado }}" on-click="{{ en.cerrar }}" hint-size="100%,56px">{{ en.pieLabel }}</x-import>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ camActiva }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;z-index:88;background:#000;display:flex;flex-direction:column">
+          <sc-if value="{{ cm.hayError }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px 24px;text-align:center">
+              <span class="mecanu-icon" style="font-size:44px;color:var(--mecanu-neutral-300)">{{ cm.errorIcon }}</span>
+              <div style="font-size:17px;font-weight:700;color:var(--mecanu-neutral-0)">{{ cm.errorTitulo }}</div>
+              <div style="font-size:13px;line-height:19px;color:var(--mecanu-neutral-200);max-width:270px">{{ cm.errorTexto }}</div>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <button type="button" onClick="{{ cm.reintentar }}" style="min-height:52px;display:flex;align-items:center;gap:8px;border:none;border-radius:9px;background:var(--mecanu-brand-primary-dark);color:var(--mecanu-neutral-900);font:inherit;font-size:14px;font-weight:700;padding:0 18px;cursor:pointer"><span class="mecanu-icon" style="font-size:20px">refresh</span>Reintentar</button>
+                <button type="button" onClick="{{ cm.cerrar }}" style="min-height:52px;border:1px solid var(--mecanu-neutral-700);border-radius:9px;background:none;color:var(--mecanu-neutral-0);font:inherit;font-size:14px;font-weight:700;padding:0 18px;cursor:pointer">Volver</button>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ cm.ok }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:1;position:relative;overflow:hidden">
+              <video ref="{{ videoRef }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000"></video>
+              <div style="position:absolute;top:52px;left:14px;right:14px;display:flex;align-items:center;gap:8px">
+                <span style="flex:1;min-width:0;font-size:12px;line-height:16px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7)">{{ cm.rotulo }}</span>
+                <sc-if value="{{ cm.grabando }}" hint-placeholder-val="{{ false }}">
+                  <span style="flex:none;display:flex;align-items:center;gap:6px;background:rgba(168,24,35,.9);color:#fff;font-size:13px;font-weight:800;padding:5px 11px;border-radius:999px"><span class="mcnc-rec" style="width:9px;height:9px;border-radius:999px;background:#fff"></span>{{ cm.contador }}</span>
+                </sc-if>
+              </div>
+            </div>
+            <div style="flex:none;display:flex;align-items:center;gap:12px;padding:16px 20px 30px;background:#000">
+              <button type="button" onClick="{{ cm.cerrar }}" style="flex:1;min-height:52px;border:none;background:none;cursor:pointer;font:inherit;font-size:14px;font-weight:700;color:#fff;text-align:left">Cancelar</button>
+              <button type="button" onClick="{{ cm.disparar }}" aria-label="{{ cm.disparoLbl }}" style="flex:none;width:76px;height:76px;border-radius:999px;border:4px solid rgba(255,255,255,.35);background:{{ cm.disparoBg }};cursor:pointer;display:flex;align-items:center;justify-content:center">
+                <span class="mecanu-icon is-filled" style="font-size:30px;color:{{ cm.disparoColor }}">{{ cm.disparoIcon }}</span>
+              </button>
+              <span style="flex:1;font-size:11px;line-height:15px;color:var(--mecanu-neutral-300);text-align:right">{{ cm.pie }}</span>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <div style="position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:130px;height:5px;border-radius:999px;background:var(--mecanu-neutral-900);opacity:.85;z-index:65"></div>
+
+      <sc-if value="{{ hayToast }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;bottom:30px;left:50%;z-index:90;animation:mcncToastIn 240ms cubic-bezier(.22,1,.36,1);background:var(--mecanu-neutral-900);color:var(--mecanu-neutral-0);padding:10px 10px 10px 16px;border-radius:999px;font-size:13px;font-weight:600;box-shadow:var(--mecanu-shadow-deep);max-width:330px;display:flex;align-items:center;gap:10px">
+          <span style="min-width:0">{{ toastTexto }}</span>
+          <sc-if value="{{ toastDeshacer }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ deshacer }}" style="flex:none;min-height:34px;border:none;border-radius:999px;background:var(--mecanu-brand-primary-dark);color:var(--mecanu-neutral-900);font:inherit;font-size:13px;font-weight:700;padding:0 13px;cursor:pointer">Deshacer</button>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:14px;font-size:13px;color:var(--mecanu-neutral-700);flex-wrap:wrap;justify-content:center">
+    <a href="Mecanu Panel.dc.html" style="display:inline-flex;align-items:center;gap:6px"><span class="mecanu-icon" style="font-size:16px">arrow_back</span>Panel del taller</a>
+    <span style="opacity:.4">·</span>
+    <button type="button" onClick="{{ toggleOnline }}" style="border:none;background:none;cursor:pointer;font:inherit;font-size:13px;color:var(--mecanu-neutral-700);display:inline-flex;align-items:center;gap:6px"><span class="mecanu-icon" style="font-size:16px">{{ wifiIcon }}</span>{{ toggleConexionLbl }}</button>
+    <sc-if value="{{ haySolPend }}" hint-placeholder-val="{{ false }}">
+      <span style="display:inline-flex;align-items:center;gap:14px">
+        <span style="opacity:.4">·</span>
+        <button type="button" onClick="{{ simularTaller }}" style="border:none;background:none;cursor:pointer;font:inherit;font-size:13px;color:var(--mecanu-neutral-700);display:inline-flex;align-items:center;gap:6px"><span class="mecanu-icon" style="font-size:16px">reply</span>{{ simularTallerLbl }}</button>
+      </span>
+    </sc-if>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:470,&quot;height&quot;:980},&quot;politica&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;manual&quot;,&quot;horario&quot;,&quot;libre&quot;],&quot;default&quot;:&quot;horario&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Regla de flota&quot;},&quot;redExterna&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Regla de flota&quot;},&quot;sinConexion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Estado&quot;}}">
+class Component extends DCLogic {
+  MI_ID = 'd1';
+  MI_NOMBRE = 'Javier Molina';
+  /* Margen entre traslados: desplazamiento + evidencias. Con él se calcula el riesgo (R5). */
+  MARGEN_MIN = 35;
+  /* Límites validados en local, sin red. */
+  FOTO_LADO = 1920; FOTO_Q = 0.8; VIDEO_MAX_S = 30;
+  COLA_MAX_MB = 200; COLA_MAX_N = 10;
+
+  EN_RUTA = ['en_camino_origen', 'en_origen', 'en_transito', 'en_destino'];
+
+  /* TODO API: GET /api/conductores/d1/turno?dia=hoy — el reparto lo decide el taller.
+     Mock del turno de Javier Molina: 9 traslados de hoy. Las ventanas se calculan
+     relativas a la hora actual para que la jornada se lea igual a cualquier hora.
+     off = [minutos de inicio, minutos de fin] respecto a la hora en curso. */
+  TURNO = [
+    { tid: 'TS-1042-1', off: [-180, -120], sub: 'completado' },
+    { tid: 'TS-1039-1', off: [-120, -60],  sub: 'completado', inspeccionHecha: true },
+    { tid: 'TS-1056-1', off: [-30, 30],    sub: 'en_camino_origen' },
+    { tid: 'TS-1057-1', off: [75, 135],    sub: 'agendado', seguro: false },
+    { tid: 'TS-1058-1', off: [90, 150],    sub: 'agendado' },
+    { tid: 'TS-1059-2', off: [195, 255],   sub: 'agendado' },
+    { tid: 'TS-1047-1', off: [290, 350],   sub: 'agendado', seguro: true, testigoRojo: 'aceite' },
+    { tid: 'TS-1064-2', off: [385, 445],   sub: 'agendado' },
+    { tid: 'TS-1043-2', off: null,         sub: 'agendado' },
+  ];
+
+  /* TODO API: GET /api/traslados/disponibles — bolsa que el taller deja libre.
+     Uno solapa con TS-1058-1 (90-150) para poder ejercitar R8; el otro entra limpio. */
+  POOL = [
+    { tid: 'TS-1055-1', off: [100, 160] },
+    { tid: 'TS-1050-1', off: [500, 560] },
+  ];
+
+  SUB_META = {
+    agendado:         { label: 'Por iniciar',   kind: 'neutral',  ribbon: 'Por iniciar' },
+    en_camino_origen: { label: 'En camino',     kind: 'info',     ribbon: 'En ruta · en camino' },
+    en_origen:        { label: 'En el origen',  kind: 'info',     ribbon: 'En ruta · en el origen' },
+    en_transito:      { label: 'En tránsito',   kind: 'info',     ribbon: 'En ruta · en tránsito' },
+    en_destino:       { label: 'En el destino', kind: 'info',     ribbon: 'En ruta · en el destino' },
+    completado:       { label: 'Completado',    kind: 'positive', ribbon: 'Completado' },
+  };
+
+  SLOTS = [
+    { key: 'frontal', label: 'Frontal' },
+    { key: 'trasera', label: 'Trasera' },
+    { key: 'izq',     label: 'Lateral izq.' },
+    { key: 'der',     label: 'Lateral der.' },
+  ];
+
+  /* Lista cerrada de 8 testigos. Los rojos impiden conducir; los ámbar generan hallazgo. */
+  TESTIGOS = [
+    { key: 'temp',    label: 'Temperatura del motor', corto: 'Temp.',   icono: 'thermostat',    nivel: 'rojo' },
+    { key: 'aceite',  label: 'Presión de aceite',     corto: 'Aceite',  icono: 'oil_barrel',    nivel: 'rojo' },
+    { key: 'frenos',  label: 'Frenos / ABS',          corto: 'Frenos',  icono: 'car_crash',     nivel: 'rojo' },
+    { key: 'airbag',  label: 'Airbag / SRS',          corto: 'Airbag',  icono: 'crisis_alert',  nivel: 'rojo' },
+    { key: 'motor',   label: 'Check engine',          corto: 'Motor',   icono: 'engineering',   nivel: 'ambar' },
+    { key: 'presion', label: 'Presión de neumáticos', corto: 'Ruedas',  icono: 'tire_repair',   nivel: 'ambar' },
+    { key: 'bateria', label: 'Batería / carga',       corto: 'Batería', icono: 'battery_alert', nivel: 'ambar' },
+    { key: 'general', label: 'Avería general',        corto: 'Avería',  icono: 'error',         nivel: 'ambar' },
+  ];
+
+  ENT_SLOTS = [
+    { key: 'estado',  label: 'Estado del coche' },
+    { key: 'entorno', label: 'Dónde lo dejas' },
+  ];
+
+  COMBUSTIBLE = ['1/4', '1/2', '3/4', 'Lleno'];
+
+  /* Escala canónica: el dato guardado es 1-4; lo que lee el conductor cambia por ítem. */
+  NIVELES = [
+    { n: 1, titulo: 'Bien',           color: '#1E7300', bg: '#E4FBDA', borde: '#BBECAA' },
+    { n: 2, titulo: 'Vigilar',        color: '#1B4F9C', bg: '#E1ECFB', borde: '#B9D2F3' },
+    { n: 3, titulo: 'Cambiar pronto', color: '#9C420B', bg: '#FDEBDD', borde: '#EEC9A7' },
+    { n: 4, titulo: 'Cambiar ya',     color: '#A81823', bg: '#FCE0E2', borde: '#F3C2C6' },
+  ];
+
+  ITEMS = [
+    { key: 'plumillas', label: 'Plumillas',    icono: 'visibility',   copy: ['Limpian bien', 'Marcan un poco', 'No aguantan las lluvias', 'Rayan o saltan'] },
+    { key: 'focos',     label: 'Focos y mica', icono: 'lightbulb',    copy: ['Todo enciende', 'Mica opaca', 'Mica muy opaca', 'Foco fundido'] },
+    { key: 'bateria',   label: 'Batería',      icono: 'battery_charging_full', copy: ['Arranca bien', 'Arranca lento', 'Cuesta arrancar', 'No arranca sin ayuda'] },
+    { key: 'carroceria', label: 'Carrocería',  icono: 'directions_car', copy: ['Sin daños', 'Rayón leve', 'Rayón visible', 'Abolladura o corrosión'] },
+    { key: 'cristales', label: 'Cristales',    icono: 'window',       copy: ['Sin daños', 'Marca pequeña', 'Piedrazo', 'Grieta en campo de visión'] },
+    { key: 'limpieza',  label: 'Limpieza interior', icono: 'cleaning_services', copy: ['Bien', 'Uso normal', 'Requiere limpieza', 'Manchas u olor'] },
+  ];
+  RUEDA_COPY = ['Buena banda', 'Media vida', 'No pasan el invierno', 'Al límite o dañado'];
+  RUEDAS = [
+    { key: 'di', label: 'Del. izq.' }, { key: 'dd', label: 'Del. der.' },
+    { key: 'ti', label: 'Tras. izq.' }, { key: 'td', label: 'Tras. der.' },
+  ];
+
+  MOTIVOS = {
+    reagenda: [
+      { id: 'solape',          label: 'Solapa con otro traslado', icono: 'event_busy' },
+      { id: 'retraso',         label: 'Voy con retraso',          icono: 'schedule' },
+      { id: 'cliente_ausente', label: 'El cliente no está',       icono: 'person_off' },
+      { id: 'otro',            label: 'Otro motivo',              icono: 'more_horiz' },
+    ],
+    rechazo: [
+      { id: 'sin_seguro',   label: 'El traslado no tiene cobertura', icono: 'gpp_maybe' },
+      { id: 'fuera_turno',  label: 'Está fuera de mi turno',         icono: 'schedule' },
+      { id: 'no_capacitado', label: 'No puedo con este vehículo',    icono: 'no_crash' },
+      { id: 'otro',         label: 'Otro motivo',                    icono: 'more_horiz' },
+    ],
+    fallido: [
+      { id: 'no_estaba',   label: 'El cliente no estaba',        icono: 'person_off' },
+      { id: 'no_contesta', label: 'No contesta al teléfono',     icono: 'phone_missed' },
+      { id: 'sin_llaves',  label: 'No hay llaves disponibles',   icono: 'key_off' },
+      { id: 'sin_acceso',  label: 'No puedo acceder al vehículo', icono: 'block' },
+    ],
+    no_rodante: [
+      { id: 'testigo_rojo', label: 'Testigo rojo encendido',   icono: 'error' },
+      { id: 'no_arranca',   label: 'No arranca',               icono: 'battery_alert' },
+      { id: 'rueda',        label: 'Rueda o neumático al límite', icono: 'tire_repair' },
+      { id: 'fuga',         label: 'Pierde líquido',           icono: 'water_drop' },
+    ],
+  };
+  SOL_META = {
+    reagenda:   { titulo: 'Pedir reagendar al taller', sub: 'El taller recibe la ventana actual y confirma la nueva. Tú no puedes cambiar la fecha.', badge: 'Reagenda pedida' },
+    rechazo:    { titulo: 'Rechazar el traslado',      sub: 'El taller decide si lo reasigna. Sigue siendo tuyo hasta que responda.', badge: 'Rechazo pedido' },
+    fallido:    { titulo: 'Marcar fallido en origen',  sub: 'Propones el fallido con la evidencia que tengas. Confirma el taller, no tú.', badge: 'Fallido propuesto' },
+    no_rodante: { titulo: 'Proponer no rodante',       sub: 'Informas de que el coche no debería circular. La decisión es del taller.', badge: 'No rodante pedido' },
+  };
+
+  state = {
+    data: null, cargando: true,
+    vista: 'lista', sel: null,
+    online: true, sync: 'synced', queue: 0, bytes: 0,
+    jobOv: {}, tomados: [], incidentes: {}, solicitudes: {}, logsLocal: {},
+    checkins: {}, inspecciones: {}, kmVehiculo: {},
+    wiz: null, ent: null, cam: null, sheet: null, dialogo: null,
+    verHechos: false, verSinFecha: false, verHistorial: false, verEvidencia: false,
+    callAbierto: null, dragDx: null,
+    toast: null, clock: '', flash: null, rec: null, voz: null, gps: null,
+  };
+
+  componentDidMount() {
+    import('./mecanu-rutas.js').then((m) => {
+      const ov = {}; this.TURNO.forEach((e) => { ov[e.tid] = { sub: e.sub, done: e.sub === 'completado' }; });
+      this.setState({ data: m, cargando: false, jobOv: ov }, () => this._seed());
+    });
+    this._tick(); this._clk = setInterval(() => this._tick(), 20000);
+    if (this.props.sinConexion) this.setState({ online: false, sync: 'offline' });
+  }
+  componentWillUnmount() {
+    clearInterval(this._clk); clearTimeout(this._sy); clearTimeout(this._to); clearTimeout(this._fl);
+    clearInterval(this._recT); clearInterval(this._vozT); this._pararStream();
+  }
+  _tick() { const d = new Date(); this.setState({ clock: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') }); }
+
+  /* ───────── semillas: un check-in con testigo rojo y una inspección ya hecha ───────── */
+  _seed() {
+    const D = this.D(); if (!D) return;
+    const chk = {}, insp = {};
+    this.TURNO.forEach((e) => {
+      if (e.testigoRojo) {
+        const j = this._job(e.tid); if (!j) return;
+        chk[e.tid] = {
+          fotos: this._fotosSeed(e.tid, 'checkin'), extras: [],
+          video: { simulado: true, seg: 22, bytes: 24 * 1024 * 1024, sello: this._sello(e.tid) },
+          km: String(j.kmVehiculo), combustible: '1/2',
+          testigos: [e.testigoRojo], sellado: true, ts: new Date(Date.now() - 5400000),
+        };
+      }
+      if (e.inspeccionHecha) {
+        insp[e.tid] = {
+          items: { plumillas: 3, focos: 1, bateria: 2, carroceria: 2, cristales: 1, limpieza: 1 },
+          ruedas: { di: 3, dd: 3, ti: 2, td: 2 }, itv: '2026-11', itvSinDato: false,
+          nota: 'El cliente comenta que las plumillas chirrían desde el invierno.', voz: null,
+          sellado: true, ts: new Date(Date.now() - 7200000),
+        };
+      }
+    });
+    const sol = {};
+    const rojo = this.TURNO.find((e) => e.testigoRojo);
+    if (rojo) sol[rojo.tid] = { tipo: 'no_rodante', motivo: 'Testigo rojo encendido', ts: new Date(Date.now() - 5300000), estado: 'pendiente' };
+    this.setState({ checkins: chk, inspecciones: insp, solicitudes: sol });
+  }
+  _fotosSeed(tid, tipo) {
+    const D = this.D(); const o = {};
+    this.SLOTS.forEach((s) => { o[s.key] = { src: D.foto('cond-' + tid + '-' + tipo + '-' + s.key), bytes: 430 * 1024, sello: this._sello(tid) }; });
+    return o;
+  }
+
+  D() { return this.state.data; }
+  esExterno() { return !!this.props.redExterna; }
+  politica() { return this.props.politica || 'horario'; }
+
+  /* ───────── feedback ───────── */
+  _toast(texto, deshacer) {
+    clearTimeout(this._to); this.setState({ toast: { texto, deshacer: deshacer || null } });
+    this._to = setTimeout(() => this.setState({ toast: null }), deshacer ? 5000 : 2800);
+  }
+  _flash(tid) { clearTimeout(this._fl); this.setState({ flash: tid }); this._fl = setTimeout(() => this.setState({ flash: null }), 2600); }
+
+  /* FLIP: cuando una card cambia de sitio se mueve, no salta. */
+  getSnapshotBeforeUpdate() {
+    if (!this._lista) return null;
+    const m = {};
+    this._lista.querySelectorAll('[data-tid]').forEach((el) => { m[el.getAttribute('data-tid')] = el.getBoundingClientRect().top; });
+    return m;
+  }
+  componentDidUpdate(pp, ps, snap) {
+    if (!snap || !this._lista || !this._lista.animate) return;
+    this._lista.querySelectorAll('[data-tid]').forEach((el) => {
+      const prev = snap[el.getAttribute('data-tid')];
+      if (prev == null || !el.animate) return;
+      const d = prev - el.getBoundingClientRect().top;
+      if (Math.abs(d) < 3) return;
+      el.animate([{ transform: 'translateY(' + d + 'px)' }, { transform: 'translateY(0)' }], { duration: 420, easing: 'cubic-bezier(.22,1,.36,1)' });
+    });
+  }
+  listaRef = (el) => { this._lista = el; };
+
+  /* ───────── conexión · offline-first (R10) ───────── */
+  toggleOnline = () => {
+    if (this.state.online) { this.setState({ online: false, sync: 'offline' }); return; }
+    const q = this.state.queue;
+    this.setState({ online: true, sync: q > 0 ? 'syncing' : 'synced' });
+    if (q > 0) { clearTimeout(this._sy); this._sy = setTimeout(() => this._sincronizado(), 1700); }
+  };
+  _sincronizado() {
+    this.setState((s) => {
+      const L = {}; Object.keys(s.logsLocal).forEach((k) => { L[k] = s.logsLocal[k].map((l) => Object.assign({}, l, { cola: false })); });
+      return { sync: 'synced', queue: 0, bytes: 0, logsLocal: L };
+    });
+    this._toast('Todo sincronizado con el taller');
+  }
+  _encolar(bytes) {
+    if (this.state.online) return;
+    this.setState((s) => ({ queue: s.queue + 1, bytes: s.bytes + (bytes || 0), sync: 'offline' }));
+  }
+  _cola() { return this.state.online ? '' : ' · en cola'; }
+
+  _log(tid, tipo, texto) {
+    const l = { ts: new Date(), tipo, texto, cola: !this.state.online };
+    this.setState((s) => ({ logsLocal: Object.assign({}, s.logsLocal, { [tid]: (s.logsLocal[tid] || []).concat([l]) }) }));
+  }
+
+  /* ───────── sello inmutable de cada captura ───────── */
+  _sello(tid) {
+    const g = this.state.gps;
+    const ts = new Date();
+    return {
+      ts, tid, conductorId: this.MI_ID,
+      gps: g ? g.lat.toFixed(5) + ', ' + g.lon.toFixed(5) : null,
+      linea: this.D().fmtHora(ts) + ' · ' + (g ? g.lat.toFixed(4) + ',' + g.lon.toFixed(4) : 'GPS no disponible') + ' · ' + tid + ' · ' + this.MI_NOMBRE,
+    };
+  }
+  _pedirGps() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => this.setState({ gps: { lat: p.coords.latitude, lon: p.coords.longitude } }),
+      () => this.setState({ gps: null }), { timeout: 4000 });
+  }
+
+  /* ───────── traslados del turno ───────── */
+  _misIds() { return this.TURNO.map((e) => e.tid).concat(this.state.tomados).filter((v, i, a) => a.indexOf(v) === i); }
+  _cfg(tid) { return this.TURNO.find((e) => e.tid === tid) || this.POOL.find((e) => e.tid === tid) || null; }
+  _sub(tid) {
+    const ov = this.state.jobOv[tid]; if (ov && ov.sub) return ov.sub;
+    const t = this.D().tramo(tid); if (!t) return 'agendado';
+    if (t.estado === 'completado') return 'completado';
+    if (t.estado === 'en_curso') return t.subestado || 'en_camino_origen';
+    return 'agendado';
+  }
+  _hecho(tid) { const ov = this.state.jobOv[tid]; if (ov) return !!ov.done; return (this.D().tramo(tid) || {}).estado === 'completado'; }
+  /* R1: como máximo un traslado en EN RUTA por conductor. */
+  _activoId() { return this._misIds().find((tid) => !this._hecho(tid) && this.EN_RUTA.indexOf(this._sub(tid)) >= 0) || null; }
+
+  _ancla() { const d = new Date(); d.setMinutes(0, 0, 0); return d; }
+  _win(tid) {
+    const t = this.D().tramo(tid); const cfg = this._cfg(tid);
+    if (cfg && cfg.off === null) return null;
+    if (cfg && cfg.off) {
+      const a = this._ancla().getTime();
+      const ini = new Date(a + cfg.off[0] * 60000); const fin = new Date(a + cfg.off[1] * 60000);
+      const hh = (d) => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      return { fecha: new Date(ini.getFullYear(), ini.getMonth(), ini.getDate()), inicio: hh(ini), fin: hh(fin) };
+    }
+    return (t && t.ventana) || null;
+  }
+
+  _fechaLbl(f) {
+    if (!f) return '';
+    const dd = new Date(f.getFullYear(), f.getMonth(), f.getDate());
+    const h = new Date(); h.setHours(0, 0, 0, 0);
+    const diff = Math.round((dd - h) / 86400000);
+    if (diff === 0) return 'Hoy';
+    if (diff === 1) return 'Mañana';
+    if (diff === -1) return 'Ayer';
+    return dd.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).replace('.', '');
+  }
+  _hhmm(f, hhmm) { const p = String(hhmm).split(':').map(Number); return new Date(f.getFullYear(), f.getMonth(), f.getDate(), p[0], p[1] || 0, 0, 0); }
+  _dirCorta(dir) { if (!dir) return 'Sin dirección'; return dir.split(',')[0].trim(); }
+  _dirVaga(dir) { return this._dirCorta(dir).replace(/\s+\d+\S*$/, ''); }
+
+  /* Ventana de la card: tamaño constante, solo cambia el color (MODELO.md §4). */
+  _ventana(job) {
+    const gris = 'var(--mecanu-neutral-700)'; const naranja = '#9C420B';
+    if (!job.win) return { texto: 'Sin agendar', color: gris };
+    const ini = this._hhmm(job.win.fecha, job.win.inicio);
+    const fin = this._hhmm(job.win.fecha, job.win.fin);
+    /* Al conductor solo le mostramos la hora de inicio: el rango de 1 h es
+       interno, para agenda y riesgo, no un dato que necesite ver dos veces. */
+    const rango = job.win.inicio;
+    const dia = this._fechaLbl(job.win.fecha);
+    const ahora = new Date();
+    if (job.hecho) return { texto: dia + ' · ' + rango, color: gris };
+    /* "Atrasado" se dispara al pasar la HORA DE INICIO del rango, no la de cierre:
+       si la franja es 14-15, va atrasado desde las 14, no desde las 15. */
+    if (ini < ahora && job.sub === 'agendado') {
+      const min = Math.round((ahora - ini) / 60000);
+      return { texto: 'Atrasado' + (min < 1 ? '' : ' hace ' + (min < 60 ? min + ' min' : Math.floor(min / 60) + ' h')), color: '#A81823' };
+    }
+    if (job.riesgo) return { texto: 'Atrasado · ' + rango, color: naranja };
+    if (ini <= ahora && ahora <= fin) {
+      const q = Math.round((fin - ahora) / 60000);
+      return { texto: 'Cierra en ' + q + ' min · ' + rango, color: naranja };
+    }
+    const faltan = Math.round((ini - ahora) / 60000);
+    if (faltan > 0 && faltan < 120) {
+      const h = Math.floor(faltan / 60); const m = faltan % 60;
+      const t = faltan < 60 ? 'En ' + faltan + ' min' : (m ? 'En ' + h + ' h ' + m + ' min' : 'En ' + h + ' h');
+      return { texto: t + ' · ' + rango, color: naranja };
+    }
+    return { texto: dia + ' · ' + rango, color: gris };
+  }
+
+  _job(tid) {
+    const D = this.D(); const t = D.tramo(tid); if (!t) return null;
+    const r = D.ruta(t.rutaId); const v = D.vehiculo(r.vehiculoId);
+    const cls = D.clientesDeVehiculo(r.vehiculoId); const cl = cls.find((c) => c.principal) || cls[0] || null;
+    const ps = D.paradasDeRuta(r.id);
+    const o = ps.find((p) => p.id === t.paradaOrigenId) || ps[0];
+    const dst = ps.find((p) => p.id === t.paradaDestinoId) || ps[ps.length - 1];
+    const sub = this._sub(tid); const hecho = this._hecho(tid);
+    const meta = this.SUB_META[hecho ? 'completado' : sub];
+    const cfg = this._cfg(tid);
+    const seguro = cfg && cfg.seguro != null ? cfg.seguro : !!t.seguro;
+    const rol = t.rol === 'vuelta' ? 'Devolución ↑' : t.rol === 'ida' ? 'Recogida ↓' : 'Movimiento →';
+    const chk = this.state.checkins[tid] || null;
+    const testigosRojos = chk ? (chk.testigos || []).filter((k) => (this.TESTIGOS.find((x) => x.key === k) || {}).nivel === 'rojo') : [];
+    return {
+      tid, ruta: r.id, rutaId: r.id, vehiculoId: r.vehiculoId, rolTipo: t.rol, rol,
+      veh: v ? D.etiquetaVehiculo(v) : 'Sin ficha', matricula: v ? v.matricula : (r.matriculaLead || '—'),
+      kmVehiculo: this.state.kmVehiculo[r.vehiculoId] != null ? this.state.kmVehiculo[r.vehiculoId] : (v ? v.km : 0),
+      cliente: cl ? D.nombreCorto(cl.nombre) : 'Sin identificar', tel: cl ? cl.telefono : null,
+      servicio: D.descripcionServicioDeRuta(r.id),
+      oEtiqueta: o ? o.etiqueta : '—', dEtiqueta: dst ? dst.etiqueta : '—',
+      oDireccion: o && o.direccion ? o.direccion : 'Sin dirección registrada',
+      dDireccion: dst && dst.direccion ? dst.direccion : 'Sin dirección registrada',
+      oTipo: o ? o.tipo : null, destinoCliente: !!(dst && dst.tipo === 'cliente'),
+      dirProxima: this._dirCorta((this.EN_RUTA.indexOf(sub) >= 2) ? (dst ? dst.direccion : null) : (o ? o.direccion : null)),
+      sub, hecho, estado: meta.label, estadoKind: meta.kind, ribbon: meta.ribbon,
+      win: this._win(tid),
+      seguro,
+      segIcon: seguro ? 'verified_user' : 'gpp_maybe',
+      segColor: seguro ? '#1E7300' : '#A81823',
+      segColorDark: seguro ? 'var(--mecanu-brand-primary-dark)' : '#FF8A93',
+      segTitulo: seguro ? 'Traslado con cobertura' : 'Traslado sin cobertura',
+      congelado: !!this.state.incidentes[tid],
+      solicitud: this.state.solicitudes[tid] || null,
+      checkin: chk, inspeccion: this.state.inspecciones[tid] || null,
+      testigosRojos, bloqueoRojo: testigosRojos.length > 0,
+      riesgo: null,
+    };
+  }
+
+  /* Agenda ordenada + riesgo (R5): si B empieza antes de que A pueda cerrarse (fin + margen). */
+  _agenda() {
+    const jobs = this._misIds().map((tid) => this._job(tid)).filter((j) => j && !j.hecho && j.win)
+      .sort((a, b) => this._hhmm(a.win.fecha, a.win.inicio) - this._hhmm(b.win.fecha, b.win.inicio));
+    jobs.forEach((j, i) => {
+      if (!i) return;
+      const prev = jobs[i - 1];
+      const finPrev = this._hhmm(prev.win.fecha, prev.win.fin).getTime() + this.MARGEN_MIN * 60000;
+      if (this._hhmm(j.win.fecha, j.win.inicio).getTime() < finPrev) {
+        j.riesgo = { con: prev.matricula + ' · ' + prev.veh, hasta: prev.win.fin, dia: this._fechaLbl(prev.win.fecha) };
+        // La hora límite del riesgo sí necesita el fin real (dato interno de cálculo), no se resume.
+      }
+    });
+    return jobs;
+  }
+  _solapa(win) {
+    if (!win) return null;
+    const ini = this._hhmm(win.fecha, win.inicio).getTime(); const fin = this._hhmm(win.fecha, win.fin).getTime();
+    return this._agenda().find((j) => {
+      const a = this._hhmm(j.win.fecha, j.win.inicio).getTime(); const b = this._hhmm(j.win.fecha, j.win.fin).getTime();
+      return ini < b && a < fin;
+    }) || null;
+  }
+
+  /* ───────── navegación ───────── */
+  abrir = (tid) => this.setState({ vista: 'detalle', sel: tid, verHistorial: false, verEvidencia: false });
+  volver = () => this.setState({ vista: 'lista', sel: null });
+  goEmg = () => this.setState({ vista: 'emergencias' });
+  toggleHechos = () => this.setState((s) => ({ verHechos: !s.verHechos }));
+  toggleSinFecha = () => this.setState((s) => ({ verSinFecha: !s.verSinFecha }));
+  toggleHistorial = () => this.setState((s) => ({ verHistorial: !s.verHistorial }));
+  toggleEvidencia = () => this.setState((s) => ({ verEvidencia: !s.verEvidencia }));
+  irADisponibles = () => { if (!this.state.dispCount) this._toast(this.politica() === 'manual' ? 'Tu taller asigna los traslados a mano' : 'Ahora no hay traslados libres'); };
+  llamar(tel) { if (tel) { window.open('tel:' + String(tel).replace(/\s/g, ''), '_self'); } else { this._toast('Este traslado no tiene teléfono de contacto'); } }
+  navegar = (job) => {
+    const destino = (job.sub === 'agendado' || job.sub === 'en_camino_origen') ? job.oDireccion : job.dDireccion;
+    window.open('https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(destino), '_blank');
+  };
+
+  /* ───────── deslizar para revelar "Llamar" ─────────
+     Dos pasos a propósito: deslizar revela, tocar llama. Una llamada al cliente
+     no puede dispararse con un gesto suelto en el bolsillo. */
+  CALL_W = 78;
+  /* Deslizar por debajo del 30% del ancho de la card dispara la llamada sola:
+     el cajón se abre del todo y el teléfono marca, sin necesidad de soltar y tocar. */
+  CALL_UMBRAL = 0.3;
+
+  callDown = (tid, tel, e) => {
+    const card = e.currentTarget.closest('[data-tid]');
+    this._dr = { tid, tel, x0: e.clientX, y0: e.clientY, anchoCard: card ? card.getBoundingClientRect().width : 350,
+      base: this.state.callAbierto === tid ? -this.CALL_W : 0, activo: false, disparado: false };
+  };
+  callMove = (tid, e) => {
+    const d = this._dr; if (!d || d.tid !== tid || d.disparado) return;
+    const dx = e.clientX - d.x0; const dy = e.clientY - d.y0;
+    if (!d.activo) {
+      if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 8) return;
+      d.activo = true;
+    }
+    const v = Math.max(-this.CALL_W, Math.min(0, d.base + dx));
+    this.setState({ dragDx: { tid, v } });
+    if (-dx >= d.anchoCard * this.CALL_UMBRAL) {
+      d.disparado = true;
+      this.setState({ callAbierto: tid, dragDx: null });
+      this.llamar(d.tel);
+    }
+  };
+  callUp = (tid) => {
+    const d = this._dr; this._dr = null;
+    if (!d || d.disparado) return;
+    const dd = this.state.dragDx;
+    if (!d.activo || !dd || dd.tid !== tid) { this.setState({ dragDx: null }); return; }
+    this.setState({ callAbierto: dd.v < -this.CALL_W / 2 ? tid : null, dragDx: null });
+  };
+
+  /* ───────── tomar del pool (R8) ───────── */
+  tomar = (tid) => {
+    const job = this._job(tid); const choque = this._solapa(job.win);
+    if (choque) {
+      this.setState({ dialogo: { tipo: 'solape', tid,
+        titulo: 'Solapa con otro traslado',
+        texto: choque.matricula + ' · ' + choque.veh + ' ya ocupa ' + this._fechaLbl(choque.win.fecha).toLowerCase() + ' de ' + choque.win.inicio + ' a ' + choque.win.fin + '. Si tomas este, tendrás que pedir reagendar uno de los dos.',
+        boton: 'Tomar igualmente' } });
+      return;
+    }
+    this._tomarYa(tid);
+  };
+  _tomarYa(tid) {
+    // TODO API: POST /api/traslados/{tid}/asignar { conductorId }
+    this.setState((s) => ({ tomados: s.tomados.concat([tid]), dialogo: null }));
+    this._log(tid, 'cambio_estado', 'Traslado tomado del pool por el conductor');
+    this._encolar(); this._flash(tid); this._toast('Traslado añadido a tu jornada' + this._cola());
+  }
+  dlgCancelar = () => this.setState({ dialogo: null });
+  dlgConfirmar = () => {
+    const d = this.state.dialogo; if (!d) return;
+    if (d.tipo === 'solape') this._tomarYa(d.tid);
+    else if (d.tipo === 'km') { this.setState({ dialogo: null }); this._w({ kmConfirmado: true, pagina: 2 }); }
+    else if (d.tipo === 'salirWiz') this.setState({ dialogo: null, wiz: null });
+    else if (d.tipo === 'salirEnt') this.setState({ dialogo: null, ent: null });
+  };
+
+  /* ───────── check-in · página 1 (gate, solo recogida) y página 2 (inspección) ───────── */
+  _w(patch) { this.setState((s) => ({ wiz: Object.assign({}, s.wiz, patch) })); }
+  _e(patch) { this.setState((s) => ({ ent: Object.assign({}, s.ent, patch) })); }
+
+  /* Captura SOLO desde la cámara de la app: nunca <input type=file>, nunca galería. */
+  videoRef = (el) => {
+    this._video = el; if (!el) return;
+    el.autoplay = true; el.playsInline = true; el.muted = true; el.setAttribute('playsinline', 'true');
+    if (this._stream) { el.srcObject = this._stream; const p = el.play(); if (p && p.catch) p.catch(() => {}); }
+  };
+  _abrirCam = (modo, slot) => { this.setState({ cam: { modo, slot, listo: false, error: null, grabando: false, seg: 0 } }, () => this._arrancarStream()); };
+  _arrancarStream() {
+    const cam = this.state.cam; if (!cam) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { this.setState((s) => ({ cam: Object.assign({}, s.cam, { error: 'nodisp' }) })); return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: this.FOTO_LADO } }, audio: cam.modo === 'video' })
+      .then((s) => {
+        this._stream = s;
+        if (this._video) { this._video.srcObject = s; const p = this._video.play(); if (p && p.catch) p.catch(() => {}); }
+        this.setState((st) => (st.cam ? { cam: Object.assign({}, st.cam, { listo: true }) } : null));
+      })
+      .catch((e) => this.setState((st) => (st.cam ? { cam: Object.assign({}, st.cam, { error: e && e.name === 'NotAllowedError' ? 'permiso' : 'nodisp' }) } : null)));
+  }
+  _pararStream() { if (this._stream) { this._stream.getTracks().forEach((t) => t.stop()); this._stream = null; } }
+  cerrarCam = () => { clearInterval(this._recT); this._pararStream(); this.setState({ cam: null }); };
+  reintentarCam = () => { this.setState((s) => ({ cam: Object.assign({}, s.cam, { error: null, listo: false }) }), () => this._arrancarStream()); };
+
+  dispararFoto = () => {
+    const cam = this.state.cam; const v = this._video;
+    if (!cam || !v || !v.videoWidth) { this._toast('La cámara aún no está lista'); return; }
+    const k = Math.min(1, this.FOTO_LADO / Math.max(v.videoWidth, v.videoHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+    c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+    const src = c.toDataURL('image/jpeg', this.FOTO_Q);
+    const tid = this.state.wiz ? this.state.wiz.tid : (this.state.ent ? this.state.ent.tid : null);
+    const foto = { src, bytes: Math.round(src.length * 0.75), sello: this._sello(tid) };
+    if (cam.modo === 'ent') this._e({ fotos: Object.assign({}, this.state.ent.fotos, { [cam.slot]: foto }) });
+    else if (cam.modo === 'extra') this._w({ extras: this.state.wiz.extras.concat([foto]) });
+    else this._w({ fotos: Object.assign({}, this.state.wiz.fotos, { [cam.slot]: foto }) });
+    this._encolar(foto.bytes);
+    this.cerrarCam();
+  };
+
+  grabarVideo = () => {
+    if (this.state.cam && this.state.cam.grabando) { this.pararVideo(); return; }
+    if (!this._stream || typeof MediaRecorder === 'undefined') { this._toast('Este dispositivo no puede grabar vídeo'); return; }
+    try {
+      const mr = new MediaRecorder(this._stream); this._chunks = [];
+      mr.ondataavailable = (e) => { if (e.data && e.data.size) this._chunks.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(this._chunks, { type: 'video/webm' });
+        const seg = this.state.cam ? this.state.cam.seg : 0;
+        this._w({ video: { url: URL.createObjectURL(blob), seg, bytes: blob.size, sello: this._sello(this.state.wiz.tid) } });
+        this._encolar(blob.size); this.cerrarCam();
+      };
+      this._mr = mr; mr.start();
+      this.setState((s) => ({ cam: Object.assign({}, s.cam, { grabando: true, seg: 0 }) }));
+      this._recT = setInterval(() => {
+        this.setState((s) => {
+          if (!s.cam) return null;
+          const n = s.cam.seg + 1;
+          if (n >= this.VIDEO_MAX_S) setTimeout(() => this.pararVideo(), 0);
+          return { cam: Object.assign({}, s.cam, { seg: n }) };
+        });
+      }, 1000);
+    } catch (e) { this._toast('Este dispositivo no puede grabar vídeo'); }
+  };
+  pararVideo = () => { clearInterval(this._recT); if (this._mr && this._mr.state !== 'inactive') this._mr.stop(); };
+
+  vozGrabar = () => {
+    if (!navigator.mediaDevices || typeof MediaRecorder === 'undefined') { this._toast('Este dispositivo no puede grabar audio'); return; }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((s) => {
+      const mr = new MediaRecorder(s); this._vozChunks = [];
+      mr.ondataavailable = (e) => { if (e.data && e.data.size) this._vozChunks.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(this._vozChunks, { type: 'audio/webm' });
+        const seg = this.state.voz ? this.state.voz.seg : 0;
+        s.getTracks().forEach((t) => t.stop());
+        this._w({ voz: { url: URL.createObjectURL(blob), seg, bytes: blob.size } });
+        this._encolar(blob.size); this.setState({ voz: null });
+      };
+      this._vozMr = mr; mr.start();
+      this.setState({ voz: { seg: 0 } });
+      this._vozT = setInterval(() => this.setState((st) => (st.voz ? { voz: { seg: st.voz.seg + 1 } } : null)), 1000);
+    }).catch(() => this._toast('Sin permiso de micrófono'));
+  };
+  vozParar = () => { clearInterval(this._vozT); if (this._vozMr && this._vozMr.state !== 'inactive') this._vozMr.stop(); };
+  vozPlay = () => { const v = this.state.wiz && this.state.wiz.voz; if (v) { const a = new Audio(v.url); const p = a.play(); if (p && p.catch) p.catch(() => {}); } };
+  vozBorrar = () => this._w({ voz: null });
+
+  firmaRef = (el) => {
+    this._firma = el; if (!el || el.__on) return; el.__on = true;
+    const r = el.getBoundingClientRect();
+    el.width = Math.round((r.width || 320) * 2); el.height = Math.round((r.height || 172) * 2);
+    const g = el.getContext('2d');
+    g.scale(2, 2); g.lineWidth = 2.4; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#161718';
+    let pintando = false;
+    const pt = (e) => { const b = el.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); pintando = true; const p = pt(e); g.beginPath(); g.moveTo(p[0], p[1]); });
+    el.addEventListener('pointermove', (e) => {
+      if (!pintando) return; e.preventDefault();
+      const p = pt(e); g.lineTo(p[0], p[1]); g.stroke();
+      if (this.state.ent && !this.state.ent.firma) this._e({ firma: true });
+    });
+    window.addEventListener('pointerup', () => { pintando = false; });
+  };
+  borrarFirma = () => { const el = this._firma; if (el) el.getContext('2d').clearRect(0, 0, el.width, el.height); this._e({ firma: false }); };
+
+  _itvDias(itv) {
+    if (!itv) return null;
+    const p = String(itv).split('-');
+    if (p.length < 2) return null;
+    return Math.round((new Date(Number(p[0]), Number(p[1]), 0) - new Date()) / 86400000);
+  }
+  _wizListo1() {
+    const w = this.state.wiz; if (!w) return false;
+    return this.SLOTS.every((s) => w.fotos[s.key]) && !!w.video && !!w.km && Number(w.km) > 0 && !!w.combustible;
+  }
+  _wizListo2() {
+    const w = this.state.wiz; if (!w) return false;
+    return this.ITEMS.every((i) => w.items[i.key]) && this.RUEDAS.every((r) => w.ruedas[r.key]);
+  }
+  wizSalir = () => {
+    const w = this.state.wiz; if (!w) return;
+    if (w.pagina === 2) { this._w({ pagina: 1 }); return; }
+    if (Object.keys(w.fotos).length || w.video || w.testigos.length) {
+      this.setState({ dialogo: { tipo: 'salirWiz', titulo: 'Salir del check-in', texto: 'Se pierden las fotos y el vídeo que todavía no has sellado. Tendrás que repetirlos.', boton: 'Salir igualmente' } });
+      return;
+    }
+    this.setState({ wiz: null });
+  };
+  wizSiguiente = () => {
+    const w = this.state.wiz; if (!w) return;
+    const job = this._job(w.tid);
+    if (w.pagina === 1) {
+      if (!this._wizListo1()) return;
+      if (Number(w.km) < job.kmVehiculo && !w.kmConfirmado) {
+        this.setState({ dialogo: { tipo: 'km', titulo: 'El cuentakilómetros ha bajado',
+          texto: 'La ficha tiene ' + job.kmVehiculo.toLocaleString('es-ES') + ' km y tú has puesto ' + Number(w.km).toLocaleString('es-ES') + '. Vuelve a mirar el cuadro antes de seguir.',
+          boton: 'Lo he comprobado' } });
+        return;
+      }
+      this._w({ pagina: 2 });
+      return;
+    }
+    if (!this._wizListo2()) return;
+    this._sellarCheckin();
+  };
+  _sellarCheckin() {
+    const w = this.state.wiz; const job = this._job(w.tid);
+    const rojos = w.testigos.filter((k) => (this.TESTIGOS.find((x) => x.key === k) || {}).nivel === 'rojo');
+    const ambar = w.testigos.filter((k) => (this.TESTIGOS.find((x) => x.key === k) || {}).nivel === 'ambar');
+    let hall = ambar.length;
+    this.ITEMS.forEach((i) => { if (w.items[i.key] >= 2) hall++; });
+    this.RUEDAS.forEach((r) => { if (w.ruedas[r.key] >= 2) hall++; });
+    const dias = this._itvDias(w.itv);
+    if (dias != null && dias < 60) hall++;
+    /* TODO API: POST /api/traslados/{tid}/checkin (evidencia sellada, inmutable)
+       TODO API: PATCH /api/vehiculos/{id} { km } — el km vive en el VEHÍCULO, no en el traslado.
+       TODO API: POST /api/campanas/hallazgos — ámbar, niveles 2-4 e ITV a menos de 60 días. */
+    this.setState((s) => ({
+      checkins: Object.assign({}, s.checkins, { [w.tid]: { fotos: w.fotos, extras: w.extras, video: w.video, km: w.km, combustible: w.combustible, testigos: w.testigos, sellado: true, ts: new Date() } }),
+      inspecciones: Object.assign({}, s.inspecciones, { [w.tid]: { items: w.items, ruedas: w.ruedas, itv: w.itv, itvSinDato: w.itvSinDato, nota: w.nota, voz: w.voz, sellado: true, ts: new Date() } }),
+      kmVehiculo: Object.assign({}, s.kmVehiculo, { [job.vehiculoId]: Number(w.km) }),
+      wiz: null,
+    }));
+    this._log(w.tid, 'nota', 'Check-in sellado · ' + (4 + w.extras.length) + ' fotos, vídeo, ' + Number(w.km).toLocaleString('es-ES') + ' km, ' + w.combustible);
+    if (hall) this._log(w.tid, 'nota', hall + (hall === 1 ? ' hallazgo enviado' : ' hallazgos enviados') + ' a Campañas');
+    this._encolar();
+    if (rojos.length) {
+      this._log(w.tid, 'incidencia', 'Testigo rojo al recoger: ' + rojos.map((k) => (this.TESTIGOS.find((x) => x.key === k) || {}).label).join(', '));
+      this.setState({ sheet: { tid: w.tid, tipo: 'no_rodante' } });
+      this._toast('Check-in sellado · testigo rojo: no arranques');
+    } else {
+      this._setSub(w.tid, 'en_transito');
+      this._flash(w.tid);
+      this._toast('Check-in sellado · en tránsito' + this._cola());
+    }
+  }
+
+  entSalir = () => {
+    const e = this.state.ent; if (!e) return;
+    if (Object.keys(e.fotos).length || e.firma) {
+      this.setState({ dialogo: { tipo: 'salirEnt', titulo: 'Salir de la entrega', texto: 'Se pierden las fotos y la firma que todavía no has sellado.', boton: 'Salir igualmente' } });
+      return;
+    }
+    this.setState({ ent: null });
+  };
+  entCerrar = () => {
+    const e = this.state.ent; if (!e) return;
+    const nf = Object.keys(e.fotos).length;
+    const pideFirma = e.tipo === 'devolucion';
+    if (nf < this.ENT_SLOTS.length || (pideFirma && !e.firma)) return;
+    // TODO API: POST /api/traslados/{tid}/entrega { fotos, firma } → completa el traslado
+    this.setState((s) => ({ ent: null, jobOv: Object.assign({}, s.jobOv, { [e.tid]: Object.assign({}, s.jobOv[e.tid], { sub: 'completado', done: true }) }) }));
+    this._log(e.tid, 'cambio_estado', pideFirma ? 'Vehículo devuelto y firmado por el cliente' : 'Vehículo entregado en el taller');
+    this._encolar(); this._flash(e.tid);
+    this._toast('Traslado completado' + this._cola());
+  };
+
+  /* ───────── avance de estado · solo el conductor mueve EN RUTA (R7) ───────── */
+  _accion(job) {
+    const sub = job.sub;
+    if (sub === 'agendado')         return { label: 'Iniciar viaje',            corta: 'Iniciar viaje',  icon: 'navigation',    kind: 'sub',  to: 'en_camino_origen' };
+    if (sub === 'en_camino_origen') return { label: 'He llegado a la recogida', corta: 'He llegado',     icon: 'where_to_vote', kind: 'sub',  to: 'en_origen' };
+    if (sub === 'en_origen')        return { label: 'Hacer el check-in',        corta: 'Check-in',       icon: 'photo_camera',  kind: 'wiz',  to: 'checkin' };
+    if (sub === 'en_transito')      return { label: 'He llegado al destino',    corta: 'He llegado',     icon: 'where_to_vote', kind: 'sub',  to: 'en_destino' };
+    if (sub === 'en_destino')       return job.destinoCliente
+      ? { label: 'Entregar y firmar',     corta: 'Entregar', icon: 'draw',   kind: 'ent', to: 'devolucion' }
+      : { label: 'Entregar en el taller', corta: 'Entregar', icon: 'garage', kind: 'ent', to: 'entrega' };
+    return null;
+  }
+  _setSub(tid, ns, extra) {
+    this.setState((s) => ({ jobOv: Object.assign({}, s.jobOv, { [tid]: Object.assign({}, s.jobOv[tid], { sub: ns }, extra || {}) }) }));
+  }
+  avanzar = (tidArg) => {
+    const tid = tidArg || this.state.sel; const job = this._job(tid); if (!job || job.congelado) return;
+    if (job.bloqueoRojo) { this._toast('Testigo rojo encendido: no puedes conducir este coche'); return; }
+    const activo = this._activoId();
+    if (job.sub === 'agendado' && activo && activo !== tid) return;
+    const a = this._accion(job); if (!a) return;
+    if (a.kind === 'sub') {
+      // TODO API: POST /api/traslados/{tid}/subestado { a, triggerSource:'conductor' }
+      const prev = job.sub;
+      this._setSub(tid, a.to); this._encolar(); this._flash(tid);
+      const msg = { en_camino_origen: 'Viaje iniciado', en_origen: 'Estás en el punto de recogida', en_destino: 'Estás en el destino' }[a.to] || 'Estado actualizado';
+      this._log(tid, 'cambio_estado', msg);
+      this._toast(msg + this._cola(), () => { this._setSub(tid, prev); this.setState({ toast: null }); });
+    } else if (a.kind === 'wiz') {
+      this._pedirGps();
+      this.setState({ wiz: { tid, pagina: 1, fotos: {}, extras: [], video: null, km: String(job.kmVehiculo), kmConfirmado: false, combustible: null, testigos: [], items: {}, abierto: null, ruedas: {}, ruedaSel: null, itv: '', itvSinDato: false, nota: '', voz: null } });
+    } else {
+      this._pedirGps();
+      this.setState({ ent: { tid, tipo: a.to, fotos: {}, firma: false } });
+    }
+  };
+  deshacer = () => { const t = this.state.toast; if (t && t.deshacer) t.deshacer(); };
+
+  /* ───────── solicitudes al taller (matriz de permisos) ───────── */
+  abrirSol = (tid, tipo) => this.setState({ sheet: { tid, tipo }, atrasoNota: '' });
+  setAtrasoNota = (e) => this.setState({ atrasoNota: e.target.value });
+  confirmarLlegada = (tid) => {
+    const nota = (this.state.atrasoNota || '').trim();
+    // TODO API: POST /api/traslados/{tid}/confirmaciones { tipo:'llegada_a_tiempo', nota, origen:'conductor' }
+    this._log(tid, 'nota', 'Confirma que llega a la hora' + (nota ? ' · "' + nota + '"' : ''));
+    this._encolar(); this._flash(tid);
+    this.setState({ sheet: null, atrasoNota: null });
+    this._toast('Confirmación enviada al taller' + this._cola());
+  };
+  abrirMenuSol = (tid) => this.setState({ sheet: { tid, tipo: 'menu' } });
+  cerrarSheet = () => this.setState({ sheet: null });
+  enviarSol = (tipo, motivo) => {
+    const s = this.state.sheet; if (!s) return;
+    const tid = s.tid; const job = this._job(tid);
+    /* TODO API: POST /api/traslados/{tid}/solicitudes
+       { tipo:'reagenda'|'rechazo'|'fallido_origen'|'no_rodante', trasladoId, rutaId, conductorId,
+         motivo, ventanaActual:{fecha,inicio,fin}, conflictoCon: trasladoId|null,
+         evidenciaIds:[], creadoEn, origen:'conductor' }
+       → el taller responde. Contrato completo en LOOP-ESTADO.md; el panel aún no tiene bandeja. */
+    const m = (this.MOTIVOS[tipo] || []).find((x) => x.id === motivo) || { label: 'Sin motivo' };
+    this.setState((st) => ({ solicitudes: Object.assign({}, st.solicitudes, { [tid]: { tipo, motivo: m.label, ts: new Date(), estado: 'pendiente' } }), sheet: null }));
+    this._log(tid, 'nota', this.SOL_META[tipo].titulo + ' · ' + m.label);
+    this._encolar(); this._flash(tid);
+    this._toast('Solicitud enviada al taller' + this._cola());
+  };
+  /* Mock: en producción la respuesta llega por push del taller. */
+  simularTaller = () => {
+    const tid = Object.keys(this.state.solicitudes).find((k) => this.state.solicitudes[k].estado === 'pendiente');
+    if (!tid) return;
+    const s = this.state.solicitudes[tid];
+    this.setState((st) => ({ solicitudes: Object.assign({}, st.solicitudes, { [tid]: Object.assign({}, s, { estado: 'resuelta' }) }) }));
+    if (s.tipo === 'no_rodante') {
+      this.setState((st) => ({ checkins: Object.assign({}, st.checkins, { [tid]: Object.assign({}, st.checkins[tid], { testigos: (st.checkins[tid].testigos || []).filter((k) => (this.TESTIGOS.find((x) => x.key === k) || {}).nivel !== 'rojo'), rojoResuelto: true }) }) }));
+      this._log(tid, 'cambio_estado', 'El taller revisó el testigo: el coche puede circular');
+    } else {
+      this._log(tid, 'cambio_estado', 'El taller respondió a tu solicitud');
+    }
+    this._flash(tid); this._toast('El taller ha respondido');
+  };
+
+  /* ───────── incidencias ───────── */
+  reportar = (tid) => {
+    // TODO API: POST /api/traslados/{tid}/incidencias { tipo:'siniestro', origen:'conductor' }
+    this.setState((s) => ({ incidentes: Object.assign({}, s.incidentes, { [tid]: { ts: new Date(), tipo: 'siniestro' } }) }));
+    this._log(tid, 'incidencia', 'Siniestro reportado por el conductor · viaje congelado');
+    this._encolar(); this._toast('Siniestro reportado · Mecanu ya lo está viendo');
+  };
+  llamarMecanu = () => this.llamar('910 220 900');
+
+  renderVals() {
+    const st = this.state;
+    const base = {
+      si: true, n2: 2, n160: 160,
+      clock: st.clock || '9:41',
+      wifiIcon: st.online ? 'wifi' : 'wifi_off',
+      sync: st.sync, syncQueue: st.queue,
+      mostrarBanner: st.sync !== 'synced',
+      avisoCola: false,
+      toggleOnline: this.toggleOnline,
+      toggleConexionLbl: st.online ? 'Simular sin conexión' : 'Reconectar',
+      cargando: st.cargando, skeletons: [{ h: 92 }, { h: 92 }, { h: 92 }, { h: 92 }, { h: 92 }, { h: 92 }],
+      esLista: false, esDetalle: false, esEmergencias: false,
+      wizActivo: false, entActivo: false, camActiva: false, sheetOpen: false, dialogo: false,
+      hayToast: !!st.toast, toastTexto: st.toast ? st.toast.texto : '', toastDeshacer: !!(st.toast && st.toast.deshacer), deshacer: this.deshacer,
+      volver: this.volver, goEmg: this.goEmg, llamarMecanu: this.llamarMecanu,
+      toggleHechos: this.toggleHechos, toggleSinFecha: this.toggleSinFecha, toggleHistorial: this.toggleHistorial, toggleEvidencia: this.toggleEvidencia,
+      verHechos: st.verHechos, verSinFecha: st.verSinFecha, verHistorial: st.verHistorial, verEvidencia: st.verEvidencia,
+      hechosChevron: st.verHechos ? 'expand_less' : 'expand_more',
+      sinFechaChevron: st.verSinFecha ? 'expand_less' : 'expand_more',
+      historialChevron: st.verHistorial ? 'expand_less' : 'expand_more',
+      evidenciaChevron: st.verEvidencia ? 'expand_less' : 'expand_more',
+      irADisponibles: this.irADisponibles, listaRef: this.listaRef,
+      cerrarSheet: this.cerrarSheet, dlgCancelar: this.dlgCancelar, dlgConfirmar: this.dlgConfirmar,
+      sheetStyle: { pointerEvents: 'auto' },
+      hayActivo: false, haySolPend: false, simularTaller: this.simularTaller, simularTallerLbl: 'Simular respuesta del taller',
+    };
+    const D = this.D(); if (!D) return base;
+
+    const mb = st.bytes / 1048576;
+    if (!st.online && (st.queue > this.COLA_MAX_N || mb > this.COLA_MAX_MB)) {
+      base.avisoCola = true;
+      base.avisoColaTexto = 'Cola grande: ' + st.queue + ' elementos · ' + Math.round(mb) + ' MB. Busca cobertura para enviarla.';
+    }
+    base.haySolPend = Object.keys(st.solicitudes).some((k) => st.solicitudes[k].estado === 'pendiente');
+
+    const agenda = this._agenda();
+    const mis = this._misIds().map((tid) => this._job(tid)).filter(Boolean);
+    const hechos = mis.filter((j) => j.hecho && j.win && this._fechaLbl(j.win.fecha) === 'Hoy')
+      .sort((a, b) => this._hhmm(b.win.fecha, b.win.inicio) - this._hhmm(a.win.fecha, a.win.inicio));
+    const sinFecha = mis.filter((j) => !j.hecho && !j.win);
+    const activoId = this._activoId();
+
+    /* El traslado en ruta va fijado arriba: si el conductor siempre ve cuál tiene activo,
+       el bloqueo del segundo se explica solo (1.2 + 1.3). */
+    const jAct = activoId ? agenda.find((j) => j.tid === activoId) || this._job(activoId) : null;
+    if (jAct) {
+      const v = this._ventana(jAct); const a = this._accion(jAct);
+      base.hayActivo = true;
+      base.act = {
+        tid: jAct.tid, ribbon: jAct.ribbon, matricula: jAct.matricula, veh: jAct.veh,
+        ventana: v.texto, ventanaColorDark: 'var(--mecanu-brand-primary-dark)',
+        dir: this.esExterno() ? this._dirVaga(jAct.dirProxima) : jAct.dirProxima,
+        segIcon: jAct.segIcon, segColorDark: jAct.segColorDark, segTitulo: jAct.segTitulo,
+        flashCls: st.flash === jAct.tid ? 'mcnc-flash' : '',
+        accionIcon: a ? a.icon : 'check', accionCorta: a ? a.corta : 'Sin acción',
+        abrir: () => this.abrir(jAct.tid), avanzar: () => this.avanzar(jAct.tid),
+        navegar: () => this.navegar(jAct), llamar: () => this.llamar(jAct.tel),
+      };
+    }
+
+    const dd = st.dragDx;
+    const filas = []; let dia = null;
+    agenda.filter((j) => j.tid !== activoId).forEach((j, i) => {
+      const lbl = this._fechaLbl(j.win.fecha);
+      if (lbl !== dia) { dia = lbl; if (i > 0 || lbl !== 'Hoy') filas.push({ esLabel: true, esCard: false, label: lbl }); }
+      const v = this._ventana(j);
+      const sol = j.solicitud && j.solicitud.estado === 'pendiente' ? this.SOL_META[j.solicitud.tipo] : null;
+      filas.push({
+        esLabel: false, esCard: true, tid: j.tid,
+        rol: j.rol,
+        matricula: j.matricula, veh: j.veh,
+        estado: sol ? sol.badge : j.estado, estadoKind: sol ? 'warning' : j.estadoKind,
+        segIcon: j.segIcon, segColor: j.segColor, segTitulo: j.segTitulo,
+        ventana: v.texto, ventanaColor: v.color,
+        dir: this.esExterno() ? this._dirVaga(j.dirProxima) : j.dirProxima,
+        borde: j.riesgo ? '#EEC9A7' : 'var(--mecanu-border)',
+        bg: j.riesgo ? '#FDF4EC' : 'var(--mecanu-neutral-0)',
+        flashCls: st.flash === j.tid ? 'mcnc-flash' : '',
+        hayRiesgo: !!j.riesgo, sinRiesgo: !j.riesgo,
+        abrir: () => this.abrir(j.tid),
+        navegar: () => this.navegar(j),
+        llamar: () => { this.setState({ callAbierto: null }); this.llamar(j.tel); },
+        alertar: () => this.abrirSol(j.tid, 'atraso'),
+        /* El cajón entra desde el borde; la fila no se mueve, así la matrícula
+           sigue legible mientras llamas. */
+        slide: 'translateX(' + (this.CALL_W + (dd && dd.tid === j.tid ? dd.v : (st.callAbierto === j.tid ? -this.CALL_W : 0))) + 'px)',
+        tabCall: st.callAbierto === j.tid ? 0 : -1,
+        ocultoCall: st.callAbierto !== j.tid,
+        down: (e) => this.callDown(j.tid, j.tel, e),
+        move: (e) => this.callMove(j.tid, e),
+        up: () => this.callUp(j.tid),
+      });
+    });
+
+    let pool = [];
+    if (this.politica() !== 'manual') {
+      const mios = this._misIds();
+      pool = this.POOL.filter((e) => mios.indexOf(e.tid) < 0).map((e) => this._job(e.tid)).filter(Boolean).map((j) => {
+        const v = this._ventana(j);
+        return { rol: j.rol, matricula: j.matricula, veh: j.veh,
+          segIcon: j.segIcon, segColor: j.segColor, segTitulo: j.segTitulo,
+          ventana: v.texto, ventanaColor: v.color, dir: '· ' + this._dirVaga(j.dirProxima),
+          tomar: () => this.tomar(j.tid) };
+      });
+    }
+    this.state.dispCount = pool.length;
+
+    Object.assign(base, {
+      kpiDisponibles: String(pool.length),
+      kpiDispColor: pool.length ? 'var(--mecanu-emerald-800)' : 'var(--mecanu-neutral-900)',
+      filas, jornadaVacia: agenda.length === 0,
+      pool, hayPool: pool.length > 0,
+      hechos: hechos.map((j) => ({ matricula: j.matricula, veh: j.veh, ventana: this._ventana(j).texto, abrir: () => this.abrir(j.tid) })),
+      hayHechos: hechos.length > 0, hechosLbl: hechos.length === 1 ? '1 traslado cerrado hoy' : hechos.length + ' traslados cerrados hoy',
+      sinFecha: sinFecha.map((j) => ({ matricula: j.matricula, veh: j.veh, abrir: () => this.abrir(j.tid) })),
+      haySinFecha: sinFecha.length > 0, sinFechaLbl: sinFecha.length === 1 ? '1 traslado sin fecha' : sinFecha.length + ' traslados sin fecha',
+    });
+
+    base.stop = (e) => e.stopPropagation();
+
+    if (st.cam) {
+      const c = st.cam; const esVideo = c.modo === 'video';
+      const rot = { foto: 'Encuadra el coche entero. Se sella con hora, GPS y matrícula.', extra: 'Foto extra: detalle o daño concreto.', video: 'Da una vuelta completa al coche, sin prisa.', ent: 'Deja constancia de cómo entregas el coche.' };
+      base.camActiva = true;
+      base.cm = {
+        hayError: !!c.error, ok: !c.error,
+        errorIcon: c.error === 'permiso' ? 'no_photography' : 'videocam_off',
+        errorTitulo: c.error === 'permiso' ? 'Sin permiso de cámara' : 'Cámara no disponible',
+        errorTexto: c.error === 'permiso'
+          ? 'El check-in solo admite fotos hechas aquí, nunca de la galería. Da permiso a la cámara para continuar.'
+          : 'Este dispositivo no expone ninguna cámara. Avisa al taller si no puedes hacer el check-in.',
+        reintentar: this.reintentarCam, cerrar: this.cerrarCam,
+        rotulo: rot[c.modo] || '',
+        grabando: !!c.grabando,
+        contador: '0:' + String(c.seg).padStart(2, '0') + ' / 0:' + this.VIDEO_MAX_S,
+        disparar: esVideo ? this.grabarVideo : this.dispararFoto,
+        disparoLbl: esVideo ? (c.grabando ? 'Detener grabación' : 'Empezar a grabar') : 'Hacer la foto',
+        disparoIcon: esVideo ? (c.grabando ? 'stop' : 'fiber_manual_record') : 'photo_camera',
+        disparoBg: esVideo ? '#A81823' : 'var(--mecanu-neutral-0)',
+        disparoColor: esVideo ? '#fff' : 'var(--mecanu-neutral-900)',
+        pie: esVideo ? 'Máx. ' + this.VIDEO_MAX_S + ' s · 720p' : 'JPEG ' + this.FOTO_LADO + ' px',
+      };
+    }
+
+    if (st.wiz) {
+      const w = st.wiz; const j = this._job(w.tid); const p1 = w.pagina === 1;
+      const nf = Object.keys(w.fotos).length;
+      const rojos = w.testigos.filter((k) => (this.TESTIGOS.find((x) => x.key === k) || {}).nivel === 'rojo');
+      const kmN = Number(w.km); const kmBajo = !!w.km && kmN < j.kmVehiculo;
+      const listo1 = this._wizListo1(); const listo2 = this._wizListo2();
+      const nivel = (n) => this.NIVELES[n - 1];
+      const opciones = (copys, valor, elegir) => copys.map((c, i) => {
+        const nv = this.NIVELES[i]; const on = valor === nv.n;
+        return { n: nv.n, copy: c, titulo: nv.titulo, elegido: on,
+          bg: on ? nv.bg : 'var(--mecanu-neutral-0)', borde: on ? nv.borde : 'var(--mecanu-border)',
+          pastilla: on ? nv.color : 'var(--mecanu-neutral-25)',
+          numColor: on ? '#fff' : 'var(--mecanu-neutral-700)', titColor: nv.color,
+          elegir: () => elegir(nv.n) };
+      });
+      const faltan1 = [];
+      if (nf < 4) faltan1.push({ n: 4 - nf, t: (4 - nf) + (nf === 3 ? ' foto' : ' fotos') });
+      if (!w.video) faltan1.push({ n: 1, t: 'el vídeo' });
+      if (!w.combustible) faltan1.push({ n: 1, t: 'el combustible' });
+      const listaEs = (xs) => xs.length < 2 ? (xs[0] || '') : xs.slice(0, -1).join(', ') + ' y ' + xs[xs.length - 1];
+      const totalFaltan = faltan1.reduce((a, x) => a + x.n, 0);
+      const textoFaltan1 = (totalFaltan === 1 ? 'Te falta ' : 'Te faltan ') + listaEs(faltan1.map((x) => x.t));
+      const faltanItems = this.ITEMS.filter((i) => !w.items[i.key]).length + this.RUEDAS.filter((r) => !w.ruedas[r.key]).length;
+      const dias = this._itvDias(w.itv);
+      const rs = w.ruedaSel ? this.RUEDAS.find((r) => r.key === w.ruedaSel) : null;
+      base.wizOpen = true;
+      base.wz = {
+        p1, p2: !p1,
+        paso: p1 ? 'Check-in · paso 1 de 2' : 'Inspección · paso 2 de 2',
+        matricula: j.matricula, veh: j.veh,
+        dot2: p1 ? 'var(--mecanu-neutral-200)' : 'var(--mecanu-neutral-900)',
+        salir: this.wizSalir, salirIcon: p1 ? 'close' : 'arrow_back',
+        fotosLbl: 'Fotos obligatorias · ' + nf + ' de 4',
+        slots: this.SLOTS.map((s) => { const f = w.fotos[s.key]; return {
+          label: s.label, hecha: !!f, vacia: !f, img: f ? 'url("' + f.src + '")' : 'none',
+          bg: f ? 'var(--mecanu-neutral-900)' : 'var(--mecanu-neutral-25)',
+          borde: f ? 'solid var(--mecanu-neutral-900)' : 'dashed var(--mecanu-border)',
+          abrir: () => this._abrirCam('foto', s.key) }; }),
+        extrasLbl: w.extras.length ? w.extras.length + (w.extras.length === 1 ? ' foto extra · añadir otra' : ' fotos extra · añadir otra') : 'Añadir foto extra',
+        addExtra: () => this._abrirCam('extra', null),
+        videoLbl: w.video ? 'Vídeo de ' + w.video.seg + ' s · sellado' : 'Grabar vídeo del vehículo · máx. ' + this.VIDEO_MAX_S + ' s',
+        videoIcon: w.video ? 'check_circle' : 'videocam',
+        videoColor: w.video ? '#1E7300' : 'var(--mecanu-neutral-700)',
+        videoBg: w.video ? '#E4FBDA' : 'var(--mecanu-neutral-25)',
+        videoBorde: w.video ? 'solid #BBECAA' : 'dashed var(--mecanu-border)',
+        grabarVideo: () => this._abrirCam('video', null),
+        km: w.km, setKm: (e) => this._w({ km: e.target.value.replace(/[^0-9]/g, ''), kmConfirmado: false }),
+        kmBorde: kmBajo ? '#EC6513' : 'var(--mecanu-border)',
+        kmNota: kmBajo ? 'Es menos que los ' + j.kmVehiculo.toLocaleString('es-ES') + ' km de la ficha. Te lo confirmaremos antes de seguir.' : 'Último en la ficha: ' + j.kmVehiculo.toLocaleString('es-ES') + ' km. Se guarda en el vehículo.',
+        kmNotaColor: kmBajo ? '#9C420B' : 'var(--mecanu-neutral-700)',
+        combustibles: this.COMBUSTIBLE.map((c) => ({ label: c,
+          bg: w.combustible === c ? 'var(--mecanu-neutral-900)' : 'var(--mecanu-neutral-0)',
+          color: w.combustible === c ? 'var(--mecanu-neutral-0)' : 'var(--mecanu-neutral-900)',
+          borde: w.combustible === c ? 'var(--mecanu-neutral-900)' : 'var(--mecanu-border)',
+          elegir: () => this._w({ combustible: c }) })),
+        testigos: this.TESTIGOS.map((t) => {
+          const on = w.testigos.indexOf(t.key) >= 0;
+          const col = t.nivel === 'rojo' ? '#A81823' : '#9C420B';
+          return { corto: t.corto, label: t.label, icono: t.icono,
+            color: on ? col : 'var(--mecanu-neutral-300)',
+            txtColor: on ? col : 'var(--mecanu-neutral-700)',
+            bg: on ? (t.nivel === 'rojo' ? '#FCE0E2' : '#FDEBDD') : 'var(--mecanu-neutral-0)',
+            borde: on ? col : 'var(--mecanu-border)',
+            toggle: () => this._w({ testigos: on ? w.testigos.filter((k) => k !== t.key) : w.testigos.concat([t.key]) }) };
+        }),
+        items: this.ITEMS.map((i) => {
+          const val = w.items[i.key]; const nv = val ? nivel(val) : null; const ab = w.abierto === i.key;
+          return { label: i.label, icono: i.icono, abierto: ab,
+            chevron: ab ? 'expand_less' : 'expand_more',
+            borde: nv ? nv.borde : 'var(--mecanu-border)',
+            headBg: nv ? nv.bg : 'var(--mecanu-neutral-0)',
+            iconColor: nv ? nv.color : 'var(--mecanu-neutral-700)',
+            estadoTexto: nv ? nv.titulo + ' · ' + i.copy[val - 1] : 'Sin responder',
+            estadoColor: nv ? nv.color : 'var(--mecanu-neutral-700)',
+            toggle: () => this._w({ abierto: ab ? null : i.key, ruedaSel: null }),
+            opciones: opciones(i.copy, val, (n) => this._w({ items: Object.assign({}, w.items, { [i.key]: n }), abierto: null })) };
+        }),
+        ruedas: this.RUEDAS.map((r, idx) => {
+          const val = w.ruedas[r.key]; const nv = val ? nivel(val) : null;
+          return { label: r.label, corto: r.key.charAt(0) === 'd' ? 'Del.' : 'Tras.',
+            n: val ? String(val) : '–', top: idx < 2 ? '6px' : '126px',
+            lado: (idx % 2 === 0) ? 'left' : 'right',
+            bg: nv ? nv.bg : 'var(--mecanu-neutral-0)', borde: nv ? nv.color : 'var(--mecanu-border)',
+            color: nv ? nv.color : 'var(--mecanu-neutral-300)',
+            abrir: () => this._w({ ruedaSel: w.ruedaSel === r.key ? null : r.key, abierto: null }) };
+        }),
+        ruedasBorde: listo2 || this.RUEDAS.every((r) => w.ruedas[r.key]) ? 'var(--mecanu-border)' : 'var(--mecanu-border)',
+        ruedasIconColor: 'var(--mecanu-neutral-700)',
+        ruedasEstado: this.RUEDAS.every((r) => w.ruedas[r.key]) ? 'Las cuatro respondidas' : this.RUEDAS.filter((r) => !w.ruedas[r.key]).length + ' sin responder · toca cada rueda',
+        ruedasEstadoColor: this.RUEDAS.every((r) => w.ruedas[r.key]) ? '#1E7300' : 'var(--mecanu-neutral-700)',
+        ruedaAbierta: !!rs, ruedaLabel: rs ? rs.label : '',
+        ruedaOpciones: rs ? opciones(this.RUEDA_COPY, w.ruedas[rs.key], (n) => this._w({ ruedas: Object.assign({}, w.ruedas, { [rs.key]: n }), ruedaSel: null })) : [],
+        itv: w.itv, itvSinDato: w.itvSinDato,
+        setItv: (e) => this._w({ itv: e.target.value }),
+        toggleItvSinDato: () => this._w({ itvSinDato: !w.itvSinDato, itv: '' }),
+        itvSinDatoIcon: w.itvSinDato ? 'check_box' : 'check_box_outline_blank',
+        itvSinDatoColor: w.itvSinDato ? 'var(--mecanu-emerald-800)' : 'var(--mecanu-neutral-300)',
+        itvHay: dias != null && !w.itvSinDato,
+        itvTexto: dias == null ? '' : dias < 0 ? 'Vencida hace ' + Math.abs(dias) + ' días' : dias < 60 ? 'Por vencer · quedan ' + dias + ' días · genera campaña' : 'Vigente · quedan ' + dias + ' días',
+        itvColor: dias == null ? '' : dias < 0 ? '#A81823' : dias < 60 ? '#9C420B' : '#1E7300',
+        itvIcon: dias == null ? '' : dias < 0 ? 'error' : dias < 60 ? 'schedule' : 'verified',
+        nota: w.nota, setNota: (e) => this._w({ nota: e.target.value }),
+        vozIdle: !st.voz && !w.voz, vozGrabando: !!st.voz, vozHecha: !st.voz && !!w.voz,
+        vozContador: st.voz ? '0:' + String(st.voz.seg).padStart(2, '0') : '',
+        vozDur: w.voz ? 'Nota de voz · ' + w.voz.seg + ' s' : '',
+        vozGrabar: this.vozGrabar, vozParar: this.vozParar, vozPlay: this.vozPlay, vozBorrar: this.vozBorrar,
+        siguiente: this.wizSiguiente,
+        pieBloqueado: p1 ? !listo1 : !listo2,
+        pieIcon: p1 ? 'arrow_forward' : 'lock',
+        pieLabel: p1 ? 'Continuar a la inspección' : 'Sellar y salir a ruta',
+        hayAviso: p1 ? (faltan1.length > 0 || rojos.length > 0) : faltanItems > 0,
+        aviso: p1
+          ? (rojos.length ? 'Testigo rojo marcado: al sellar no podrás iniciar la marcha y se avisará al taller.' : textoFaltan1)
+          : (faltanItems === 1 ? 'Te falta 1 respuesta. Un toque y listo.' : 'Te faltan ' + faltanItems + ' respuestas. Un toque cada una.'),
+        avisoBg: (p1 && rojos.length) ? '#FCE0E2' : 'var(--mecanu-neutral-25)',
+        avisoColor: (p1 && rojos.length) ? '#A81823' : 'var(--mecanu-neutral-700)',
+        avisoIcon: (p1 && rojos.length) ? 'error' : 'info',
+      };
+    }
+
+    if (st.ent) {
+      const e = st.ent; const j = this._job(e.tid);
+      const pideFirma = e.tipo === 'devolucion';
+      const nf = Object.keys(e.fotos).length;
+      base.entOpen = true;
+      base.en = {
+        paso: pideFirma ? 'Devolución al cliente' : 'Entrega en el taller',
+        matricula: j.matricula, veh: j.veh, cliente: j.cliente,
+        salir: this.entSalir,
+        fotosLbl: 'Fotos de entrega · ' + nf + ' de ' + this.ENT_SLOTS.length,
+        slots: this.ENT_SLOTS.map((s) => { const f = e.fotos[s.key]; return {
+          label: s.label, hecha: !!f, vacia: !f, img: f ? 'url("' + f.src + '")' : 'none',
+          bg: f ? 'var(--mecanu-neutral-900)' : 'var(--mecanu-neutral-25)',
+          borde: f ? 'solid var(--mecanu-neutral-900)' : 'dashed var(--mecanu-border)',
+          abrir: () => this._abrirCam('ent', s.key) }; }),
+        pideFirma,
+        firmaBorde: e.firma ? 'var(--mecanu-neutral-900)' : 'var(--mecanu-border)',
+        firmaNota: e.firma ? 'Firma recogida. Se sella con hora y GPS al confirmar.' : 'Pásale el móvil al cliente para que firme con el dedo.',
+        borrarFirma: this.borrarFirma,
+        bloqueado: nf < this.ENT_SLOTS.length || (pideFirma && !e.firma),
+        pieLabel: pideFirma ? 'Confirmar la devolución' : 'Confirmar la entrega',
+        cerrar: this.entCerrar,
+      };
+    }
+
+    base.hayDialogo = !!st.dialogo;
+    if (st.dialogo) base.dlg = st.dialogo;
+
+    if (st.sheet) {
+      const j = this._job(st.sheet.tid); const t = st.sheet.tipo;
+      base.sheetOpen = true;
+      if (t === 'menu') {
+        base.sh = { titulo: 'Solicitar al taller', sub: 'Tú propones con lo que ves en la calle; el taller decide y confirma. Ninguna de estas acciones se ejecuta sola.',
+          opciones: [
+            { label: 'Pedir reagendar', icono: 'event_repeat', color: 'var(--mecanu-neutral-900)', onClick: () => this.abrirSol(j.tid, 'reagenda') },
+            { label: 'Rechazar el traslado', icono: 'assignment_return', color: 'var(--mecanu-neutral-900)', onClick: () => this.abrirSol(j.tid, 'rechazo') },
+            { label: 'Marcar fallido en origen', icono: 'person_off', color: 'var(--mecanu-neutral-900)', onClick: () => this.abrirSol(j.tid, 'fallido') },
+            { label: 'Proponer no rodante', icono: 'car_crash', color: '#A81823', onClick: () => this.abrirSol(j.tid, 'no_rodante') },
+          ] };
+      } else if (t === 'atraso') {
+        const jr = (agenda.find((x) => x.tid === j.tid) || {}).riesgo || null;
+        base.sh = { titulo: 'Vas atrasado', esAtraso: true,
+          sub: jr ? 'El anterior traslado no acaba hasta las ' + jr.hasta + '. Confirma si igual llegarás a tiempo, o pide reagendar.' : '',
+          atrasoNota: st.atrasoNota || '', setAtrasoNota: this.setAtrasoNota,
+          confirmar: () => this.confirmarLlegada(j.tid),
+          opciones: (this.MOTIVOS.reagenda || []).map((o) => ({ label: o.label, icono: o.icono, color: 'var(--mecanu-neutral-900)', onClick: () => this.enviarSol('reagenda', o.id) })) };
+      } else {
+        const m = this.SOL_META[t];
+        base.sh = { titulo: m.titulo, sub: m.sub,
+          opciones: (this.MOTIVOS[t] || []).map((o) => ({ label: o.label, icono: o.icono, color: 'var(--mecanu-neutral-900)', onClick: () => this.enviarSol(t, o.id) })) };
+      }
+    }
+
+    if (st.vista === 'emergencias') {
+      base.esEmergencias = true;
+      const jobs = mis.filter((j) => !j.hecho && this.EN_RUTA.indexOf(j.sub) >= 0);
+      base.emgJobs = jobs.map((j) => ({
+        matricula: j.matricula, veh: j.veh, rol: j.rol,
+        segIcon: j.segIcon, segColor: j.segColor, segTitulo: j.segTitulo,
+        puedeReportar: !j.congelado, congelado: j.congelado,
+        cuando: j.congelado ? D.fmtHora(st.incidentes[j.tid].ts) : '',
+        reportar: () => this.reportar(j.tid),
+      }));
+      base.hayEmgJobs = jobs.length > 0; base.sinEmgJobs = jobs.length === 0;
+      return base;
+    }
+
+    if (st.vista === 'detalle' && st.sel) {
+      const j = this._job(st.sel); if (!j) { base.esLista = true; return base; }
+      base.esDetalle = true;
+      const a = this._accion(j);
+      const activoId2 = this._activoId();
+      const otro = activoId2 && activoId2 !== j.tid ? this._job(activoId2) : null;
+      /* R1: sin alerta ni redirección — el botón queda deshabilitado y una línea neutra lo explica. */
+      const bloqPorOtro = !!(otro && j.sub === 'agendado');
+      const bloqueado = j.congelado || j.bloqueoRojo || bloqPorOtro || (!j.win && j.sub === 'agendado');
+      const pasos = ['Recogida', 'Tránsito', 'En taller', 'Devolución'];
+      const cur = j.hecho ? 4 : ({ agendado: 0, en_camino_origen: 0, en_origen: 0, en_transito: 1, en_destino: 2 })[j.sub];
+      const sol = j.solicitud;
+      const logsBase = (D.logsDeTraslado ? D.logsDeTraslado(j.tid) : []).map((l) => ({ ts: l.creadoEn || l.ts, tipo: l.tipo, texto: l.texto || l.mensaje, cola: false }));
+      const logs = logsBase.concat(st.logsLocal[j.tid] || []).sort((x, y) => y.ts - x.ts);
+      const icoLog = { cambio_estado: 'swap_horiz', incidencia: 'warning', nota: 'sticky_note_2', comunicacion: 'chat' };
+      base.dt = {
+        rol: j.rol, matricula: j.matricula, veh: j.veh, estado: j.estado, estadoKind: j.estadoKind,
+        segIcon: j.segIcon, segColor: j.segColor,
+        segBg: j.seguro ? '#E4FBDA' : '#FCE0E2',
+        segTexto: j.seguro ? 'Cobertura activa durante todo el traslado, del origen al destino.' : 'Sin cobertura. Si algo pasa con este coche, no está asegurado por Mecanu.',
+        congelado: j.congelado,
+        bloqueoRojo: j.bloqueoRojo,
+        rojoTexto: j.bloqueoRojo ? 'Testigo rojo: ' + j.testigosRojos.map((k) => (this.TESTIGOS.find((x) => x.key === k) || {}).label).join(', ') + '. No conduzcas este coche.' : '',
+        rojoEstado: sol && sol.tipo === 'no_rodante' ? (sol.estado === 'pendiente' ? 'Has propuesto marcarlo no rodante. Esperando al taller.' : 'El taller lo ha revisado.') : 'Propón marcarlo no rodante desde "Solicitar al taller".',
+        steps: pasos, current: cur,
+        hayVentana: !!j.win, sinVentana: !j.win,
+        vIni: j.win ? j.win.inicio : '', vFin: j.win ? j.win.inicio : '', vDia: j.win ? this._fechaLbl(j.win.fecha) : '',
+        pedirReagenda: () => this.abrirSol(j.tid, 'reagenda'),
+        hayRiesgo: !!j.riesgo,
+        riesgoTexto: j.riesgo ? 'Atrasado: ' + j.riesgo.con + ' no acaba hasta las ' + j.riesgo.hasta + '. Pide reagendar uno de los dos.' : '',
+        haySolicitud: !!sol,
+        solicitudTexto: sol ? (sol.estado === 'pendiente' ? this.SOL_META[sol.tipo].badge + ' · ' + sol.motivo + ' · esperando al taller' : 'El taller ya respondió a tu solicitud') : '',
+        oEtiqueta: j.oEtiqueta, dEtiqueta: j.dEtiqueta,
+        oDireccion: this.esExterno() && j.sub === 'agendado' ? this._dirVaga(j.oDireccion) : j.oDireccion,
+        dDireccion: this.esExterno() && j.sub === 'agendado' ? this._dirVaga(j.dDireccion) : j.dDireccion,
+        oIcon: 'trip_origin', oColor: 'var(--mecanu-neutral-700)', dIcon: 'place', dColor: 'var(--mecanu-emerald-800)',
+        navegar: () => this.navegar(j), navLabel: (j.sub === 'agendado' || j.sub === 'en_camino_origen') ? 'Navegar a la recogida' : 'Navegar al destino',
+        cliente: j.cliente, telefono: j.tel ? (this.esExterno() ? 'Teléfono oculto hasta iniciar' : j.tel) : 'Sin teléfono registrado',
+        llamar: () => this.llamar(j.tel), servicio: j.servicio,
+        hayCheckin: !!j.checkin,
+        checkinLbl: j.inspeccion ? 'Check-in e inspección hechos' : 'Check-in hecho',
+        checkinMeta: j.checkin ? (Object.keys(j.checkin.fotos).length + ' fotos · vídeo · ' + Number(j.checkin.km).toLocaleString('es-ES') + ' km · ' + j.checkin.combustible + ' · ' + D.fmtHora(j.checkin.ts) + ' · sellado, no editable') : '',
+        historialLbl: logs.length ? 'Historial · ' + logs.length : 'Sin historial todavía',
+        historial: logs.map((l) => ({
+          texto: l.texto, icono: icoLog[l.tipo] || 'radio_button_unchecked',
+          color: l.tipo === 'incidencia' ? '#A81823' : 'var(--mecanu-neutral-300)',
+          meta: D.fmtHora(l.ts) + (l.cola ? ' · pendiente de enviar' : ''),
+        })),
+        abrirMenuSol: () => this.abrirMenuSol(j.tid),
+        soporte: 'Ref. soporte ' + j.ruta + ' / ' + j.tid,
+        sinAgenda: !j.win && !j.hecho,
+        hayAccion: !!a && !j.hecho, completado: j.hecho,
+        accionLabel: a ? a.label : '', accionIcon: a ? a.icon : 'check',
+        bloqueado, avanzar: () => this.avanzar(j.tid),
+        bloqueoTexto: j.congelado ? 'Viaje congelado por siniestro.'
+          : j.bloqueoRojo ? 'Testigo rojo encendido: el taller tiene que autorizar.'
+          : bloqPorOtro ? 'Termina el ' + otro.veh + ' primero.'
+          : 'Sin ventana acordada, no se puede iniciar.',
+      };
+      return base;
+    }
+
+    base.esLista = true;
+    return base;
+  }
+}
+
+</script>
+</body>
+</html>

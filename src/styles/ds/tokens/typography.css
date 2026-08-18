@@ -1,7 +1,9 @@
 :root {
-  /* var(--font-plus-jakarta-sans) la expone next/font/google en src/app/layout.tsx —
-     autoalojada en build time, no depende de red en runtime (ver esa nota para el porqué). */
-  --mecanu-font-family: var(--font-plus-jakarta-sans), "Inter", -apple-system, sans-serif;
+  /* var(--font-plus-jakarta-sans) la expone next/font/google en src/app/layout.tsx.
+     El fallback DENTRO de var() es obligatorio: si la custom property no está
+     definida, `var(--x), "Inter"` invalida toda la declaración y el body cae
+     al system font. Con fallback, al menos se pide "Plus Jakarta Sans" por nombre. */
+  --mecanu-font-family: var(--font-plus-jakarta-sans, "Plus Jakarta Sans"), "Inter", -apple-system, sans-serif;
   --mecanu-font-weight-regular: 400;
   --mecanu-font-weight-medium: 500;
   --mecanu-font-weight-bold: 700;

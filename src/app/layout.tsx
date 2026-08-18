@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { preconnect } from "react-dom";
 import "./globals.css";
 
 /**
  * Plus Jakarta Sans vía next/font/google: se descarga y autoaloja en build time,
- * cero dependencia de red en runtime. Necesario porque un `@import url(...)` a
- * fonts.googleapis.com dentro del CSS bundleado NO sobrevive al build de
- * producción de Turbopack (confirmado: el CSS compilado no lo contiene, aunque
- * funcionaba en `next dev`) — ver ARQUITECTURA.md, sección de fuentes.
- * `variable` expone un custom property que typography.css consume como
- * `--mecanu-font-family`, así que ningún componente cambia.
+ * cero dependencia de red en runtime. Un `@import url(...)` a fonts.googleapis.com
+ * dentro del CSS bundleado NO sobrevive al build de producción de Turbopack
+ * (el CSS compilado no lo contiene, aunque funcionaba en `next dev`) —
+ * ver ARQUITECTURA.md y AUDITORIA-FRONTEND.md.
+ *
+ * `variable` expone `--font-plus-jakarta-sans` que typography.css consume como
+ * `--mecanu-font-family`. `className` aplica `font-family` directo en html/body
+ * para no depender solo de la cadena de custom properties (si la variable no
+ * llega a definirse, `--mecanu-font-family` quedaba inválida y caía al system font).
  */
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -23,25 +27,34 @@ export const metadata: Metadata = {
   description: "Mecanu — logística B2B para talleres",
 };
 
+const fontClass = `${plusJakartaSans.variable} ${plusJakartaSans.className}`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  preconnect("https://fonts.googleapis.com");
+  preconnect("https://fonts.gstatic.com", { crossOrigin: "anonymous" });
+
   return (
-    <html lang="es" className={`h-full antialiased ${plusJakartaSans.variable}`}>
-      <head>
+    <html lang="es" className={`h-full antialiased ${fontClass}`}>
+      <body className={`min-h-full flex flex-col ${plusJakartaSans.className}`}>
         {/*
-          Material Symbols Rounded como <link> real en el <head>, no vía CSS
-          @import: por la misma razón que Plus Jakarta Sans necesitó next/font —
-          un <link> nativo lo resuelve el navegador en runtime y no pasa por el
-          bundler de CSS de Turbopack, así que sobrevive al build de producción.
-          Es además el mismo patrón que usaban los .dc.html originales (un <link>
-          de verdad en el <helmet>, no una importación empaquetada).
+          Material Symbols Rounded. Next.js 16 (App Router + Metadata API) no
+          garantiza que un <head> manual en el root layout sobreviva al HTML
+          servido — y además recorta <link> a fonts.googleapis.com (regla
+          no-page-custom-font / font optimizer), que es exactamente por qué los
+          iconos se veían como texto literal.
+
+          React 19 iza <link precedence> al document head. El href es same-origin
+          (`public/fonts/…`), así el optimizer de Google Fonts no lo toca. Ese
+          CSS estático es el que pide la variable font a Google en runtime.
+          Aplica a /panel y /conductor porque ambos cuelgan de este layout.
         */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font -- regla de la era del Pages Router; en App Router este <link> vive en el layout raíz y ya cubre el sitio entero por diseño, es un falso positivo aquí */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=swap"
+          href="/fonts/material-symbols-rounded.css"
+          precedence="high"
         />
-      </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,18 +1,20 @@
-/* Plus Jakarta Sans — sustituta oficial de Škoda Next (spec §1.2) — y Material Symbols Rounded —
-   set de iconografía sustituto de Uber Base Icons.
+/* Plus Jakarta Sans — sustituta oficial de Škoda Next (spec §1.2) — y Material
+   Symbols Rounded — set de iconografía sustituto de Uber Base Icons.
 
    Deliberadamente vacío de @import: un `@import url(...)` remoto dentro del CSS
    bundleado por Turbopack NO sobrevive al build de producción (confirmado
    inspeccionando el CSS compilado — el import simplemente no está, aunque
-   funcionaba en `next dev`). Las dos fuentes se cargan por vías que si sobreviven:
+   funcionaba en `next dev`). Las dos fuentes se cargan por vías que sí sobreviven:
 
    - Plus Jakarta Sans: next/font/google en src/app/layout.tsx (autoalojada en
-     build time, expone `var(--font-plus-jakarta-sans)` que consume
-     `--mecanu-font-family` en tokens/typography.css).
-   - Material Symbols Rounded: <link rel="stylesheet"> real en el <head> de
-     src/app/layout.tsx (un <link> nativo lo resuelve el navegador en runtime,
-     no pasa por el bundler de CSS — mismo patrón que usaban los .dc.html
-     originales, que también cargaban sus fuentes vía <link>, no vía import
-     empaquetado).
+     build time). Expone `var(--font-plus-jakarta-sans)` que consume
+     `--mecanu-font-family` en tokens/typography.css, y aplica `className` en
+     html/body para no depender solo de esa cadena de variables.
+   - Material Symbols Rounded: stylesheet estático en
+     public/fonts/material-symbols-rounded.css, enlazado con <link precedence>
+     desde el layout raíz (same-origin, fuera del bundler y del font optimizer
+     de Next.js que recorta los <link> a fonts.googleapis.com). El @import a
+     Google Fonts vive en ese archivo público, no aquí.
 
-   Ver ARQUITECTURA.md para el detalle completo de este diagnóstico. */
+   Este archivo se importa desde styles.css para no romper el orden de tokens
+   del design system original. Ver AUDITORIA-FRONTEND.md. */

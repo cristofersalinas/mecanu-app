@@ -1,0 +1,6 @@
+/* Material Symbols Rounded — stylesheet estático (public/), nunca pasa por Turbopack.
+   El navegador resuelve el @import en runtime con su User-Agent real, así llega
+   la variable font (ejes opsz / wght / FILL / GRAD) y no un TTF estático.
+   display=block: mientras carga no se pintan las ligatures como texto
+   (arrow_back, search, …). */
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block");
