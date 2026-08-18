@@ -245,11 +245,9 @@ export default function MadridMap() {
     const onTrackpadPinch = (event: WheelEvent) => {
       if (!event.ctrlKey && !event.metaKey) return;
       event.preventDefault();
-      const rect = container.getBoundingClientRect();
-      const around = map.unproject([event.clientX - rect.left, event.clientY - rect.top]);
       const step = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 0.08 : 0.008;
       const zoom = Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), map.getZoom() - event.deltaY * step));
-      map.jumpTo({ center: map.getCenter(), zoom, around });
+      map.jumpTo({ zoom });
     };
     container.addEventListener("wheel", onTrackpadPinch, { passive: false });
 
