@@ -149,12 +149,6 @@ const novedades = [
     icono: "local_shipping",
     visual: "articleFleet",
   },
-  {
-    categoria: "COBERTURA",
-    titulo: "Qué mirar antes de mover un vehículo bajo custodia",
-    icono: "shield",
-    visual: "articleCoverage",
-  },
 ] as const;
 
 const beneficios = [
