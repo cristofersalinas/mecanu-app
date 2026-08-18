@@ -1,0 +1,548 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import {
+  Map as MapLibreMap,
+  NavigationControl,
+  setWorkerUrl,
+  type GeoJSONSource,
+  type LngLatBounds,
+  type StyleSpecification,
+} from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { Icon } from "@/components/ds/Icon";
+import styles from "@/app/landing.module.css";
+import {
+  CIUDAD_INICIAL,
+  CIUDADES_MAPA,
+  TAMANO_CIUDAD,
+  TAMANO_DISTRITO,
+  ciudadPorId,
+  type CiudadMapa,
+  type CiudadMapaId,
+  type TallerMapa,
+} from "./ciudades-mapa";
+
+const MAP_STYLE: StyleSpecification = {
+  version: 8,
+  glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap © CARTO",
+    },
+  },
+  layers: [{ id: "osm", type: "raster", source: "osm" }],
+};
+
+const CITY_FIT_PADDING = 28;
+/** Zoom por defecto: más cerca que el encaje del recuadro. */
+const CITY_ZOOM_EXTRA = Math.log2(1.728);
+/** Al seleccionar un taller: 10 % de la distancia original (90 % más cerca). */
+const TALLER_DISTANCIA_RELATIVA = 0.1;
+
+function talleresGeoJSON(talleres: TallerMapa[]): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return {
+    type: "FeatureCollection",
+    features: talleres.map((taller) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [taller.lng, taller.lat] },
+      properties: { name: taller.name, address: taller.address },
+    })),
+  };
+}
+
+function distritosGeoJSON(ciudad: CiudadMapa): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return {
+    type: "FeatureCollection",
+    features: ciudad.distritos
+      .filter((distrito) => distrito.name !== ciudad.omitDistrict)
+      .map((distrito) => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [distrito.lng, distrito.lat] },
+        properties: { name: distrito.name },
+      })),
+  };
+}
+
+function ciudadGeoJSON(ciudad: CiudadMapa): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [ciudad.lng, ciudad.lat] },
+        properties: { name: ciudad.cityName },
+      },
+    ],
+  };
+}
+
+function mapsUrl(address: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+}
+
+function zoomTaller(zoomOrigen: number, maxZoom: number): number {
+  return Math.min(maxZoom, zoomOrigen + Math.log2(1 / TALLER_DISTANCIA_RELATIVA));
+}
+
+function padBounds(bounds: LngLatBounds, factor = 0.04): [[number, number], [number, number]] {
+  const west = bounds.getWest();
+  const east = bounds.getEast();
+  const south = bounds.getSouth();
+  const north = bounds.getNorth();
+  const lngPad = (east - west) * factor;
+  const latPad = (north - south) * factor;
+  return [
+    [west - lngPad, south - latPad],
+    [east + lngPad, north + latPad],
+  ];
+}
+
+function vistaCiudad(map: MapLibreMap, ciudad: CiudadMapa): { center: [number, number]; zoom: number } {
+  const camera = map.cameraForBounds(ciudad.bounds, { padding: CITY_FIT_PADDING });
+  return {
+    center: [ciudad.lng, ciudad.lat],
+    zoom: (camera?.zoom ?? map.getZoom()) + CITY_ZOOM_EXTRA,
+  };
+}
+
+function bloquearVista(map: MapLibreMap) {
+  map.setMaxBounds(padBounds(map.getBounds()));
+  map.setMinZoom(map.getZoom());
+}
+
+let lockVistaId = 0;
+
+function encajarCiudad(map: MapLibreMap, ciudad: CiudadMapa, duration: number): number {
+  const lockId = ++lockVistaId;
+  map.setMaxBounds(null);
+  map.setMinZoom(1);
+  const view = vistaCiudad(map, ciudad);
+  if (duration <= 0) {
+    map.jumpTo(view);
+    bloquearVista(map);
+  } else {
+    map.once("moveend", () => {
+      if (lockId !== lockVistaId) return;
+      bloquearVista(map);
+    });
+    map.easeTo({ ...view, duration });
+  }
+  return view.zoom;
+}
+
+function aplicarFuentes(map: MapLibreMap, ciudad: CiudadMapa) {
+  (map.getSource("distritos") as GeoJSONSource | undefined)?.setData(distritosGeoJSON(ciudad));
+  (map.getSource("ciudad") as GeoJSONSource | undefined)?.setData(ciudadGeoJSON(ciudad));
+  (map.getSource("talleres") as GeoJSONSource | undefined)?.setData(talleresGeoJSON(ciudad.talleres));
+}
+
+function coleccionVacia(): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return { type: "FeatureCollection", features: [] };
+}
+
+function seleccionGeoJSON(taller: TallerMapa | null): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  if (!taller) return coleccionVacia();
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [taller.lng, taller.lat] },
+        properties: {},
+      },
+    ],
+  };
+}
+
+function aplicarSeleccion(map: MapLibreMap, taller: TallerMapa | null) {
+  (map.getSource("seleccion") as GeoJSONSource | undefined)?.setData(seleccionGeoJSON(taller));
+}
+
+function iconoTaller(): ImageData {
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return new ImageData(size, size);
+  ctx.fillStyle = "#ffffff";
+  ctx.translate(8, 8);
+  ctx.scale(48 / 24, 48 / 24);
+  ctx.fill(new Path2D("M3 8.5 5 5h14l2 3.5V10H3V8.5Zm1 2.5h16v9H4v-9Zm6 9h4v-5h-4v5Z"));
+  return ctx.getImageData(0, 0, size, size);
+}
+
+export default function MadridMap() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const defaultZoomRef = useRef<number | null>(null);
+  const resetTimerRef = useRef<number | null>(null);
+  const [cityId, setCityId] = useState<CiudadMapaId>(CIUDAD_INICIAL.id);
+  const [selected, setSelected] = useState<TallerMapa | null>(null);
+  const cityRef = useRef(CIUDAD_INICIAL);
+  const ciudad = ciudadPorId(cityId);
+  const prevCityIdRef = useRef<CiudadMapaId | null>(null);
+
+  useEffect(() => {
+    cityRef.current = ciudad;
+  }, [ciudad]);
+
+  const clearResetTimer = () => {
+    if (resetTimerRef.current == null) return;
+    window.clearTimeout(resetTimerRef.current);
+    resetTimerRef.current = null;
+  };
+
+  const scheduleReset = () => {
+    clearResetTimer();
+    resetTimerRef.current = window.setTimeout(() => {
+      const map = mapRef.current;
+      const destino = cityRef.current;
+      if (map) {
+        defaultZoomRef.current = encajarCiudad(map, destino, 900);
+        aplicarSeleccion(map, null);
+      }
+      setSelected(null);
+      resetTimerRef.current = null;
+    }, 3000);
+  };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
+
+    const map = new MapLibreMap({
+      container,
+      style: MAP_STYLE,
+      bounds: CIUDAD_INICIAL.bounds,
+      fitBoundsOptions: { padding: CITY_FIT_PADDING },
+      maxZoom: 18,
+      renderWorldCopies: false,
+      attributionControl: { compact: true },
+      scrollZoom: false,
+      boxZoom: false,
+      dragRotate: false,
+      touchPitch: false,
+      doubleClickZoom: false,
+      dragPan: true,
+      touchZoomRotate: true,
+    });
+
+    map.touchZoomRotate.disableRotation();
+    map.addControl(new NavigationControl({ showCompass: false }), "bottom-right");
+    mapRef.current = map;
+
+    const onTrackpadPinch = (event: WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      const rect = container.getBoundingClientRect();
+      const around = map.unproject([event.clientX - rect.left, event.clientY - rect.top]);
+      const step = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 0.08 : 0.008;
+      const zoom = Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), map.getZoom() - event.deltaY * step));
+      map.jumpTo({ center: map.getCenter(), zoom, around });
+    };
+    container.addEventListener("wheel", onTrackpadPinch, { passive: false });
+
+    const capasPines = ["talleres-pines", "talleres-clusters"] as const;
+
+    const onLoad = () => {
+      map.resize();
+      map.addImage("taller-icono", iconoTaller(), { pixelRatio: 2 });
+
+      map.addSource("distritos", {
+        type: "geojson",
+        data: distritosGeoJSON(cityRef.current),
+      });
+
+      map.addLayer({
+        id: "distritos-label",
+        type: "symbol",
+        source: "distritos",
+        layout: {
+          "text-field": ["get", "name"],
+          "text-size": TAMANO_DISTRITO,
+          "text-max-width": 8,
+          "text-padding": 2,
+          "text-allow-overlap": false,
+        },
+        paint: {
+          "text-color": "#6b7280",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1.6,
+        },
+      });
+
+      map.addSource("ciudad", {
+        type: "geojson",
+        data: ciudadGeoJSON(cityRef.current),
+      });
+
+      map.addLayer({
+        id: "ciudad-label",
+        type: "symbol",
+        source: "ciudad",
+        layout: {
+          "text-field": ["get", "name"],
+          "text-size": TAMANO_CIUDAD,
+          "text-letter-spacing": 0.04,
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+        },
+        paint: {
+          "text-color": "#0f0f0f",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 2,
+        },
+      });
+
+      map.addSource("seleccion", {
+        type: "geojson",
+        data: coleccionVacia(),
+      });
+
+      map.addLayer({
+        id: "seleccion-ring-outer",
+        type: "circle",
+        source: "seleccion",
+        paint: {
+          "circle-radius": 160,
+          "circle-color": "#0f0f0f",
+          "circle-opacity": 0.04,
+        },
+      });
+
+      map.addLayer({
+        id: "seleccion-ring-mid",
+        type: "circle",
+        source: "seleccion",
+        paint: {
+          "circle-radius": 100,
+          "circle-color": "#0f0f0f",
+          "circle-opacity": 0.09,
+        },
+      });
+
+      map.addLayer({
+        id: "seleccion-ring-inner",
+        type: "circle",
+        source: "seleccion",
+        paint: {
+          "circle-radius": 60,
+          "circle-color": "#0f0f0f",
+          "circle-opacity": 0.18,
+        },
+      });
+
+      map.addSource("talleres", {
+        type: "geojson",
+        data: talleresGeoJSON(cityRef.current.talleres),
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 26,
+      });
+
+      map.addLayer({
+        id: "talleres-clusters",
+        type: "circle",
+        source: "talleres",
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": "#ffffff",
+          "circle-stroke-color": "#111111",
+          "circle-stroke-width": 1,
+          "circle-radius": [
+            "min",
+            40,
+            ["+", 10, ["*", ["get", "point_count"], 3.5]],
+          ],
+        },
+      });
+
+      map.addLayer({
+        id: "talleres-cluster-count",
+        type: "symbol",
+        source: "talleres",
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": ["get", "point_count_abbreviated"],
+          "text-size": ["min", 18, ["+", 10, ["*", ["get", "point_count"], 0.9]]],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+        },
+        paint: {
+          "text-color": "#111111",
+        },
+      });
+
+      map.addLayer({
+        id: "talleres-pines",
+        type: "circle",
+        source: "talleres",
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": "#0f0f0f",
+          "circle-radius": 16,
+        },
+      });
+
+      map.addLayer({
+        id: "talleres-iconos",
+        type: "symbol",
+        source: "talleres",
+        filter: ["!", ["has", "point_count"]],
+        layout: {
+          "icon-image": "taller-icono",
+          "icon-size": 0.5,
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+        },
+      });
+
+      defaultZoomRef.current = encajarCiudad(map, cityRef.current, 0);
+
+      const setPointer = () => {
+        map.getCanvas().style.cursor = "pointer";
+      };
+      const clearPointer = () => {
+        map.getCanvas().style.cursor = "";
+      };
+      for (const layer of capasPines) {
+        map.on("mouseenter", layer, setPointer);
+        map.on("mouseleave", layer, clearPointer);
+      }
+    };
+
+    map.on("load", onLoad);
+
+    map.on("click", (event) => {
+      const target = event.originalEvent.target;
+      if (target instanceof Element && target.closest("button")) return;
+
+      const cluster = map.queryRenderedFeatures(event.point, { layers: ["talleres-clusters"] })[0];
+      if (cluster?.geometry.type === "Point") {
+        const clusterId = Number(cluster.properties?.cluster_id);
+        const coordinates = cluster.geometry.coordinates as [number, number];
+        const source = map.getSource("talleres") as GeoJSONSource;
+        source.getClusterExpansionZoom(clusterId).then((zoom) => {
+          map.easeTo({ center: coordinates, zoom });
+        });
+        return;
+      }
+
+      const pin = map.queryRenderedFeatures(event.point, { layers: ["talleres-pines"] })[0];
+      if (pin?.properties?.name) {
+        const taller = cityRef.current.talleres.find((item) => item.name === pin.properties?.name);
+        if (taller) {
+          setSelected(taller);
+          const origen = defaultZoomRef.current ?? map.getZoom();
+          map.easeTo({
+            center: [taller.lng, taller.lat],
+            zoom: zoomTaller(origen, map.getMaxZoom()),
+            duration: 700,
+          });
+        }
+        return;
+      }
+
+      setSelected(null);
+    });
+
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+      container.removeEventListener("wheel", onTrackpadPinch);
+      clearResetTimer();
+      mapRef.current = null;
+      map.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (prevCityIdRef.current === null) {
+      prevCityIdRef.current = cityId;
+      return;
+    }
+    if (prevCityIdRef.current === cityId) return;
+    prevCityIdRef.current = cityId;
+    cityRef.current = ciudad;
+    const map = mapRef.current;
+    if (!map?.isStyleLoaded()) return;
+    clearResetTimer();
+    setSelected(null);
+    aplicarFuentes(map, ciudad);
+    aplicarSeleccion(map, null);
+    defaultZoomRef.current = encajarCiudad(map, ciudad, 700);
+  }, [cityId, ciudad]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map?.isStyleLoaded()) return;
+    aplicarSeleccion(map, selected);
+  }, [selected]);
+
+  return (
+    <section
+      className={styles.mapSection}
+      aria-label={`Mapa de talleres en ${ciudad.cityName}`}
+      onPointerEnter={clearResetTimer}
+      onPointerLeave={scheduleReset}
+    >
+      <div className={styles.mapCitySwitch} role="radiogroup" aria-label="Ciudad del mapa">
+        {CIUDADES_MAPA.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="radio"
+            aria-checked={item.id === cityId}
+            className={item.id === cityId ? styles.mapCitySwitchActive : undefined}
+            onClick={() => {
+              cityRef.current = ciudadPorId(item.id);
+              setCityId(item.id);
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <div ref={containerRef} className={styles.mapCanvas} />
+      {selected ? (
+        <article className={styles.mapPlaceCard} aria-live="polite">
+          <div className={styles.mapPlacePhoto} aria-hidden="true">
+            <Icon name="storefront" size="xl" />
+          </div>
+          <div className={styles.mapPlaceBody}>
+            <strong>{selected.name}</strong>
+            <p>{selected.address}</p>
+            <div className={styles.mapPlaceActions}>
+              <a
+                className={styles.btnSecondary}
+                href={mapsUrl(selected.address)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Detalles
+              </a>
+              <a className={styles.btnPrimary} href="#contacto">
+                Hablar con Mecanu
+              </a>
+            </div>
+          </div>
+        </article>
+      ) : null}
+    </section>
+  );
+}
