@@ -5,13 +5,18 @@ import { cabecerasDeSeguridad } from "./src/lib/security/csp";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
+    const seguridad = cabecerasDeSeguridad({
+      desarrollo: process.env.NODE_ENV === "development",
+    });
+    const cacheInmutable = {
+      key: "Cache-Control",
+      value: "public, max-age=31536000, immutable",
+    };
     return [
-      {
-        source: "/:path*",
-        headers: cabecerasDeSeguridad({
-          desarrollo: process.env.NODE_ENV === "development",
-        }),
-      },
+      { source: "/:path*", headers: seguridad },
+      { source: "/landing/:path*", headers: [cacheInmutable] },
+      { source: "/icons/:path*", headers: [cacheInmutable] },
+      { source: "/maplibre/:path*", headers: [cacheInmutable] },
     ];
   },
 };
