@@ -46,6 +46,12 @@ const soloLanding =
   process.env.MECANU_EXPONER_APPS !== "1";
 
 function esAppProtegida(pathname: string) {
+  const apiPublica =
+    pathname === "/api/v1/contacto" ||
+    pathname.startsWith("/api/v1/contacto/") ||
+    pathname === "/api/v1/itv-leads" ||
+    pathname.startsWith("/api/v1/itv-leads/");
+  if (apiPublica) return false;
   return (
     pathname === "/panel" ||
     pathname.startsWith("/panel/") ||

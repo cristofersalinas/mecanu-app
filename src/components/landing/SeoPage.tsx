@@ -16,6 +16,7 @@ export function SeoPage({
   lede,
   children,
   ctaText = "¿Quieres probar Mecanu en tu taller?",
+  ctaHref = "/contacto",
   related,
 }: {
   breadcrumb: string;
@@ -23,6 +24,7 @@ export function SeoPage({
   lede: string;
   children: ReactNode;
   ctaText?: string;
+  ctaHref?: string;
   related: RelatedLink[];
 }) {
   return (
@@ -50,7 +52,7 @@ export function SeoPage({
 
         <div className={styles.cta}>
           <p className={styles.ctaText}>{ctaText}</p>
-          <Link href="/contacto" className={styles.ctaBtn}>
+          <Link href={ctaHref} className={styles.ctaBtn}>
             Hablar con Mecanu →
           </Link>
         </div>

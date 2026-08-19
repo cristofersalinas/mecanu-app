@@ -74,6 +74,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE}/software-taller`, priority: 0.75, changeFrequency: "monthly" as const },
     { url: `${SITE}/mantenimiento-marcas`, priority: 0.75, changeFrequency: "monthly" as const },
     { url: `${SITE}/cliente-no-recoge-coche`, priority: 0.8, changeFrequency: "monthly" as const },
+    { url: `${SITE}/itv-a-domicilio`, priority: 0.85, changeFrequency: "weekly" as const },
+    { url: `${SITE}/itv-a-domicilio/madrid`, priority: 0.8, changeFrequency: "monthly" as const },
+    { url: `${SITE}/itv-a-domicilio/barcelona`, priority: 0.8, changeFrequency: "monthly" as const },
+    { url: `${SITE}/itv-a-domicilio/caducada`, priority: 0.75, changeFrequency: "monthly" as const },
+    { url: `${SITE}/itv-a-domicilio/rechazada`, priority: 0.75, changeFrequency: "monthly" as const },
   ].map((p) => ({ ...p, lastModified: now }));
 
   // Política de privacidad

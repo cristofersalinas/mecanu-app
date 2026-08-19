@@ -1,0 +1,95 @@
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid #e5e5e5;
+}
+
+.steps li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 2rem 1.75rem 2.25rem;
+  border-right: 1px solid #e5e5e5;
+}
+
+.steps li:last-child {
+  border-right: 0;
+}
+
+.steps strong {
+  font-size: 0.95rem;
+}
+
+.steps span {
+  color: #374151;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.faqSection,
+.blogSection {
+  padding: 3.5rem 2.5rem 3rem;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.faqItem {
+  padding: 1rem 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.faqItem summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.faqItem p {
+  margin: 0.6rem 0 0;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.subLinks,
+.blogList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.subLinks a,
+.blogList a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.blogList {
+  flex-direction: column;
+}
+
+.bottomCta {
+  display: flex;
+  justify-content: center;
+  padding: 2.5rem 1.5rem 3.5rem;
+}
+
+@media (max-width: 800px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .steps li {
+    border-right: 0;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .faqSection,
+  .blogSection {
+    padding: 2.5rem 1.25rem;
+  }
+}

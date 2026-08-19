@@ -1,5 +1,4 @@
-/** Datos estáticos del blog de Mecanu.
- *  Sin backend por ahora — se reemplaza por Supabase cuando haya más posts. */
+import { ITV_POSTS } from "./itv-posts";
 
 export type Author = {
   slug: string;
@@ -198,6 +197,7 @@ export const POSTS: Post[] = [
 <p>Desglose en <a href="/software-taller">software de taller</a> y <a href="/itv-para-talleres">ITV para talleres</a>.</p>
     `,
   },
+  ...ITV_POSTS,
 ];
 
 export function getPost(slug: string): Post | undefined {
