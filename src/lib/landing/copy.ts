@@ -4,9 +4,9 @@ export type LandingMapCityId =
   | "madrid"
   | "barcelona"
   | "londres"
-  | "sao-paulo"
-  | "san-francisco"
-  | "nueva-york";
+  | "paris"
+  | "ginebra"
+  | "zurich";
 
 export type LandingCopy = {
   meta: { title: string; description: string };
@@ -170,11 +170,11 @@ const es: LandingCopy = {
     { label: "Atención de cliente", href: "#contacto" },
   ],
   hero: {
-    kicker: "DISEÑADO PARA",
-    kickerBrand: "TALLERES EN MOVIMIENTO",
-    headline: "Los coches se mueven. Tu taller no para.",
+    kicker: "INFRAESTRUCTURA LOGÍSTICA",
+    kickerBrand: "PARA AUTOMOVILISTAS MODERNOS",
+    headline: "Tu taller no para cuando los coches se mueven.",
     subtext:
-      "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones.",
+      "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones con clientes.",
     primary: "Ver cómo funciona",
     secondary: "Hablar con nosotros",
     photoAlt: "Volvo recorriendo una calle estrecha al atardecer",
@@ -187,9 +187,9 @@ const es: LandingCopy = {
       madrid: "Madrid",
       barcelona: "Barcelona",
       londres: "Londres",
-      "sao-paulo": "São Paulo",
-      "san-francisco": "San Francisco",
-      "nueva-york": "New York",
+      paris: "París",
+      ginebra: "Ginebra",
+      zurich: "Zúrich",
     },
     details: "Detalles",
     talk: "Hablar con Mecanu",
@@ -199,26 +199,26 @@ const es: LandingCopy = {
   stats: [
     {
       numero: "01",
-      valor: "1 h",
-      etiqueta: "VENTANA HORARIA",
+      valor: "7 días",
+      etiqueta: "SIN ESPERAR AL CLIENTE",
       texto:
-        "Recogidas y entregas coordinadas en un rango claro, para que el cliente y el taller sepan cuándo ocurre.",
+        "Se acabó quedar una semana coordinando cuándo trae el coche. Recogida en puerta con ventana de 1 h.",
       enlace: "Ver cómo funciona",
     },
     {
       numero: "02",
-      valor: "24/7",
-      etiqueta: "ESTADO VISIBLE",
+      valor: "50%",
+      etiqueta: "MENOS QUE UNA GRÚA",
       texto:
-        "Cada movimiento queda registrado: conductor, estado, fotos y firma desde la recogida hasta la entrega.",
+        "Más barato, asegurado y disponible el mismo día en traslados urbanos con coche circulando.",
       enlace: "Ver cómo funciona",
     },
     {
       numero: "03",
-      valor: "40 km",
-      etiqueta: "PRUEBA EN RUTA",
+      valor: "+1 plaza",
+      etiqueta: "CAPACIDAD AL DÍA",
       texto:
-        "Cobertura pensada para el riesgo real de mover vehículos bajo custodia del taller, también en pruebas.",
+        "Devuelves el coche terminado el mismo día y abres hueco para otra OR sin ampliar la nave.",
     },
   ],
   hiw: {
@@ -252,11 +252,11 @@ const es: LandingCopy = {
     heading: "¿Pico de trabajo?",
     subtext: "Tu capacidad puede crecer sin ampliar la nave.",
     cta: "Pide apoyo a Mecanu",
-    photoAlt: "Coche clásico partido en collage vintage, sobre fondo crema.",
+    photoAlt: "Coche clásico partido en collage vintage.",
   },
   news: {
     eyebrow: "MECANU / IDEAS PARA EL TALLER",
-    heading: "Novedades para mover mejor tu taller",
+    heading: "Ideas para modernizar tu taller",
     cta: "Ver todas →",
     read: "Leer →",
     items: [
@@ -284,7 +284,7 @@ const es: LandingCopy = {
     eyebrow: "PONLO EN MARCHA",
     heading: "Si tus clientes no pueden ir al taller por falta de tiempo.",
     subtext:
-      "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones.",
+      "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones con clientes.",
     primary: "Hablar con Mecanu",
     secondary: "Ver cómo funciona",
     featuresLabel: "LO QUE OBTIENES",
@@ -294,8 +294,16 @@ const es: LandingCopy = {
         texto: "Se acabó esperar 7 días: el coche se recoge en su puerta.",
       },
       {
+        icono: "home_work",
+        texto: "El cliente se queda en casa. Tú recuperas plaza.",
+      },
+      {
         icono: "savings",
         texto: "Más barato y más disponible que una grúa.",
+      },
+      {
+        icono: "chat",
+        texto: "Automatiza la atención al cliente con inteligencia artificial, hasta donde tú quieras.",
       },
       {
         icono: "verified_user",
@@ -310,16 +318,8 @@ const es: LandingCopy = {
         texto: "Check-in visual: hasta 20 puntos.",
       },
       {
-        icono: "chat",
-        texto: "CRM con WhatsApp: menos llamadas, atención automática.",
-      },
-      {
         icono: "auto_awesome",
         texto: "Predicción de próximos servicios y avisos al cliente.",
-      },
-      {
-        icono: "home_work",
-        texto: "El cliente se queda en casa. Tú recuperas plaza.",
       },
     ],
   },
@@ -482,11 +482,11 @@ const ca: LandingCopy = {
     { label: "Atenció al client", href: "#contacto" },
   ],
   hero: {
-    kicker: "DISSENYAT PER A",
-    kickerBrand: "TALLERS EN MOVIMENT",
-    headline: "Els cotxes es mouen. El teu taller no s'atura.",
+    kicker: "INFRAESTRUCTURA LOGÍSTICA",
+    kickerBrand: "PER A AUTOMOBILISTES MODERNS",
+    headline: "El teu taller no s'atura quan els cotxes es mouen.",
     subtext:
-      "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions.",
+      "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions amb clients.",
     primary: "Veure com funciona",
     secondary: "Parlar amb nosaltres",
     photoAlt: "Volvo recorrent un carrer estret al capvespre",
@@ -499,9 +499,9 @@ const ca: LandingCopy = {
       madrid: "Madrid",
       barcelona: "Barcelona",
       londres: "Londres",
-      "sao-paulo": "São Paulo",
-      "san-francisco": "San Francisco",
-      "nueva-york": "New York",
+      paris: "París",
+      ginebra: "Ginebra",
+      zurich: "Zuric",
     },
     details: "Detalls",
     talk: "Parlar amb Mecanu",
@@ -511,26 +511,26 @@ const ca: LandingCopy = {
   stats: [
     {
       numero: "01",
-      valor: "1 h",
-      etiqueta: "FRANJA HORÀRIA",
+      valor: "7 dies",
+      etiqueta: "SENSE ESPERAR EL CLIENT",
       texto:
-        "Recollides i lliuraments coordinats en una franja clara, perquè el client i el taller sàpiguen quan passa.",
+        "S'ha acabat quedar una setmana coordinant quan porta el cotxe. Recollida a la porta amb franja d'1 h.",
       enlace: "Veure com funciona",
     },
     {
       numero: "02",
-      valor: "24/7",
-      etiqueta: "ESTAT VISIBLE",
+      valor: "50%",
+      etiqueta: "MENYS QUE UNA GRUA",
       texto:
-        "Cada moviment queda registrat: conductor, estat, fotos i signatura des de la recollida fins al lliurament.",
+        "Més barat, assegurat i disponible el mateix dia en trasllats urbans amb cotxe circulant.",
       enlace: "Veure com funciona",
     },
     {
       numero: "03",
-      valor: "40 km",
-      etiqueta: "PROVA EN RUTA",
+      valor: "+1 plaça",
+      etiqueta: "CAPACITAT AL DIA",
       texto:
-        "Cobertura pensada per al risc real de moure vehicles sota custòdia del taller, també en proves.",
+        "Retornes el cotxe acabat el mateix dia i obres espai per a una altra OR sense ampliar la nau.",
     },
   ],
   hiw: {
@@ -564,11 +564,11 @@ const ca: LandingCopy = {
     heading: "Pic de feina?",
     subtext: "La teva capacitat pot créixer sense ampliar la nau.",
     cta: "Demana suport a Mecanu",
-    photoAlt: "Cotxe clàssic partit en collage vintage, sobre fons crema.",
+    photoAlt: "Cotxe clàssic partit en collage vintage.",
   },
   news: {
     eyebrow: "MECANU / IDEES PER AL TALLER",
-    heading: "Novetats per moure millor el teu taller",
+    heading: "Idees per modernitzar el teu taller",
     cta: "Veure-les totes →",
     read: "Llegir →",
     items: [
@@ -596,7 +596,7 @@ const ca: LandingCopy = {
     eyebrow: "POSA-HO EN MARXA",
     heading: "Si els teus clients no poden anar al taller per falta de temps.",
     subtext:
-      "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions.",
+      "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions amb clients.",
     primary: "Parlar amb Mecanu",
     secondary: "Veure com funciona",
     featuresLabel: "QUÈ HI GUANYES",
@@ -606,8 +606,16 @@ const ca: LandingCopy = {
         texto: "S'ha acabat esperar 7 dies: el cotxe es recull a la porta.",
       },
       {
+        icono: "home_work",
+        texto: "El client es queda a casa. Tu recuperes plaça.",
+      },
+      {
         icono: "savings",
         texto: "Més barat i més disponible que una grua.",
+      },
+      {
+        icono: "chat",
+        texto: "Automatitza l'atenció al client amb intel·ligència artificial, fins on tu vulguis.",
       },
       {
         icono: "verified_user",
@@ -622,16 +630,8 @@ const ca: LandingCopy = {
         texto: "Check-in visual: fins a 20 punts.",
       },
       {
-        icono: "chat",
-        texto: "CRM amb WhatsApp: menys trucades, atenció automàtica.",
-      },
-      {
         icono: "auto_awesome",
         texto: "Predicció de pròxims serveis i avisos al client.",
-      },
-      {
-        icono: "home_work",
-        texto: "El client es queda a casa. Tu recuperes plaça.",
       },
     ],
   },
@@ -794,11 +794,11 @@ const en: LandingCopy = {
     { label: "Customer service", href: "#contacto" },
   ],
   hero: {
-    kicker: "DESIGNED FOR",
-    kickerBrand: "SHOPS THAT MOVE",
-    headline: "Cars move. Your shop never stops.",
+    kicker: "LOGISTICS INFRASTRUCTURE",
+    kickerBrand: "FOR MODERN MOTORISTS",
+    headline: "Your shop never stops when cars move.",
     subtext:
-      "Send cars where you need them, free the shop, and look after the customer. Every run under control. No friction.",
+      "Send cars where you need them, free the shop, and look after the customer. Every run under control. No friction with customers.",
     primary: "See how it works",
     secondary: "Talk to us",
     photoAlt: "Volvo on a narrow street at dusk",
@@ -811,9 +811,9 @@ const en: LandingCopy = {
       madrid: "Madrid",
       barcelona: "Barcelona",
       londres: "London",
-      "sao-paulo": "São Paulo",
-      "san-francisco": "San Francisco",
-      "nueva-york": "New York",
+      paris: "Paris",
+      ginebra: "Geneva",
+      zurich: "Zurich",
     },
     details: "Details",
     talk: "Talk to Mecanu",
@@ -823,23 +823,26 @@ const en: LandingCopy = {
   stats: [
     {
       numero: "01",
-      valor: "1 h",
-      etiqueta: "TIME WINDOW",
-      texto: "Collections and deliveries in a clear window. Shop and customer both know when.",
+      valor: "7 days",
+      etiqueta: "NO WAITING ON THE CUSTOMER",
+      texto:
+        "No more spending a week lining up when they can bring the car. Door collection in a 1 h window.",
       enlace: "See how it works",
     },
     {
       numero: "02",
-      valor: "24/7",
-      etiqueta: "VISIBLE STATUS",
-      texto: "Every run is logged: driver, status, photos and signature, collection to delivery.",
+      valor: "50%",
+      etiqueta: "LESS THAN A TOW TRUCK",
+      texto:
+        "Cheaper, insured and available the same day for urban runs when the car still drives.",
       enlace: "See how it works",
     },
     {
       numero: "03",
-      valor: "40 km",
-      etiqueta: "ROAD TEST",
-      texto: "Cover for the real risk of moving cars in the shop’s care — including road tests.",
+      valor: "+1 bay",
+      etiqueta: "CAPACITY TODAY",
+      texto:
+        "Return the finished car the same day and free a bay for another job without expanding the shop.",
     },
   ],
   hiw: {
@@ -869,11 +872,11 @@ const en: LandingCopy = {
     heading: "Workload spike?",
     subtext: "Grow capacity without a bigger shop.",
     cta: "Bring Mecanu in",
-    photoAlt: "Classic car split in vintage collage on a cream background.",
+    photoAlt: "Classic car split in vintage collage.",
   },
   news: {
     eyebrow: "MECANU / IDEAS FOR THE SHOP",
-    heading: "What’s new to keep the shop moving",
+    heading: "Ideas to modernize your shop",
     cta: "See all →",
     read: "Read →",
     items: [
@@ -901,7 +904,7 @@ const en: LandingCopy = {
     eyebrow: "GET IT RUNNING",
     heading: "When customers have no time to come in.",
     subtext:
-      "Send cars where you need them, free the shop, and look after the customer. Every run under control. No friction.",
+      "Send cars where you need them, free the shop, and look after the customer. Every run under control. No friction with customers.",
     primary: "Talk to Mecanu",
     secondary: "See how it works",
     featuresLabel: "WHAT YOU GET",
@@ -911,8 +914,16 @@ const en: LandingCopy = {
         texto: "No more waiting 7 days: we collect the car at their door.",
       },
       {
+        icono: "home_work",
+        texto: "The customer stays home. You get the bay back.",
+      },
+      {
         icono: "savings",
         texto: "Cheaper and more available than a recovery truck.",
+      },
+      {
+        icono: "chat",
+        texto: "Automate customer care with AI, as far as you want.",
       },
       {
         icono: "verified_user",
@@ -927,16 +938,8 @@ const en: LandingCopy = {
         texto: "Visual check-in: up to 20 points.",
       },
       {
-        icono: "chat",
-        texto: "WhatsApp CRM: fewer calls, automated care.",
-      },
-      {
         icono: "auto_awesome",
         texto: "Upcoming-service prediction and client alerts.",
-      },
-      {
-        icono: "home_work",
-        texto: "The customer stays home. You get the bay back.",
       },
     ],
   },
@@ -1099,11 +1102,11 @@ const pt: LandingCopy = {
     { label: "Apoio ao cliente", href: "#contacto" },
   ],
   hero: {
-    kicker: "DESENHADO PARA",
-    kickerBrand: "OFICINAS EM MOVIMENTO",
-    headline: "Os carros movem-se. A tua oficina não para.",
+    kicker: "INFRAESTRUTURA LOGÍSTICA",
+    kickerBrand: "PARA AUTOMOBILISTAS MODERNOS",
+    headline: "A tua oficina não para quando os carros se movem.",
     subtext:
-      "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito.",
+      "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito com clientes.",
     primary: "Ver como funciona",
     secondary: "Falar connosco",
     photoAlt: "Volvo numa rua estreita ao entardecer",
@@ -1116,9 +1119,9 @@ const pt: LandingCopy = {
       madrid: "Madrid",
       barcelona: "Barcelona",
       londres: "Londres",
-      "sao-paulo": "São Paulo",
-      "san-francisco": "San Francisco",
-      "nueva-york": "New York",
+      paris: "Paris",
+      ginebra: "Genebra",
+      zurich: "Zurique",
     },
     details: "Detalhes",
     talk: "Falar com Mecanu",
@@ -1128,23 +1131,26 @@ const pt: LandingCopy = {
   stats: [
     {
       numero: "01",
-      valor: "1 h",
-      etiqueta: "JANELA HORÁRIA",
-      texto: "Recolhas e entregas numa janela clara. Oficina e cliente sabem quando.",
+      valor: "7 dias",
+      etiqueta: "SEM ESPERAR PELO CLIENTE",
+      texto:
+        "Acabou ficar uma semana a combinar quando o cliente traz o carro. Recolha à porta com janela de 1 h.",
       enlace: "Ver como funciona",
     },
     {
       numero: "02",
-      valor: "24/7",
-      etiqueta: "ESTADO À VISTA",
-      texto: "Cada movimento fica registado: condutor, estado, fotos e assinatura, da recolha à entrega.",
+      valor: "50%",
+      etiqueta: "MENOS QUE UM REBOQUE",
+      texto:
+        "Mais barato, com seguro e disponível no mesmo dia em deslocações urbanas com carro a circular.",
       enlace: "Ver como funciona",
     },
     {
       numero: "03",
-      valor: "40 km",
-      etiqueta: "TESTE EM ESTRADA",
-      texto: "Cobertura para o risco real de mover carros à guarda da oficina — também em testes.",
+      valor: "+1 lugar",
+      etiqueta: "CAPACIDADE NO DIA",
+      texto:
+        "Devolves o carro terminado no mesmo dia e abres espaço para outra OR sem ampliar a oficina.",
     },
   ],
   hiw: {
@@ -1174,11 +1180,11 @@ const pt: LandingCopy = {
     heading: "Pico de trabalho?",
     subtext: "Aumenta a capacidade sem alargar a oficina.",
     cta: "Chama a Mecanu",
-    photoAlt: "Carro clássico partido em collage vintage, sobre fundo creme.",
+    photoAlt: "Carro clássico partido em collage vintage.",
   },
   news: {
     eyebrow: "MECANU / IDEIAS PARA A OFICINA",
-    heading: "Novidades para a oficina continuar a andar",
+    heading: "Ideias para modernizar a tua oficina",
     cta: "Ver todas →",
     read: "Ler →",
     items: [
@@ -1206,7 +1212,7 @@ const pt: LandingCopy = {
     eyebrow: "PÕE ISTO A ANDAR",
     heading: "Quando o cliente não tem tempo de ir à oficina.",
     subtext:
-      "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito.",
+      "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito com clientes.",
     primary: "Falar com Mecanu",
     secondary: "Ver como funciona",
     featuresLabel: "O QUE OBTÉNS",
@@ -1216,8 +1222,16 @@ const pt: LandingCopy = {
         texto: "Acabou esperar 7 dias: o carro recolhe-se à porta.",
       },
       {
+        icono: "home_work",
+        texto: "O cliente fica em casa. Tu recuperas o lugar.",
+      },
+      {
         icono: "savings",
         texto: "Mais barato e mais disponível do que um reboque.",
+      },
+      {
+        icono: "chat",
+        texto: "Automatiza o atendimento ao cliente com inteligência artificial, até onde quiseres.",
       },
       {
         icono: "verified_user",
@@ -1232,16 +1246,8 @@ const pt: LandingCopy = {
         texto: "Check-in visual: até 20 pontos.",
       },
       {
-        icono: "chat",
-        texto: "CRM com WhatsApp: menos chamadas, atendimento automático.",
-      },
-      {
         icono: "auto_awesome",
         texto: "Predição dos próximos serviços e avisos ao cliente.",
-      },
-      {
-        icono: "home_work",
-        texto: "O cliente fica em casa. Tu recuperas o lugar.",
       },
     ],
   },

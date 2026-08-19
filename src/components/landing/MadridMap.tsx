@@ -45,6 +45,10 @@ const MAP_STYLE: StyleSpecification = {
 const CITY_FIT_PADDING = 28;
 /** Zoom por defecto: más cerca que el encaje del recuadro. */
 const CITY_ZOOM_EXTRA = Math.log2(1.728);
+/** Solo sesgamos la vista hacia talleres si siguen razonablemente ligados a la ciudad. */
+const CITY_TALLER_MAX_DIST_KM = 15;
+/** El centro se inclina hacia la zona con más talleres, sin abandonar la ciudad. */
+const CITY_CENTER_BIAS = 0.35;
 /** Al seleccionar un taller: 10 % de la distancia original (90 % más cerca). */
 const TALLER_DISTANCIA_RELATIVA = 0.1;
 
@@ -124,11 +128,62 @@ function padBounds(bounds: LngLatBounds, factor = 0.04): [[number, number], [num
   ];
 }
 
+function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const lat1 = toRad(aLat);
+  const lat2 = toRad(bLat);
+  const sinLat = Math.sin(dLat / 2);
+  const sinLng = Math.sin(dLng / 2);
+  const h =
+    sinLat * sinLat + Math.cos(lat1) * Math.cos(lat2) * sinLng * sinLng;
+  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+function talleresCercanos(ciudad: CiudadMapa): TallerMapa[] {
+  return ciudad.talleres.filter((taller) =>
+    distanceKm(ciudad.lat, ciudad.lng, taller.lat, taller.lng) <= CITY_TALLER_MAX_DIST_KM
+  );
+}
+
+function boundsDePuntos(
+  points: Array<{ lng: number; lat: number }>
+): [[number, number], [number, number]] {
+  const lngs = points.map((point) => point.lng);
+  const lats = points.map((point) => point.lat);
+  return [
+    [Math.min(...lngs), Math.min(...lats)],
+    [Math.max(...lngs), Math.max(...lats)],
+  ];
+}
+
 function vistaCiudad(map: MapLibreMap, ciudad: CiudadMapa): { center: [number, number]; zoom: number } {
   const camera = map.cameraForBounds(ciudad.bounds, { padding: CITY_FIT_PADDING });
+  const zoomCiudad = (camera?.zoom ?? map.getZoom()) + CITY_ZOOM_EXTRA;
+  const cercanos = talleresCercanos(ciudad);
+  if (cercanos.length === 0) {
+    return {
+      center: [ciudad.lng, ciudad.lat],
+      zoom: zoomCiudad,
+    };
+  }
+
+  const mediaLng =
+    cercanos.reduce((acc, taller) => acc + taller.lng, 0) / cercanos.length;
+  const mediaLat =
+    cercanos.reduce((acc, taller) => acc + taller.lat, 0) / cercanos.length;
+  const cameraTalleres = map.cameraForBounds(
+    boundsDePuntos([{ lng: ciudad.lng, lat: ciudad.lat }, ...cercanos]),
+    { padding: CITY_FIT_PADDING + 16 }
+  );
+  const zoomTalleres = (cameraTalleres?.zoom ?? zoomCiudad) + 0.2;
   return {
-    center: [ciudad.lng, ciudad.lat],
-    zoom: (camera?.zoom ?? map.getZoom()) + CITY_ZOOM_EXTRA,
+    center: [
+      ciudad.lng + (mediaLng - ciudad.lng) * CITY_CENTER_BIAS,
+      ciudad.lat + (mediaLat - ciudad.lat) * CITY_CENTER_BIAS,
+    ],
+    zoom: Math.min(zoomCiudad, zoomTalleres),
   };
 }
 
@@ -325,7 +380,8 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
     });
 
     map.touchZoomRotate.disableRotation();
-    map.addControl(new NavigationControl({ showCompass: false }), "top-right");
+    // Zoom +/-: estilos y alineación en landing.module.css — ver AGENTS.md § mapa MapLibre
+    map.addControl(new NavigationControl({ showCompass: false }), "bottom-right");
     mapRef.current = map;
 
     const onTrackpadPinch = (event: WheelEvent) => {
@@ -598,25 +654,26 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
       onPointerEnter={clearResetTimer}
       onPointerLeave={scheduleReset}
     >
-      <div className={styles.mapCitySwitch}>
-        <select
-          aria-label={copy.citySwitchAria}
-          value={cityId}
-          onChange={(event) => {
-            const nextId = event.target.value as CiudadMapaId;
-            cityRef.current = ciudadPorId(nextId);
-            setCityId(nextId);
-          }}
-        >
-          {CIUDADES_MAPA.map((item) => (
-            <option key={item.id} value={item.id}>
+      <div className={styles.mapCityTabs} role="group" aria-label={copy.citySwitchAria}>
+        {CIUDADES_MAPA.map((item) => {
+          const active = item.id === cityId;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={active ? styles.mapCityTabActive : styles.mapCityTab}
+              aria-pressed={active}
+              onClick={() => {
+                cityRef.current = ciudadPorId(item.id);
+                setCityId(item.id);
+              }}
+            >
               {copy.ciudades[item.id] ?? item.label}
-            </option>
-          ))}
-        </select>
+            </button>
+          );
+        })}
       </div>
-      <div ref={containerRef} className={styles.mapCanvas} />
-      <div className={styles.mapZoomControls}>
+      <div className={styles.mapControlsColumn}>
         <button
           type="button"
           className={styles.mapResetBtn}
@@ -633,6 +690,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
           <Icon name="my_location" size="sm" />
         </button>
       </div>
+      <div ref={containerRef} className={styles.mapCanvas} />
       {selected ? (
         <article className={styles.mapPlaceCard} aria-live="polite">
           <StreetViewPhoto taller={selected} />
@@ -656,13 +714,19 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
         </article>
       ) : ciudad.talleres.length === 0 ? (
         <article className={styles.mapPlaceCard} aria-live="polite">
-          <div className={styles.mapPlacePhotoPlaceholder}>
-            <img
-              className={styles.mapPlacePhotoImg}
-              src="/landing/map-barcelona.png"
-              alt="Mosaico de un reloj de arena, estilo trencadís de Barcelona"
-            />
-          </div>
+          {ciudad.id === "barcelona" ? (
+            <div className={styles.mapPlacePhotoPlaceholder}>
+              <img
+                className={styles.mapPlacePhotoImg}
+                src="/landing/map-barcelona.png"
+                alt="Mosaico de un reloj de arena, estilo trencadís de Barcelona"
+              />
+            </div>
+          ) : (
+            <div className={styles.mapPlacePhoto} aria-hidden="true">
+              <Icon name="storefront" size="xl" />
+            </div>
+          )}
           <div className={styles.mapPlaceBody}>
             <strong>{nombreCiudad(copy, ciudad)}</strong>
             <p>{copy.comingSoon}</p>

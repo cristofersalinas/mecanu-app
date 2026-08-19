@@ -217,7 +217,7 @@ export function LandingPage({ locale }: { locale: Locale }) {
         <section className={styles.faqSection} id="preguntas">
           <div className={styles.sectionHeader}>
             <p className={styles.eyebrow}>MECANU / PREGUNTAS FRECUENTES</p>
-            <h2 className={styles.headline}>Lo que preguntan los talleres antes de empezar</h2>
+            <h2 className={styles.headline}>Preguntas frecuentes</h2>
           </div>
           <input id="faq-expand" type="checkbox" className={styles.faqToggle} />
           <div className={styles.faqClamp}>

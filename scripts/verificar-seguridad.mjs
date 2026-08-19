@@ -24,7 +24,7 @@ async function landingYCsp() {
   else ok("CSP allowlista Vercel Analytics");
   if (/localhost:\\d+/.test(csp)) fail("CSP hardcodea un puerto");
   else ok("CSP sin puerto de localhost");
-  if (!html.includes("Los coches se mueven")) fail("H1 en español no está");
+  if (!html.includes("Tu taller no para cuando los coches se mueven")) fail("H1 en español no está");
   else ok("landing en español");
   if (html.toLowerCase().includes("x-powered-by")) fail("HTML menciona el stack");
   else ok("sin X-Powered-By en el cuerpo");
