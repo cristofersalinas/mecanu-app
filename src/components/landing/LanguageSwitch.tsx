@@ -99,12 +99,13 @@ export function LanguageSwitch({
 }: {
   locale: Locale;
   label: string;
-  variant?: "header" | "footer" | "menu";
+  variant?: "header" | "footer" | "mobile";
   destino?: "landing" | "contacto";
 }) {
   const [abierto, setAbierto] = useState(false);
   const contenedor = useRef<HTMLDivElement>(null);
   const menuId = useId();
+  const FlagActual = FLAGS[locale];
 
   useEffect(() => {
     if (!abierto) return;
@@ -129,7 +130,7 @@ export function LanguageSwitch({
   return (
     <div
       ref={contenedor}
-      className={`${styles.langSwitch} ${variant === "header" ? styles.langSwitchHeader : ""}`}
+      className={`${styles.langSwitch} ${variant === "header" ? styles.langSwitchHeader : ""} ${variant === "footer" ? styles.langSwitchFooter : ""} ${variant === "mobile" ? styles.langSwitchMobile : ""}`}
     >
       <button
         type="button"
@@ -137,11 +138,19 @@ export function LanguageSwitch({
         aria-expanded={abierto}
         aria-controls={menuId}
         aria-haspopup="menu"
+        aria-label={`${label}: ${LOCALE_META[locale].nativeName}`}
         onClick={() => setAbierto((previo) => !previo)}
       >
-        <Icon name="translate" size="sm" />
+        <span className={styles.langTriggerTranslate}>
+          <Icon name="translate" size="sm" />
+        </span>
+        <span className={styles.langTriggerFlag} aria-hidden="true">
+          <FlagActual />
+        </span>
         <span className={styles.langTriggerLabel}>{label}</span>
-        <Icon name="expand_more" size="sm" />
+        <span className={styles.langTriggerChevron}>
+          <Icon name="expand_more" size="sm" />
+        </span>
       </button>
 
       <ul
@@ -168,7 +177,11 @@ export function LanguageSwitch({
               >
                 <Flag />
                 <span className={styles.langOptionName}>{LOCALE_META[id].nativeName}</span>
-                {actual ? <Icon name="check" size="sm" /> : null}
+                {actual ? (
+                  <span className={styles.langOptionCheck}>
+                    <Icon name="check" size="sm" />
+                  </span>
+                ) : null}
               </Link>
             </li>
           );

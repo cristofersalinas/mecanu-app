@@ -24,8 +24,6 @@ export type CiudadMapaId =
   | "madrid"
   | "barcelona"
   | "londres"
-  | "paris"
-  | "ginebra"
   | "zurich";
 
 export type CiudadMapa = {
@@ -146,150 +144,6 @@ const LONDRES: CiudadMapa = {
   ],
 };
 
-const PARIS: CiudadMapa = {
-  id: "paris",
-  label: "Paris",
-  cityName: "Paris",
-  lng: 2.3522,
-  lat: 48.8566,
-  bounds: [
-    [2.24, 48.815],
-    [2.42, 48.902],
-  ],
-  omitDistrict: "Louvre",
-  distritos: [
-    { name: "Louvre", lng: 2.3364, lat: 48.8625 },
-    { name: "Le Marais", lng: 2.3622, lat: 48.8576 },
-    { name: "Bastille", lng: 2.3692, lat: 48.8532 },
-    { name: "Montmartre", lng: 2.3429, lat: 48.8867 },
-    { name: "Batignolles", lng: 2.319, lat: 48.8872 },
-    { name: "Belleville", lng: 2.383, lat: 48.8721 },
-    { name: "Montparnasse", lng: 2.3212, lat: 48.8422 },
-    { name: "Bercy", lng: 2.3868, lat: 48.8385 },
-  ],
-  talleres: [
-    {
-      name: "Garage Boulard",
-      address: "Rue Boulard, 75014 Paris, France",
-      lat: 48.8334339,
-      lng: 2.3290764,
-    },
-    {
-      name: "Garage d'Abbeville",
-      address: "Rue d'Abbeville, 75010 Paris, France",
-      lat: 48.8782254,
-      lng: 2.3506915,
-    },
-    {
-      name: "Garage de l'Équerre",
-      address: "Rue de l'Équerre, 75019 Paris, France",
-      lat: 48.8749504,
-      lng: 2.3818485,
-    },
-    {
-      name: "Garage Rebeval",
-      address: "Rue Rébeval, 75019 Paris, France",
-      lat: 48.874423,
-      lng: 2.3817686,
-    },
-    {
-      name: "Garage Renault",
-      address: "65 bis Rue de la Colonie, 75013 Paris, France",
-      lat: 48.8240047,
-      lng: 2.351261,
-    },
-    {
-      name: "Garage Poniatowski",
-      address: "57 Boulevard Poniatowski, 75012 Paris, France",
-      lat: 48.8332546,
-      lng: 2.4011059,
-    },
-    {
-      name: "Renault Garage Saint-Georges Agent",
-      address: "Avenue Secrétan, 75019 Paris, France",
-      lat: 48.8794027,
-      lng: 2.3769111,
-    },
-    {
-      name: "Garage Élite",
-      address: "Avenue Duquesne, 75007 Paris, France",
-      lat: 48.8532436,
-      lng: 2.3080981,
-    },
-  ],
-};
-
-const GINEBRA: CiudadMapa = {
-  id: "ginebra",
-  label: "Geneva",
-  cityName: "Geneva",
-  lng: 6.1432,
-  lat: 46.2044,
-  bounds: [
-    [6.08, 46.17],
-    [6.2, 46.24],
-  ],
-  omitDistrict: "Cité",
-  distritos: [
-    { name: "Cité", lng: 6.1466, lat: 46.2018 },
-    { name: "Eaux-Vives", lng: 6.1635, lat: 46.2035 },
-    { name: "Plainpalais", lng: 6.143, lat: 46.1942 },
-    { name: "Pâquis", lng: 6.1557, lat: 46.2129 },
-    { name: "Carouge", lng: 6.1393, lat: 46.1805 },
-    { name: "Petit-Saconnex", lng: 6.1238, lat: 46.2169 },
-  ],
-  talleres: [
-    {
-      name: "Garage Peugeot Meyrin",
-      address: "Rue Lect, 1216 Meyrin, Genève, Suisse",
-      lat: 46.225182,
-      lng: 6.0808977,
-    },
-    {
-      name: "Garage de l'Athénée",
-      address: "Route de Meyrin, 1220 Vernier, Genève, Suisse",
-      lat: 46.2202517,
-      lng: 6.105214,
-    },
-    {
-      name: "Garage GF Automobiles",
-      address: "31 Route de Base, 1228 Plan-les-Ouates, Genève, Suisse",
-      lat: 46.1712608,
-      lng: 6.1091639,
-    },
-    {
-      name: "Garage Encyclopédie",
-      address: "6 Rue de l'Encyclopédie, 1201 Genève, Suisse",
-      lat: 46.2077031,
-      lng: 6.1355288,
-    },
-    {
-      name: "Garage de Beaulieu",
-      address: "19 Rue des Grottes, 1201 Genève, Suisse",
-      lat: 46.2118865,
-      lng: 6.1382321,
-    },
-    {
-      name: "Garage Dunoyer",
-      address: "Chemin De-Joinville, 1216 Meyrin, Genève, Suisse",
-      lat: 46.2254452,
-      lng: 6.1082473,
-    },
-    {
-      name: "Garage Bapst",
-      address: "Rue des Maraîchers, 1205 Genève, Suisse",
-      lat: 46.1990027,
-      lng: 6.1353286,
-    },
-    {
-      name: "Garage E. Jimenez",
-      address: "53 Rue du Grand-Pré, 1202 Genève, Suisse",
-      lat: 46.2152213,
-      lng: 6.1323645,
-    },
-  ],
-};
-
 const ZURICH: CiudadMapa = {
   id: "zurich",
   label: "Zurich",
@@ -375,8 +229,6 @@ export const CIUDADES_MAPA: CiudadMapa[] = [
   },
   BARCELONA,
   LONDRES,
-  PARIS,
-  GINEBRA,
   ZURICH,
 ];
 

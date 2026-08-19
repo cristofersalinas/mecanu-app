@@ -71,6 +71,7 @@ export function LandingHeader({
 
         <div className={styles.navEnd}>
           <LanguageSwitch locale={locale} label={copy.langLabel} variant="header" />
+          <LanguageSwitch locale={locale} label={copy.langLabel} variant="mobile" />
           <a className={styles.ctaBtn} href={contactoPathFor(locale)}>{copy.cta}</a>
           <button
             type="button"
@@ -108,9 +109,6 @@ export function LandingHeader({
                 {producto.label}
               </a>
             ))}
-            <div className={styles.mobileLang}>
-              <LanguageSwitch locale={locale} label={copy.langLabel} variant="menu" />
-            </div>
           </nav>
         </>
       ) : null}
