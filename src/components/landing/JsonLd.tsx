@@ -343,6 +343,41 @@ export function FaqJsonLd({ items, pageUrl }: { items: readonly FaqItem[]; pageU
   );
 }
 
+/**
+ * `AboutPage` para la página de definición de la entidad.
+ *
+ * `speakable` marca qué partes son la respuesta corta y citable: es lo que
+ * consumen los motores de respuesta y asistentes de voz cuando alguien pregunta
+ * "qué es Mecanu". Sin esto extraen el fragmento que les parece, que suele ser
+ * el primer texto del DOM y no la definición.
+ */
+export function AboutPageJsonLd({ url }: { url: string }) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "@id": `${url}#about`,
+    url,
+    name: "Qué es Mecanu",
+    description:
+      "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Coordina la recogida del coche en casa del cliente, el traslado al taller y la devolución cuando la reparación está terminada, con conductores verificados y seguro de responsabilidad civil incluido. Opera en Madrid y Barcelona.",
+    inLanguage: "es-ES",
+    isPartOf: { "@id": `${SITE}/#website` },
+    about: { "@id": `${SITE}/#organization` },
+    mainEntity: { "@id": `${SITE}/#organization` },
+    primaryImageOfPage: { "@id": `${SITE}/#logo` },
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: ["h1", "h1 + p"],
+    },
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
 /** JSON-LD para páginas de ciudad (LocalBusiness + Service) */
 export function CityPageJsonLd({
   city,

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SeoPage, FaqBlock } from "@/components/landing/SeoPage";
-import { BreadcrumbJsonLd, FaqJsonLd } from "@/components/landing/JsonLd";
+import { BreadcrumbJsonLd, FaqJsonLd, AboutPageJsonLd } from "@/components/landing/JsonLd";
 import { FAQ_LANDING } from "@/lib/landing/faq";
 
 export const dynamic = "force-static";
@@ -37,6 +37,7 @@ export default function QueEsMecanuPage() {
   return (
     <>
       <BreadcrumbJsonLd trail={[{ name: "Qué es Mecanu", path: "/que-es-mecanu" }]} />
+      <AboutPageJsonLd url={URL} />
       <FaqJsonLd items={FAQ_LANDING} pageUrl={URL} />
       <SeoPage
         breadcrumb="Qué es Mecanu"
