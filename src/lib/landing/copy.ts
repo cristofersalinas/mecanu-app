@@ -1,5 +1,12 @@
 import { DEFAULT_LOCALE, type Locale } from "./locales";
 
+export type LandingMapCityId =
+  | "madrid"
+  | "londres"
+  | "sao-paulo"
+  | "san-francisco"
+  | "nueva-york";
+
 export type LandingCopy = {
   meta: { title: string; description: string };
   nav: {
@@ -31,6 +38,7 @@ export type LandingCopy = {
      *  la frontera servidor→cliente y una función no es serializable. */
     sectionAria: string;
     citySwitchAria: string;
+    ciudades: Record<LandingMapCityId, string>;
     details: string;
     talk: string;
   };
@@ -88,13 +96,55 @@ export type LandingCopy = {
     gestionar: string;
     configurar: string;
   };
+  contacto: {
+    eyebrow: string;
+    heading: string;
+    subtext: string;
+    aceptar: string;
+    enviar: string;
+    anterior: string;
+    gracias: { heading: string; subtext: string };
+    pasos: {
+      nombre: { pregunta: string };
+      apellido: { pregunta: string };
+      email: { pregunta: string; aviso: string };
+      telefono: { pregunta: string; selectorPais: string };
+      objetivo: {
+        pregunta: string;
+        opciones: [string, string];
+      };
+      tipoTaller: {
+        pregunta: string;
+        opciones: [string, string, string, string, string];
+      };
+      uso: {
+        pregunta: string;
+        aviso: string;
+        opciones: [string, string, string, string, string, string, string, string, string];
+      };
+      ciudad: {
+        pregunta: string;
+        opciones: [string, string, string, string, string, string];
+      };
+      volumen: {
+        pregunta: string;
+        aviso: string;
+        opciones: [string, string, string, string, string];
+      };
+      negocio: { pregunta: string; placeholder: string };
+      canal: {
+        pregunta: string;
+        opciones: [string, string, string, string, string, string, string, string, string, string, string];
+      };
+    };
+  };
 };
 
 const es: LandingCopy = {
   meta: {
-    title: "Mecanu | Logística para talleres",
+    title: "Mecanu | Recogida y entrega de coches para talleres mecánicos",
     description:
-      "Recoge y entrega vehículos, libera espacio en tu taller y controla cada traslado con Mecanu.",
+      "Mecanu coordina la recogida y entrega de vehículos para talleres mecánicos en Madrid, Barcelona, Londres y más. Conductores verificados, ventanas de 1 hora, seguro incluido. Sin grúas caras.",
   },
   nav: {
     homeAria: "Mecanu, inicio",
@@ -131,6 +181,13 @@ const es: LandingCopy = {
   map: {
     sectionAria: "Mapa de talleres en {city}",
     citySwitchAria: "Ciudad del mapa",
+    ciudades: {
+      madrid: "Madrid",
+      londres: "Londres",
+      "sao-paulo": "São Paulo",
+      "san-francisco": "San Francisco",
+      "nueva-york": "New York",
+    },
     details: "Detalles",
     talk: "Hablar con Mecanu",
   },
@@ -274,13 +331,102 @@ const es: LandingCopy = {
     gestionar: "Más info",
     configurar: "Configurar cookies",
   },
+  contacto: {
+    eyebrow: "EMPIEZA AQUÍ",
+    heading: "Cuéntanos un poco sobre tu taller.",
+    subtext: "Son solo unos minutos. Nos ayuda a preparar la conversación.",
+    aceptar: "Aceptar",
+    enviar: "Enviar",
+    anterior: "Anterior",
+    gracias: {
+      heading: "Recibido.",
+      subtext: "Te contactaremos en menos de 24 horas.",
+    },
+    pasos: {
+      nombre: { pregunta: "Empecemos. ¿Cuál es tu **nombre**?" },
+      apellido: { pregunta: "Mucho gusto, {nombre}. ¿Cuál es tu **apellido**?" },
+      email: {
+        pregunta: "¿Cuál es tu **correo electrónico**?",
+        aviso:
+          "Al enviar este formulario, aceptas que Mecanu se ponga en contacto contigo para hablar de tu taller.",
+      },
+      telefono: {
+        pregunta: "¿Cuál es tu **número de teléfono**?",
+        selectorPais: "País",
+      },
+      objetivo: {
+        pregunta: "¿Qué quieres **hacer**?",
+        opciones: ["Digitalizar mi taller actual", "Abrir un nuevo taller"],
+      },
+      tipoTaller: {
+        pregunta: "¿Qué tipo de **taller** tienes?",
+        opciones: [
+          "Mecánica general",
+          "Carrocería y pintura",
+          "ITV / revisiones",
+          "Taller de flota",
+          "Otro",
+        ],
+      },
+      uso: {
+        pregunta: "¿Qué **problema quieres resolver** con Mecanu?",
+        aviso: "Selecciona hasta 3 opciones.",
+        opciones: [
+          "Despachar autos a domicilio",
+          "Retirar autos del cliente",
+          "Ofrecer mejor experiencia al cliente",
+          "Contratar conductores externos",
+          "Seguro de responsabilidad civil",
+          "Automatizar la atención al cliente",
+          "Tener página web para el taller",
+          "Ofrecer crédito a mis clientes",
+          "Fidelizar clientes y repetir visitas",
+        ],
+      },
+      ciudad: {
+        pregunta: "¿En qué **ciudad** está tu taller?",
+        opciones: ["Madrid", "Barcelona", "Valencia", "Bilbao", "Sevilla", "Otra"],
+      },
+      volumen: {
+        pregunta: "¿Cuántos **coches atiendes** normalmente al mes?",
+        aviso: "Cuenta los que entran al taller, no solo los traslados a domicilio.",
+        opciones: [
+          "Menos de 20 (micro)",
+          "20 – 60 (pequeño)",
+          "60 – 150 (mediano)",
+          "150 – 400 (grande)",
+          "Más de 400 (flota / cadena)",
+        ],
+      },
+      negocio: {
+        pregunta: "¿Cuál es el **nombre de tu taller**?",
+        placeholder: "Escribe el nombre aquí…",
+      },
+      canal: {
+        pregunta: "¿Cómo **nos conociste**?",
+        opciones: [
+          "Google / búsqueda online",
+          "LinkedIn",
+          "Instagram / redes sociales",
+          "Radio La Clave",
+          "Startupslatam.com",
+          "Tech Barcelona",
+          "Vendedor en terreno",
+          "Referido de otro taller",
+          "Email o newsletter",
+          "Evento o feria",
+          "Otro",
+        ],
+      },
+    },
+  },
 };
 
 const ca: LandingCopy = {
   meta: {
-    title: "Mecanu | Logística per a tallers",
+    title: "Mecanu | Recollida i lliurament de cotxes per a tallers mecànics",
     description:
-      "Recull i lliura vehicles, allibera espai al teu taller i controla cada trasllat amb Mecanu.",
+      "Mecanu coordina la recollida i lliurament de vehicles per a tallers mecànics a Barcelona, Madrid i més. Conductors verificats, finestres d'1 hora, assegurança inclosa. Sense grues cares.",
   },
   nav: {
     homeAria: "Mecanu, inici",
@@ -317,6 +463,13 @@ const ca: LandingCopy = {
   map: {
     sectionAria: "Mapa de tallers a {city}",
     citySwitchAria: "Ciutat del mapa",
+    ciudades: {
+      madrid: "Madrid",
+      londres: "Londres",
+      "sao-paulo": "São Paulo",
+      "san-francisco": "San Francisco",
+      "nueva-york": "New York",
+    },
     details: "Detalls",
     talk: "Parlar amb Mecanu",
   },
@@ -460,13 +613,102 @@ const ca: LandingCopy = {
     gestionar: "Més info",
     configurar: "Configurar galetes",
   },
+  contacto: {
+    eyebrow: "COMENÇA AQUÍ",
+    heading: "Explica'ns una mica el teu taller.",
+    subtext: "Són uns minuts. Ens ajuda a preparar la conversa.",
+    aceptar: "Acceptar",
+    enviar: "Enviar",
+    anterior: "Anterior",
+    gracias: {
+      heading: "Rebut.",
+      subtext: "Et contactarem en menys de 24 hores.",
+    },
+    pasos: {
+      nombre: { pregunta: "Comencem. Com et **dius**?" },
+      apellido: { pregunta: "Molt de gust, {nombre}. Quin és el teu **cognom**?" },
+      email: {
+        pregunta: "Quin és el teu **correu electrònic**?",
+        aviso:
+          "En enviar aquest formulari, acceptes que Mecanu es posi en contacte amb tu per parlar del teu taller.",
+      },
+      telefono: {
+        pregunta: "Quin és el teu **número de telèfon**?",
+        selectorPais: "País",
+      },
+      objetivo: {
+        pregunta: "Què vols **fer**?",
+        opciones: ["Digitalitzar el meu taller actual", "Obrir un taller nou"],
+      },
+      tipoTaller: {
+        pregunta: "Quin tipus de **taller** tens?",
+        opciones: [
+          "Mecànica general",
+          "Carrosseria i pintura",
+          "ITV / revisions",
+          "Taller de flota",
+          "Altre",
+        ],
+      },
+      uso: {
+        pregunta: "Quin **problema vols resoldre** amb Mecanu?",
+        aviso: "Selecciona fins a 3 opcions.",
+        opciones: [
+          "Despatxar cotxes a domicili",
+          "Recollir cotxes del client",
+          "Oferir millor experiència al client",
+          "Contractar conductors externs",
+          "Assegurança de responsabilitat civil",
+          "Automatitzar l'atenció al client",
+          "Tenir pàgina web per al taller",
+          "Oferir crèdit als meus clients",
+          "Fidelitzar clients i repetir visites",
+        ],
+      },
+      ciudad: {
+        pregunta: "En quina **ciutat** és el teu taller?",
+        opciones: ["Madrid", "Barcelona", "València", "Bilbao", "Sevilla", "Altra"],
+      },
+      volumen: {
+        pregunta: "Quants **cotxes atens** normalment al mes?",
+        aviso: "Compta els que entren al taller, no només els trasllats a domicili.",
+        opciones: [
+          "Menys de 20 (micro)",
+          "20 – 60 (petit)",
+          "60 – 150 (mitjà)",
+          "150 – 400 (gran)",
+          "Més de 400 (flota / cadena)",
+        ],
+      },
+      negocio: {
+        pregunta: "Quin és el **nom del teu taller**?",
+        placeholder: "Escriu el nom aquí…",
+      },
+      canal: {
+        pregunta: "Com ens has **conegut**?",
+        opciones: [
+          "Google / cerca en línia",
+          "LinkedIn",
+          "Instagram / xarxes socials",
+          "Radio La Clave",
+          "Startupslatam.com",
+          "Tech Barcelona",
+          "Venedor en terreny",
+          "Referit d'un altre taller",
+          "Email o newsletter",
+          "Esdeveniment o fira",
+          "Altre",
+        ],
+      },
+    },
+  },
 };
 
 const en: LandingCopy = {
   meta: {
-    title: "Mecanu | Logistics for shops",
+    title: "Mecanu | Car Collection & Delivery Service for Auto Repair Shops",
     description:
-      "Collect and deliver cars, free up bays, and keep every run under control.",
+      "Mecanu coordinates vehicle collection and delivery for auto repair workshops in London, Madrid, Barcelona and more. Verified drivers, 1-hour windows, insurance included. No expensive recovery trucks.",
   },
   nav: {
     homeAria: "Mecanu, home",
@@ -503,6 +745,13 @@ const en: LandingCopy = {
   map: {
     sectionAria: "Shops in {city}",
     citySwitchAria: "City",
+    ciudades: {
+      madrid: "Madrid",
+      londres: "London",
+      "sao-paulo": "São Paulo",
+      "san-francisco": "San Francisco",
+      "nueva-york": "New York",
+    },
     details: "Details",
     talk: "Talk to Mecanu",
   },
@@ -639,13 +888,102 @@ const en: LandingCopy = {
     gestionar: "More info",
     configurar: "Cookie settings",
   },
+  contacto: {
+    eyebrow: "GET STARTED",
+    heading: "Tell us a bit about your shop.",
+    subtext: "Just a few minutes. Helps us prepare the conversation.",
+    aceptar: "OK",
+    enviar: "Submit",
+    anterior: "Back",
+    gracias: {
+      heading: "Got it.",
+      subtext: "We will get back to you within 24 hours.",
+    },
+    pasos: {
+      nombre: { pregunta: "Let's start. What is your **first name**?" },
+      apellido: { pregunta: "Nice to meet you, {nombre}. What is your **last name**?" },
+      email: {
+        pregunta: "What is your **email address**?",
+        aviso:
+          "By submitting this form, you agree that Mecanu may contact you to discuss your shop.",
+      },
+      telefono: {
+        pregunta: "What is your **phone number**?",
+        selectorPais: "Country",
+      },
+      objetivo: {
+        pregunta: "What do you want to **do**?",
+        opciones: ["Digitise my current shop", "Open a new workshop"],
+      },
+      tipoTaller: {
+        pregunta: "What type of **workshop** do you run?",
+        opciones: [
+          "General mechanics",
+          "Bodywork and paint",
+          "MOT / inspections",
+          "Fleet workshop",
+          "Other",
+        ],
+      },
+      uso: {
+        pregunta: "What **problem do you want to solve** with Mecanu?",
+        aviso: "Select up to 3 options.",
+        opciones: [
+          "Drop off cars at the customer's door",
+          "Pick up cars from the customer",
+          "Offer a better customer experience",
+          "Hire external drivers",
+          "Civil liability insurance",
+          "Automate customer communication",
+          "Get a website for the workshop",
+          "Offer financing to customers",
+          "Build loyalty and repeat visits",
+        ],
+      },
+      ciudad: {
+        pregunta: "What **city** is your shop in?",
+        opciones: ["Madrid", "Barcelona", "Valencia", "Bilbao", "Seville", "Other"],
+      },
+      volumen: {
+        pregunta: "How many **cars do you normally service** per month?",
+        aviso: "Count cars that come into the shop, not just home-collection runs.",
+        opciones: [
+          "Under 20 (micro)",
+          "20 – 60 (small)",
+          "60 – 150 (medium)",
+          "150 – 400 (large)",
+          "Over 400 (fleet / chain)",
+        ],
+      },
+      negocio: {
+        pregunta: "What is the **name of your workshop**?",
+        placeholder: "Type the name here…",
+      },
+      canal: {
+        pregunta: "How did you **find us**?",
+        opciones: [
+          "Google / online search",
+          "LinkedIn",
+          "Instagram / social media",
+          "Radio La Clave",
+          "Startupslatam.com",
+          "Tech Barcelona",
+          "Field sales rep",
+          "Referral from another shop",
+          "Email or newsletter",
+          "Event or trade fair",
+          "Other",
+        ],
+      },
+    },
+  },
 };
 
 const pt: LandingCopy = {
   meta: {
-    title: "Mecanu | Logística para oficinas",
+    title: "Mecanu | Recolha e entrega de veículos para oficinas mecânicas",
     description:
-      "Recolhe e entrega carros, liberta lugares e controla cada recolha.",
+      "Mecanu coordena a recolha e entrega de veículos para oficinas em Lisboa, Madrid, Barcelona e mais. Condutores verificados, janelas de 1 hora, seguro incluído. Sem reboques caros.",
   },
   nav: {
     homeAria: "Mecanu, início",
@@ -682,6 +1020,13 @@ const pt: LandingCopy = {
   map: {
     sectionAria: "Oficinas em {city}",
     citySwitchAria: "Cidade",
+    ciudades: {
+      madrid: "Madrid",
+      londres: "Londres",
+      "sao-paulo": "São Paulo",
+      "san-francisco": "San Francisco",
+      "nueva-york": "New York",
+    },
     details: "Detalhes",
     talk: "Falar com Mecanu",
   },
@@ -817,6 +1162,95 @@ const pt: LandingCopy = {
     rechazar: "Rejeitar",
     gestionar: "Mais info",
     configurar: "Configurar cookies",
+  },
+  contacto: {
+    eyebrow: "COMEÇA AQUI",
+    heading: "Conta-nos um pouco sobre a tua oficina.",
+    subtext: "São apenas alguns minutos. Ajuda-nos a preparar a conversa.",
+    aceptar: "Aceitar",
+    enviar: "Enviar",
+    anterior: "Anterior",
+    gracias: {
+      heading: "Recebido.",
+      subtext: "Entraremos em contacto contigo em menos de 24 horas.",
+    },
+    pasos: {
+      nombre: { pregunta: "Vamos começar. Qual é o teu **nome**?" },
+      apellido: { pregunta: "Muito prazer, {nombre}. Qual é o teu **apelido**?" },
+      email: {
+        pregunta: "Qual é o teu **email**?",
+        aviso:
+          "Ao enviares este formulário, aceitas que a Mecanu entre em contacto contigo para falar da tua oficina.",
+      },
+      telefono: {
+        pregunta: "Qual é o teu **número de telemóvel**?",
+        selectorPais: "País",
+      },
+      objetivo: {
+        pregunta: "O que queres **fazer**?",
+        opciones: ["Digitalizar a minha oficina atual", "Abrir uma nova oficina"],
+      },
+      tipoTaller: {
+        pregunta: "Que tipo de **oficina** tens?",
+        opciones: [
+          "Mecânica geral",
+          "Carroçaria e pintura",
+          "IPO / inspeções",
+          "Oficina de frota",
+          "Outro",
+        ],
+      },
+      uso: {
+        pregunta: "Que **problema queres resolver** com a Mecanu?",
+        aviso: "Seleciona até 3 opções.",
+        opciones: [
+          "Levar carros a casa do cliente",
+          "Ir buscar carros ao cliente",
+          "Oferecer melhor experiência ao cliente",
+          "Contratar condutores externos",
+          "Seguro de responsabilidade civil",
+          "Automatizar o atendimento ao cliente",
+          "Ter página web para a oficina",
+          "Oferecer crédito aos clientes",
+          "Fidelizar clientes e repetir visitas",
+        ],
+      },
+      ciudad: {
+        pregunta: "Em que **cidade** está a tua oficina?",
+        opciones: ["Madrid", "Barcelona", "Valencia", "Bilbao", "Sevilha", "Outra"],
+      },
+      volumen: {
+        pregunta: "Quantos **carros atende** normalmente por mês?",
+        aviso: "Conta os que entram na oficina, não só as recolhas ao domicílio.",
+        opciones: [
+          "Menos de 20 (micro)",
+          "20 – 60 (pequena)",
+          "60 – 150 (média)",
+          "150 – 400 (grande)",
+          "Mais de 400 (frota / cadeia)",
+        ],
+      },
+      negocio: {
+        pregunta: "Qual é o **nome da tua oficina**?",
+        placeholder: "Escreve o nome aqui…",
+      },
+      canal: {
+        pregunta: "Como nos **conheceste**?",
+        opciones: [
+          "Google / pesquisa online",
+          "LinkedIn",
+          "Instagram / redes sociais",
+          "Radio La Clave",
+          "Startupslatam.com",
+          "Tech Barcelona",
+          "Vendedor em terreno",
+          "Referência de outra oficina",
+          "Email ou newsletter",
+          "Evento ou feira",
+          "Outro",
+        ],
+      },
+    },
   },
 };
 

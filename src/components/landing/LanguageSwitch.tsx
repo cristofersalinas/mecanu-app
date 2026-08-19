@@ -8,6 +8,7 @@ import {
   LOCALE_COOKIE,
   LOCALE_META,
   pathFor,
+  contactoPathFor,
   type Locale,
 } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
@@ -94,10 +95,12 @@ export function LanguageSwitch({
   locale,
   label,
   variant = "footer",
+  destino = "landing",
 }: {
   locale: Locale;
   label: string;
   variant?: "header" | "footer" | "menu";
+  destino?: "landing" | "contacto";
 }) {
   const [abierto, setAbierto] = useState(false);
   const contenedor = useRef<HTMLDivElement>(null);
@@ -154,7 +157,7 @@ export function LanguageSwitch({
             <li key={id}>
               <Link
                 className={styles.langOption}
-                href={pathFor(id)}
+                href={destino === "contacto" ? contactoPathFor(id) : pathFor(id)}
                 hrefLang={LOCALE_META[id].hreflang}
                 lang={LOCALE_META[id].htmlLang}
                 aria-current={actual ? "page" : undefined}

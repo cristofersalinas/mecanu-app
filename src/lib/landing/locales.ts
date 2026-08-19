@@ -27,6 +27,10 @@ export function pathFor(locale: Locale): string {
   return locale === DEFAULT_LOCALE ? "/" : `/${locale}`;
 }
 
+export function contactoPathFor(locale: Locale): string {
+  return locale === DEFAULT_LOCALE ? "/contacto" : `/${locale}/contacto`;
+}
+
 export function localeFromPathname(pathname: string): Locale {
   for (const locale of LOCALES) {
     if (locale === DEFAULT_LOCALE) continue;

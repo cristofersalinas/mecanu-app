@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import Link from "next/link";
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore, useEffect } from "react";
 import { Icon } from "@/components/ds/Icon";
 import {
   consentCookieHeader,
@@ -19,6 +19,8 @@ import {
   gtmSnippet,
 } from "@/lib/landing/analytics";
 import type { LandingCopy } from "@/lib/landing/copy";
+import { copyFor } from "@/lib/landing/copy";
+import { localeFromPathname, type Locale } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
 
 /**
@@ -31,12 +33,18 @@ import styles from "@/app/landing.module.css";
  * en este archivo, no dentro de GTM: si estuviera en los dos, grabaría dos veces.
  */
 export function GoogleTag({
-  copy,
+  copy: copyProp,
   cookieInicial,
 }: {
   copy: LandingCopy["consent"];
   cookieInicial: string;
 }) {
+  // Si el copy se pasó como fallback (es), redetectarlo desde el pathname del cliente
+  const [copy, setCopy] = useState<LandingCopy["consent"]>(copyProp);
+  useEffect(() => {
+    const locale = localeFromPathname(window.location.pathname) as Locale;
+    setCopy(copyFor(locale).consent);
+  }, []);
   const [bannerAbierto, setBannerAbierto] = useState(false);
   const cookies = useSyncExternalStore(
     subscribeToConsent,

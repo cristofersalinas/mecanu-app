@@ -72,21 +72,39 @@ function distritosGeoJSON(ciudad: CiudadMapa): GeoJSON.FeatureCollection<GeoJSON
   };
 }
 
-function ciudadGeoJSON(ciudad: CiudadMapa): GeoJSON.FeatureCollection<GeoJSON.Point> {
+function ciudadGeoJSON(
+  ciudad: CiudadMapa,
+  nombre: string,
+): GeoJSON.FeatureCollection<GeoJSON.Point> {
   return {
     type: "FeatureCollection",
     features: [
       {
         type: "Feature",
         geometry: { type: "Point", coordinates: [ciudad.lng, ciudad.lat] },
-        properties: { name: ciudad.cityName },
+        properties: { name: nombre },
       },
     ],
   };
 }
 
+function nombreCiudad(copy: LandingCopy["map"], ciudad: CiudadMapa): string {
+  return copy.ciudades[ciudad.id] ?? ciudad.cityName;
+}
+
 function mapsUrl(address: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+}
+
+function streetViewUrl(taller: TallerMapa): string | null {
+  // Sin key no hay proxy útil tampoco
+  if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY) return null;
+  const params = new URLSearchParams({
+    lat: String(taller.lat),
+    lng: String(taller.lng),
+  });
+  if (taller.svHeading != null) params.set("heading", String(taller.svHeading));
+  return `/api/v1/streetview?${params.toString()}`;
 }
 
 function zoomTaller(zoomOrigen: number, maxZoom: number): number {
@@ -139,9 +157,9 @@ function encajarCiudad(map: MapLibreMap, ciudad: CiudadMapa, duration: number): 
   return view.zoom;
 }
 
-function aplicarFuentes(map: MapLibreMap, ciudad: CiudadMapa) {
+function aplicarFuentes(map: MapLibreMap, ciudad: CiudadMapa, nombre: string) {
   (map.getSource("distritos") as GeoJSONSource | undefined)?.setData(distritosGeoJSON(ciudad));
-  (map.getSource("ciudad") as GeoJSONSource | undefined)?.setData(ciudadGeoJSON(ciudad));
+  (map.getSource("ciudad") as GeoJSONSource | undefined)?.setData(ciudadGeoJSON(ciudad, nombre));
   (map.getSource("talleres") as GeoJSONSource | undefined)?.setData(talleresGeoJSON(ciudad.talleres));
 }
 
@@ -179,6 +197,57 @@ function iconoTaller(): ImageData {
   ctx.scale(48 / 24, 48 / 24);
   ctx.fill(new Path2D("M3 8.5 5 5h14l2 3.5V10H3V8.5Zm1 2.5h16v9H4v-9Zm6 9h4v-5h-4v5Z"));
   return ctx.getImageData(0, 0, size, size);
+}
+
+// Cache en memoria: url → blob URL (dura lo que dura la sesión de la página)
+const photoCache = new Map<string, string | null>();
+
+function preloadPhotos(talleres: TallerMapa[]) {
+  for (const t of talleres) {
+    const url = streetViewUrl(t);
+    if (!url || photoCache.has(url)) continue;
+    // Marcamos como "cargando" para no lanzar dos fetches del mismo taller
+    photoCache.set(url, undefined as unknown as string);
+    fetch(url)
+      .then((r) => {
+        if (!r.ok) { photoCache.set(url, null); return; }
+        return r.blob();
+      })
+      .then((blob) => {
+        if (!blob) return;
+        photoCache.set(url, URL.createObjectURL(blob));
+      })
+      .catch(() => photoCache.set(url, null));
+  }
+}
+
+function StreetViewPhoto({ taller }: { taller: TallerMapa }) {
+  const rawUrl = streetViewUrl(taller);
+  const cached = rawUrl ? photoCache.get(rawUrl) : undefined;
+  // Si ya está en cache usamos el blob URL; si no, pedimos la URL del proxy directamente
+  const src = cached ?? rawUrl ?? null;
+  const failed = cached === null; // null explícito = error confirmado
+
+  const [error, setError] = useState(failed);
+
+  if (!src || error) {
+    return (
+      <div className={styles.mapPlacePhoto} aria-hidden="true">
+        <Icon name="storefront" size="xl" />
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.mapPlacePhoto}>
+      <img
+        src={src}
+        alt={taller.name}
+        className={styles.mapPlacePhotoImg}
+        onError={() => setError(true)}
+      />
+    </div>
+  );
 }
 
 export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
@@ -246,7 +315,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
     });
 
     map.touchZoomRotate.disableRotation();
-    map.addControl(new NavigationControl({ showCompass: false }), "bottom-right");
+    map.addControl(new NavigationControl({ showCompass: false }), "top-right");
     mapRef.current = map;
 
     const onTrackpadPinch = (event: WheelEvent) => {
@@ -263,6 +332,8 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
     const onLoad = () => {
       map.resize();
       map.addImage("taller-icono", iconoTaller(), { pixelRatio: 2 });
+      // Precarga las fotos de Street View de Madrid en segundo plano
+      preloadPhotos(CIUDAD_INICIAL.talleres);
 
       map.addSource("distritos", {
         type: "geojson",
@@ -289,7 +360,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
 
       map.addSource("ciudad", {
         type: "geojson",
-        data: ciudadGeoJSON(cityRef.current),
+        data: ciudadGeoJSON(cityRef.current, nombreCiudad(copy, cityRef.current)),
       });
 
       map.addLayer({
@@ -459,7 +530,10 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
         return;
       }
 
+      // Clic en el vacío: cierra la ficha y vuelve al zoom de ciudad
       setSelected(null);
+      defaultZoomRef.current = encajarCiudad(map, cityRef.current, 700);
+      aplicarSeleccion(map, null);
     });
 
     let lastW = container.clientWidth;
@@ -481,7 +555,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
       mapRef.current = null;
       map.remove();
     };
-  }, []);
+  }, [copy]);
 
   useEffect(() => {
     if (prevCityIdRef.current === null) {
@@ -495,10 +569,10 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
     if (!map?.isStyleLoaded()) return;
     clearResetTimer();
     setSelected(null);
-    aplicarFuentes(map, ciudad);
+    aplicarFuentes(map, ciudad, nombreCiudad(copy, ciudad));
     aplicarSeleccion(map, null);
     defaultZoomRef.current = encajarCiudad(map, ciudad, 700);
-  }, [cityId, ciudad]);
+  }, [cityId, ciudad, copy]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -509,7 +583,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
   return (
     <section
       className={styles.mapSection}
-      aria-label={copy.sectionAria.replace("{city}", ciudad.cityName)}
+      aria-label={copy.sectionAria.replace("{city}", nombreCiudad(copy, ciudad))}
       onPointerEnter={clearResetTimer}
       onPointerLeave={scheduleReset}
     >
@@ -526,16 +600,31 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
               setCityId(item.id);
             }}
           >
-            {item.label}
+            {copy.ciudades[item.id] ?? item.label}
           </button>
         ))}
       </div>
       <div ref={containerRef} className={styles.mapCanvas} />
+      <div className={styles.mapZoomControls}>
+        <button
+          type="button"
+          className={styles.mapResetBtn}
+          aria-label="Volver a la vista de ciudad"
+          onClick={() => {
+            const map = mapRef.current;
+            if (!map) return;
+            clearResetTimer();
+            setSelected(null);
+            aplicarSeleccion(map, null);
+            defaultZoomRef.current = encajarCiudad(map, cityRef.current, 700);
+          }}
+        >
+          <Icon name="my_location" size="sm" />
+        </button>
+      </div>
       {selected ? (
         <article className={styles.mapPlaceCard} aria-live="polite">
-          <div className={styles.mapPlacePhoto} aria-hidden="true">
-            <Icon name="storefront" size="xl" />
-          </div>
+          <StreetViewPhoto taller={selected} />
           <div className={styles.mapPlaceBody}>
             <strong>{selected.name}</strong>
             <p>{selected.address}</p>

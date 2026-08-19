@@ -11,6 +11,7 @@ export type TallerMapa = {
   address: string;
   lat: number;
   lng: number;
+  svHeading?: number;
 };
 
 export type DistritoMapa = {

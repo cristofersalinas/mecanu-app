@@ -6,7 +6,7 @@ import { Icon } from "@/components/ds/Icon";
 import { Logo } from "@/components/ds/Logo";
 import { LanguageSwitch } from "@/components/landing/LanguageSwitch";
 import type { LandingCopy } from "@/lib/landing/copy";
-import { pathFor, type Locale } from "@/lib/landing/locales";
+import { pathFor, contactoPathFor, type Locale } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
 
 export function LandingHeader({
@@ -71,7 +71,7 @@ export function LandingHeader({
 
         <div className={styles.navEnd}>
           <LanguageSwitch locale={locale} label={copy.langLabel} variant="header" />
-          <a className={styles.ctaBtn} href="#contacto">{copy.cta}</a>
+          <a className={styles.ctaBtn} href={contactoPathFor(locale)}>{copy.cta}</a>
           <button
             type="button"
             className={styles.menuToggle}

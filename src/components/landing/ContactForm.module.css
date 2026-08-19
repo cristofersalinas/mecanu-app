@@ -1,0 +1,436 @@
+/* ContactForm — estilos fieles al design system Mecanu */
+
+.wrap {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper, #fff);
+  color: var(--ink, #0f0f0f);
+  font-family: var(--landing-font), "Inter Tight", sans-serif;
+}
+
+/* ─── Barra de progreso ─── */
+.progressBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--line, #e5e5e5);
+  z-index: 100;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--ink, #0f0f0f);
+  transition: width 0.35s ease;
+}
+
+/* ─── Logo ─── */
+.logoRow {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--line, #e5e5e5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logoRowEnd {
+  display: flex;
+  align-items: center;
+}
+
+/* ─── Contenido central ─── */
+.inner {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px 120px;
+  width: 100%;
+}
+
+.stepWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+  max-width: 560px;
+  text-align: left;
+}
+
+/* ─── Número de paso ─── */
+.stepIndex {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--ink, #0f0f0f);
+  color: var(--paper, #fff);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* ─── Pregunta ─── */
+.pregunta {
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--ink, #0f0f0f);
+  margin: 0;
+}
+
+.pregunta strong {
+  font-weight: 700;
+}
+
+/* ─── Inputs ─── */
+.input {
+  width: 100%;
+  max-width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ink, #0f0f0f);
+  border-radius: 0;
+  padding: 8px 0;
+  font-size: 1.1rem;
+  font-family: inherit;
+  color: var(--ink, #0f0f0f);
+  outline: none;
+  caret-color: var(--ink, #0f0f0f);
+}
+
+.input::placeholder {
+  color: var(--faint, #9ca3af);
+}
+
+.input:focus {
+  border-bottom-color: var(--ink, #0f0f0f);
+}
+
+/* ─── Teléfono ─── */
+.phoneRow {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  border-bottom: 1px solid var(--ink, #0f0f0f);
+}
+
+/* El input del teléfono ya tiene border-bottom propio; lo quitamos aquí
+   porque el phoneRow actúa como contenedor con borde único */
+.phoneRow .input {
+  border-bottom: none;
+  padding-left: 8px;
+  flex: 1;
+}
+
+.countrySelectWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-right: 1px solid var(--line, #e5e5e5);
+  padding-right: 8px;
+  cursor: pointer;
+}
+
+.countrySelect {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.countryPrefix {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink, #0f0f0f);
+  white-space: nowrap;
+  padding: 8px 4px 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.countryPrefix::after {
+  content: "▾";
+  font-size: 0.65rem;
+  color: var(--muted, #6b7280);
+  margin-left: 2px;
+}
+
+.inputPhone {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ─── Número ─── */
+.numberRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+}
+
+.inputNumber {
+  width: 120px;
+}
+
+.unit {
+  font-size: 0.9rem;
+  color: var(--muted, #6b7280);
+}
+
+/* ─── Select ─── */
+.selectWrap {
+  position: relative;
+  width: 100%;
+}
+
+.selectWrap::after {
+  content: "expand_more";
+  font-family: "Material Symbols Rounded", sans-serif;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 1.1rem;
+  color: var(--muted, #6b7280);
+}
+
+.select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ink, #0f0f0f);
+  border-radius: 0;
+  padding: 8px 28px 8px 0;
+  font-size: 1.1rem;
+  font-family: inherit;
+  color: var(--ink, #0f0f0f);
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+/* ─── Pills (opciones) ─── */
+.pills {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border: 1px solid var(--line, #e5e5e5);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--ink, #0f0f0f);
+  font-size: 0.95rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.pill:hover {
+  border-color: var(--ink, #0f0f0f);
+}
+
+.pillSelected {
+  border-color: var(--ink, #0f0f0f);
+  background: var(--ink, #0f0f0f);
+  color: var(--paper, #fff);
+}
+
+.pillLetter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.pillCheck {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.pillDisabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ─── Aviso ─── */
+.aviso {
+  font-size: 0.82rem;
+  color: var(--muted, #6b7280);
+  line-height: 1.5;
+  margin: 0;
+  width: 100%;
+}
+
+/* ─── Botones de acción ─── */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 100px;
+  background: var(--ink, #0f0f0f);
+  color: var(--paper, #fff);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btnBack {
+  background: transparent;
+  border: none;
+  color: var(--muted, #6b7280);
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.btnBack:hover {
+  color: var(--ink, #0f0f0f);
+}
+
+/* ─── Error ─── */
+.error {
+  font-size: 0.85rem;
+  color: #e82b37;
+  margin: 0;
+}
+
+/* ─── Pantalla de gracias ─── */
+.thanks {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 24px;
+  width: 100%;
+  gap: 16px;
+}
+
+.thanksHeading {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.thanksSubtext {
+  font-size: 1.05rem;
+  color: var(--muted, #6b7280);
+  margin: 0;
+}
+
+/* ─── Botones de navegación ↑↓ ─── */
+.navButtons {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  gap: 4px;
+  z-index: 50;
+}
+
+.navBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--ink, #0f0f0f);
+  color: var(--paper, #fff);
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+}
+
+.navBtn:disabled {
+  background: var(--line, #e5e5e5);
+  color: var(--faint, #9ca3af);
+  cursor: not-allowed;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 720px) {
+  .inner {
+    padding: 40px 20px 100px;
+    align-items: flex-start;
+    padding-top: 60px;
+  }
+
+  .pregunta {
+    font-size: 1.15rem;
+  }
+
+  .input {
+    font-size: 1rem;
+  }
+
+  .pill {
+    font-size: 0.9rem;
+    padding: 11px 16px;
+  }
+}
