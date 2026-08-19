@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import type { ReactNode } from "react";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { localeFromPathname, LOCALE_META } from "@/lib/landing/locales";
 import "./globals.css";
 
 /**
@@ -19,13 +22,17 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://mecanu.com"),
   title: "Mecanu",
   description: "Mecanu — logística B2B para talleres",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const pathname = (await headers()).get("x-mecanu-pathname") ?? "/";
+  const locale = localeFromPathname(pathname);
+
   return (
-    <html lang="es" className={`h-full antialiased ${plusJakartaSans.variable}`}>
+    <html lang={LOCALE_META[locale].htmlLang} className={`h-full antialiased ${plusJakartaSans.variable}`}>
       <head>
         {/*
           Material Symbols Rounded como <link> real en el <head>, no vía CSS

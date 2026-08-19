@@ -1478,6 +1478,107 @@
   font-size: .78rem;
 }
 
+.langSwitch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.langTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 .5rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper);
+  color: inherit;
+  font: inherit;
+  font-size: .78rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.langTrigger:hover,
+.langTrigger:focus-visible {
+  border-color: var(--ink);
+}
+
+.langTriggerLabel {
+  white-space: nowrap;
+}
+
+/* La flecha gira al abrir; el icono de translate no. */
+.langTrigger[aria-expanded="true"] > :last-child {
+  transform: rotate(180deg);
+}
+
+.langMenu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 40;
+  min-width: 11rem;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+}
+
+.langMenu[hidden] {
+  display: none;
+}
+
+.langOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: .4rem .5rem;
+  border-radius: 2px;
+  font-size: .78rem;
+  white-space: nowrap;
+}
+
+.langOption:hover,
+.langOption:focus-visible {
+  background: var(--wash, rgb(0 0 0 / 5%));
+}
+
+.langOption svg {
+  display: block;
+  flex: none;
+  border: 1px solid rgb(0 0 0 / 12%);
+}
+
+.langOptionName {
+  flex: 1;
+}
+
+.langOption[aria-current="page"] {
+  font-weight: 600;
+}
+
+.langSwitchHeader {
+  margin-right: .45rem;
+}
+
+/* En la cabecera el desplegable cae hacia abajo; en el pie sube, que es el
+   comportamiento por defecto de .langMenu. */
+.langSwitchHeader .langMenu {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
+
+.mobileLang {
+  margin-top: .85rem;
+  padding-top: .85rem;
+  border-top: 1px solid var(--line);
+}
+
 @media (max-width: 900px) {
   .navInner {
     padding: 0 1.5rem;
@@ -1626,18 +1727,24 @@
     top: 0;
     left: 0;
     z-index: 1;
+    width: 100%;
     max-width: none;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow: hidden;
     border: 0;
     border-bottom: 1px solid var(--line);
     transform: none;
   }
 
   .mapCitySwitch button {
+    flex: 1 1 0;
+    min-width: 0;
     min-height: 44px;
-    padding: .55rem .8rem;
-    font-size: .72rem;
+    padding: .5rem .2rem;
+    font-size: .62rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
   }
 
   .mapPlaceCard {
@@ -1771,14 +1878,24 @@
   }
 
   .footerTop {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.35rem .7rem;
+  }
+
+  .footerBrand {
+    grid-column: 1 / -1;
+  }
+
+  .langSwitchHeader {
+    display: none;
   }
 
   .fLink {
     display: inline-flex;
-    align-items: center;
-    min-height: 44px;
+    align-items: flex-start;
+    min-height: 40px;
+    padding-top: .3rem;
+    font-size: .72rem;
   }
 
   .colLabel {
