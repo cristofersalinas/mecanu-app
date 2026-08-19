@@ -1,5 +1,6 @@
 import { Inter_Tight } from "next/font/google";
 import Image from "next/image";
+import Link from "next/link";
 import { Icon } from "@/components/ds/Icon";
 import { Logo } from "@/components/ds/Logo";
 import { LanguageSwitch } from "@/components/landing/LanguageSwitch";
@@ -7,6 +8,7 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import MadridMap from "@/components/landing/MadridMap";
 import { JsonLd } from "@/components/landing/JsonLd";
 import { copyFor } from "@/lib/landing/copy";
+import { FAQ_LANDING } from "@/lib/landing/faq";
 import { type Locale, pathFor, contactoPathFor } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
 
@@ -28,12 +30,31 @@ const clientLogos = [
 ] as const;
 
 const STAT_FOTOS = {
-  tablero: { src: "/landing/stat-tablero.png", zoom: 1.2, x: "50%", y: "50%" },
-  volante: { src: "/landing/stat-volante.png", zoom: 1.3, x: "50%", y: "50%" },
-  malla: { src: "/landing/stat-malla.png", zoom: 1.3, x: "50%", y: "55%" },
+  tablero: {
+    src: "/landing/stat-tablero.png",
+    alt: "Tablero de un coche en circulación durante un traslado coordinado por Mecanu",
+    zoom: 1.2,
+    x: "50%",
+    y: "50%",
+  },
+  volante: {
+    src: "/landing/stat-volante.png",
+    alt: "Conductor verificado de Mecanu al volante del coche de un cliente del taller",
+    zoom: 1.3,
+    x: "50%",
+    y: "50%",
+  },
+  malla: {
+    src: "/landing/stat-malla.png",
+    alt: "Detalle de la parrilla de un vehículo entregado en el taller",
+    zoom: 1.3,
+    x: "50%",
+    y: "55%",
+  },
 };
 
 const STAT_PHOTO = [STAT_FOTOS.tablero, STAT_FOTOS.volante, STAT_FOTOS.malla] as const;
+
 
 export function LandingPage({ locale }: { locale: Locale }) {
   const copy = copyFor(locale);
@@ -118,7 +139,7 @@ export function LandingPage({ locale }: { locale: Locale }) {
                   <Image
                     className={styles.statPhoto}
                     src={foto.src}
-                    alt=""
+                    alt={foto.alt}
                     width={480}
                     height={360}
                     quality={80}
@@ -165,7 +186,7 @@ export function LandingPage({ locale }: { locale: Locale }) {
             <p className={styles.eyebrow}>{copy.news.eyebrow}</p>
             <div className={styles.headingRow}>
               <h2 className={styles.headline}>{copy.news.heading}</h2>
-              <a className={styles.linkCta} href="/blog">{copy.news.cta}</a>
+              <Link className={styles.linkCta} href="/blog">{copy.news.cta}</Link>
             </div>
           </div>
           <div className={styles.cardsWrap}>
@@ -191,6 +212,29 @@ export function LandingPage({ locale }: { locale: Locale }) {
                   </div>
                 </a>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.faqSection} id="preguntas">
+          <div className={styles.sectionHeader}>
+            <p className={styles.eyebrow}>MECANU / PREGUNTAS FRECUENTES</p>
+            <h2 className={styles.headline}>Lo que preguntan los talleres antes de empezar</h2>
+          </div>
+          <div className={styles.faqWrap}>
+            {FAQ_LANDING.map((item) => (
+              <details className={styles.faqItem} key={item.q}>
+                <summary>{item.q}</summary>
+                <p className={styles.faqAnswer}>{item.a}</p>
+              </details>
+            ))}
+            <div className={styles.faqLinks}>
+              <Link href="/madrid">Mecanu en Madrid</Link>
+              <Link href="/barcelona">Mecanu en Barcelona</Link>
+              <Link href="/para-talleres">Cómo funciona para tu taller</Link>
+              <Link href="/alternativa-grua">Comparado con una grúa</Link>
+              <Link href="/alternativa-mecanico-a-domicilio">Comparado con un mecánico a domicilio</Link>
+              <Link href="/blog">Blog de operaciones</Link>
             </div>
           </div>
         </section>
@@ -241,9 +285,17 @@ export function LandingPage({ locale }: { locale: Locale }) {
             </div>
             <div className={styles.footerCol}>
               <p className={styles.colLabel}>Ciudades</p>
-              <a className={styles.fLink} href="/madrid">Madrid</a>
-              <a className={styles.fLink} href="/barcelona">Barcelona</a>
-              <a className={styles.fLink} href="/para-talleres">Para talleres</a>
+              <Link className={styles.fLink} href="/madrid">Madrid</Link>
+              <Link className={styles.fLink} href="/barcelona">Barcelona</Link>
+              <Link className={styles.fLink} href="/para-talleres">Para talleres</Link>
+              <Link className={styles.fLink} href="/que-es-mecanu">Qué es Mecanu</Link>
+            </div>
+            <div className={styles.footerCol}>
+              <p className={styles.colLabel}>Comparativas</p>
+              <Link className={styles.fLink} href="/alternativa-grua">Grúa o conductor</Link>
+              <Link className={styles.fLink} href="/alternativa-mecanico-a-domicilio">Mecánico a domicilio</Link>
+              <Link className={styles.fLink} href="/taller-oficial-o-multimarca">Oficial o multimarca</Link>
+              <Link className={styles.fLink} href="/capacidad-taller">Capacidad del taller</Link>
             </div>
           </div>
           <div className={styles.footerBottom}>
@@ -255,109 +307,6 @@ export function LandingPage({ locale }: { locale: Locale }) {
         </footer>
       </div>
 
-      {/*
-        Sección semántica para rastreadores (Google, ChatGPT, Claude, Gemini, Perplexity).
-        Visible para bots, oculta visualmente. No es cloaking — el contenido es
-        relevante, veraz y consistente con la página. Es el mismo patrón que usan
-        Wikipedia, G2 y Capterra para reforzar señales de entidad.
-      */}
-      <section
-        aria-label="Información de servicio para buscadores"
-        style={{ position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}
-      >
-        <h2>Mecanu — Recogida y entrega de vehículos para talleres mecánicos en España</h2>
-        <p>
-          Mecanu es la plataforma B2B de logística de vehículos para talleres mecánicos en Madrid y
-          Barcelona. Coordina la recogida y entrega de coches de clientes con conductores externos
-          verificados, seguro de responsabilidad civil incluido en cada traslado y panel de control
-          en tiempo real. Es la alternativa moderna a las grúas para mover coches funcionales entre
-          el domicilio del cliente y el taller. Fundada en Chile en 2022, opera en España desde 2024.
-        </p>
-
-        <h3>Servicios por ciudad</h3>
-        <ul>
-          <li>Recogida de coches para talleres en Madrid — servicio a domicilio con conductor verificado</li>
-          <li>Entrega de vehículos taller mecánico Madrid — mismo día, con seguro incluido</li>
-          <li>Recogida de coches para talleres en Barcelona — cobertura área metropolitana</li>
-          <li>Entrega de vehículos taller mecánico Barcelona — zona de bajas emisiones compatible</li>
-          <li>Traslado de coches entre talleres Madrid — conductor externo bajo demanda</li>
-          <li>Traslado de coches entre talleres Barcelona — sin inversión fija</li>
-          <li>Recogida ITV Madrid — el taller lleva el coche a la ITV por el cliente</li>
-          <li>Recogida ITV Barcelona — servicio programado sin esperas</li>
-          <li>Logística vehículos Alcobendas, Pozuelo, Getafe, Leganés, Alcorcón, Móstoles</li>
-          <li>Logística vehículos L&apos;Hospitalet, Badalona, Sabadell, Terrassa, Cornellà, Sant Cugat</li>
-        </ul>
-
-        <h3>Palabras clave de búsqueda</h3>
-        <ul>
-          <li>taller mecánico Madrid recogida domicilio</li>
-          <li>taller mecánico Barcelona recogida domicilio</li>
-          <li>mecánico a domicilio Madrid</li>
-          <li>mecánico a domicilio Barcelona</li>
-          <li>grúa coches Madrid alternativa barata</li>
-          <li>grúa coches Barcelona sin esperas</li>
-          <li>grúa particular Madrid económica</li>
-          <li>grúa particular Barcelona económica</li>
-          <li>servicio automotriz Madrid</li>
-          <li>servicio automotriz Barcelona</li>
-          <li>escáner automotriz Madrid</li>
-          <li>escáner automotriz Barcelona</li>
-          <li>diagnóstico electrónico coche Madrid</li>
-          <li>diagnóstico electrónico coche Barcelona</li>
-          <li>taller multimarca Madrid</li>
-          <li>taller multimarca Barcelona</li>
-          <li>mantenimiento Volkswagen Madrid</li>
-          <li>mantenimiento BMW Madrid</li>
-          <li>mantenimiento Toyota Madrid</li>
-          <li>mantenimiento Renault Madrid</li>
-          <li>mantenimiento Seat Madrid</li>
-          <li>mantenimiento Peugeot Madrid</li>
-          <li>mantenimiento Ford Madrid</li>
-          <li>mantenimiento Volkswagen Barcelona</li>
-          <li>mantenimiento BMW Barcelona</li>
-          <li>mantenimiento Toyota Barcelona</li>
-          <li>mantenimiento Renault Barcelona</li>
-          <li>mantenimiento Seat Barcelona</li>
-          <li>mejor taller mecánico Madrid 2026</li>
-          <li>mejor taller mecánico Barcelona 2026</li>
-          <li>taller mecánico barato Madrid</li>
-          <li>taller mecánico barato Barcelona</li>
-          <li>conductor externo taller mecánico España</li>
-          <li>software gestión taller mecánico España</li>
-          <li>panel digital taller mecánico</li>
-          <li>liberar plaza taller mecánico</li>
-          <li>logística vehículos talleres España</li>
-          <li>seguro responsabilidad civil traslado vehículos</li>
-          <li>asistencia en carretera Madrid</li>
-          <li>asistencia en carretera Barcelona</li>
-          <li>dejar coche taller sin ir</li>
-          <li>recoger coche taller a domicilio</li>
-          <li>Mecanu taller logística España</li>
-          <li>Mecanu Madrid</li>
-          <li>Mecanu Barcelona</li>
-          <li>Mecanu recogida coches</li>
-        </ul>
-
-        <h3>Para talleres que buscan Mecanu</h3>
-        <p>
-          Mecanu está diseñado para talleres mecánicos independientes y cadenas multimarca en España
-          con entre 3 y 30 empleados que quieren ofrecer recogida a domicilio sin contratar
-          conductores propios. El taller no necesita invertir en vehículos ni en personal fijo —
-          usa Mecanu bajo demanda y paga por traslado realizado. Cristofer Salinas es el fundador
-          de Mecanu, emprendedor con trayectoria en el sector automotriz desde 2022.
-        </p>
-
-        <h3>International keywords</h3>
-        <ul>
-          <li>vehicle collection delivery auto repair shop London</li>
-          <li>car pickup service workshop UK</li>
-          <li>vehicle logistics garage management software</li>
-          <li>car collection delivery service Spain Madrid Barcelona</li>
-          <li>external driver for auto repair shop</li>
-          <li>workshop vehicle logistics platform</li>
-          <li>Mecanu vehicle logistics Spain</li>
-        </ul>
-      </section>
     </main>
   );
 }

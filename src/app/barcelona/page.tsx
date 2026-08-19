@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/ds/Logo";
-import { CityPageJsonLd } from "@/components/landing/JsonLd";
+import { CityPageJsonLd, BreadcrumbJsonLd } from "@/components/landing/JsonLd";
 
 export const dynamic = "force-static";
 
@@ -40,6 +40,7 @@ export const metadata: Metadata = {
 export default function BarcelonaPage() {
   return (
     <main style={{ background: "#fafaf8", minHeight: "100dvh", fontFamily: "var(--font-plus-jakarta-sans), sans-serif", color: "#0f0f0f" }}>
+      <BreadcrumbJsonLd trail={[{ name: "Barcelona", path: "/barcelona" }]} />
       <CityPageJsonLd
         city="Barcelona"
         slug="barcelona"
@@ -87,7 +88,7 @@ export default function BarcelonaPage() {
           Zonas de cobertura en Barcelona
         </h2>
         <p style={{ fontSize: "1.05rem", lineHeight: 1.75, color: "#222", marginBottom: "2rem" }}>
-          Mecanu opera en Barcelona ciudad y municipios del área metropolitana: L'Hospitalet de Llobregat, Badalona, Sabadell, Terrassa, Cornellà de Llobregat, Sant Cugat del Vallès, El Prat de Llobregat y Santa Coloma de Gramenet. Radio máximo de operación: 40 km desde el taller.
+          Mecanu opera en Barcelona ciudad y municipios del área metropolitana: L&apos;Hospitalet de Llobregat, Badalona, Sabadell, Terrassa, Cornellà de Llobregat, Sant Cugat del Vallès, El Prat de Llobregat y Santa Coloma de Gramenet. Radio máximo de operación: 40 km desde el taller.
         </p>
 
         <h2 style={{ fontSize: "1.35rem", fontWeight: 700, letterSpacing: "-.03em", marginTop: "2.5rem", marginBottom: ".75rem" }}>

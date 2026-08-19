@@ -52,11 +52,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  // Money pages (ciudad + caso de uso)
+  // Money pages: ciudad, caso de uso, comparativas y entidad
   const moneyPages = [
     { url: `${SITE}/madrid`, priority: 0.9, changeFrequency: "monthly" as const },
     { url: `${SITE}/barcelona`, priority: 0.9, changeFrequency: "monthly" as const },
     { url: `${SITE}/para-talleres`, priority: 0.85, changeFrequency: "monthly" as const },
+    { url: `${SITE}/que-es-mecanu`, priority: 0.85, changeFrequency: "monthly" as const },
+    { url: `${SITE}/capacidad-taller`, priority: 0.8, changeFrequency: "monthly" as const },
+    { url: `${SITE}/alternativa-grua`, priority: 0.8, changeFrequency: "monthly" as const },
+    {
+      url: `${SITE}/alternativa-mecanico-a-domicilio`,
+      priority: 0.8,
+      changeFrequency: "monthly" as const,
+    },
+    {
+      url: `${SITE}/taller-oficial-o-multimarca`,
+      priority: 0.75,
+      changeFrequency: "monthly" as const,
+    },
   ].map((p) => ({ ...p, lastModified: now }));
 
   // Política de privacidad

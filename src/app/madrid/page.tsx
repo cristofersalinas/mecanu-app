@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/ds/Logo";
-import { CityPageJsonLd } from "@/components/landing/JsonLd";
+import { CityPageJsonLd, BreadcrumbJsonLd } from "@/components/landing/JsonLd";
 import styles from "@/app/landing.module.css";
 
 export const dynamic = "force-static";
@@ -38,6 +38,7 @@ export const metadata: Metadata = {
 export default function MadridPage() {
   return (
     <main style={{ background: "#fafaf8", minHeight: "100dvh", fontFamily: "var(--font-plus-jakarta-sans), sans-serif", color: "#0f0f0f" }}>
+      <BreadcrumbJsonLd trail={[{ name: "Madrid", path: "/madrid" }]} />
       <CityPageJsonLd
         city="Madrid"
         slug="madrid"

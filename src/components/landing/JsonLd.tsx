@@ -10,6 +10,8 @@
  *  - ItemList           → lista de ciudades con LocalBusiness
  */
 
+import { FAQ_LANDING, type FaqItem } from "@/lib/landing/faq";
+
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mecanu.com";
 
 // Entidad de la persona fundadora — ayuda a desambiguar "Mecanu" de la empresa
@@ -91,8 +93,12 @@ const organization = {
       { "@type": "Offer", name: "Recogida y entrega de vehículos para talleres en Madrid", url: `${SITE}/madrid` },
       { "@type": "Offer", name: "Recogida y entrega de vehículos para talleres en Barcelona", url: `${SITE}/barcelona` },
       { "@type": "Offer", name: "Panel de gestión para talleres mecánicos", url: `${SITE}/para-talleres` },
+      { "@type": "Offer", name: "Traslado de vehículos a ITV para talleres", url: `${SITE}/alternativa-grua` },
+      { "@type": "Offer", name: "Recogida y entrega frente a mecánico a domicilio", url: `${SITE}/alternativa-mecanico-a-domicilio` },
     ],
   },
+  mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE}/que-es-mecanu` },
+  subjectOf: { "@type": "WebPage", "@id": `${SITE}/que-es-mecanu`, name: "Qué es Mecanu" },
 };
 
 const website = {
@@ -137,66 +143,16 @@ const softwareApp = {
   screenshot: `${SITE}/landing/stat-tablero.png`,
 };
 
+// Generado desde la misma fuente que el FAQ visible de la landing. Google exige
+// que coincidan; si divergen, trata el marcado como incumplimiento.
 const faqPage = {
   "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "¿Qué es Mecanu?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Mecanu es una plataforma B2B de logística de vehículos diseñada para talleres mecánicos. Permite coordinar la recogida y entrega de los coches de los clientes mediante conductores externos verificados, con seguro incluido y panel de control en tiempo real.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "¿Cómo funciona la recogida de vehículos con Mecanu?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "El taller crea un traslado en el panel de Mecanu indicando la dirección del cliente y la ventana horaria preferida (franjas de 1 hora). Un conductor verificado recoge el vehículo, lo fotografía, solicita la firma digital del cliente y lo entrega en el taller. El taller ve el estado en tiempo real.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "¿Mecanu es una alternativa a las grúas para talleres?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Sí. Mecanu reemplaza el uso de grúas caras y lentas para mover coches funcionales entre el domicilio del cliente y el taller. No es un servicio de asistencia en carretera: es logística de vehículos programada para talleres.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "¿En qué ciudades opera Mecanu?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Mecanu opera actualmente en Madrid y Barcelona, con presencia en proceso en Londres, São Paulo, San Francisco y Nueva York.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "¿Qué seguro cubre los traslados de Mecanu?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Cada traslado coordinado a través de Mecanu incluye cobertura de responsabilidad civil específica para el vehículo durante el trayecto, activa desde que el conductor recoge las llaves hasta que el cliente firma la entrega.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "¿Puedo usar Mecanu sin contratar conductores propios?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Sí. Mecanu funciona con conductores externos verificados que se activan bajo demanda. El taller no necesita contratar personal fijo — solo paga por los traslados realizados.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "¿Mecanu sirve para talleres pequeños o solo para grandes cadenas?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Mecanu está diseñado para talleres independientes y medianos. Un taller que hace entre 5 y 50 traslados a la semana obtiene el mayor beneficio. También funciona para cadenas multimarca.",
-      },
-    },
-  ],
+  "@id": `${SITE}/#faq`,
+  mainEntity: FAQ_LANDING.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
 };
 
 const localBusinesses = [
@@ -326,6 +282,59 @@ export function BlogPostJsonLd({
     ].join(", "),
   };
 
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
+/**
+ * Breadcrumbs. Google los usa para reemplazar la URL cruda en el resultado de
+ * búsqueda por una ruta legible — es lo que hace que el snippet se vea limpio.
+ */
+export function BreadcrumbJsonLd({
+  trail,
+}: {
+  trail: { name: string; path: string }[];
+}) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { name: "Mecanu", path: "/" },
+      ...trail,
+    ].map((crumb, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: crumb.name,
+      item: `${SITE}${crumb.path}`,
+    })),
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
+/**
+ * FAQPage para una página concreta. Pasar exactamente los mismos items que se
+ * renderizan visibles en esa página.
+ */
+export function FaqJsonLd({ items, pageUrl }: { items: readonly FaqItem[]; pageUrl: string }) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "@id": `${pageUrl}#faq`,
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
   return (
     <script
       type="application/ld+json"

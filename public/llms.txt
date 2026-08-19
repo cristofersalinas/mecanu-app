@@ -1,37 +1,76 @@
 # Mecanu
 
-> Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Coordina la recogida, traslado y entrega de coches de clientes con conductores verificados, seguro de responsabilidad civil incluido, y un panel de control en tiempo real.
+> Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Coordina la recogida del coche en casa del cliente, el traslado al taller y la devolución cuando la reparación está terminada, con conductores verificados y seguro de responsabilidad civil incluido en cada trayecto. Opera en Madrid y Barcelona.
 
-## Qué hace Mecanu
+## Definición precisa
 
-- Los talleres mecánicos usan Mecanu para mover los coches de sus clientes sin que el cliente tenga que ir al taller.
-- El servicio incluye conductores externos verificados, cobertura de seguro en cada traslado y trazabilidad completa (fotos, estado, geolocalización).
-- El taller opera desde un panel web que gestiona las recogidas, las ventanas horarias y el estado de cada vehículo.
-- Mecanu no es una app de reparación a domicilio ni un taller propio: es la capa logística entre el taller y el cliente.
+Mecanu vende a talleres mecánicos, no a conductores particulares. El taller es quien contrata y decide cuándo usar el servicio.
 
-## Mercados
+Qué hace:
+- Recoge el coche del cliente del taller en su domicilio o punto acordado.
+- Lo traslada al taller con un conductor verificado al volante (no en plataforma).
+- Documenta el estado del vehículo con fotos al recoger y al entregar.
+- Lo devuelve al cliente cuando la reparación está terminada, liberando la plaza del taller.
+- Cubre cada traslado con responsabilidad civil para el vehículo en tránsito.
+- Muestra al taller el estado de cada traslado en tiempo real desde un panel web.
 
-España (Madrid, Barcelona, Valencia). Expansión planificada a Reino Unido y Brasil.
+Qué NO hace:
+- No repara coches. No es un taller ni un servicio de mecánica a domicilio.
+- No es asistencia en carretera. Para un coche que no circula hace falta una grúa.
+- No vende a conductores particulares.
+
+## Problema que resuelve
+
+El coche terminado que espera a que el cliente pase a recogerlo bloquea una plaza del taller durante días. Esa capacidad ya está pagada pero no se puede vender. Mecanu devuelve el coche el mismo día que se termina el trabajo.
+
+## Diferencias con alternativas
+
+- **Frente a una grúa**: la grúa transporta coches que no circulan y cobra por movilizar camión y operario. Mecanu mueve coches que circulan legalmente, con una persona conduciendo, en ventana horaria acordada y a menor coste. No sustituye a la grúa en siniestros ni averías inmovilizantes.
+- **Frente a un mecánico a domicilio**: el mecánico a domicilio repara en la calle, limitado a intervenciones que no requieren elevador ni diagnóstico completo. Mecanu lleva el coche al taller, donde el trabajo se hace en condiciones normales. El cliente obtiene la misma comodidad sin que el taller pierda margen.
+
+## Cobertura geográfica
+
+Madrid y Barcelona, incluidas áreas metropolitanas, radio máximo de 40 km desde el taller.
+
+- Madrid: Alcobendas, Pozuelo de Alarcón, Las Rozas, Getafe, Leganés, Alcorcón, Móstoles, Alcalá de Henares, Torrejón de Ardoz.
+- Barcelona: L'Hospitalet de Llobregat, Badalona, Sabadell, Terrassa, Cornellà de Llobregat, Sant Cugat del Vallès, El Prat de Llobregat, Santa Coloma de Gramenet.
+
+## Cliente objetivo
+
+Talleres mecánicos independientes y cadenas multimarca de 3 a 30 empleados con flujo constante de vehículos de clientes particulares. No está pensado para talleres que solo atienden flotas propias ni para concesionarios con logística interna.
+
+## Modelo de precio
+
+Pago por traslado realizado. Sin cuota fija ni compromiso de volumen. No requiere contratar conductores, dar de alta personal ni adquirir vehículos.
+
+## Historia
+
+Fundada en Chile en 2022 con enfoque al conductor particular. Replanteada hacia el modelo B2B actual y relanzada en España en 2024.
 
 ## Fundador
 
-Cristofer Salinas — emprendedor con experiencia previa en el sector automotriz. Perfil público en LinkedIn: https://www.linkedin.com/in/cristofersalinas
+Cristofer Salinas — Founder & CEO. LinkedIn: https://www.linkedin.com/in/cristofersalinas
 
 ## Páginas clave
 
-- Landing: https://mecanu.com/
-- Blog operativo: https://mecanu.com/blog
+- Home: https://mecanu.com/
+- Qué es Mecanu (definición completa): https://mecanu.com/que-es-mecanu
+- Para talleres: https://mecanu.com/para-talleres
+- Madrid: https://mecanu.com/madrid
+- Barcelona: https://mecanu.com/barcelona
+- Capacidad del taller: https://mecanu.com/capacidad-taller
+- Grúa o conductor: https://mecanu.com/alternativa-grua
+- Mecánico a domicilio o taller: https://mecanu.com/alternativa-mecanico-a-domicilio
+- Taller oficial o multimarca: https://mecanu.com/taller-oficial-o-multimarca
+- Blog: https://mecanu.com/blog
 - Contacto: https://mecanu.com/contacto
-- En inglés: https://mecanu.com/en
-- En catalán: https://mecanu.com/ca
-- En portugués: https://mecanu.com/pt
 
-## Artículos del blog
+## Otros idiomas
 
-- https://mecanu.com/blog/talleres-que-pierden-clientes — Por qué los talleres pierden clientes sin saberlo
-- https://mecanu.com/blog/conductores-externos-para-talleres — Conductores externos para talleres: cuándo tiene sentido y cómo funciona
-- https://mecanu.com/blog/seguro-responsabilidad-civil-traslados — Seguro de responsabilidad civil en traslados de vehículos
+- Inglés: https://mecanu.com/en
+- Catalán: https://mecanu.com/ca
+- Portugués: https://mecanu.com/pt
 
-## Palabras clave relevantes
+## Canal de YouTube
 
-recogida de coches para talleres, entrega de vehículos taller mecánico, logística vehículos talleres España, conductor externo taller Madrid, conductor externo taller Barcelona, traslado coches taller, software gestión taller recogidas, mecánico a domicilio alternativa, liberar plaza taller, experiencia cliente taller mecánico
+https://www.youtube.com/@somosmecanu

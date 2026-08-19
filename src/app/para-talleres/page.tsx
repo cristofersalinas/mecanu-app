@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/ds/Logo";
+import { BreadcrumbJsonLd, FaqJsonLd } from "@/components/landing/JsonLd";
+import type { FaqItem } from "@/lib/landing/faq";
 
 export const dynamic = "force-static";
 
@@ -33,9 +35,27 @@ export const metadata: Metadata = {
   },
 };
 
+// Mismo contenido que los <details> visibles de abajo. Si se edita uno, editar el otro.
+const FAQ: readonly FaqItem[] = [
+  {
+    q: "¿Necesito instalar algo en el taller?",
+    a: "No. Mecanu es una aplicación web. El taller accede desde cualquier ordenador o tablet sin instalar nada. Los conductores usan su móvil para documentar el traslado.",
+  },
+  {
+    q: "¿Qué pasa si el conductor tiene un accidente con el coche del cliente?",
+    a: "Cada traslado de Mecanu incluye cobertura de responsabilidad civil para el vehículo en tránsito. El taller no asume el riesgo del desplazamiento.",
+  },
+  {
+    q: "¿En qué ciudades está disponible Mecanu?",
+    a: "Actualmente Mecanu opera en Madrid y Barcelona y sus áreas metropolitanas. La expansión a otras ciudades de España está en curso.",
+  },
+];
+
 export default function ParaTalleresPage() {
   return (
     <main style={{ background: "#fafaf8", minHeight: "100dvh", fontFamily: "var(--font-plus-jakarta-sans), sans-serif", color: "#0f0f0f" }}>
+      <BreadcrumbJsonLd trail={[{ name: "Para talleres", path: "/para-talleres" }]} />
+      <FaqJsonLd items={FAQ} pageUrl="https://mecanu.com/para-talleres" />
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.1rem 2.5rem", borderBottom: "1px solid #e5e5e0" }}>
         <Link href="/" aria-label="Mecanu — volver a la web" style={{ color: "#0f0f0f", textDecoration: "none" }}>
           <Logo height={20} />

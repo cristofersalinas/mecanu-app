@@ -37,8 +37,8 @@ export const POSTS: Post[] = [
     excerpt:
       "La mayoría de los talleres mecánicos en España son buenos técnicamente. El problema no está en el motor — está en la logística de la experiencia.",
     category: "Operaciones",
-    coverImage: "/blog/hero-taller-vintage.png",
-    coverAlt: "Mecánico revisando componentes desarmados de un automóvil clásico, fotografía vintage en blanco y negro.",
+    coverImage: "/blog/hero-rueda-vintage.png",
+    coverAlt: "Mujer con ropa de época ajustando la rueda de un automóvil clásico, fotografía vintage en blanco y negro.",
     publishedAt: "2026-08-14",
     readingMinutes: 5,
     authorSlug: "cristofer",
@@ -82,8 +82,8 @@ export const POSTS: Post[] = [
     excerpt:
       "Tener conductores propios parece la solución obvia. Pero para la mayoría de talleres, la mejor flota es la que no aparece en tu nómina.",
     category: "Recursos humanos",
-    coverImage: "/blog/hero-taller-vintage.png",
-    coverAlt: "Vista de un taller mecánico antiguo con varios automóviles clásicos en reparación.",
+    coverImage: "/blog/hero-conductor-vintage.png",
+    coverAlt: "Mujer de época apoyada en un automóvil descapotable clásico, fotografía vintage en blanco y negro.",
     publishedAt: "2026-07-28",
     readingMinutes: 4,
     authorSlug: "cristofer",
