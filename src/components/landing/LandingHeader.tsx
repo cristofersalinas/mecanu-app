@@ -4,14 +4,20 @@ import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ds/Icon";
 import { Logo } from "@/components/ds/Logo";
+import { LanguageSwitch } from "@/components/landing/LanguageSwitch";
+import type { LandingCopy } from "@/lib/landing/copy";
+import { pathFor, type Locale } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
 
-export type LandingProducto = {
-  label: string;
-  href: string;
-};
-
-export function LandingHeader({ productos }: { productos: readonly LandingProducto[] }) {
+export function LandingHeader({
+  locale,
+  copy,
+  productos,
+}: {
+  locale: Locale;
+  copy: LandingCopy["nav"];
+  productos: LandingCopy["productos"];
+}) {
   const [abierto, setAbierto] = useState(false);
   const menuId = useId();
 
@@ -43,17 +49,17 @@ export function LandingHeader({ productos }: { productos: readonly LandingProduc
   return (
     <header className={`${styles.navGrid} ${abierto ? styles.navOpen : ""}`}>
       <div className={styles.navInner}>
-        <Link href="#inicio" className={styles.logo} aria-label="Mecanu, inicio" onClick={cerrar}>
+        <Link href={pathFor(locale)} className={styles.logo} aria-label={copy.homeAria} onClick={cerrar}>
           <Logo height={17} />
         </Link>
 
-        <nav className={styles.links} aria-label="Navegación principal">
-          <a className={styles.link} href="#inicio">Inicio</a>
-          <a className={styles.link} href="#solucion">Solución</a>
-          <a className={styles.link} href="#recursos">Recursos</a>
+        <nav className={styles.links} aria-label={copy.mainAria}>
+          <a className={styles.link} href="#inicio">{copy.inicio}</a>
+          <a className={styles.link} href="#solucion">{copy.solucion}</a>
+          <a className={styles.link} href="#recursos">{copy.recursos}</a>
           <details className={styles.dropdown}>
             <summary className={`${styles.link} ${styles.dropdownToggle}`}>
-              Productos <Icon name="expand_more" size="sm" />
+              {copy.productos} <Icon name="expand_more" size="sm" />
             </summary>
             <div className={styles.dropdownMenu}>
               {productos.map((producto) => (
@@ -64,11 +70,12 @@ export function LandingHeader({ productos }: { productos: readonly LandingProduc
         </nav>
 
         <div className={styles.navEnd}>
-          <a className={styles.ctaBtn} href="#contacto">Hablar con Mecanu</a>
+          <LanguageSwitch locale={locale} label={copy.langLabel} variant="header" />
+          <a className={styles.ctaBtn} href="#contacto">{copy.cta}</a>
           <button
             type="button"
             className={styles.menuToggle}
-            aria-label={abierto ? "Cerrar menú" : "Abrir menú"}
+            aria-label={abierto ? copy.closeMenu : copy.openMenu}
             aria-expanded={abierto}
             aria-controls={menuId}
             onClick={() => setAbierto((v) => !v)}
@@ -83,14 +90,14 @@ export function LandingHeader({ productos }: { productos: readonly LandingProduc
           <button
             type="button"
             className={styles.menuBackdrop}
-            aria-label="Cerrar menú"
+            aria-label={copy.closeMenu}
             onClick={cerrar}
           />
-          <nav id={menuId} className={styles.mobileNav} aria-label="Navegación móvil">
-            <a className={styles.mobileLink} href="#inicio" onClick={cerrar}>Inicio</a>
-            <a className={styles.mobileLink} href="#solucion" onClick={cerrar}>Solución</a>
-            <a className={styles.mobileLink} href="#recursos" onClick={cerrar}>Recursos</a>
-            <p className={styles.mobileGroupLabel}>Productos</p>
+          <nav id={menuId} className={styles.mobileNav} aria-label={copy.mobileAria}>
+            <a className={styles.mobileLink} href="#inicio" onClick={cerrar}>{copy.inicio}</a>
+            <a className={styles.mobileLink} href="#solucion" onClick={cerrar}>{copy.solucion}</a>
+            <a className={styles.mobileLink} href="#recursos" onClick={cerrar}>{copy.recursos}</a>
+            <p className={styles.mobileGroupLabel}>{copy.productos}</p>
             {productos.map((producto) => (
               <a
                 className={styles.mobileLink}
@@ -101,6 +108,9 @@ export function LandingHeader({ productos }: { productos: readonly LandingProduc
                 {producto.label}
               </a>
             ))}
+            <div className={styles.mobileLang}>
+              <LanguageSwitch locale={locale} label={copy.langLabel} variant="menu" />
+            </div>
           </nav>
         </>
       ) : null}
