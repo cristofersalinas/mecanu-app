@@ -9,14 +9,27 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "es";
 
+/**
+ * `ogLocale` va aparte de `htmlLang` porque Open Graph exige siempre
+ * `idioma_TERRITORIO`. En inglés no coinciden: el `lang` del HTML correcto es
+ * `en` a secas —la versión no es de ningún país concreto— pero Open Graph no
+ * admite `en` suelto, así que ahí va `en_GB`, coherente con la bandera del
+ * Reino Unido que usa el selector.
+ */
 export const LOCALE_META: Record<
   Locale,
-  { htmlLang: string; hreflang: string; name: string; nativeName: string }
+  {
+    htmlLang: string;
+    hreflang: string;
+    ogLocale: string;
+    name: string;
+    nativeName: string;
+  }
 > = {
-  es: { htmlLang: "es-ES", hreflang: "es-ES", name: "Spanish", nativeName: "Español" },
-  ca: { htmlLang: "ca-ES", hreflang: "ca-ES", name: "Catalan", nativeName: "Català" },
-  en: { htmlLang: "en", hreflang: "en", name: "English", nativeName: "English" },
-  pt: { htmlLang: "pt-PT", hreflang: "pt-PT", name: "Portuguese", nativeName: "Português" },
+  es: { htmlLang: "es-ES", hreflang: "es-ES", ogLocale: "es_ES", name: "Spanish", nativeName: "Español" },
+  ca: { htmlLang: "ca-ES", hreflang: "ca-ES", ogLocale: "ca_ES", name: "Catalan", nativeName: "Català" },
+  en: { htmlLang: "en", hreflang: "en", ogLocale: "en_GB", name: "English", nativeName: "English" },
+  pt: { htmlLang: "pt-PT", hreflang: "pt-PT", ogLocale: "pt_PT", name: "Portuguese", nativeName: "Português" },
 };
 
 export function isLocale(value: string | null | undefined): value is Locale {
