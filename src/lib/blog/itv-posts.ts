@@ -8,6 +8,8 @@ function post(
   excerpt: string,
   publishedAt: string,
   readingMinutes: number,
+  coverImage: string,
+  coverAlt: string,
   content: string,
 ): Post {
   return {
@@ -16,8 +18,8 @@ function post(
     excerpt,
     content: `${content}\n${CTA}`,
     category: "ITV",
-    coverImage: "/landing/hero-calle.jpg",
-    coverAlt: "Coche en la calle listo para recoger y llevar a la estación de ITV.",
+    coverImage,
+    coverAlt,
     publishedAt,
     readingMinutes,
     authorSlug: "cristofer",
@@ -32,6 +34,8 @@ export const ITV_POSTS: Post[] = [
     "Nadie inspecciona el coche en tu portal. Un conductor lo lleva a una estación autorizada, espera el resultado y te lo devuelve.",
     "2026-08-19",
     6,
+    "/blog/itv-inspector-lineup-collage.png",
+    "Inspector frente a varios coches clásicos y un cartel de ITV en collage vintage.",
     `
 <p>En España no existe una ITV “en casa”. La inspección solo la puede hacer una estación autorizada. Lo que sí existe —y es lo que ofrece Mecanu— es <strong>no tener que ir tú</strong>: recogemos el coche, lo llevamos, y te lo devolvemos.</p>
 <h2>Cómo es el servicio</h2>
@@ -52,6 +56,8 @@ export const ITV_POSTS: Post[] = [
     "No. La DGT multa igual. Tener cita no autoriza a usar el coche para ir al trabajo.",
     "2026-08-18",
     4,
+    "/blog/itv-road-mosaic.png",
+    "Coche pequeño avanzando por una carretera larga en una ilustración de mosaico.",
     `
 <p>La respuesta corta: <strong>no</strong>. Circular con la ITV caducada es infracción grave aunque tengas cita impresa en el móvil. La multa habitual son 200 € (100 € por pronto pago).</p>
 <p>La excepción práctica es llevar el vehículo <em>directamente</em> a la estación o al taller para reparar. No es un salvoconducto para el resto del día.</p>
@@ -65,6 +71,8 @@ export const ITV_POSTS: Post[] = [
     "Caducada no es lo mismo que desfavorable ni que negativa. Las sanciones y lo que puedes hacer con el coche cambian.",
     "2026-08-17",
     5,
+    "/blog/itv-hourglass-mosaic.png",
+    "Reloj de arena dorado realizado en mosaico sobre fondo claro.",
     `
 <p>Tres situaciones distintas:</p>
 <ul>
@@ -81,6 +89,8 @@ export const ITV_POSTS: Post[] = [
     "Desfavorable te deja un margen. Negativa te deja el coche parado. Confundirlas sale caro.",
     "2026-08-16",
     5,
+    "/blog/itv-split-sedan-collage.png",
+    "Coche clásico partido en dos con rotura central en collage vintage.",
     `
 <p>Si el resultado es <strong>desfavorable</strong>, tienes un plazo legal (habitualmente dos meses) para reparar los defectos graves y repetir la inspección, a menudo solo de los puntos fallados y a menor coste.</p>
 <p>Si es <strong>negativa</strong>, el vehículo no está apto. No lo conduzcas a casa “que ya lo miro”. Taller, y si no arranca o no es seguro, grúa — no un conductor.</p>
@@ -93,6 +103,8 @@ export const ITV_POSTS: Post[] = [
     "Tras un desfavorable, la repetición suele ser más barata y más corta si vuelves a tiempo y al mismo centro.",
     "2026-08-15",
     4,
+    "/blog/itv-inspector-magnifier-collage.png",
+    "Inspector observando un coche con lupa en collage vintage.",
     `
 <p>La segunda inspección no es “pasar la ITV otra vez entera” si cumples plazo y estación. Revisan los defectos anotados. El precio de esa repetición lo fija cada operador; en Madrid (tarifas libres) conviene preguntar al pedir la primera cita.</p>
 <p>Si dejas pasar el plazo, pagas inspección completa de nuevo. Si cambias de estación, también.</p>
@@ -105,6 +117,8 @@ export const ITV_POSTS: Post[] = [
     "La DGT permite adelantar un mes. La caducidad siguiente no se come esos días.",
     "2026-08-14",
     3,
+    "/blog/itv-car-green-collage.png",
+    "Coche clásico en collage de papel sobre fondo verde oscuro.",
     `
 <p>Si tu ITV vence el 18 de marzo, puedes pasarla desde el 16 de febrero (30 días naturales antes) y la próxima caducidad sigue anclada al 18 de marzo del ciclo que te toque, no se adelanta al 16 de febrero.</p>
 <p>Eso sirve para coger hueco en estación, para que coincida con un hueco en el trabajo, o para que recojamos el coche un martes flojo en vez del último día del mes.</p>
@@ -116,6 +130,8 @@ export const ITV_POSTS: Post[] = [
     "En Madrid cada estación pone precio. La cita online evita la cola; no evita tener que llevar el coche.",
     "2026-08-13",
     5,
+    "/blog/itv-consultation-mosaic.png",
+    "Persona señalando un coche mientras otra escucha, en ilustración de mosaico.",
     `
 <p>La Comunidad de Madrid liberalizó tarifas: gasolina, diésel e híbrido no cuestan lo mismo ni en el mismo polígono. Rango orientativo 2026 para turismo: unos 40–65 € según combustible y estación, más descuentos entre semana.</p>
 <p>Applus, Iteuve, SGS y operadores privados publican cita online. Sin cita, en algunas estaciones se espera. Con cita, sigues siendo tú quien pierde la mañana — salvo que alguien lleve el coche por ti.</p>
@@ -128,6 +144,8 @@ export const ITV_POSTS: Post[] = [
     "En Catalunya las tarifas están más reguladas. El problema no es tanto el euro como el desplazamiento y la ZBE.",
     "2026-08-12",
     5,
+    "/blog/itv-key-mosaic.png",
+    "Llave de coche azul representada como mosaico cerámico.",
     `
 <p>En Barcelona y área, la cita previa en la red de estaciones (Applus y otras) se agota en determinados meses. El turismo diésel paga más que el gasolina por emisiones.</p>
 <p>Si tu distintivo ambiental no te deja entrar a ciertas zonas, hay que elegir estación compatible. El conductor que lleva el coche tiene que poder circular; el tuyo también.</p>
@@ -140,6 +158,8 @@ export const ITV_POSTS: Post[] = [
     "La tasa de la estación no es el coste real. El coste real es la mañana que pierdes.",
     "2026-08-11",
     4,
+    "/blog/itv-crash-mosaic.png",
+    "Dos camiones chocando en una composición de mosaico con piezas rotas en el centro.",
     `
 <p>La inspección de un turismo en 2026 se mueve, según comunidad y combustible, entre unos 35 y 65 €. Madrid es liberalizado (cada estación decide). Catalunya aplica tarifas más homogéneas, con subidas recientes.</p>
 <p>Eso es la tasa. Si sumas taxi de ida y vuelta, parking, o media jornada laboral, el “precio de la ITV” se parece más a 80–150 € de fricción. El servicio de recogida cobra esa fricción, no sustituye la tasa de la estación (va aparte o incluida según lo que te cotemos por WhatsApp).</p>
@@ -151,6 +171,8 @@ export const ITV_POSTS: Post[] = [
     "La lista es aburrida y es la que te saca desfavorable. Un vistazo en el taller el día de antes evita la segunda visita.",
     "2026-08-10",
     6,
+    "/blog/itv-wheel-tire-mosaic.png",
+    "Rueda y neumático de coche construidos con azulejos de mosaico.",
     `
 <p>Inspección visual y de equipos, en este orden típico:</p>
 <ul>
@@ -171,6 +193,8 @@ export const ITV_POSTS: Post[] = [
     "Luces fundidas y un testigo de motor son el clásico. Se ven en el elevador, no en la cola de la ITV.",
     "2026-08-09",
     4,
+    "/blog/itv-mechanic-wheel-collage.png",
+    "Mecánico agachado trabajando en la rueda de un coche clásico en collage vintage.",
     `
 <p>Muchos talleres venden una pre-ITV barata: lectura de averías, luces, frenos de mano, fugas evidentes. Cuesta menos que repetir la inspección.</p>
 <p>El flujo inteligente: pre-ITV → recogida → estación → (si hace falta) vuelta al taller → segunda inspección. Todo eso se coordina. Tú no haces de mensajero entre tres sitios.</p>
@@ -182,6 +206,8 @@ export const ITV_POSTS: Post[] = [
     "El diésel paga más tasa y falla más en emisiones. Un regenerado a tiempo no es opcional.",
     "2026-08-08",
     5,
+    "/blog/itv-engine-mosaic.png",
+    "Motor visto dentro del vano delantero en una composición de mosaico.",
     `
 <p>Las estaciones miden opacidad y, en muchos casos, leen el OBD. Un FAP tapado, un EGR sucio o un testigo de motor encendido son causa típica de desfavorable en diésel de más de diez años.</p>
 <p>Si el coche hace trayectos cortos por ciudad, el FAP no regenera. Un viaje de carretera o una limpieza en taller antes de la cita es más barato que dos inspecciones + traslado.</p>
@@ -194,6 +220,8 @@ export const ITV_POSTS: Post[] = [
     "Misma estación, menos sitio en cola, mismo problema de calendario. El traslado es un conductor, no una furgoneta-grúa salvo que no arranque.",
     "2026-08-07",
     4,
+    "/blog/itv-driver-window-mosaic.png",
+    "Conductor sonriendo desde la ventanilla de un coche en estilo mosaico.",
     `
 <p>Las motos también tienen ITV periódica (plazos distintos según cilindrada y antigüedad). La tasa es más baja que la del turismo. El dolor es el mismo: cita, desplazamiento, espera.</p>
 <p>Si la moto circula y está asegurada, un conductor con carnet adecuado puede llevarla. Si no arranca, es grúa de moto, no Mecanu.</p>
@@ -206,6 +234,8 @@ export const ITV_POSTS: Post[] = [
     "Si no está homologado y en la ficha, sale desfavorable. Homologar no es un traslado: es un taller y un laboratorio.",
     "2026-08-06",
     5,
+    "/blog/itv-star-pattern-mosaic.png",
+    "Patrón de estrellas amarillas sobre fondo azul en mosaico cerámico.",
     `
 <p>Láminas no homologadas, escape “deportivo” sin ficha, faros no e-mark: la estación no negocia. O está en la documentación o no pasa.</p>
 <p>Mecanu no homologa. Si tu coche tiene reformas, resuélvelas <em>antes</em> de pedirnos la recogida. Si no, pagas el viaje para un desfavorable anunciado.</p>
@@ -217,6 +247,8 @@ export const ITV_POSTS: Post[] = [
     "Turismo particular: primera a los 4 años, luego cada 2 hasta los 10, después cada año. Vehículos de servicio, otro calendario.",
     "2026-08-05",
     4,
+    "/blog/itv-shoe-keys-mosaic.png",
+    "Zapatos y llaves apoyadas en el suelo representados como mosaico.",
     `
 <p>Para turismos de uso particular en España:</p>
 <ul>

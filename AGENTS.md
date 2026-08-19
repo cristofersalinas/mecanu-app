@@ -47,7 +47,9 @@ criterio implícito.
 
 1. `CLAUDE.md` — contexto de producto y decisiones cerradas. Léelo antes que nada:
    ahí está la mitad de las respuestas a preguntas que podrías estar a punto de
-   volver a hacer.
+   volver a hacer. Beneficios y propuesta de valor comercial:
+   `docs/PROPUESTA-VALOR.md` — anotar ahí un claim nuevo antes de subirlo a la
+   landing.
 2. `ARQUITECTURA.md` — qué vive dónde y por qué.
 3. `src/lib/mecanu/types.ts` — las formas de datos reales, con comentarios de qué
    es decisión de producto y qué es campo `// REVISAR`.

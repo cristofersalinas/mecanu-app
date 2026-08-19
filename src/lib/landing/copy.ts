@@ -2,6 +2,7 @@ import { DEFAULT_LOCALE, type Locale } from "./locales";
 
 export type LandingMapCityId =
   | "madrid"
+  | "barcelona"
   | "londres"
   | "sao-paulo"
   | "san-francisco"
@@ -41,6 +42,7 @@ export type LandingCopy = {
     ciudades: Record<LandingMapCityId, string>;
     details: string;
     talk: string;
+    comingSoon: string;
   };
   statsAria: string;
   stats: { numero: string; valor: string; etiqueta: string; texto: string; enlace?: string }[];
@@ -51,7 +53,7 @@ export type LandingCopy = {
     subtext: string;
     pasos: { numero: string; titulo: string; texto: string }[];
   };
-  hiring: { heading: string; subtext: string; cta: string };
+  hiring: { heading: string; subtext: string; cta: string; photoAlt: string };
   news: {
     eyebrow: string;
     heading: string;
@@ -66,7 +68,7 @@ export type LandingCopy = {
     primary: string;
     secondary: string;
     featuresLabel: string;
-    beneficios: string[];
+    beneficios: { icono: string; texto: string }[];
   };
   footer: {
     tagline: string;
@@ -183,6 +185,7 @@ const es: LandingCopy = {
     citySwitchAria: "Ciudad del mapa",
     ciudades: {
       madrid: "Madrid",
+      barcelona: "Barcelona",
       londres: "Londres",
       "sao-paulo": "São Paulo",
       "san-francisco": "San Francisco",
@@ -190,6 +193,7 @@ const es: LandingCopy = {
     },
     details: "Detalles",
     talk: "Hablar con Mecanu",
+    comingSoon: "Próximamente en esta ciudad.",
   },
   statsAria: "Resultados de Mecanu",
   stats: [
@@ -248,6 +252,7 @@ const es: LandingCopy = {
     heading: "¿Pico de trabajo?",
     subtext: "Tu capacidad puede crecer sin ampliar la nave.",
     cta: "Pide apoyo a Mecanu",
+    photoAlt: "Coche clásico partido en collage vintage, sobre fondo crema.",
   },
   news: {
     eyebrow: "MECANU / IDEAS PARA EL TALLER",
@@ -262,8 +267,8 @@ const es: LandingCopy = {
         visual: "articleWorkshop",
       },
       {
-        categoria: "OPERATIVA",
-        titulo: "Ventanas horarias: una forma más clara de coordinar cada traslado",
+        categoria: "EXPERIENCIA",
+        titulo: "El cliente se acostumbró al delivery y los talleres no se quedan atrás",
         icono: "schedule",
         visual: "articleWindow",
       },
@@ -284,11 +289,38 @@ const es: LandingCopy = {
     secondary: "Ver cómo funciona",
     featuresLabel: "LO QUE OBTIENES",
     beneficios: [
-      "Más plazas disponibles para reparar.",
-      "Ventanas claras y estados visibles.",
-      "Tu equipo o flota externa cuando haga falta.",
-      "Cobertura y evidencia en cada traslado.",
-      "Un solo hilo de información para todos.",
+      {
+        icono: "door_front",
+        texto: "Se acabó esperar 7 días: el coche se recoge en su puerta.",
+      },
+      {
+        icono: "savings",
+        texto: "Más barato y más disponible que una grúa.",
+      },
+      {
+        icono: "verified_user",
+        texto: "Flota externa con seguro. Si pasa algo, lo cubre Mecanu.",
+      },
+      {
+        icono: "policy",
+        texto: "RC flexible: para el taller o por traslado.",
+      },
+      {
+        icono: "photo_camera",
+        texto: "Check-in visual: hasta 20 puntos.",
+      },
+      {
+        icono: "chat",
+        texto: "CRM con WhatsApp: menos llamadas, atención automática.",
+      },
+      {
+        icono: "auto_awesome",
+        texto: "Predicción de próximos servicios y avisos al cliente.",
+      },
+      {
+        icono: "home_work",
+        texto: "El cliente se queda en casa. Tú recuperas plaza.",
+      },
     ],
   },
   footer: {
@@ -465,6 +497,7 @@ const ca: LandingCopy = {
     citySwitchAria: "Ciutat del mapa",
     ciudades: {
       madrid: "Madrid",
+      barcelona: "Barcelona",
       londres: "Londres",
       "sao-paulo": "São Paulo",
       "san-francisco": "San Francisco",
@@ -472,6 +505,7 @@ const ca: LandingCopy = {
     },
     details: "Detalls",
     talk: "Parlar amb Mecanu",
+    comingSoon: "Pròximament en aquesta ciutat.",
   },
   statsAria: "Resultats de Mecanu",
   stats: [
@@ -530,6 +564,7 @@ const ca: LandingCopy = {
     heading: "Pic de feina?",
     subtext: "La teva capacitat pot créixer sense ampliar la nau.",
     cta: "Demana suport a Mecanu",
+    photoAlt: "Cotxe clàssic partit en collage vintage, sobre fons crema.",
   },
   news: {
     eyebrow: "MECANU / IDEES PER AL TALLER",
@@ -544,8 +579,8 @@ const ca: LandingCopy = {
         visual: "articleWorkshop",
       },
       {
-        categoria: "OPERATIVA",
-        titulo: "Franges horàries: una manera més clara de coordinar cada trasllat",
+        categoria: "EXPERIÈNCIA",
+        titulo: "El client s'ha acostumat al delivery i els tallers no es queden enrere",
         icono: "schedule",
         visual: "articleWindow",
       },
@@ -566,11 +601,38 @@ const ca: LandingCopy = {
     secondary: "Veure com funciona",
     featuresLabel: "QUÈ HI GUANYES",
     beneficios: [
-      "Més places disponibles per reparar.",
-      "Franges clares i estats visibles.",
-      "El teu equip o flota externa quan calgui.",
-      "Cobertura i evidència en cada trasllat.",
-      "Un sol fil d'informació per a tothom.",
+      {
+        icono: "door_front",
+        texto: "S'ha acabat esperar 7 dies: el cotxe es recull a la porta.",
+      },
+      {
+        icono: "savings",
+        texto: "Més barat i més disponible que una grua.",
+      },
+      {
+        icono: "verified_user",
+        texto: "Flota externa amb assegurança. Si passa res, ho cobreix Mecanu.",
+      },
+      {
+        icono: "policy",
+        texto: "RC flexible: per al taller o per trasllat.",
+      },
+      {
+        icono: "photo_camera",
+        texto: "Check-in visual: fins a 20 punts.",
+      },
+      {
+        icono: "chat",
+        texto: "CRM amb WhatsApp: menys trucades, atenció automàtica.",
+      },
+      {
+        icono: "auto_awesome",
+        texto: "Predicció de pròxims serveis i avisos al client.",
+      },
+      {
+        icono: "home_work",
+        texto: "El client es queda a casa. Tu recuperes plaça.",
+      },
     ],
   },
   footer: {
@@ -747,6 +809,7 @@ const en: LandingCopy = {
     citySwitchAria: "City",
     ciudades: {
       madrid: "Madrid",
+      barcelona: "Barcelona",
       londres: "London",
       "sao-paulo": "São Paulo",
       "san-francisco": "San Francisco",
@@ -754,6 +817,7 @@ const en: LandingCopy = {
     },
     details: "Details",
     talk: "Talk to Mecanu",
+    comingSoon: "Coming soon in this city.",
   },
   statsAria: "What Mecanu does",
   stats: [
@@ -805,6 +869,7 @@ const en: LandingCopy = {
     heading: "Workload spike?",
     subtext: "Grow capacity without a bigger shop.",
     cta: "Bring Mecanu in",
+    photoAlt: "Classic car split in vintage collage on a cream background.",
   },
   news: {
     eyebrow: "MECANU / IDEAS FOR THE SHOP",
@@ -819,8 +884,8 @@ const en: LandingCopy = {
         visual: "articleWorkshop",
       },
       {
-        categoria: "OPS",
-        titulo: "Time windows: a clearer way to coordinate each run",
+        categoria: "EXPERIENCE",
+        titulo: "Customers got used to delivery. Shops aren't staying behind.",
         icono: "schedule",
         visual: "articleWindow",
       },
@@ -841,11 +906,38 @@ const en: LandingCopy = {
     secondary: "See how it works",
     featuresLabel: "WHAT YOU GET",
     beneficios: [
-      "More bays to repair.",
-      "Clear windows. Visible status.",
-      "Your drivers or ours, when you need them.",
-      "Cover and evidence on every run.",
-      "One record for everyone.",
+      {
+        icono: "door_front",
+        texto: "No more waiting 7 days: we collect the car at their door.",
+      },
+      {
+        icono: "savings",
+        texto: "Cheaper and more available than a recovery truck.",
+      },
+      {
+        icono: "verified_user",
+        texto: "Insured external fleet. If something happens, Mecanu covers it.",
+      },
+      {
+        icono: "policy",
+        texto: "Flexible liability: for the shop or per transfer.",
+      },
+      {
+        icono: "photo_camera",
+        texto: "Visual check-in: up to 20 points.",
+      },
+      {
+        icono: "chat",
+        texto: "WhatsApp CRM: fewer calls, automated care.",
+      },
+      {
+        icono: "auto_awesome",
+        texto: "Upcoming-service prediction and client alerts.",
+      },
+      {
+        icono: "home_work",
+        texto: "The customer stays home. You get the bay back.",
+      },
     ],
   },
   footer: {
@@ -1022,6 +1114,7 @@ const pt: LandingCopy = {
     citySwitchAria: "Cidade",
     ciudades: {
       madrid: "Madrid",
+      barcelona: "Barcelona",
       londres: "Londres",
       "sao-paulo": "São Paulo",
       "san-francisco": "San Francisco",
@@ -1029,6 +1122,7 @@ const pt: LandingCopy = {
     },
     details: "Detalhes",
     talk: "Falar com Mecanu",
+    comingSoon: "Brevemente nesta cidade.",
   },
   statsAria: "O que a Mecanu faz",
   stats: [
@@ -1080,6 +1174,7 @@ const pt: LandingCopy = {
     heading: "Pico de trabalho?",
     subtext: "Aumenta a capacidade sem alargar a oficina.",
     cta: "Chama a Mecanu",
+    photoAlt: "Carro clássico partido em collage vintage, sobre fundo creme.",
   },
   news: {
     eyebrow: "MECANU / IDEIAS PARA A OFICINA",
@@ -1094,8 +1189,8 @@ const pt: LandingCopy = {
         visual: "articleWorkshop",
       },
       {
-        categoria: "OPERAÇÃO",
-        titulo: "Janelas horárias: uma forma mais clara de coordenar cada recolha",
+        categoria: "EXPERIÊNCIA",
+        titulo: "O cliente habituou-se ao delivery e as oficinas não ficam atrás",
         icono: "schedule",
         visual: "articleWindow",
       },
@@ -1116,11 +1211,38 @@ const pt: LandingCopy = {
     secondary: "Ver como funciona",
     featuresLabel: "O QUE OBTÉNS",
     beneficios: [
-      "Mais lugares para reparar.",
-      "Janelas claras. Estado à vista.",
-      "Os teus condutores ou os nossos, quando for preciso.",
-      "Cobertura e prova em cada recolha.",
-      "Um só registo para todos.",
+      {
+        icono: "door_front",
+        texto: "Acabou esperar 7 dias: o carro recolhe-se à porta.",
+      },
+      {
+        icono: "savings",
+        texto: "Mais barato e mais disponível do que um reboque.",
+      },
+      {
+        icono: "verified_user",
+        texto: "Frota externa com seguro. Se acontecer algo, a Mecanu cobre.",
+      },
+      {
+        icono: "policy",
+        texto: "RC flexível: para a oficina ou por recolha.",
+      },
+      {
+        icono: "photo_camera",
+        texto: "Check-in visual: até 20 pontos.",
+      },
+      {
+        icono: "chat",
+        texto: "CRM com WhatsApp: menos chamadas, atendimento automático.",
+      },
+      {
+        icono: "auto_awesome",
+        texto: "Predição dos próximos serviços e avisos ao cliente.",
+      },
+      {
+        icono: "home_work",
+        texto: "O cliente fica em casa. Tu recuperas o lugar.",
+      },
     ],
   },
   footer: {

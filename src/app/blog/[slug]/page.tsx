@@ -192,11 +192,14 @@ export default async function BlogPostPage({ params }: Props) {
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 </div>
-                <span className={styles.relatedCat}>{p.category}</span>
-                <p className={styles.relatedTitle}>{p.title}</p>
-                <span className={styles.relatedByline}>
-                  por {getAuthor(p.authorSlug)?.name} · {formatDate(p.publishedAt)}
-                </span>
+                <div className={styles.relatedCardBody}>
+                  <span className={styles.relatedCat}>{p.category}</span>
+                  <p className={styles.relatedTitle}>{p.title}</p>
+                  <span className={styles.relatedByline}>
+                    por {getAuthor(p.authorSlug)?.name} · {formatDate(p.publishedAt)}
+                  </span>
+                  <span className={styles.relatedReadLink}>Leer →</span>
+                </div>
               </Link>
             ))}
           </div>

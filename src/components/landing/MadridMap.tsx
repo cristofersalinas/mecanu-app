@@ -221,6 +221,16 @@ function preloadPhotos(talleres: TallerMapa[]) {
   }
 }
 
+function preloadCityPhotos(ciudad: CiudadMapa) {
+  preloadPhotos(ciudad.talleres);
+}
+
+function preloadAllCityPhotos() {
+  for (const ciudad of CIUDADES_MAPA) {
+    preloadCityPhotos(ciudad);
+  }
+}
+
 function StreetViewPhoto({ taller }: { taller: TallerMapa }) {
   const rawUrl = streetViewUrl(taller);
   const cached = rawUrl ? photoCache.get(rawUrl) : undefined;
@@ -332,8 +342,8 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
     const onLoad = () => {
       map.resize();
       map.addImage("taller-icono", iconoTaller(), { pixelRatio: 2 });
-      // Precarga las fotos de Street View de Madrid en segundo plano
-      preloadPhotos(CIUDAD_INICIAL.talleres);
+      // Precarga Street View para todas las ciudades y deja la activa lista.
+      preloadAllCityPhotos();
 
       map.addSource("distritos", {
         type: "geojson",
@@ -569,6 +579,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
     if (!map?.isStyleLoaded()) return;
     clearResetTimer();
     setSelected(null);
+    preloadCityPhotos(ciudad);
     aplicarFuentes(map, ciudad, nombreCiudad(copy, ciudad));
     aplicarSeleccion(map, null);
     defaultZoomRef.current = encajarCiudad(map, ciudad, 700);
@@ -587,22 +598,22 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
       onPointerEnter={clearResetTimer}
       onPointerLeave={scheduleReset}
     >
-      <div className={styles.mapCitySwitch} role="radiogroup" aria-label={copy.citySwitchAria}>
-        {CIUDADES_MAPA.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="radio"
-            aria-checked={item.id === cityId}
-            className={item.id === cityId ? styles.mapCitySwitchActive : undefined}
-            onClick={() => {
-              cityRef.current = ciudadPorId(item.id);
-              setCityId(item.id);
-            }}
-          >
-            {copy.ciudades[item.id] ?? item.label}
-          </button>
-        ))}
+      <div className={styles.mapCitySwitch}>
+        <select
+          aria-label={copy.citySwitchAria}
+          value={cityId}
+          onChange={(event) => {
+            const nextId = event.target.value as CiudadMapaId;
+            cityRef.current = ciudadPorId(nextId);
+            setCityId(nextId);
+          }}
+        >
+          {CIUDADES_MAPA.map((item) => (
+            <option key={item.id} value={item.id}>
+              {copy.ciudades[item.id] ?? item.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div ref={containerRef} className={styles.mapCanvas} />
       <div className={styles.mapZoomControls}>
@@ -637,6 +648,25 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
               >
                 {copy.details}
               </a>
+              <a className={styles.btnPrimary} href="#contacto">
+                {copy.talk}
+              </a>
+            </div>
+          </div>
+        </article>
+      ) : ciudad.talleres.length === 0 ? (
+        <article className={styles.mapPlaceCard} aria-live="polite">
+          <div className={styles.mapPlacePhotoPlaceholder}>
+            <img
+              className={styles.mapPlacePhotoImg}
+              src="/landing/map-barcelona.png"
+              alt="Mosaico de un reloj de arena, estilo trencadís de Barcelona"
+            />
+          </div>
+          <div className={styles.mapPlaceBody}>
+            <strong>{nombreCiudad(copy, ciudad)}</strong>
+            <p>{copy.comingSoon}</p>
+            <div className={styles.mapPlaceActions}>
               <a className={styles.btnPrimary} href="#contacto">
                 {copy.talk}
               </a>

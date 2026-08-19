@@ -7,6 +7,7 @@ import { LanguageSwitch } from "@/components/landing/LanguageSwitch";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import MadridMap from "@/components/landing/MadridMap";
 import { JsonLd } from "@/components/landing/JsonLd";
+import { getPost } from "@/lib/blog/data";
 import { copyFor } from "@/lib/landing/copy";
 import { FAQ_LANDING } from "@/lib/landing/faq";
 import { type Locale, pathFor, contactoPathFor } from "@/lib/landing/locales";
@@ -55,6 +56,12 @@ const STAT_FOTOS = {
 
 const STAT_PHOTO = [STAT_FOTOS.tablero, STAT_FOTOS.volante, STAT_FOTOS.malla] as const;
 
+const RESOURCE_POSTS = [
+  getPost("cliente-no-recoge-el-coche"),
+  getPost("tu-taller-tambien-puede-entregar-como-un-delivery"),
+  getPost("conductores-externos-para-talleres"),
+] as const;
+
 
 export function LandingPage({ locale }: { locale: Locale }) {
   const copy = copyFor(locale);
@@ -90,7 +97,6 @@ export function LandingPage({ locale }: { locale: Locale }) {
               priority
               quality={85}
             />
-            <div className={styles.expandMark} aria-hidden="true"><Icon name="open_in_full" size="sm" /></div>
           </div>
         </section>
 
@@ -130,6 +136,27 @@ export function LandingPage({ locale }: { locale: Locale }) {
           </div>
         </section>
 
+        <section className={styles.hiringCta} id="flota">
+          <div className={styles.ctaSection}>
+            <div className={styles.ctaImage}>
+              <Image
+                src="/landing/cta-car-split-collage.png"
+                alt={copy.hiring.photoAlt}
+                width={150}
+                height={128}
+                className={styles.ctaImagePhoto}
+              />
+            </div>
+            <div className={styles.ctaText}>
+              <h2 className={styles.ctaHeading}>{copy.hiring.heading}</h2>
+              <p className={styles.ctaSubtext}>{copy.hiring.subtext}</p>
+            </div>
+            <div className={styles.ctaButtonWrapper}>
+              <a className={styles.ctaButton} href={ctaHref}>{copy.hiring.cta}</a>
+            </div>
+          </div>
+        </section>
+
         <section className={styles.useCasesGrid} id="solucion" aria-label={copy.statsAria}>
           {copy.stats.map((metrica, i) => {
             const foto = STAT_PHOTO[i];
@@ -162,87 +189,6 @@ export function LandingPage({ locale }: { locale: Locale }) {
           })}
         </section>
 
-        <section className={styles.hiringCta} id="flota">
-          <div className={styles.ctaSection}>
-            <div className={styles.ctaImage} aria-hidden="true">
-              <div className={styles.ctaRouteDrawing}>
-                <span className={styles.ctaRouteLine} />
-                <span className={styles.ctaRoutePoint} />
-                <Icon name="local_shipping" size="xl" />
-              </div>
-            </div>
-            <div className={styles.ctaText}>
-              <h2 className={styles.ctaHeading}>{copy.hiring.heading}</h2>
-              <p className={styles.ctaSubtext}>{copy.hiring.subtext}</p>
-            </div>
-            <div className={styles.ctaButtonWrapper}>
-              <a className={styles.ctaButton} href={ctaHref}>{copy.hiring.cta}</a>
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.useCasesSection} id="recursos">
-          <div className={styles.sectionHeader}>
-            <p className={styles.eyebrow}>{copy.news.eyebrow}</p>
-            <div className={styles.headingRow}>
-              <h2 className={styles.headline}>{copy.news.heading}</h2>
-              <Link className={styles.linkCta} href="/blog">{copy.news.cta}</Link>
-            </div>
-          </div>
-          <div className={styles.cardsWrap}>
-            <div className={styles.cardsGrid}>
-              {copy.news.items.map((novedad, i) => (
-                <a
-                  className={styles.postCard}
-                  href={[
-                    "/blog/talleres-que-pierden-clientes",
-                    "/blog/conductores-externos-para-talleres",
-                    "/blog/seguro-responsabilidad-civil-traslados",
-                  ][i] ?? "/blog"}
-                  key={novedad.titulo}
-                >
-                  <div className={`${styles.postImage} ${styles[novedad.visual]}`}>
-                    <div className={styles.postImageGrid} />
-                    <Icon name={novedad.icono} size="xl" />
-                  </div>
-                  <div className={styles.postContent}>
-                    <p className={styles.cardDate}>{novedad.categoria}</p>
-                    <h3 className={styles.cardTitle}>{novedad.titulo}</h3>
-                    <span className={styles.readLink}>{copy.news.read}</span>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.faqSection} id="preguntas">
-          <div className={styles.sectionHeader}>
-            <p className={styles.eyebrow}>MECANU / PREGUNTAS FRECUENTES</p>
-            <h2 className={styles.headline}>Lo que preguntan los talleres antes de empezar</h2>
-          </div>
-          <div className={styles.faqWrap}>
-            {FAQ_LANDING.map((item) => (
-              <details className={styles.faqItem} key={item.q}>
-                <summary>{item.q}</summary>
-                <p className={styles.faqAnswer}>{item.a}</p>
-              </details>
-            ))}
-            <div className={styles.faqLinks}>
-              <Link href="/madrid">Mecanu en Madrid</Link>
-              <Link href="/barcelona">Mecanu en Barcelona</Link>
-              <Link href="/para-talleres">Cómo funciona para tu taller</Link>
-              <Link href="/alternativa-grua">Comparado con una grúa</Link>
-              <Link href="/alternativa-mecanico-a-domicilio">Comparado con un mecánico a domicilio</Link>
-              <Link href="/itv-para-talleres">ITV para talleres</Link>
-              <Link href="/software-taller">Software de taller</Link>
-              <Link href="/mantenimiento-marcas">Mantenimiento por marca</Link>
-              <Link href="/cliente-no-recoge-coche">Cliente no recoge el coche</Link>
-              <Link href="/blog">Blog de operaciones</Link>
-            </div>
-          </div>
-        </section>
-
         <section className={styles.ctaGrid} id="contacto">
           <div className={styles.ctaLeft}>
             <p className={styles.eyebrow}>{copy.close.eyebrow}</p>
@@ -257,12 +203,94 @@ export function LandingPage({ locale }: { locale: Locale }) {
             <p className={styles.featuresLabel}>{copy.close.featuresLabel}</p>
             <ul className={styles.featureList}>
               {copy.close.beneficios.map((beneficio) => (
-                <li className={styles.featureItem} key={beneficio}>
-                  <span className={styles.check}><Icon name="check" size="sm" /></span>
-                  <span>{beneficio}</span>
+                <li className={styles.featureItem} key={beneficio.texto}>
+                  <span className={styles.featureIcon} aria-hidden="true">
+                    <Icon name={beneficio.icono} size="sm" />
+                  </span>
+                  <span>{beneficio.texto}</span>
                 </li>
               ))}
             </ul>
+          </div>
+        </section>
+
+        <section className={styles.faqSection} id="preguntas">
+          <div className={styles.sectionHeader}>
+            <p className={styles.eyebrow}>MECANU / PREGUNTAS FRECUENTES</p>
+            <h2 className={styles.headline}>Lo que preguntan los talleres antes de empezar</h2>
+          </div>
+          <input id="faq-expand" type="checkbox" className={styles.faqToggle} />
+          <div className={styles.faqClamp}>
+            <div className={styles.faqWrap}>
+              {FAQ_LANDING.map((item) => (
+                <details className={styles.faqItem} key={item.q}>
+                  <summary>{item.q}</summary>
+                  <p className={styles.faqAnswer}>{item.a}</p>
+                </details>
+              ))}
+              <div className={styles.faqLinks}>
+                <Link href="/madrid">Mecanu en Madrid</Link>
+                <Link href="/barcelona">Mecanu en Barcelona</Link>
+                <Link href="/para-talleres">Cómo funciona para tu taller</Link>
+                <Link href="/alternativa-grua">Comparado con una grúa</Link>
+                <Link href="/alternativa-mecanico-a-domicilio">Comparado con un mecánico a domicilio</Link>
+                <Link href="/itv-para-talleres">ITV para talleres</Link>
+                <Link href="/software-taller">Software de taller</Link>
+                <Link href="/mantenimiento-marcas">Mantenimiento por marca</Link>
+                <Link href="/cliente-no-recoge-coche">Cliente no recoge el coche</Link>
+                <Link href="/blog">Blog de operaciones</Link>
+              </div>
+            </div>
+          </div>
+          <label className={styles.faqToggleLabel} htmlFor="faq-expand">
+            <span className={styles.faqToggleMore}>Ver más</span>
+            <span className={styles.faqToggleLess}>Ver menos</span>
+          </label>
+        </section>
+
+        <section className={styles.useCasesSection} id="recursos">
+          <div className={styles.sectionHeader}>
+            <p className={styles.eyebrow}>{copy.news.eyebrow}</p>
+            <div className={styles.headingRow}>
+              <h2 className={styles.headline}>{copy.news.heading}</h2>
+              <Link className={styles.linkCta} href="/blog">{copy.news.cta}</Link>
+            </div>
+          </div>
+          <div className={styles.cardsWrap}>
+            <div className={styles.cardsGrid}>
+              {copy.news.items.map((novedad, i) => (
+                (() => {
+                  const preview = RESOURCE_POSTS[i];
+                  const href = preview ? `/blog/${preview.slug}` : "/blog";
+                  return (
+                <a
+                  className={styles.postCard}
+                  href={href}
+                  key={novedad.titulo}
+                >
+                  <div className={`${styles.postImage} ${styles[novedad.visual]}`}>
+                    {preview ? (
+                      <Image
+                        src={preview.coverImage}
+                        alt={preview.coverAlt}
+                        fill
+                        sizes="(max-width: 960px) 100vw, 33vw"
+                        className={styles.postPreviewImg}
+                      />
+                    ) : null}
+                    <div className={styles.postImageShade} />
+                    <div className={styles.postImageGrid} />
+                  </div>
+                  <div className={styles.postContent}>
+                    <p className={styles.cardDate}>{novedad.categoria}</p>
+                    <h3 className={styles.cardTitle}>{novedad.titulo}</h3>
+                    <span className={styles.readLink}>{copy.news.read}</span>
+                  </div>
+                </a>
+                  );
+                })()
+              ))}
+            </div>
           </div>
         </section>
 
@@ -315,6 +343,15 @@ export function LandingPage({ locale }: { locale: Locale }) {
         </footer>
       </div>
 
+      <div className={styles.pageBackdrop} aria-hidden="true">
+        <Image
+          src="/landing/globe-outline-light.png"
+          alt=""
+          fill
+          sizes="100vw"
+          className={styles.pageBackdropImg}
+        />
+      </div>
     </main>
   );
 }

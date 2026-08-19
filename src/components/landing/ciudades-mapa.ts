@@ -22,6 +22,7 @@ export type DistritoMapa = {
 
 export type CiudadMapaId =
   | "madrid"
+  | "barcelona"
   | "londres"
   | "sao-paulo"
   | "san-francisco"
@@ -43,6 +44,30 @@ export type CiudadMapa = {
 
 export const TAMANO_DISTRITO = 18;
 export const TAMANO_CIUDAD = 30;
+
+const BARCELONA: CiudadMapa = {
+  id: "barcelona",
+  label: "Barcelona",
+  cityName: "Barcelona",
+  lng: 2.1734,
+  lat: 41.3851,
+  bounds: [
+    [2.07, 41.32],
+    [2.25, 41.45],
+  ],
+  omitDistrict: "Eixample",
+  distritos: [
+    { name: "Eixample", lng: 2.163, lat: 41.39 },
+    { name: "Gràcia", lng: 2.158, lat: 41.403 },
+    { name: "Sants", lng: 2.14, lat: 41.375 },
+    { name: "Poblenou", lng: 2.2, lat: 41.403 },
+    { name: "Sant Andreu", lng: 2.189, lat: 41.436 },
+    { name: "Les Corts", lng: 2.129, lat: 41.387 },
+    { name: "Sarrià", lng: 2.121, lat: 41.401 },
+    { name: "Barceloneta", lng: 2.191, lat: 41.379 },
+  ],
+  talleres: [],
+};
 
 const LONDRES: CiudadMapa = {
   id: "londres",
@@ -302,22 +327,16 @@ const NUEVA_YORK: CiudadMapa = {
       lng: -73.9974832,
     },
     {
-      name: "Chelsea Auto Diagnostic",
-      address: "616 West 47th Street, New York, NY 10036",
-      lat: 40.7641093,
-      lng: -73.9964835,
+      name: "Chang's Auto Repair",
+      address: "293 Bond Street, Brooklyn, NY 11231",
+      lat: 40.6802844,
+      lng: -73.9892079,
     },
     {
       name: "A&A Imported Motors",
       address: "307 East 92nd Street, New York, NY 10128",
       lat: 40.781599,
       lng: -73.9482515,
-    },
-    {
-      name: "Chang's Auto Repair",
-      address: "293 Bond Street, Brooklyn, NY 11231",
-      lat: 40.6802844,
-      lng: -73.9892079,
     },
     {
       name: "Alfa Motors",
@@ -330,12 +349,6 @@ const NUEVA_YORK: CiudadMapa = {
       address: "321 McGuinness Boulevard, Brooklyn, NY 11222",
       lat: 40.733627,
       lng: -73.9524761,
-    },
-    {
-      name: "T&A Auto Repair",
-      address: "13-20 Jackson Avenue, Long Island City, NY 11101",
-      lat: 40.7440914,
-      lng: -73.9489261,
     },
     {
       name: "New Xcell Auto Repair",
@@ -358,6 +371,7 @@ export const CIUDADES_MAPA: CiudadMapa[] = [
     distritos: DISTRITOS_MADRID,
     talleres: TALLERES_MADRID,
   },
+  BARCELONA,
   LONDRES,
   SAO_PAULO,
   SAN_FRANCISCO,

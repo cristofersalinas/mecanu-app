@@ -1,6 +1,7 @@
 /** Talleres reales de Madrid verificados en 2026.
  *  Coordenadas geocodificadas vía Nominatim/OSM.
- *  No son clientes de Mecanu: son pines de referencia. */
+ *  No son clientes de Mecanu: son pines de referencia.
+ *  Filtro curatorial: solo mantenemos talleres con señal pública suficiente. */
 export type TallerMadrid = {
   name: string;
   address: string;
@@ -22,13 +23,13 @@ export const TALLERES_MADRID: TallerMadrid[] = [
     name: "Talleres Amador",
     address: "C/ Príncipe de Asturias, 9, 28006 Madrid",
     lat: 40.4278216,
-    lng: -3.6717520,
+    lng: -3.671752,
     svHeading: 90,
   },
   {
     name: "Talleres H. Núñez",
     address: "P.º de las Yeserías, 57, 28005 Madrid",
-    lat: 40.3969290,
+    lat: 40.396929,
     lng: -3.6969727,
     svHeading: 180,
   },
@@ -68,13 +69,6 @@ export const TALLERES_MADRID: TallerMadrid[] = [
     svHeading: 90,
   },
   {
-    name: "Motor Daytona",
-    address: "Av. de Logroño, 317, 28042 Madrid",
-    lat: 40.4504704,
-    lng: -3.6085662,
-    svHeading: 270,
-  },
-  {
     name: "Dasercars Madrid",
     address: "C/ Valgrande, 17, 28108 Alcobendas, Madrid",
     lat: 40.5374051,
@@ -84,7 +78,7 @@ export const TALLERES_MADRID: TallerMadrid[] = [
   {
     name: "Talleres Euromaster Vallejo",
     address: "C/ de Bravo Murillo, 300, 28020 Madrid",
-    lat: 40.4626100,
+    lat: 40.46261,
     lng: -3.6969919,
     svHeading: 90,
   },
@@ -98,7 +92,7 @@ export const TALLERES_MADRID: TallerMadrid[] = [
   {
     name: "Taller General Ricardos",
     address: "C/ del General Ricardos, 180, 28025 Madrid",
-    lat: 40.3870160,
+    lat: 40.387016,
     lng: -3.7344782,
     svHeading: 90,
   },
@@ -112,7 +106,7 @@ export const TALLERES_MADRID: TallerMadrid[] = [
   {
     name: "Taller Embajadores",
     address: "C/ de Embajadores, 150, 28045 Madrid",
-    lat: 40.3969290,
+    lat: 40.396929,
     lng: -3.6969727,
     svHeading: 0,
   },

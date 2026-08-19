@@ -31,13 +31,64 @@ export const AUTHORS: Author[] = [
 
 export const POSTS: Post[] = [
   {
+    slug: "tu-taller-tambien-puede-entregar-como-un-delivery",
+    title: "El cliente se acostumbró al delivery y los talleres no se quedan atrás",
+    excerpt:
+      "La comida a domicilio y las compras online enseñaron al cliente una expectativa simple: resolver sin desplazarse. El taller que adapte esa lógica gana comodidad, recurrencia y ticket.",
+    category: "Experiencia cliente",
+    coverImage: "/blog/post-delivery-experience-collage.png",
+    coverAlt: "Collage vintage con bolsas de compra, mochilas de delivery y una moto de reparto sobre fondo crema.",
+    publishedAt: "2026-08-19",
+    readingMinutes: 5,
+    authorSlug: "cristofer",
+    content: `
+<p>Uber Eats, Glovo y Amazon no cambiaron solo la comida o las compras. Cambiaron la tolerancia del cliente a la fricción. Hoy nadie quiere organizar su agenda alrededor de una gestión que podría resolverse sin salir de casa.</p>
+
+<p>Eso también aplica al taller. El cliente no compara tu servicio solo con otro mecánico: lo compara con cualquier experiencia cómoda que ya vive en su día a día. Si puede pedir comida, recibir una compra o devolver un paquete sin moverse, empieza a preguntarse por qué mantener su coche sigue implicando perder media mañana.</p>
+
+<h2>La lección real del delivery</h2>
+
+<p>El éxito del delivery no está en la moto ni en la mochila. Está en tres promesas operativas muy claras: recogida o entrega sin esfuerzo, visibilidad del estado y una franja de tiempo que el cliente entiende. El dueño del taller puede tomar esas mismas piezas y aplicarlas al servicio automotriz.</p>
+
+<ul>
+  <li><strong>Comodidad percibida.</strong> El cliente siente que el taller se adapta a su rutina, no al revés.</li>
+  <li><strong>Seguimiento claro.</strong> Saber cuándo recogen, cuándo llega y cuándo vuelve el coche reduce ansiedad y llamadas.</li>
+  <li><strong>Entrega como parte del servicio.</strong> La reparación deja de terminar en la puerta del taller; termina cuando el coche vuelve al cliente.</li>
+</ul>
+
+<h2>Qué cambia para el taller</h2>
+
+<p>Cuando el taller incorpora recogida y entrega como capa operativa, compite mejor frente al concesionario, al “ya lo haré después” y al mecánico a domicilio. No porque repare distinto, sino porque elimina la parte más incómoda del proceso.</p>
+
+<p>Eso impacta en tres métricas que importan de verdad:</p>
+
+<ul>
+  <li><strong>Más aceptación de trabajos.</strong> El cliente posterga menos mantenimientos si no tiene que reorganizarse.</li>
+  <li><strong>Más repetición.</strong> La próxima vez recuerda facilidad, no solo reparación.</li>
+  <li><strong>Más capacidad libre.</strong> Un coche terminado puede devolverse antes, sin esperar a que el cliente encuentre hueco.</li>
+</ul>
+
+<h2>No se trata de parecer una app de comida</h2>
+
+<p>El taller no tiene que disfrazarse de marketplace. Tiene que adoptar la lógica correcta: ventana horaria clara, conductor verificado, cobertura del trayecto y trazabilidad. En automoción hay más riesgo que en una hamburguesa, así que la experiencia solo funciona si detrás hay operación seria.</p>
+
+<p>Por eso el “delivery” automotriz no es marketing. Es servicio envuelto en logística: recoger, mover, devolver y registrar. Lo que Amazon hizo con la expectativa del paquete, el taller puede hacerlo con la experiencia del coche.</p>
+
+<h2>La pregunta útil para un dueño de taller</h2>
+
+<p>No es “¿debería ofrecer delivery?”. Es “si el cliente ya espera comodidad en todo lo demás, cuánto tiempo más puede mi taller seguir obligándolo a desplazarse?”.</p>
+
+<p>Ahí es donde una capa como Mecanu cambia la percepción del servicio: el coche entra y sale del taller con la misma naturalidad con la que hoy entra una compra en casa.</p>
+    `,
+  },
+  {
     slug: "talleres-que-pierden-clientes",
     title: "Por qué los talleres pierden clientes sin saberlo",
     excerpt:
       "La mayoría de los talleres mecánicos en España son buenos técnicamente. El problema no está en el motor — está en la logística de la experiencia.",
     category: "Operaciones",
-    coverImage: "/blog/hero-rueda-vintage.png",
-    coverAlt: "Mujer con ropa de época ajustando la rueda de un automóvil clásico, fotografía vintage en blanco y negro.",
+    coverImage: "/blog/post-hand-keys-collage.png",
+    coverAlt: "Mano sosteniendo una llave de coche en collage vintage sobre fondo crema.",
     publishedAt: "2026-08-14",
     readingMinutes: 5,
     authorSlug: "cristofer",
@@ -81,8 +132,8 @@ export const POSTS: Post[] = [
     excerpt:
       "Tener conductores propios parece la solución obvia. Pero para la mayoría de talleres, la mejor flota es la que no aparece en tu nómina.",
     category: "Recursos humanos",
-    coverImage: "/blog/hero-conductor-vintage.png",
-    coverAlt: "Mujer de época apoyada en un automóvil descapotable clásico, fotografía vintage en blanco y negro.",
+    coverImage: "/blog/post-driver-wave-collage.png",
+    coverAlt: "Conductor saludando desde la ventanilla de un coche clásico en collage vintage.",
     publishedAt: "2026-07-28",
     readingMinutes: 4,
     authorSlug: "cristofer",
@@ -110,8 +161,8 @@ export const POSTS: Post[] = [
     excerpt:
       "Mover el coche de un cliente sin la cobertura correcta es un riesgo que la mayoría de talleres asume sin saberlo. Esto es lo que cubre y lo que no.",
     category: "Legal",
-    coverImage: "/blog/hero-taller-vintage.png",
-    coverAlt: "Interior de taller mecánico vintage con herramientas y piezas de automóvil.",
+    coverImage: "/blog/post-key-handover-mosaic.png",
+    coverAlt: "Dos personas entregándose unas llaves en una ilustración estilo mosaico.",
     publishedAt: "2026-07-10",
     readingMinutes: 6,
     authorSlug: "cristofer",
@@ -139,8 +190,8 @@ export const POSTS: Post[] = [
     excerpt:
       "El trabajo ya está facturado. El elevador está libre. La plaza no. En un taller urbano eso vale más que el recambio que acabas de montar.",
     category: "Operaciones",
-    coverImage: "/blog/hero-taller-vintage.png",
-    coverAlt: "Interior de taller mecánico vintage con herramientas y piezas de automóvil.",
+    coverImage: "/blog/post-phone-by-car-collage.png",
+    coverAlt: "Hombre revisando el móvil junto a un coche clásico en collage vintage.",
     publishedAt: "2026-08-18",
     readingMinutes: 5,
     authorSlug: "cristofer",
@@ -170,8 +221,8 @@ export const POSTS: Post[] = [
     excerpt:
       "Tempario, recambios, Autel, facturación, ITV. Ninguno de esos programas mueve el coche del cliente. Ese hueco es el que WhatsApp no aguanta.",
     category: "Operativa",
-    coverImage: "/blog/hero-rueda-vintage.png",
-    coverAlt: "Mujer con ropa de época ajustando la rueda de un automóvil clásico, fotografía vintage en blanco y negro.",
+    coverImage: "/blog/post-papers-mosaic.png",
+    coverAlt: "Montón de papeles y hojas de trabajo representados en mosaico cerámico.",
     publishedAt: "2026-08-19",
     readingMinutes: 6,
     authorSlug: "cristofer",
@@ -195,6 +246,228 @@ export const POSTS: Post[] = [
 <p>No hay que tirar el DMS ni el escáner. Mecanu no es un sustituto de Autel ni de GT Motive. Es la capa de traslado: ventana de una hora, conductor verificado, RC del trayecto, registro. El resto del oficio sigue en tu nave.</p>
 
 <p>Desglose en <a href="/software-taller">software de taller</a> y <a href="/itv-para-talleres">ITV para talleres</a>.</p>
+    `,
+  },
+  {
+    slug: "mecanu-en-madrid",
+    title: "Mecanu en Madrid: recogida y entrega de coches para talleres sin montar una flota propia",
+    excerpt:
+      "Madrid tiene volumen, tráfico y clientes repartidos por toda el área metropolitana. La recogida del coche ya no puede resolverse con favores internos.",
+    category: "Ciudad",
+    coverImage: "/blog/itv-road-mosaic.png",
+    coverAlt: "Coche recorriendo una carretera en mosaico.",
+    publishedAt: "2026-08-04",
+    readingMinutes: 5,
+    authorSlug: "cristofer",
+    content: `
+<p>Madrid no falla por falta de talleres. Falla por la distancia entre el taller y el cliente. Cuando el coche está en Chamartín, el conductor en Vallecas y la cita del cliente en Pozuelo, la fricción no es mecánica: es logística.</p>
+
+<p>Ahí encaja Mecanu. El taller no contrata una flota fija ni improvisa con recepcionistas saliendo a mover coches. Coordina recogida, entrega y seguimiento con ventanas de una hora, conductor verificado y trazabilidad de cada trayecto.</p>
+
+<h2>Qué cambia en el día a día</h2>
+
+<ul>
+  <li>Menos plazas ocupadas por coches listos para entregar.</li>
+  <li>Más facilidad para aceptar revisiones y mantenimientos que hoy se pierden por incomodidad.</li>
+  <li>Menos llamadas de “¿cuándo puedo ir?” y “¿me lo podéis devolver?”.</li>
+</ul>
+
+<p>La guía operativa completa está en <a href="/madrid">Mecanu en Madrid</a>, pero la idea es simple: el cliente no tiene que perder la mañana y el taller no tiene que convertirse en empresa de transporte.</p>
+    `,
+  },
+  {
+    slug: "mecanu-en-barcelona",
+    title: "Mecanu en Barcelona: recoger y entregar coches en una ciudad donde el tiempo y la ZBE importan",
+    excerpt:
+      "Barcelona no solo añade tráfico. Añade restricciones, barrios densos y una experiencia de cliente donde desplazarse al taller es parte del problema.",
+    category: "Ciudad",
+    coverImage: "/blog/itv-star-pattern-mosaic.png",
+    coverAlt: "Patrón de estrellas amarillas sobre fondo azul en mosaico.",
+    publishedAt: "2026-08-03",
+    readingMinutes: 5,
+    authorSlug: "cristofer",
+    content: `
+<p>En Barcelona el coste oculto del taller no es solo la mano de obra. También es la fricción del desplazamiento: ZBE, tráfico, aparcamiento, agendas apretadas y clientes que retrasan la visita porque dejar el coche les desordena el día completo.</p>
+
+<p>Por eso la recogida y entrega no es un extra decorativo. Es una capa operativa que ayuda al taller a captar más trabajo de mantenimiento, revisión e ITV sin pedirle al cliente que resuelva solo la parte más incómoda.</p>
+
+<h2>Dónde gana el taller</h2>
+
+<p>Un taller que puede ofrecer recogida en Barcelona, L'Hospitalet, Badalona o Sant Cugat compite mejor frente al concesionario y frente al “ya lo haré otro mes”. No vende solo una reparación: vende facilidad.</p>
+
+<p>Si quieres el marco completo por ciudad, está desarrollado en <a href="/barcelona">Mecanu en Barcelona</a>.</p>
+    `,
+  },
+  {
+    slug: "como-funciona-para-tu-taller",
+    title: "Cómo funciona Mecanu para tu taller, explicado sin jerga",
+    excerpt:
+      "No es una grúa, no es un DMS y no es un chófer fijo en nómina. Es una capa operativa para mover coches de clientes con control.",
+    category: "Guía",
+    coverImage: "/blog/post-phone-by-car-collage.png",
+    coverAlt: "Hombre revisando el móvil junto a un coche clásico en collage vintage.",
+    publishedAt: "2026-08-02",
+    readingMinutes: 5,
+    authorSlug: "cristofer",
+    content: `
+<p>La explicación corta es esta: el taller crea una solicitud, Mecanu coordina el conductor, el coche se recoge en una ventana clara y el trayecto queda registrado. Eso sirve tanto para traer el vehículo al taller como para devolverlo cuando ya está listo.</p>
+
+<p>No sustituye tu sistema de órdenes de reparación, ni tu peritación, ni tu diagnosis. Sustituye el caos manual entre el domicilio del cliente y la puerta del taller.</p>
+
+<h2>Las tres piezas que importan</h2>
+
+<ol>
+  <li><strong>Asignación.</strong> El conductor no sale de una libreta ni de una cadena de WhatsApp.</li>
+  <li><strong>Cobertura.</strong> El trayecto tiene marco documental y seguro de custodia.</li>
+  <li><strong>Visibilidad.</strong> El taller sabe qué coche está en recogida, en ruta o entregado.</li>
+</ol>
+
+<p>La versión más desarrollada está en <a href="/para-talleres">Cómo funciona para tu taller</a>.</p>
+    `,
+  },
+  {
+    slug: "alternativa-a-la-grua",
+    title: "Cuándo una grúa no es la mejor forma de mover el coche del cliente",
+    excerpt:
+      "Si el coche arranca y solo necesitas llevarlo al taller o devolverlo, la grúa suele ser más cara, más aparatosa y menos flexible de lo necesario.",
+    category: "Comparativa",
+    coverImage: "/blog/itv-crash-mosaic.png",
+    coverAlt: "Dos camiones chocando en una composición de mosaico.",
+    publishedAt: "2026-08-01",
+    readingMinutes: 4,
+    authorSlug: "cristofer",
+    content: `
+<p>La grúa tiene un sitio claro: vehículo inmovilizado, avería seria o imposibilidad real de circular. El problema es usarla como herramienta universal para cualquier traslado del taller.</p>
+
+<p>Cuando el coche está operativo, la grúa introduce coste, espera y una experiencia más aparatosa para un caso que muchas veces solo pedía mover el coche de A a B con normalidad, seguro y seguimiento.</p>
+
+<h2>Qué comparar de verdad</h2>
+
+<ul>
+  <li>Coste por trayecto.</li>
+  <li>Tiempo de coordinación.</li>
+  <li>Flexibilidad para recogidas y entregas urbanas.</li>
+  <li>Experiencia del cliente final.</li>
+</ul>
+
+<p>Si quieres ver ese análisis más aterrizado, está en <a href="/alternativa-grua">Comparado con una grúa</a>.</p>
+    `,
+  },
+  {
+    slug: "mecanico-a-domicilio-o-taller",
+    title: "Mecánico a domicilio o llevar el coche al taller: la comparación que más se confunde",
+    excerpt:
+      "No compiten en lo mismo. El mecánico a domicilio resuelve casos concretos; el taller resuelve capacidad, equipamiento y continuidad del servicio.",
+    category: "Comparativa",
+    coverImage: "/blog/itv-mechanic-wheel-collage.png",
+    coverAlt: "Mecánico trabajando en la rueda de un coche clásico en collage vintage.",
+    publishedAt: "2026-07-31",
+    readingMinutes: 5,
+    authorSlug: "cristofer",
+    content: `
+<p>Un mecánico a domicilio es útil para baterías, revisiones concretas o averías muy delimitadas. Pero cuando el trabajo necesita elevador, diagnosis, varias horas o coordinación con piezas y más personal, el destino natural sigue siendo el taller.</p>
+
+<p>La confusión aparece cuando el cliente compara “comodidad”. Ahí el taller pierde si obliga a desplazarse. Gana otra vez cuando puede recoger y devolver el vehículo sin pedirle al cliente ese esfuerzo.</p>
+
+<p>No se trata de pelear contra el mecánico móvil. Se trata de quitarle su principal ventaja percibida: la facilidad.</p>
+
+<p>La comparativa completa está explicada en <a href="/alternativa-mecanico-a-domicilio">Mecánico a domicilio o taller</a>.</p>
+    `,
+  },
+  {
+    slug: "itv-para-talleres",
+    title: "ITV para talleres: cómo resolverla sin pedirle al cliente que pierda la mañana",
+    excerpt:
+      "Muchos talleres ya hacen la pre-ITV. El siguiente paso lógico es resolver también el trayecto y la devolución.",
+    category: "ITV",
+    coverImage: "/blog/itv-inspector-lineup-collage.png",
+    coverAlt: "Inspector frente a varios coches clásicos y un cartel de ITV en collage vintage.",
+    publishedAt: "2026-07-30",
+    readingMinutes: 5,
+    authorSlug: "cristofer",
+    content: `
+<p>La ITV no es solo una inspección. Para el cliente también es agenda, desplazamiento, espera y vuelta. Y para el taller, una oportunidad clara de cerrar el ciclo del servicio si puede hacerse cargo de ese movimiento.</p>
+
+<p>Cuando el taller ofrece pre-ITV, revisión y además recogida del coche, deja de vender una reparación aislada y empieza a vender resolución completa. Eso es especialmente potente en mantenimiento periódico y flotas pequeñas.</p>
+
+<h2>Qué hace falta para que no sea improvisación</h2>
+
+<p>Ventana horaria, conductor verificado, documentación del trayecto y un criterio claro de cuándo el coche puede circular y cuándo toca grúa. Sin eso, la promesa comercial es más fuerte que la operación real.</p>
+
+<p>El marco completo está en <a href="/itv-para-talleres">ITV para talleres</a>.</p>
+    `,
+  },
+  {
+    slug: "software-de-taller-que-no-cubre-un-dms",
+    title: "Lo que un software de taller cubre bien y lo que no va a resolver nunca solo",
+    excerpt:
+      "El DMS ordena citas, OR y almacén. No mueve el coche del cliente, no asigna conductor y no documenta la entrega en ruta.",
+    category: "Operativa",
+    coverImage: "/blog/post-papers-mosaic.png",
+    coverAlt: "Montón de papeles y hojas de trabajo representados en mosaico.",
+    publishedAt: "2026-07-29",
+    readingMinutes: 5,
+    authorSlug: "cristofer",
+    content: `
+<p>El dueño de taller compra DMS, diagnosis y peritación para ordenar la nave. Y hace bien. El problema es esperar que esas herramientas también resuelvan la parte del servicio que ocurre fuera del taller.</p>
+
+<p>Ahí aparece un vacío operativo: el cliente sigue en su casa, el coche sigue lejos y la recogida termina organizada por teléfono, libreta o grupo de WhatsApp.</p>
+
+<h2>Qué sí cubre un DMS</h2>
+
+<ul>
+  <li>Citas y recepción.</li>
+  <li>Órdenes de reparación.</li>
+  <li>Recambios, tiempos e IVA.</li>
+</ul>
+
+<p><strong>Qué no cubre:</strong> mover el vehículo, asignar un conductor, dejar trazabilidad del trayecto y cerrar la entrega a domicilio con el mismo nivel de control.</p>
+
+<p>Ese ángulo está ampliado en <a href="/software-taller">Software de taller</a>.</p>
+    `,
+  },
+  {
+    slug: "mantenimiento-por-marca-en-taller-independiente",
+    title: "Mantenimiento por marca en taller independiente: la intención de búsqueda que un taller puede capturar",
+    excerpt:
+      "Quien busca mantenimiento BMW, Audi o Volkswagen no siempre busca concesionario. Muchas veces busca confianza sin perder comodidad.",
+    category: "Mantenimiento",
+    coverImage: "/blog/itv-engine-mosaic.png",
+    coverAlt: "Motor visto dentro del vano delantero en una composición de mosaico.",
+    publishedAt: "2026-07-27",
+    readingMinutes: 5,
+    authorSlug: "cristofer",
+    content: `
+<p>Las búsquedas por marca tienen intención comercial muy clara: “mantenimiento BMW”, “revisión Audi”, “taller Volkswagen”. Ahí compiten concesionarios, talleres especialistas e independientes con buen posicionamiento local.</p>
+
+<p>La técnica importa, claro. Pero también importa la facilidad. Un cliente premium tolera pagar; tolera peor perder la mañana para una revisión de mantenimiento.</p>
+
+<p>Por eso la logística no es un detalle secundario. Es parte del posicionamiento del taller. Si puedes recoger y devolver el coche, te acercas más a la experiencia de concesionario sin copiar su estructura.</p>
+
+<p>La página base de esa idea está en <a href="/mantenimiento-marcas">Mantenimiento por marca</a>.</p>
+    `,
+  },
+  {
+    slug: "cliente-no-recoge-coche-que-hace-el-taller",
+    title: "Cuando el cliente no recoge el coche: qué hace el taller que quiere recuperar la plaza hoy, no mañana",
+    excerpt:
+      "El coche terminado no debería dormir una noche más ocupando sitio. El cuello de botella no está en la reparación: está en la entrega.",
+    category: "Operaciones",
+    coverImage: "/blog/post-hand-keys-collage.png",
+    coverAlt: "Mano sosteniendo una llave de coche en collage vintage sobre fondo crema.",
+    publishedAt: "2026-07-26",
+    readingMinutes: 5,
+    authorSlug: "cristofer",
+    content: `
+<p>Hay un momento muy común en los talleres urbanos: la orden ya está cerrada, la factura está lista, el coche también, pero la plaza sigue ocupada. A partir de ahí cada hora pesa más que el margen de una reparación pequeña.</p>
+
+<p>El error es tratarlo como un problema de recordatorio. No suele faltar aviso; suele faltar una forma sencilla de devolver el coche sin pedirle al cliente una coordinación complicada.</p>
+
+<h2>La lógica correcta</h2>
+
+<p>Si el vehículo ya está listo, la entrega a domicilio deja de ser un extra bonito y pasa a ser una herramienta de capacidad. Libera espacio, reduce espera y hace que el taller pueda aceptar el siguiente trabajo antes.</p>
+
+<p>La versión operativa completa está en <a href="/cliente-no-recoge-coche">Cliente no recoge el coche</a>.</p>
     `,
   },
   ...ITV_POSTS,

@@ -7,12 +7,14 @@
 Mecanu vende a talleres mecánicos, no a conductores particulares. El taller es quien contrata y decide cuándo usar el servicio.
 
 Qué hace:
-- Recoge el coche del cliente del taller en su domicilio o punto acordado.
+- Recoge el coche del cliente del taller en su domicilio o punto acordado, sin que el taller espere días a coordinar la visita.
 - Lo traslada al taller con un conductor verificado al volante (no en plataforma).
-- Documenta el estado del vehículo con fotos al recoger y al entregar.
+- Documenta el estado del vehículo con un check-in de inspección visual (hasta 20 puntos) y fotos al recoger y al entregar.
 - Lo devuelve al cliente cuando la reparación está terminada, liberando la plaza del taller.
-- Cubre cada traslado con responsabilidad civil para el vehículo en tránsito.
+- Cubre cada traslado con responsabilidad civil para el vehículo en tránsito. El seguro de RC es flexible: para el taller o por traslado. La flota externa va asegurada; si ocurre un incidente en el trayecto, lo cubre Mecanu.
+- Automatiza parte de la atención al cliente con CRM y WhatsApp, y envía avisos de próximos servicios a partir de lo visto en la inspección.
 - Muestra al taller el estado de cada traslado en tiempo real desde un panel web.
+- Es más barato y más disponible que una grúa cuando el coche puede circular: no hace falta agendar el camión con días de antelación. Si el coche no arranca, sigue haciendo falta una grúa.
 
 Qué NO hace:
 - No repara coches. No es un taller ni un servicio de mecánica a domicilio.
