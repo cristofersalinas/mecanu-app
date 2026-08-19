@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { trackConversion } from "@/lib/landing/analytics";
 import styles from "@/app/landing.module.css";
 
 /**
@@ -29,6 +30,7 @@ export function StickyCta({ label, href }: { label: string; href: string }) {
         className={styles.stickyCtaBtn}
         href={href}
         tabIndex={visible ? undefined : -1}
+        onClick={() => trackConversion("cta_principal", { cta_origen: "sticky_movil" })}
       >
         {label}
       </a>

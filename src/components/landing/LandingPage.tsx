@@ -1,4 +1,5 @@
 import { Inter_Tight } from "next/font/google";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { Icon } from "@/components/ds/Icon";
 import { Logo } from "@/components/ds/Logo";
 import { LanguageSwitch } from "@/components/landing/LanguageSwitch";
@@ -8,6 +9,9 @@ import { copyFor } from "@/lib/landing/copy";
 import { type Locale } from "@/lib/landing/locales";
 import { landingJsonLd } from "@/lib/landing/structured-data";
 import { StickyCta } from "@/components/landing/StickyCta";
+import { Consent } from "@/components/landing/Consent";
+import { PageAnalytics } from "@/components/landing/PageAnalytics";
+import { CtaLink } from "@/components/landing/CtaLink";
 import styles from "@/app/landing.module.css";
 
 const interTight = Inter_Tight({
@@ -61,8 +65,12 @@ export function LandingPage({ locale }: { locale: Locale }) {
             <h1 className={styles.headline}>{copy.hero.headline}</h1>
             <p className={styles.subtext}>{copy.hero.subtext}</p>
             <div className={styles.actions}>
-              <a className={styles.btnPrimary} href="#como-funciona">{copy.hero.primary}</a>
-              <a className={styles.btnSecondary} href="#contacto">{copy.hero.secondary}</a>
+              <CtaLink className={styles.btnPrimary} href="#como-funciona" origen="hero_primario">
+                {copy.hero.primary}
+              </CtaLink>
+              <CtaLink className={styles.btnSecondary} href="#contacto" origen="hero_secundario">
+                {copy.hero.secondary}
+              </CtaLink>
             </div>
           </div>
 
@@ -197,8 +205,12 @@ export function LandingPage({ locale }: { locale: Locale }) {
             <h2 className={styles.heading}>{copy.close.heading}</h2>
             <p className={styles.subtext}>{copy.close.subtext}</p>
             <div className={styles.actions}>
-              <a className={styles.btnPrimary} href="#contacto">{copy.close.primary}</a>
-              <a className={styles.btnSecondary} href="#como-funciona">{copy.close.secondary}</a>
+              <CtaLink className={styles.btnPrimary} href="#contacto" origen="cierre_primario">
+                {copy.close.primary}
+              </CtaLink>
+              <CtaLink className={styles.btnSecondary} href="#como-funciona" origen="cierre_secundario">
+                {copy.close.secondary}
+              </CtaLink>
             </div>
           </div>
           <div className={styles.ctaRight}>
@@ -250,6 +262,16 @@ export function LandingPage({ locale }: { locale: Locale }) {
       </div>
 
       <StickyCta label={copy.hero.secondary} href="#contacto" />
+      <PageAnalytics />
+      <Consent locale={locale} copy={copy.consent} />
+
+      {/*
+        Vercel Analytics va fuera del consentimiento a propósito: no escribe
+        cookies ni identificadores persistentes y agrega en servidor, así que
+        no necesita base de consentimiento del RGPD como sí la necesitan GA4 y
+        Clarity. Solo se monta en la landing, nunca en /panel ni /conductor.
+      */}
+      <VercelAnalytics />
     </main>
   );
 }
