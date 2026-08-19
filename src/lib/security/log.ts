@@ -24,16 +24,20 @@ export function registrarEvento(evento: EventoSeguridad, extra?: Record<string, 
 
   if (!ALERTA_INMEDIATA.includes(evento.tipo)) return;
 
-  Sentry.captureMessage(`security:${evento.tipo}`, {
-    level: "warning",
-    tags: {
-      tipo: evento.tipo,
-      ruta: evento.ruta,
-      tecnica: evento.tecnica ?? "ninguna",
-      pais: evento.geo.pais ?? "?",
-    },
-    extra: { ip: evento.ip, userAgent: evento.userAgent, resumen: evento.resumen },
-  });
+  try {
+    Sentry.captureMessage(`security:${evento.tipo}`, {
+      level: "warning",
+      tags: {
+        tipo: evento.tipo,
+        ruta: evento.ruta,
+        tecnica: evento.tecnica ?? "ninguna",
+        pais: evento.geo.pais ?? "?",
+      },
+      extra: { ip: evento.ip, userAgent: evento.userAgent, resumen: evento.resumen },
+    });
+  } catch {
+    // Edge sin DSN, o SDK no disponible: el JSON de stdout ya salió.
+  }
 }
 
 const HONEYPOTS_POR_IP = new Map<string, Set<string>>();
