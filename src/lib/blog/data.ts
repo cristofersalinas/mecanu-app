@@ -134,6 +134,70 @@ export const POSTS: Post[] = [
 <p>Eso elimina la zona gris. El taller sabe que está cubierto. El cliente sabe que su coche está protegido. Y el conductor sabe exactamente cuál es su responsabilidad.</p>
     `,
   },
+  {
+    slug: "cliente-no-recoge-el-coche",
+    title: "El cliente no recoge el coche: el coste real de una plaza ocupada",
+    excerpt:
+      "El trabajo ya está facturado. El elevador está libre. La plaza no. En un taller urbano eso vale más que el recambio que acabas de montar.",
+    category: "Operaciones",
+    coverImage: "/blog/hero-taller-vintage.png",
+    coverAlt: "Interior de taller mecánico vintage con herramientas y piezas de automóvil.",
+    publishedAt: "2026-08-18",
+    readingMinutes: 5,
+    authorSlug: "cristofer",
+    content: `
+<p>El trabajo ya está facturado. El elevador está libre. La plaza no. En un taller de Madrid o Barcelona esa plaza vale más que el recambio que acabas de montar.</p>
+
+<p>Nadie busca en Google “logística B2B”. El dueño escribe “el cliente no recoge el coche” porque mañana entra un kit de distribución y no hay dónde dejar el vehículo. Tres coches terminados son tres OR que no pueden entrar.</p>
+
+<h2>No es un problema de educación al cliente</h2>
+
+<p>El cliente trabaja lejos, no tiene segundo coche y no va a coger dos taxis para una revisión de 180 euros. Llamar más veces no libera la plaza. Ofrecer devolución a domicilio sí — es el mismo gesto que el concesionario vende como premium.</p>
+
+<h2>Qué hacer el mismo día que cierras la OR</h2>
+
+<ul>
+  <li>Confirma que el coche está listo de verdad, no “casi”.</li>
+  <li>Propón una ventana de una hora para devolverlo. Nunca una hora exacta.</li>
+  <li>Que el trayecto tenga fotos y seguro de custodia. Un aprendiz sin cobertura no es un proceso.</li>
+</ul>
+
+<p>El marco operativo está en <a href="/cliente-no-recoge-coche">el cliente no recoge el coche</a> y en <a href="/capacidad-taller">capacidad del taller</a>.</p>
+    `,
+  },
+  {
+    slug: "herramientas-que-busca-un-dueno-de-taller",
+    title: "Lo que busca un dueño de taller en Google (y qué parte no cubre el DMS)",
+    excerpt:
+      "Tempario, recambios, Autel, facturación, ITV. Ninguno de esos programas mueve el coche del cliente. Ese hueco es el que WhatsApp no aguanta.",
+    category: "Operativa",
+    coverImage: "/blog/hero-rueda-vintage.png",
+    coverAlt: "Mujer con ropa de época ajustando la rueda de un automóvil clásico, fotografía vintage en blanco y negro.",
+    publishedAt: "2026-08-19",
+    readingMinutes: 6,
+    authorSlug: "cristofer",
+    content: `
+<p>El buscador del dueño de taller no es el del particular. Escribe tempario, referencia de recambio, Autel, GT Motive, “programa de facturación taller” e ITV. Compra diagnosis y DMS. Sigue coordinando recogidas por WhatsApp.</p>
+
+<h2>El mapa de herramientas</h2>
+
+<ul>
+  <li><strong>Tempario y peritación:</strong> GT Motive, Audatex, Cesvimap.</li>
+  <li><strong>Recambios:</strong> TecDoc y el distribuidor de siempre.</li>
+  <li><strong>Diagnosis:</strong> Autel, Launch, Bosch KTS, Texa — a veces ISTA, ODIS o Xentry si hay premium.</li>
+  <li><strong>DMS:</strong> citas, OR, almacén, IVA.</li>
+  <li><strong>WhatsApp:</strong> “¿ya está mi coche?”</li>
+</ul>
+
+<p>Ninguno mueve el vehículo. El hueco está entre el domicilio y la puerta. Ahí se rompe el grupo de WhatsApp: un conductor que no aparece, un parachoques sin foto, un seguro que pregunta quién conducía.</p>
+
+<h2>Qué no hay que hacer</h2>
+
+<p>No hay que tirar el DMS ni el escáner. Mecanu no es un sustituto de Autel ni de GT Motive. Es la capa de traslado: ventana de una hora, conductor verificado, RC del trayecto, registro. El resto del oficio sigue en tu nave.</p>
+
+<p>Desglose en <a href="/software-taller">software de taller</a> y <a href="/itv-para-talleres">ITV para talleres</a>.</p>
+    `,
+  },
 ];
 
 export function getPost(slug: string): Post | undefined {

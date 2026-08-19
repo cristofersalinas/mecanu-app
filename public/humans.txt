@@ -1,0 +1,11 @@
+/* TEAM */
+Founder: Cristofer Salinas
+Site: https://mecanu.com
+LinkedIn: https://www.linkedin.com/in/cristofersalinas
+YouTube: https://www.youtube.com/@somosmecanu
+
+/* SITE */
+Standards: HTML, CSS, JSON-LD, llms.txt
+Language: es-ES (ca, en, pt on localized paths)
+Doctype: HTML5
+Software: Next.js

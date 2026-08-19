@@ -71,9 +71,12 @@ const organization = {
     "Software de gestión de traslados de vehículos",
     "Alternativa a grúas para talleres",
     "Vehicle collection and delivery for auto repair shops",
+    "ITV para talleres",
+    "Liberar plazas de taller",
     "Taller mecánico Madrid",
     "Taller mecánico Barcelona",
     "Traslado de vehículos España",
+    "Taller independiente Volkswagen BMW Audi Mercedes",
   ],
   sameAs: [
     "https://www.youtube.com/@somosmecanu",
@@ -95,6 +98,8 @@ const organization = {
       { "@type": "Offer", name: "Panel de gestión para talleres mecánicos", url: `${SITE}/para-talleres` },
       { "@type": "Offer", name: "Traslado de vehículos a ITV para talleres", url: `${SITE}/alternativa-grua` },
       { "@type": "Offer", name: "Recogida y entrega frente a mecánico a domicilio", url: `${SITE}/alternativa-mecanico-a-domicilio` },
+      { "@type": "Offer", name: "Traslado a ITV para talleres", url: `${SITE}/itv-para-talleres` },
+      { "@type": "Offer", name: "Logística junto al software de taller", url: `${SITE}/software-taller` },
     ],
   },
   mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE}/que-es-mecanu` },
@@ -436,6 +441,47 @@ export function CityPageJsonLd({
         parentOrganization: { "@id": `${SITE}/#organization` },
       },
     ],
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
+/**
+ * HowTo. Google y los motores de respuesta lo usan para pasos numerados
+ * ("cómo recoger un coche del cliente"). Los pasos deben coincidir con
+ * el contenido visible de la página que lo emite.
+ */
+export function HowToJsonLd({
+  name,
+  description,
+  url,
+  steps,
+}: {
+  name: string;
+  description: string;
+  url: string;
+  steps: { name: string; text: string }[];
+}) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "@id": `${url}#howto`,
+    name,
+    description,
+    url,
+    inLanguage: "es-ES",
+    supply: [{ "@type": "HowToSupply", name: "Panel web de Mecanu" }],
+    tool: [{ "@type": "HowToTool", name: "Teléfono del conductor" }],
+    step: steps.map((step, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      name: step.name,
+      text: step.text,
+    })),
   };
   return (
     <script

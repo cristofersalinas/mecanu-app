@@ -43,6 +43,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Preconnect: resuelve DNS y establece la conexión antes de que el navegador la necesite */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="me" href="https://www.youtube.com/@somosmecanu" />
+        <link rel="me" href="https://www.linkedin.com/company/mecanu" />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Blog Mecanu"
+          href="https://mecanu.com/feed.xml"
+        />
         {/* eslint-disable-next-line @next/next/no-page-custom-font -- falso positivo en App Router; el <link> vive en el layout raíz por diseño */}
         <link
           rel="stylesheet"

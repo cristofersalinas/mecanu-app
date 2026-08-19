@@ -234,6 +234,10 @@ export function LandingPage({ locale }: { locale: Locale }) {
               <Link href="/para-talleres">Cómo funciona para tu taller</Link>
               <Link href="/alternativa-grua">Comparado con una grúa</Link>
               <Link href="/alternativa-mecanico-a-domicilio">Comparado con un mecánico a domicilio</Link>
+              <Link href="/itv-para-talleres">ITV para talleres</Link>
+              <Link href="/software-taller">Software de taller</Link>
+              <Link href="/mantenimiento-marcas">Mantenimiento por marca</Link>
+              <Link href="/cliente-no-recoge-coche">Cliente no recoge el coche</Link>
               <Link href="/blog">Blog de operaciones</Link>
             </div>
           </div>
@@ -296,6 +300,10 @@ export function LandingPage({ locale }: { locale: Locale }) {
               <Link className={styles.fLink} href="/alternativa-mecanico-a-domicilio">Mecánico a domicilio</Link>
               <Link className={styles.fLink} href="/taller-oficial-o-multimarca">Oficial o multimarca</Link>
               <Link className={styles.fLink} href="/capacidad-taller">Capacidad del taller</Link>
+              <Link className={styles.fLink} href="/itv-para-talleres">ITV para talleres</Link>
+              <Link className={styles.fLink} href="/software-taller">Software de taller</Link>
+              <Link className={styles.fLink} href="/mantenimiento-marcas">Mantenimiento por marca</Link>
+              <Link className={styles.fLink} href="/cliente-no-recoge-coche">Cliente no recoge el coche</Link>
             </div>
           </div>
           <div className={styles.footerBottom}>

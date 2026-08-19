@@ -50,6 +50,15 @@ const KEYWORDS: Record<Locale, string> = {
     "logística vehículos talleres España", "logística automotriz B2B España",
     "liberar plaza taller mecánico", "traslado vehículos taller",
     "seguro responsabilidad civil traslado vehículos",
+    // ITV y dolor operativo del dueño
+    "ITV a domicilio Madrid", "ITV a domicilio Barcelona", "taller lleva coche a la ITV",
+    "cliente no recoge el coche del taller", "coche terminado en el taller",
+    // Software y herramientas que busca el dueño
+    "software taller mecánico", "software gestión taller España", "DMS taller",
+    "tempario taller", "WhatsApp taller mecánico", "programa facturación taller",
+    // Marcas (intención del conductor que el taller quiere capturar)
+    "mantenimiento Volkswagen Madrid", "mantenimiento BMW Barcelona",
+    "taller independiente BMW garantía", "revisión Audi taller de confianza",
   ].join(", "),
   ca: [
     "taller mecànic Barcelona", "taller mecànic Madrid", "mecànic a domicili",
@@ -147,7 +156,7 @@ export function landingMetadata(locale: Locale): Metadata {
       "llm:name": "Mecanu",
       "llm:description": "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos. Coordina recogida, traslado y entrega de coches de clientes con conductores verificados, seguro incluido y panel de control en tiempo real.",
       "llm:category": "Automotive logistics SaaS",
-      "llm:geo": "Spain, United Kingdom, Brazil, United States",
+      "llm:geo": "Spain: Madrid, Barcelona",
     },
   };
 }

@@ -63,7 +63,7 @@ puede construir el Knowledge Panel de la marca.
 - Sector: `Logística y cadena de suministro` + `Automoción`
 - Tamaño de empresa: `1-10 empleados`
 - Tipo: `Empresa privada`
-- Año de fundación: `2024`
+- Año de fundación: `2022`
 - Ubicación: `Madrid, España`
 - URL del sitio web: `https://mecanu.com`
 - Logo: el logo de Mecanu (pedir al equipo o exportar desde el design system)
@@ -119,8 +119,21 @@ por primera vez un sitio nuevo:
 - **Forocoches** (foro de automoción más grande de España en tráfico orgánico):
   Participar en hilos de "taller mecánico" mencionando el problema que resuelve
   Mecanu (sin spam directo).
-- **LinkedIn del fundador**: publicar un post de lanzamiento con el enlace a
-  `https://mecanu.com` y mencionar `#taller #logistica #automocion`.
+- **LinkedIn del fundador**: publica este texto (cópialo tal cual y pega el enlace):
+
+```
+Relanzamos Mecanu en España.
+
+Mecanu coordina la recogida y entrega de los coches de tus clientes para talleres mecánicos. El cliente no tiene que ir al taller. Tú no tienes que contratar conductores ni pagar una grúa para un coche que arranca.
+
+Conductores verificados, seguro en cada traslado, panel en tiempo real. Madrid y Barcelona.
+
+Si tienes plazas ocupadas por coches que ya están listos, esto va por ti.
+
+https://mecanu.com
+```
+
+Hashtags opcionales al final, no en el primer párrafo: `taller` `logística` `automoción` `Madrid` `Barcelona`.
 
 ### Medium / Substack
 Publicar un artículo de 800-1200 palabras sobre el problema que resuelve Mecanu

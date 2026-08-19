@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   description: "Artículos sobre operaciones, logística y tecnología para talleres mecánicos.",
   alternates: {
     canonical: "https://mecanu.com/blog",
+    types: {
+      "application/rss+xml": "https://mecanu.com/feed.xml",
+    },
   },
 };
 

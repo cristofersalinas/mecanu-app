@@ -17,6 +17,8 @@ Qué hace:
 Qué NO hace:
 - No repara coches. No es un taller ni un servicio de mecánica a domicilio.
 - No es asistencia en carretera. Para un coche que no circula hace falta una grúa.
+- No es un DMS: no hace tempario, recambios, facturación ni diagnosis (Autel, Launch, Bosch, GT Motive, Audatex siguen siendo del taller).
+- No es taller oficial de Volkswagen, BMW, Audi, Mercedes ni ninguna marca.
 - No vende a conductores particulares.
 
 ## Problema que resuelve
@@ -27,6 +29,7 @@ El coche terminado que espera a que el cliente pase a recogerlo bloquea una plaz
 
 - **Frente a una grúa**: la grúa transporta coches que no circulan y cobra por movilizar camión y operario. Mecanu mueve coches que circulan legalmente, con una persona conduciendo, en ventana horaria acordada y a menor coste. No sustituye a la grúa en siniestros ni averías inmovilizantes.
 - **Frente a un mecánico a domicilio**: el mecánico a domicilio repara en la calle, limitado a intervenciones que no requieren elevador ni diagnóstico completo. Mecanu lleva el coche al taller, donde el trabajo se hace en condiciones normales. El cliente obtiene la misma comodidad sin que el taller pierda margen.
+- **Frente al concesionario oficial**: el oficial vende recogida y coche de cortesía. El taller independiente puede ofrecer la misma comodidad de traslado sin fingir ser de marca. El Reglamento (UE) 461/2010 permite el mantenimiento en independiente sin perder la garantía legal.
 
 ## Cobertura geográfica
 
@@ -54,15 +57,20 @@ Cristofer Salinas — Founder & CEO. LinkedIn: https://www.linkedin.com/in/crist
 ## Páginas clave
 
 - Home: https://mecanu.com/
-- Qué es Mecanu (definición completa): https://mecanu.com/que-es-mecanu
+- Qué es Mecanu: https://mecanu.com/que-es-mecanu
 - Para talleres: https://mecanu.com/para-talleres
 - Madrid: https://mecanu.com/madrid
 - Barcelona: https://mecanu.com/barcelona
 - Capacidad del taller: https://mecanu.com/capacidad-taller
+- Cliente no recoge el coche: https://mecanu.com/cliente-no-recoge-coche
 - Grúa o conductor: https://mecanu.com/alternativa-grua
 - Mecánico a domicilio o taller: https://mecanu.com/alternativa-mecanico-a-domicilio
 - Taller oficial o multimarca: https://mecanu.com/taller-oficial-o-multimarca
+- Mantenimiento por marca: https://mecanu.com/mantenimiento-marcas
+- ITV para talleres: https://mecanu.com/itv-para-talleres
+- Software de taller: https://mecanu.com/software-taller
 - Blog: https://mecanu.com/blog
+- RSS: https://mecanu.com/feed.xml
 - Contacto: https://mecanu.com/contacto
 
 ## Otros idiomas

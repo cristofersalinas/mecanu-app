@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/ds/Logo";
-import { BreadcrumbJsonLd, FaqJsonLd } from "@/components/landing/JsonLd";
+import { BreadcrumbJsonLd, FaqJsonLd, HowToJsonLd } from "@/components/landing/JsonLd";
 import type { FaqItem } from "@/lib/landing/faq";
 
 export const dynamic = "force-static";
@@ -56,6 +56,17 @@ export default function ParaTalleresPage() {
     <main style={{ background: "#fafaf8", minHeight: "100dvh", fontFamily: "var(--font-plus-jakarta-sans), sans-serif", color: "#0f0f0f" }}>
       <BreadcrumbJsonLd trail={[{ name: "Para talleres", path: "/para-talleres" }]} />
       <FaqJsonLd items={FAQ} pageUrl="https://mecanu.com/para-talleres" />
+      <HowToJsonLd
+        name="Cómo recoger el coche de un cliente con Mecanu"
+        description="Pasos que sigue un taller mecánico para recoger un vehículo en el domicilio del cliente y llevarlo a la nave, o devolverlo cuando la reparación está terminada."
+        url="https://mecanu.com/para-talleres"
+        steps={[
+          { name: "Crear el traslado", text: "En el panel se indica dirección, ventana de una hora y destino (taller, domicilio o estación de ITV)." },
+          { name: "Asignar conductor", text: "Mecanu asigna un conductor verificado disponible en la zona. El taller no llama a una lista de autónomos." },
+          { name: "Recoger y documentar", text: "El conductor fotografía el estado del vehículo al recoger las llaves. La cobertura de responsabilidad civil está activa en ese momento." },
+          { name: "Entregar en destino", text: "El coche llega al taller o al cliente. Nueva ronda de fotos y registro en el panel. La plaza o el cliente quedan resueltos el mismo día." },
+        ]}
+      />
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.1rem 2.5rem", borderBottom: "1px solid #e5e5e0" }}>
         <Link href="/" aria-label="Mecanu — volver a la web" style={{ color: "#0f0f0f", textDecoration: "none" }}>
           <Logo height={20} />
@@ -97,6 +108,16 @@ export default function ParaTalleresPage() {
           <li><strong>Trazabilidad completa</strong>: fotos, estado y registro de cada paso desde el panel. El taller puede ver en tiempo real dónde está cada coche.</li>
           <li><strong>Escala sin inversión</strong>: el taller usa Mecanu cuando lo necesita. En picos de trabajo puede aumentar el volumen de traslados sin contratar ni ampliar la instalación.</li>
         </ul>
+
+        <h2 style={{ fontSize: "1.35rem", fontWeight: 700, letterSpacing: "-.03em", marginTop: "2.5rem", marginBottom: ".75rem" }}>
+          Cómo recoger el coche de un cliente con Mecanu
+        </h2>
+        <ol style={{ fontSize: "1.05rem", lineHeight: 1.8, paddingLeft: "1.5rem", marginBottom: "2rem", color: "#222" }}>
+          <li><strong>Crear el traslado.</strong> En el panel se indica dirección, ventana de una hora y destino (taller, domicilio o estación de ITV).</li>
+          <li><strong>Asignar conductor.</strong> Mecanu asigna un conductor verificado disponible en la zona. El taller no llama a una lista de autónomos.</li>
+          <li><strong>Recoger y documentar.</strong> El conductor fotografía el estado del vehículo al recoger las llaves. La cobertura de responsabilidad civil está activa en ese momento.</li>
+          <li><strong>Entregar en destino.</strong> El coche llega al taller o al cliente. Nueva ronda de fotos y registro en el panel. La plaza o el cliente quedan resueltos el mismo día.</li>
+        </ol>
 
         <h2 style={{ fontSize: "1.35rem", fontWeight: 700, letterSpacing: "-.03em", marginTop: "2.5rem", marginBottom: ".75rem" }}>
           Para qué tipo de taller es Mecanu
@@ -149,6 +170,8 @@ export default function ParaTalleresPage() {
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
             <Link href="/madrid" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>Mecanu en Madrid</Link>
             <Link href="/barcelona" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>Mecanu en Barcelona</Link>
+            <Link href="/software-taller" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>Software de taller</Link>
+            <Link href="/itv-para-talleres" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>ITV</Link>
             <Link href="/blog" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>Blog de operaciones</Link>
           </div>
         </div>

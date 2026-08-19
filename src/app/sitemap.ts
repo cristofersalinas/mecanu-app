@@ -70,6 +70,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.75,
       changeFrequency: "monthly" as const,
     },
+    { url: `${SITE}/itv-para-talleres`, priority: 0.8, changeFrequency: "monthly" as const },
+    { url: `${SITE}/software-taller`, priority: 0.75, changeFrequency: "monthly" as const },
+    { url: `${SITE}/mantenimiento-marcas`, priority: 0.75, changeFrequency: "monthly" as const },
+    { url: `${SITE}/cliente-no-recoge-coche`, priority: 0.8, changeFrequency: "monthly" as const },
   ].map((p) => ({ ...p, lastModified: now }));
 
   // Política de privacidad

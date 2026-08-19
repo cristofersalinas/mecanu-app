@@ -51,4 +51,16 @@ export const FAQ_LANDING: readonly FaqItem[] = [
     q: "¿Puedo ver dónde está el coche mientras se mueve?",
     a: "Sí. El panel muestra el estado de cada traslado en tiempo real, con fotos del vehículo al recoger y al entregar, y registro de cada paso. Si un cliente llama preguntando, tienes la respuesta en pantalla.",
   },
+  {
+    q: "¿Sustituye Mecanu al software de gestión, el tempario o el escáner?",
+    a: "No. El DMS, GT Motive, Audatex, Autel, Launch o Bosch siguen siendo tuyos. Mecanu no hace recambios, facturación ni diagnosis: solo mueve el coche entre el cliente y la nave.",
+  },
+  {
+    q: "¿Sirve para clientes de Volkswagen, BMW, Audi o Mercedes?",
+    a: "Sí. Mecanu no es taller oficial de ninguna marca. Lleva el coche al taller que elijas — independiente o de marca — igual que el concesionario ofrece recogida como servicio extra.",
+  },
+  {
+    q: "¿Qué hago si el cliente no recoge el coche terminado?",
+    a: "Devuélvelo en una ventana acordada en lugar de dejarlo ocupando plaza. Es el uso más frecuente junto con la recogida inicial y el traslado a ITV.",
+  },
 ] as const;
