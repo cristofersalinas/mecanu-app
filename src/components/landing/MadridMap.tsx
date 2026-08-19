@@ -12,6 +12,7 @@ import {
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Icon } from "@/components/ds/Icon";
 import styles from "@/app/landing.module.css";
+import type { LandingCopy } from "@/lib/landing/copy";
 import {
   CIUDAD_INICIAL,
   CIUDADES_MAPA,
@@ -180,7 +181,7 @@ function iconoTaller(): ImageData {
   return ctx.getImageData(0, 0, size, size);
 }
 
-export default function MadridMap() {
+export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const defaultZoomRef = useRef<number | null>(null);
@@ -508,11 +509,11 @@ export default function MadridMap() {
   return (
     <section
       className={styles.mapSection}
-      aria-label={`Mapa de talleres en ${ciudad.cityName}`}
+      aria-label={copy.sectionAria.replace("{city}", ciudad.cityName)}
       onPointerEnter={clearResetTimer}
       onPointerLeave={scheduleReset}
     >
-      <div className={styles.mapCitySwitch} role="radiogroup" aria-label="Ciudad del mapa">
+      <div className={styles.mapCitySwitch} role="radiogroup" aria-label={copy.citySwitchAria}>
         {CIUDADES_MAPA.map((item) => (
           <button
             key={item.id}
@@ -545,10 +546,10 @@ export default function MadridMap() {
                 target="_blank"
                 rel="noreferrer"
               >
-                Detalles
+                {copy.details}
               </a>
               <a className={styles.btnPrimary} href="#contacto">
-                Hablar con Mecanu
+                {copy.talk}
               </a>
             </div>
           </div>
