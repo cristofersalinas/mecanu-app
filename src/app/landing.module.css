@@ -1479,51 +1479,98 @@
 }
 
 .langSwitch {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.langSwitch a {
   position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
+}
+
+.langTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   height: 32px;
+  padding: 0 .5rem;
   border: 1px solid var(--line);
   border-radius: 2px;
   background: var(--paper);
+  color: inherit;
+  font: inherit;
+  font-size: .78rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
-.langSwitch a:hover,
-.langSwitch a:focus-visible {
+.langTrigger:hover,
+.langTrigger:focus-visible {
   border-color: var(--ink);
 }
 
-.langSwitch a[aria-current="page"] {
-  border-color: var(--ink);
-  box-shadow: inset 0 0 0 1px var(--ink);
-}
-
-.langSwitch svg {
-  display: block;
-}
-
-.langName {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+.langTriggerLabel {
   white-space: nowrap;
-  border: 0;
+}
+
+/* La flecha gira al abrir; el icono de translate no. */
+.langTrigger[aria-expanded="true"] > :last-child {
+  transform: rotate(180deg);
+}
+
+.langMenu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 40;
+  min-width: 11rem;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+}
+
+.langMenu[hidden] {
+  display: none;
+}
+
+.langOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: .4rem .5rem;
+  border-radius: 2px;
+  font-size: .78rem;
+  white-space: nowrap;
+}
+
+.langOption:hover,
+.langOption:focus-visible {
+  background: var(--wash, rgb(0 0 0 / 5%));
+}
+
+.langOption svg {
+  display: block;
+  flex: none;
+  border: 1px solid rgb(0 0 0 / 12%);
+}
+
+.langOptionName {
+  flex: 1;
+}
+
+.langOption[aria-current="page"] {
+  font-weight: 600;
 }
 
 .langSwitchHeader {
   margin-right: .45rem;
+}
+
+/* En la cabecera el desplegable cae hacia abajo; en el pie sube, que es el
+   comportamiento por defecto de .langMenu. */
+.langSwitchHeader .langMenu {
+  top: calc(100% + 6px);
+  bottom: auto;
 }
 
 .mobileLang {

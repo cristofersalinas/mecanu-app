@@ -238,6 +238,167 @@ const es: LandingCopy = {
   },
 };
 
+const ca: LandingCopy = {
+  meta: {
+    title: "Mecanu | Logística per a tallers",
+    description:
+      "Recull i lliura vehicles, allibera espai al teu taller i controla cada trasllat amb Mecanu.",
+  },
+  nav: {
+    homeAria: "Mecanu, inici",
+    mainAria: "Navegació principal",
+    mobileAria: "Navegació mòbil",
+    openMenu: "Obrir menú",
+    closeMenu: "Tancar menú",
+    inicio: "Inici",
+    solucion: "Solució",
+    recursos: "Recursos",
+    productos: "Productes",
+    cta: "Parlar amb Mecanu",
+    langLabel: "Idioma",
+  },
+  productos: [
+    { label: "Logística", href: "#solucion" },
+    { label: "Assegurances", href: "#cobertura" },
+    { label: "Marketplace", href: "#contacto" },
+    { label: "Flota externa", href: "#flota" },
+    { label: "Ecommerce", href: "#contacto" },
+    { label: "Atenció al client", href: "#contacto" },
+  ],
+  hero: {
+    kicker: "DISSENYAT PER A",
+    kickerBrand: "TALLERS EN MOVIMENT",
+    headline: "Cars move. Your shop never stops.",
+    subtext:
+      "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions.",
+    primary: "Veure com funciona",
+    secondary: "Parlar amb nosaltres",
+    photoAlt: "Volvo recorrent un carrer estret al capvespre",
+  },
+  logosAria: "Logotips de tallers clients de referència",
+  map: {
+    sectionAria: "Mapa de tallers a {city}",
+    citySwitchAria: "Ciutat del mapa",
+    details: "Detalls",
+    talk: "Parlar amb Mecanu",
+  },
+  statsAria: "Resultats de Mecanu",
+  stats: [
+    {
+      numero: "01",
+      valor: "1 h",
+      etiqueta: "FRANJA HORÀRIA",
+      texto:
+        "Recollides i lliuraments coordinats en una franja clara, perquè el client i el taller sàpiguen quan passa.",
+      enlace: "Veure com funciona",
+    },
+    {
+      numero: "02",
+      valor: "24/7",
+      etiqueta: "ESTAT VISIBLE",
+      texto:
+        "Cada moviment queda registrat: conductor, estat, fotos i signatura des de la recollida fins al lliurament.",
+      enlace: "Veure com funciona",
+    },
+    {
+      numero: "03",
+      valor: "40 km",
+      etiqueta: "PROVA EN RUTA",
+      texto:
+        "Cobertura pensada per al risc real de moure vehicles sota custòdia del taller, també en proves.",
+    },
+  ],
+  hiw: {
+    eyebrow: "OPERACIÓ",
+    heading: "Com funciona",
+    cta: "Parlar amb Mecanu →",
+    subtext:
+      "Tres passos per anar de la trucada del client a un lliurament registrat, sense perdre el fil del trasllat.",
+    pasos: [
+      {
+        numero: "01",
+        titulo: "Indica on és el cotxe",
+        texto:
+          "Tria client, taller, data i franja. El trasllat queda registrat des del primer moment.",
+      },
+      {
+        numero: "02",
+        titulo: "Mecanu coordina la ruta",
+        texto:
+          "Els conductors gestionen tot el trasllat, des de la inspecció fins al lliurament, amb geolocalització en temps real.",
+      },
+      {
+        numero: "03",
+        titulo: "Lliura i torna a produir",
+        texto:
+          "El client rep avisos des de la comoditat de casa seva o de la feina, i el taller queda lliure per seguir operant.",
+      },
+    ],
+  },
+  hiring: {
+    heading: "Pic de feina?",
+    subtext: "La teva capacitat pot créixer sense ampliar la nau.",
+    cta: "Demana suport a Mecanu",
+  },
+  news: {
+    eyebrow: "MECANU / IDEES PER AL TALLER",
+    heading: "Novetats per moure millor el teu taller",
+    cta: "Veure-les totes →",
+    read: "Llegir →",
+    items: [
+      {
+        categoria: "GUIA",
+        titulo: "Com alliberar una plaça quan el cotxe ja està acabat",
+        icono: "garage",
+        visual: "articleWorkshop",
+      },
+      {
+        categoria: "OPERATIVA",
+        titulo: "Franges horàries: una manera més clara de coordinar cada trasllat",
+        icono: "schedule",
+        visual: "articleWindow",
+      },
+      {
+        categoria: "MECANU",
+        titulo: "Flota externa per absorbir pics sense perdre el control",
+        icono: "local_shipping",
+        visual: "articleFleet",
+      },
+    ],
+  },
+  close: {
+    eyebrow: "POSA-HO EN MARXA",
+    heading: "Si els teus clients no poden anar al taller per falta de temps.",
+    subtext:
+      "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions.",
+    primary: "Parlar amb Mecanu",
+    secondary: "Veure com funciona",
+    featuresLabel: "QUÈ HI GUANYES",
+    beneficios: [
+      "Més places disponibles per reparar.",
+      "Franges clares i estats visibles.",
+      "El teu equip o flota externa quan calgui.",
+      "Cobertura i evidència en cada trasllat.",
+      "Un sol fil d'informació per a tothom.",
+    ],
+  },
+  footer: {
+    tagline: "Logística B2B per a tallers que volen seguir reparant.",
+    contacto: "Contacte",
+    producto: "Producte",
+    solucion: "La solució",
+    como: "Com funciona",
+    cobertura: "Cobertura",
+    recursos: "Recursos",
+    ideas: "Idees per al taller",
+    hablar: "Parlar amb Mecanu",
+    arriba: "Tornar a dalt",
+    copyright: "© 2026 Mecanu",
+    cta: "Parlar amb Mecanu →",
+    langLabel: "Idioma",
+  },
+};
+
 const en: LandingCopy = {
   meta: {
     title: "Mecanu | Logistics for shops",
@@ -546,7 +707,7 @@ const pt: LandingCopy = {
   },
 };
 
-const COPIES: Record<Locale, LandingCopy> = { es, en, pt };
+const COPIES: Record<Locale, LandingCopy> = { es, ca, en, pt };
 
 export function copyFor(locale: Locale): LandingCopy {
   return COPIES[locale] ?? COPIES[DEFAULT_LOCALE];

@@ -1,4 +1,9 @@
-export const LOCALES = ["es", "en", "pt"] as const;
+/**
+ * El orden de `LOCALES` es el orden en que salen en el desplegable de idioma:
+ * español, català, English y después el resto. Es una decisión de producto, no
+ * alfabética — no la reordenes sin preguntar.
+ */
+export const LOCALES = ["es", "ca", "en", "pt"] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
@@ -9,12 +14,13 @@ export const LOCALE_META: Record<
   { htmlLang: string; hreflang: string; name: string; nativeName: string }
 > = {
   es: { htmlLang: "es-ES", hreflang: "es-ES", name: "Spanish", nativeName: "Español" },
+  ca: { htmlLang: "ca-ES", hreflang: "ca-ES", name: "Catalan", nativeName: "Català" },
   en: { htmlLang: "en", hreflang: "en", name: "English", nativeName: "English" },
   pt: { htmlLang: "pt-PT", hreflang: "pt-PT", name: "Portuguese", nativeName: "Português" },
 };
 
 export function isLocale(value: string | null | undefined): value is Locale {
-  return value === "es" || value === "en" || value === "pt";
+  return LOCALES.includes(value as Locale);
 }
 
 export function pathFor(locale: Locale): string {
@@ -22,8 +28,10 @@ export function pathFor(locale: Locale): string {
 }
 
 export function localeFromPathname(pathname: string): Locale {
-  if (pathname === "/en" || pathname.startsWith("/en/")) return "en";
-  if (pathname === "/pt" || pathname.startsWith("/pt/")) return "pt";
+  for (const locale of LOCALES) {
+    if (locale === DEFAULT_LOCALE) continue;
+    if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) return locale;
+  }
   return DEFAULT_LOCALE;
 }
 

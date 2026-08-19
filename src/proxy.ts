@@ -60,6 +60,8 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/",
+    "/ca",
+    "/ca/:path*",
     "/en",
     "/en/:path*",
     "/pt",
