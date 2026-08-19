@@ -85,6 +85,41 @@ solo un CSS distinto. Si tocas `globals.css`, `layout.tsx`, o cualquier cosa que
 cargue un recurso externo, verifica contra `npm run build && npx next start`, no
 solo contra `npm run dev`.
 
+## Landing — controles del mapa (MapLibre)
+
+Archivos: `src/components/landing/MadridMap.tsx` + `src/app/landing.module.css`
+(`.mapSection`).
+
+Hay **tres piezas** de control en el mapa:
+
+1. **React** — `.mapCityTabs`: ciudades visibles y centradas arriba.
+2. **React** — `.mapControlsColumn`: botón reset (`.mapResetBtn`).
+3. **MapLibre** — `NavigationControl` inyectado en el canvas (zoom +/-).
+
+**Reglas de alineación (no iterar a ciegas):**
+
+- Reset, zoom y atribución comparten `--map-control-right` y se apilan **abajo a
+  la derecha**. El zoom se posiciona en `.maplibregl-ctrl-bottom-right`, no
+  moviendo las ciudades ni el reset.
+- Las ciudades no van en dropdown: se muestran en `.mapCityTabs`, centradas y
+  siempre visibles.
+- MapLibre trae CSS global (`maplibre-gl/dist/maplibre-gl.css`) que **gana en
+  cascada** si no se anula con la misma o mayor especificidad:
+  - `.maplibregl-ctrl-group:not(:empty) { box-shadow: 0 0 0 2px rgb(0 0 0 / 0.1) }`
+    — anillo oscuro distinto al resto; hay que sobreescribir con
+    `--map-control-surface-shadow`.
+  - `.maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 10px 10px 0 }` — desplaza
+    el bloque de zoom.
+  - Hover/focus por defecto (gris / azul) distintos al design system.
+- Borde, sombra, radio y hover del zoom deben usar las variables
+  `--map-control-surface-*` y `var(--warm)`, igual que `.mapResetBtn` y el
+  chip activo de ciudad.
+- El reset vive **encima** del zoom; ambos quedan **encima** de la atribución
+  compacta y con el mismo borde derecho.
+
+Si tocas esto, verifica en `/` desktop: ciudades arriba y centradas; reset, +/-
+y atribución en la misma vertical derecha; sombra y borde visualmente idénticos.
+
 ## Ramas
 
 `feature/<nombre>` → PR a `staging` → verificar en el preview de Vercel de

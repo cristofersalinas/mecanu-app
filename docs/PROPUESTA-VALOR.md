@@ -87,3 +87,16 @@ Cada fila: **claim** (cómo se dice) · **ancla** (por qué es creíble) ·
 | FAQ pública + rich results | `src/lib/landing/faq.ts` |
 | JSON-LD `featureList` | `src/components/landing/JsonLd.tsx` |
 | Cita para LLMs | `public/llms.txt`, `public/llms-full.txt` |
+| Tarjetas numéricas (bloque stats) | `src/lib/landing/copy.ts` → `stats` |
+
+## Tarjetas numéricas (landing, bloque stats)
+
+Tres claims visibles con cifra grande. Las imágenes no cambian; solo valor + etiqueta + texto.
+
+| Valor | Etiqueta | Claim | Ancla |
+|---|---|---|---|
+| 7 días | Sin esperar al cliente | Se acabó la semana típica coordinando cuándo trae el coche. | Dolor de recepción (catálogo), no media medida. |
+| 50% | Menos que una grúa | Más barato, asegurado y disponible el mismo día en traslados urbanos con coche circulando. | **Pendiente validar** con comparativa real grúa vs Mecanu. No sustituye grúa si no arranca. |
+| +1 plaza | Capacidad al día | Devolver el coche terminado el mismo día libera una plaza para otra OR. | Efecto operativo, no % de ingresos medido. |
+
+**No usar** en stats: “+20% ingresos”, “ahorras X h/semana” u otras cifras sin dato de talleres reales.
