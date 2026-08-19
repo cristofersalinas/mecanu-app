@@ -86,6 +86,7 @@ export type LandingCopy = {
     aceptar: string;
     rechazar: string;
     gestionar: string;
+    configurar: string;
   };
 };
 
@@ -271,6 +272,7 @@ const es: LandingCopy = {
     aceptar: "Aceptar",
     rechazar: "Rechazar",
     gestionar: "Más info",
+    configurar: "Configurar cookies",
   },
 };
 
@@ -456,6 +458,7 @@ const ca: LandingCopy = {
     aceptar: "Acceptar",
     rechazar: "Rebutjar",
     gestionar: "Més info",
+    configurar: "Configurar galetes",
   },
 };
 
@@ -634,6 +637,7 @@ const en: LandingCopy = {
     aceptar: "Accept",
     rechazar: "Reject",
     gestionar: "More info",
+    configurar: "Cookie settings",
   },
 };
 
@@ -812,6 +816,7 @@ const pt: LandingCopy = {
     aceptar: "Aceitar",
     rechazar: "Rejeitar",
     gestionar: "Mais info",
+    configurar: "Configurar cookies",
   },
 };
 

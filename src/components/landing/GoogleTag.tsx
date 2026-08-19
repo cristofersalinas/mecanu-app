@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import Link from "next/link";
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import {
   consentCookieHeader,
   notifyConsentChanged,
@@ -36,6 +36,7 @@ export function GoogleTag({
   copy: LandingCopy["consent"];
   cookieInicial: string;
 }) {
+  const [bannerAbierto, setBannerAbierto] = useState(false);
   const cookies = useSyncExternalStore(
     subscribeToConsent,
     consentSnapshot,
@@ -44,6 +45,7 @@ export function GoogleTag({
   const consent = useMemo(() => readConsentFromCookieString(cookies), [cookies]);
   const decidido = consent !== null;
   const cargar = analiticaHabilitada() && consent?.analitica === true;
+  const mostrarBanner = !decidido || bannerAbierto;
 
   const guardar = useCallback((analitica: boolean) => {
     document.cookie = consentCookieHeader(analitica);
@@ -52,6 +54,7 @@ export function GoogleTag({
         analytics_storage: analitica ? "granted" : "denied",
       });
     }
+    setBannerAbierto(false);
     notifyConsentChanged();
   }, []);
 
@@ -68,8 +71,21 @@ export function GoogleTag({
         </>
       ) : null}
 
-      {decidido ? null : (
+      {decidido && !bannerAbierto ? (
+        <button
+          type="button"
+          className={styles.consentReopen}
+          aria-controls="mecanu-consent-banner"
+          data-testid="consent-reopen"
+          onClick={() => setBannerAbierto(true)}
+        >
+          {copy.configurar}
+        </button>
+      ) : null}
+
+      {mostrarBanner ? (
         <div
+          id="mecanu-consent-banner"
           className={styles.consentBanner}
           role="dialog"
           aria-label={copy.titulo}
@@ -99,7 +115,7 @@ export function GoogleTag({
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }

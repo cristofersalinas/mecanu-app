@@ -32,7 +32,8 @@ export default function PrivacidadPage() {
           página. Google y Microsoft reciben esa visita. Si rechazas, no se pide
           ningún script y no se envía nada. El panel del taller y la app del
           conductor no llevan estas etiquetas. Puedes cambiar de opinión
-          borrando las cookies de este sitio.
+          con el botón «Configurar cookies» de la parte inferior o borrando la
+          cookie de consentimiento de este sitio.
         </p>
 
         <h2 style={{ fontSize: "1.1rem" }}>Registro de seguridad</h2>

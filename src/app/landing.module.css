@@ -1990,6 +1990,9 @@
 }
 
 .consentBanner {
+  --ink: #0f0f0f;
+  --line: #e5e5e5;
+  --paper: #fff;
   position: fixed;
   right: 1rem;
   bottom: 1rem;
@@ -1997,11 +2000,12 @@
   z-index: 90;
   display: flex;
   justify-content: center;
+  color: var(--ink);
 }
 
 .consentInner {
   width: 100%;
-  max-width: 36rem;
+  max-width: 46rem;
   padding: 1rem 1.1rem;
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -2057,4 +2061,56 @@
   border-color: transparent;
   background: none;
   text-decoration: underline;
+}
+
+.consentReopen {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 89;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  margin: 0 auto;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 2px;
+  background: #fff;
+  color: #0f0f0f;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.consentBtnPrimario:focus-visible,
+.consentBtnSecundario:focus-visible,
+.consentBtnTexto:focus-visible,
+.consentReopen:focus-visible {
+  outline: 2px solid #0f0f0f;
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  .consentBanner {
+    right: 0.6rem;
+    bottom: calc(0.6rem + env(safe-area-inset-bottom));
+    left: 0.6rem;
+  }
+
+  .consentReopen {
+    right: 0.6rem;
+    bottom: calc(0.6rem + env(safe-area-inset-bottom));
+    left: 0.6rem;
+  }
+
+  .consentAcciones {
+    justify-content: stretch;
+  }
+
+  .consentAcciones button,
+  .consentAcciones a {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
 }
