@@ -4,6 +4,7 @@ import { Logo } from "@/components/ds/Logo";
 import { LanguageSwitch } from "@/components/landing/LanguageSwitch";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import MadridMap from "@/components/landing/MadridMap";
+import { WhatsAppButton } from "@/components/landing/WhatsAppButton";
 import { copyFor } from "@/lib/landing/copy";
 import { type Locale } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
@@ -234,6 +235,8 @@ export function LandingPage({ locale }: { locale: Locale }) {
           </div>
         </footer>
       </div>
+
+      <WhatsAppButton label={copy.whatsapp.aria} mensaje={copy.whatsapp.mensaje} />
     </main>
   );
 }

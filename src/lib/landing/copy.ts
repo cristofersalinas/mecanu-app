@@ -75,6 +75,7 @@ export type LandingCopy = {
     cta: string;
     langLabel: string;
   };
+  whatsapp: { aria: string; mensaje: string };
 };
 
 const es: LandingCopy = {
@@ -235,6 +236,10 @@ const es: LandingCopy = {
     copyright: "© 2026 Mecanu",
     cta: "Hablar con Mecanu →",
     langLabel: "Idioma",
+  },
+  whatsapp: {
+    aria: "Escribir por WhatsApp",
+    mensaje: "Estuve viendo lo que hacen en Mecanu",
   },
 };
 
@@ -397,6 +402,10 @@ const ca: LandingCopy = {
     cta: "Parlar amb Mecanu →",
     langLabel: "Idioma",
   },
+  whatsapp: {
+    aria: "Escriure per WhatsApp",
+    mensaje: "Estava mirant el que feu a Mecanu",
+  },
 };
 
 const en: LandingCopy = {
@@ -551,6 +560,10 @@ const en: LandingCopy = {
     cta: "Talk to Mecanu →",
     langLabel: "Language",
   },
+  whatsapp: {
+    aria: "Message us on WhatsApp",
+    mensaje: "I've been looking at what you do at Mecanu",
+  },
 };
 
 const pt: LandingCopy = {
@@ -704,6 +717,10 @@ const pt: LandingCopy = {
     copyright: "© 2026 Mecanu",
     cta: "Falar com Mecanu →",
     langLabel: "Idioma",
+  },
+  whatsapp: {
+    aria: "Escrever no WhatsApp",
+    mensaje: "Estive a ver o que fazem na Mecanu",
   },
 };
 

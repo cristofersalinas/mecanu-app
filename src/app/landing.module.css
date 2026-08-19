@@ -1930,6 +1930,36 @@
   }
 }
 
+.whatsappBtn {
+  position: fixed;
+  right: max(1.1rem, env(safe-area-inset-right));
+  bottom: max(1.1rem, env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 10%);
+  transition: background .15s ease, color .15s ease;
+}
+
+.whatsappBtn svg {
+  width: 22px;
+  height: 22px;
+}
+
+@media (hover: hover) {
+  .whatsappBtn:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .track {
     animation: none;
@@ -1939,7 +1969,8 @@
   .ctaBtn,
   .btnPrimary,
   .btnSecondary,
-  .ctaButton {
+  .ctaButton,
+  .whatsappBtn {
     transition: none;
   }
 }
