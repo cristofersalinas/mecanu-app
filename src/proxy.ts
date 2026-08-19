@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { localeFromPathname } from "@/lib/landing/locales";
+import {
+  LOCALE_COOKIE,
+  localeFromPathname,
+  pathFor,
+  preferredLocaleFromRequest,
+} from "@/lib/landing/locales";
 import { defenderPeticion } from "@/lib/security/proxy-defensa";
 import {
   comprobarRateLimit,
@@ -20,7 +25,9 @@ import {
  *
  *    Para verificar panel/conductor en un preview de staging, pon
  *    `MECANU_EXPONER_APPS=1` solo en el entorno Preview, o entra con SSO.
- * 2. Marca el idioma de `/`, `/en` y `/pt` en una cabecera para que el layout
+ * 2. En la primera entrada a `/`, propone el idioma por país/región usando las
+ *    cabeceras server-side de Vercel. Una ruta localizada o la cookie manual
+ *    siempre ganan. Después marca el idioma en una cabecera para que el layout
  *    raíz pueda poner el `lang` correcto en el `<html>`.
  *
  * Sobre el corte: en Vercel siempre, a propósito. Un preview de rama es una
@@ -57,6 +64,25 @@ export async function proxy(request: NextRequest) {
 
   const defensa = await defenderPeticion(request);
   if (defensa) return defensa;
+
+  if (pathname === "/") {
+    const locale = preferredLocaleFromRequest(request.headers, request.headers.get("cookie"));
+    if (locale !== "es") {
+      const destino = new URL(pathFor(locale), request.url);
+      destino.search = request.nextUrl.search;
+      const respuesta = NextResponse.redirect(destino);
+      respuesta.cookies.set(LOCALE_COOKIE, locale, {
+        maxAge: 60 * 60 * 24 * 365,
+        path: "/",
+        sameSite: "lax",
+        secure: process.env.VERCEL === "1",
+      });
+      // La respuesta depende de la IP/cookie del visitante. Nunca debe
+      // convertirse en una redirección compartida por la caché de Vercel.
+      respuesta.headers.set("Cache-Control", "private, no-store");
+      return respuesta;
+    }
+  }
 
   if (soloLanding && esAppProtegida(pathname)) {
     // Un 302 a la landing desde una llamada de datos rompería el cliente del

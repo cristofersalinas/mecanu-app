@@ -3,6 +3,7 @@
 import Script from "next/script";
 import Link from "next/link";
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { Icon } from "@/components/ds/Icon";
 import {
   consentCookieHeader,
   notifyConsentChanged,
@@ -75,11 +76,13 @@ export function GoogleTag({
         <button
           type="button"
           className={styles.consentReopen}
+          aria-label={copy.configurar}
           aria-controls="mecanu-consent-banner"
+          title={copy.configurar}
           data-testid="consent-reopen"
           onClick={() => setBannerAbierto(true)}
         >
-          {copy.configurar}
+          <Icon name="cookie" size="md" filled />
         </button>
       ) : null}
 

@@ -23,6 +23,17 @@ export default function PrivacidadPage() {
           redactado. Lo que sigue ya está en vigor.
         </p>
 
+        <h2 style={{ fontSize: "1.1rem" }}>Idioma por ubicación</h2>
+        <p>
+          En la primera entrada a la portada usamos el país y, en España, la
+          comunidad autónoma aproximados que Vercel adjunta a la petición para
+          elegir el idioma: Catalunya en catalán, Portugal en portugués, países
+          anglófonos en inglés y el resto en español. No pedimos ubicación GPS,
+          no instalamos un proveedor de geolocalización en el navegador y no
+          mostramos esa ubicación. Si eliges otro idioma, tu elección manual
+          tiene prioridad y se guarda en una cookie de preferencias.
+        </p>
+
         <h2 style={{ fontSize: "1.1rem" }}>Cookies de analítica</h2>
         <p>
           Si aceptas el aviso, cargamos Google Tag Manager (GTM-T8TJGTJQ). Desde
