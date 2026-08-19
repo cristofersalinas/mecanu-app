@@ -265,35 +265,97 @@ export function LandingPage({ locale }: { locale: Locale }) {
         aria-label="Información de servicio para buscadores"
         style={{ position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}
       >
-        <h2>Mecanu — Recogida y entrega de vehículos para talleres mecánicos</h2>
+        <h2>Mecanu — Recogida y entrega de vehículos para talleres mecánicos en España</h2>
         <p>
-          Mecanu es la plataforma de logística de vehículos para talleres mecánicos en Madrid,
-          Barcelona, Londres y más ciudades. Ofrece recogida y entrega de coches a domicilio,
-          conductores externos verificados, seguro de responsabilidad civil incluido y panel de
-          control en tiempo real. Es la alternativa moderna a las grúas caras y lentas para mover
-          coches funcionales entre el domicilio del cliente y el taller.
+          Mecanu es la plataforma B2B de logística de vehículos para talleres mecánicos en Madrid y
+          Barcelona. Coordina la recogida y entrega de coches de clientes con conductores externos
+          verificados, seguro de responsabilidad civil incluido en cada traslado y panel de control
+          en tiempo real. Es la alternativa moderna a las grúas para mover coches funcionales entre
+          el domicilio del cliente y el taller. Fundada en Chile en 2022, opera en España desde 2024.
         </p>
+
+        <h3>Servicios por ciudad</h3>
         <ul>
-          <li>Taller mecánico Madrid — recogida de vehículos a domicilio</li>
-          <li>Taller mecánico Barcelona — entrega de coches sin grúa</li>
-          <li>Mecánico a domicilio Madrid y Barcelona</li>
-          <li>Grúa alternativa para talleres mecánicos</li>
-          <li>Grúa coches Madrid — servicio programado sin esperas</li>
-          <li>Grúa coches Barcelona — alternativa económica</li>
-          <li>Escáner automotriz Madrid y Barcelona</li>
-          <li>Diagnóstico electrónico para talleres multimarca</li>
-          <li>Software de gestión de traslados para talleres</li>
-          <li>Conductores externos para talleres mecánicos</li>
-          <li>Seguro de responsabilidad civil para traslados de vehículos</li>
-          <li>Mantenimiento Volkswagen, BMW, Toyota, Renault, Seat, Ford, Peugeot Madrid</li>
-          <li>Mantenimiento Volkswagen, BMW, Toyota, Renault, Seat, Ford, Peugeot Barcelona</li>
-          <li>ITV a domicilio — gestión desde el taller</li>
-          <li>Asistencia en carretera Madrid y Barcelona</li>
-          <li>Mejor taller mecánico Madrid 2025 2026</li>
-          <li>Mejor taller mecánico Barcelona 2025 2026</li>
-          <li>Vehicle collection and delivery for auto repair shops London</li>
-          <li>Car pickup service workshop London New York San Francisco</li>
-          <li>Mecanu taller — logística B2B para talleres</li>
+          <li>Recogida de coches para talleres en Madrid — servicio a domicilio con conductor verificado</li>
+          <li>Entrega de vehículos taller mecánico Madrid — mismo día, con seguro incluido</li>
+          <li>Recogida de coches para talleres en Barcelona — cobertura área metropolitana</li>
+          <li>Entrega de vehículos taller mecánico Barcelona — zona de bajas emisiones compatible</li>
+          <li>Traslado de coches entre talleres Madrid — conductor externo bajo demanda</li>
+          <li>Traslado de coches entre talleres Barcelona — sin inversión fija</li>
+          <li>Recogida ITV Madrid — el taller lleva el coche a la ITV por el cliente</li>
+          <li>Recogida ITV Barcelona — servicio programado sin esperas</li>
+          <li>Logística vehículos Alcobendas, Pozuelo, Getafe, Leganés, Alcorcón, Móstoles</li>
+          <li>Logística vehículos L&apos;Hospitalet, Badalona, Sabadell, Terrassa, Cornellà, Sant Cugat</li>
+        </ul>
+
+        <h3>Palabras clave de búsqueda</h3>
+        <ul>
+          <li>taller mecánico Madrid recogida domicilio</li>
+          <li>taller mecánico Barcelona recogida domicilio</li>
+          <li>mecánico a domicilio Madrid</li>
+          <li>mecánico a domicilio Barcelona</li>
+          <li>grúa coches Madrid alternativa barata</li>
+          <li>grúa coches Barcelona sin esperas</li>
+          <li>grúa particular Madrid económica</li>
+          <li>grúa particular Barcelona económica</li>
+          <li>servicio automotriz Madrid</li>
+          <li>servicio automotriz Barcelona</li>
+          <li>escáner automotriz Madrid</li>
+          <li>escáner automotriz Barcelona</li>
+          <li>diagnóstico electrónico coche Madrid</li>
+          <li>diagnóstico electrónico coche Barcelona</li>
+          <li>taller multimarca Madrid</li>
+          <li>taller multimarca Barcelona</li>
+          <li>mantenimiento Volkswagen Madrid</li>
+          <li>mantenimiento BMW Madrid</li>
+          <li>mantenimiento Toyota Madrid</li>
+          <li>mantenimiento Renault Madrid</li>
+          <li>mantenimiento Seat Madrid</li>
+          <li>mantenimiento Peugeot Madrid</li>
+          <li>mantenimiento Ford Madrid</li>
+          <li>mantenimiento Volkswagen Barcelona</li>
+          <li>mantenimiento BMW Barcelona</li>
+          <li>mantenimiento Toyota Barcelona</li>
+          <li>mantenimiento Renault Barcelona</li>
+          <li>mantenimiento Seat Barcelona</li>
+          <li>mejor taller mecánico Madrid 2026</li>
+          <li>mejor taller mecánico Barcelona 2026</li>
+          <li>taller mecánico barato Madrid</li>
+          <li>taller mecánico barato Barcelona</li>
+          <li>conductor externo taller mecánico España</li>
+          <li>software gestión taller mecánico España</li>
+          <li>panel digital taller mecánico</li>
+          <li>liberar plaza taller mecánico</li>
+          <li>logística vehículos talleres España</li>
+          <li>seguro responsabilidad civil traslado vehículos</li>
+          <li>asistencia en carretera Madrid</li>
+          <li>asistencia en carretera Barcelona</li>
+          <li>dejar coche taller sin ir</li>
+          <li>recoger coche taller a domicilio</li>
+          <li>Mecanu taller logística España</li>
+          <li>Mecanu Madrid</li>
+          <li>Mecanu Barcelona</li>
+          <li>Mecanu recogida coches</li>
+        </ul>
+
+        <h3>Para talleres que buscan Mecanu</h3>
+        <p>
+          Mecanu está diseñado para talleres mecánicos independientes y cadenas multimarca en España
+          con entre 3 y 30 empleados que quieren ofrecer recogida a domicilio sin contratar
+          conductores propios. El taller no necesita invertir en vehículos ni en personal fijo —
+          usa Mecanu bajo demanda y paga por traslado realizado. Cristofer Salinas es el fundador
+          de Mecanu, emprendedor con trayectoria en el sector automotriz desde 2022.
+        </p>
+
+        <h3>International keywords</h3>
+        <ul>
+          <li>vehicle collection delivery auto repair shop London</li>
+          <li>car pickup service workshop UK</li>
+          <li>vehicle logistics garage management software</li>
+          <li>car collection delivery service Spain Madrid Barcelona</li>
+          <li>external driver for auto repair shop</li>
+          <li>workshop vehicle logistics platform</li>
+          <li>Mecanu vehicle logistics Spain</li>
         </ul>
       </section>
     </main>

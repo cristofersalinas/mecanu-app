@@ -8,22 +8,48 @@ const OG_IMAGE = `${SITE}/og-image.png`;
 /** Keywords por idioma — incluyen long-tail local y semántica por ciudad */
 const KEYWORDS: Record<Locale, string> = {
   es: [
-    "taller mecánico Madrid", "taller mecánico Barcelona", "taller mecánico Valencia",
-    "mecánico a domicilio", "recogida de vehículos para talleres", "entrega de coches taller",
+    // Marca
+    "Mecanu", "Mecanu taller", "Mecanu Madrid", "Mecanu Barcelona", "Mecanu logística",
+    // Intención principal
+    "recogida coches talleres Madrid", "recogida coches talleres Barcelona",
+    "entrega vehículos taller mecánico Madrid", "entrega vehículos taller mecánico Barcelona",
+    "recogida domicilio taller mecánico", "dejar coche en taller sin ir",
+    "recoger coche taller a domicilio", "taller mecánico recoge el coche",
+    // Conductor externo
+    "conductor externo taller mecánico", "conductor externo Madrid", "conductor externo Barcelona",
+    "conductor para taller mecánico España",
+    // Grúa alternativa
+    "grúa coches Madrid", "grúa coches Barcelona", "grúa particular Madrid",
+    "grúa particular Barcelona", "alternativa grúa taller", "grúa alternativa taller mecánico",
+    "grúa barata Madrid", "grúa barata Barcelona", "servicio grúa sin avería",
+    // Mecánico a domicilio
+    "mecánico a domicilio Madrid", "mecánico a domicilio Barcelona",
+    "mecánico a domicilio España", "servicio mecánico domicilio",
+    // Servicio automotriz por ciudad
     "servicio automotriz Madrid", "servicio automotriz Barcelona",
-    "logística para talleres mecánicos", "grúa alternativa taller",
-    "traslado de vehículos", "conductor externo para taller", "Mecanu",
-    "taller mecánico sin cita", "mantenimiento coche a domicilio",
-    "escáner automotriz Barcelona", "escáner automotriz Madrid",
-    "mantenimiento Volkswagen Madrid", "mantenimiento BMW Barcelona",
-    "mantenimiento Toyota Madrid", "mantenimiento Renault Madrid",
-    "ITV a domicilio", "grúa coches Madrid", "grúa coches Barcelona",
-    "servicio de grúa barato Madrid", "asistencia en carretera Madrid",
+    "taller mecánico Madrid", "taller mecánico Barcelona", "taller mecánico Valencia",
+    "mejor taller mecánico Madrid 2026", "mejor taller mecánico Barcelona 2026",
+    "taller mecánico barato Madrid", "taller mecánico barato Barcelona",
     "taller multimarca Madrid", "taller multimarca Barcelona",
-    "diagnóstico coches Madrid", "diagnóstico electrónico Barcelona",
-    "mejor taller mecánico Madrid", "mejor taller mecánico Barcelona",
-    "recoger coche taller", "dejar coche en taller sin ir",
-    "software gestión taller", "panel taller mecánico digital",
+    // Escáner y diagnóstico
+    "escáner automotriz Madrid", "escáner automotriz Barcelona",
+    "escaner automotriz Madrid", "escaner automotriz Barcelona",
+    "diagnóstico electrónico coche Madrid", "diagnóstico electrónico coche Barcelona",
+    "diagnóstico OBD Madrid", "diagnóstico OBD Barcelona",
+    // Mantenimiento por marca
+    "mantenimiento Volkswagen Madrid", "mantenimiento BMW Madrid", "mantenimiento Toyota Madrid",
+    "mantenimiento Renault Madrid", "mantenimiento Seat Madrid", "mantenimiento Peugeot Madrid",
+    "mantenimiento Ford Madrid", "mantenimiento Audi Madrid", "mantenimiento Mercedes Madrid",
+    "mantenimiento Volkswagen Barcelona", "mantenimiento BMW Barcelona",
+    "mantenimiento Toyota Barcelona", "mantenimiento Renault Barcelona",
+    // ITV y asistencia
+    "ITV a domicilio Madrid", "ITV a domicilio Barcelona", "gestión ITV taller",
+    "asistencia en carretera Madrid", "asistencia en carretera Barcelona",
+    // Software y logística
+    "software gestión taller mecánico", "panel digital taller mecánico",
+    "logística vehículos talleres España", "logística automotriz B2B España",
+    "liberar plaza taller mecánico", "traslado vehículos taller",
+    "seguro responsabilidad civil traslado vehículos",
   ].join(", "),
   ca: [
     "taller mecànic Barcelona", "taller mecànic Madrid", "mecànic a domicili",
