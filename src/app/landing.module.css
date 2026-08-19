@@ -1478,6 +1478,107 @@
   font-size: .78rem;
 }
 
+.langSwitch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.langTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 .5rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper);
+  color: inherit;
+  font: inherit;
+  font-size: .78rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.langTrigger:hover,
+.langTrigger:focus-visible {
+  border-color: var(--ink);
+}
+
+.langTriggerLabel {
+  white-space: nowrap;
+}
+
+/* La flecha gira al abrir; el icono de translate no. */
+.langTrigger[aria-expanded="true"] > :last-child {
+  transform: rotate(180deg);
+}
+
+.langMenu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 40;
+  min-width: 11rem;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+}
+
+.langMenu[hidden] {
+  display: none;
+}
+
+.langOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: .4rem .5rem;
+  border-radius: 2px;
+  font-size: .78rem;
+  white-space: nowrap;
+}
+
+.langOption:hover,
+.langOption:focus-visible {
+  background: var(--wash, rgb(0 0 0 / 5%));
+}
+
+.langOption svg {
+  display: block;
+  flex: none;
+  border: 1px solid rgb(0 0 0 / 12%);
+}
+
+.langOptionName {
+  flex: 1;
+}
+
+.langOption[aria-current="page"] {
+  font-weight: 600;
+}
+
+.langSwitchHeader {
+  margin-right: .45rem;
+}
+
+/* En la cabecera el desplegable cae hacia abajo; en el pie sube, que es el
+   comportamiento por defecto de .langMenu. */
+.langSwitchHeader .langMenu {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
+
+.mobileLang {
+  margin-top: .85rem;
+  padding-top: .85rem;
+  border-top: 1px solid var(--line);
+}
+
 @media (max-width: 900px) {
   .navInner {
     padding: 0 1.5rem;
@@ -1626,18 +1727,24 @@
     top: 0;
     left: 0;
     z-index: 1;
+    width: 100%;
     max-width: none;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow: hidden;
     border: 0;
     border-bottom: 1px solid var(--line);
     transform: none;
   }
 
   .mapCitySwitch button {
+    flex: 1 1 0;
+    min-width: 0;
     min-height: 44px;
-    padding: .55rem .8rem;
-    font-size: .72rem;
+    padding: .5rem .2rem;
+    font-size: .62rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
   }
 
   .mapPlaceCard {
@@ -1771,14 +1878,24 @@
   }
 
   .footerTop {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.35rem .7rem;
+  }
+
+  .footerBrand {
+    grid-column: 1 / -1;
+  }
+
+  .langSwitchHeader {
+    display: none;
   }
 
   .fLink {
     display: inline-flex;
-    align-items: center;
-    min-height: 44px;
+    align-items: flex-start;
+    min-height: 40px;
+    padding-top: .3rem;
+    font-size: .72rem;
   }
 
   .colLabel {
@@ -1825,4 +1942,211 @@
   .ctaButton {
     transition: none;
   }
+}
+
+/* ── Banner de consentimiento ────────────────────────────────────────────── */
+
+.consentBanner {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 90;
+  display: flex;
+  justify-content: center;
+}
+
+.consentInner {
+  width: 100%;
+  max-width: 46rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 18%);
+}
+
+.consentTitulo {
+  margin: 0 0 .3rem;
+  font-size: .9rem;
+  font-weight: 600;
+}
+
+.consentCuerpo {
+  margin: 0;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.consentEnlace {
+  text-decoration: underline;
+}
+
+.consentCategorias {
+  display: grid;
+  gap: .5rem;
+  margin-top: .85rem;
+  padding-top: .85rem;
+  border-top: 1px solid var(--line);
+}
+
+.consentCategoria {
+  display: flex;
+  gap: .55rem;
+  align-items: flex-start;
+  font-size: .78rem;
+}
+
+.consentCategoria strong {
+  display: block;
+  font-weight: 600;
+}
+
+.consentCategoria em {
+  display: block;
+  font-style: normal;
+  opacity: .72;
+}
+
+.consentAcciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: flex-end;
+  margin-top: .9rem;
+}
+
+.consentBtnPrimario,
+.consentBtnSecundario,
+.consentBtnTexto {
+  display: inline-flex;
+  gap: .35rem;
+  align-items: center;
+  height: 34px;
+  padding: 0 .85rem;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  font: inherit;
+  font-size: .78rem;
+  cursor: pointer;
+}
+
+.consentBtnPrimario {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.consentBtnSecundario {
+  background: var(--paper);
+  color: inherit;
+}
+
+.consentBtnTexto {
+  margin-right: auto;
+  border-color: transparent;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* ── CTA fijo en móvil ───────────────────────────────────────────────────── */
+
+.stickyCta {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 80;
+  display: none;
+  padding: .7rem 1rem calc(.7rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  transform: translateY(110%);
+  transition: transform .22s ease;
+}
+
+.stickyCta[data-visible="true"] {
+  transform: translateY(0);
+}
+
+.stickyCtaBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  border-radius: 2px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: .9rem;
+  font-weight: 500;
+}
+
+@media (max-width: 720px) {
+  .stickyCta {
+    display: block;
+  }
+
+  /* El banner de cookies se sitúa por encima del CTA fijo para no solaparlo. */
+  .consentBanner {
+    right: .6rem;
+    bottom: calc(4.6rem + env(safe-area-inset-bottom));
+    left: .6rem;
+  }
+
+  .consentAcciones {
+    justify-content: stretch;
+  }
+
+  .consentAcciones button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stickyCta {
+    transition: none;
+  }
+}
+
+/* ── Páginas legales ─────────────────────────────────────────────────────── */
+
+.legalPage {
+  min-height: 100dvh;
+  padding: 3rem 1.5rem;
+  background: var(--paper);
+}
+
+.legalInner {
+  display: grid;
+  gap: 1rem;
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.legalTitulo {
+  margin: 1rem 0 0;
+  font-size: 1.9rem;
+  line-height: 1.15;
+}
+
+.legalIntro {
+  margin: 0;
+  font-size: .95rem;
+  line-height: 1.6;
+}
+
+.legalPlaceholder {
+  margin: 0;
+  padding: .9rem 1rem;
+  border: 1px dashed var(--line);
+  border-radius: 3px;
+  font-size: .85rem;
+  line-height: 1.55;
+  opacity: .85;
+}
+
+.legalVolver {
+  font-size: .85rem;
+  text-decoration: underline;
 }
