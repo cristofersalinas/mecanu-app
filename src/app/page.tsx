@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter_Tight } from "next/font/google";
-import Link from "next/link";
 import { Icon } from "@/components/ds/Icon";
 import { Logo } from "@/components/ds/Logo";
+import { LandingHeader } from "@/components/landing/LandingHeader";
 import MadridMap from "@/components/landing/MadridMap";
 import styles from "./landing.module.css";
 
@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   title: "Mecanu | Logística para talleres",
   description:
     "Recoge y entrega vehículos, libera espacio en tu taller y controla cada traslado con Mecanu.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 const clientLogos = [
@@ -189,51 +195,7 @@ export default function Home() {
   return (
     <main className={`${styles.page} ${interTight.variable}`}>
       <div className={styles.pageRail}>
-        <header className={styles.navGrid}>
-          <div className={styles.navInner}>
-            <Link href="#inicio" className={styles.logo} aria-label="Mecanu, inicio">
-              <Logo height={17} />
-            </Link>
-
-            <nav className={styles.links} aria-label="Navegación principal">
-              <a className={styles.link} href="#inicio">Inicio</a>
-              <a className={styles.link} href="#solucion">Solución</a>
-              <a className={styles.link} href="#recursos">Recursos</a>
-              <details className={styles.dropdown}>
-                <summary className={`${styles.link} ${styles.dropdownToggle}`}>
-                  Productos <Icon name="expand_more" size="sm" />
-                </summary>
-                <div className={styles.dropdownMenu}>
-                  {productos.map((producto) => (
-                    <a href={producto.href} key={producto.label}>{producto.label}</a>
-                  ))}
-                </div>
-              </details>
-            </nav>
-
-            <div className={styles.navEnd}>
-              <a className={styles.ctaBtn} href="#contacto">Hablar con Mecanu</a>
-
-              <details className={styles.mobileMenu}>
-                <summary className={styles.hamburger} aria-label="Abrir menú">
-                  <Icon name="menu" size="md" />
-                </summary>
-                <nav className={styles.mobileNav} aria-label="Navegación móvil">
-                  <a className={styles.mobileLink} href="#inicio">Inicio</a>
-                  <a className={styles.mobileLink} href="#solucion">Solución</a>
-                  <a className={styles.mobileLink} href="#recursos">Recursos</a>
-                  <p className={styles.mobileGroupLabel}>Productos</p>
-                  {productos.map((producto) => (
-                    <a className={styles.mobileLink} href={producto.href} key={producto.label}>
-                      {producto.label}
-                    </a>
-                  ))}
-                  <a className={styles.mobileCta} href="#contacto">Hablar con Mecanu</a>
-                </nav>
-              </details>
-            </div>
-          </div>
-        </header>
+        <LandingHeader productos={productos} />
 
         <section className={styles.heroGrid} id="inicio">
           <div className={styles.heroText}>

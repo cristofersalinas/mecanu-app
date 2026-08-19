@@ -221,6 +221,7 @@ export default function MadridMap() {
 
     setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
+    const esTactil = window.matchMedia("(pointer: coarse)").matches;
     const map = new MapLibreMap({
       container,
       style: MAP_STYLE,
@@ -234,8 +235,13 @@ export default function MadridMap() {
       dragRotate: false,
       touchPitch: false,
       doubleClickZoom: false,
-      dragPan: true,
-      touchZoomRotate: true,
+      /* En móvil el mapa es tap + botones de zoom. El arrastre y el pinch
+         se comen el primer scroll de la página (y el resize al esconderse
+         la barra del navegador lo devuelve). */
+      dragPan: !esTactil,
+      touchZoomRotate: false,
+      cooperativeGestures: false,
+      trackResize: !esTactil,
     });
 
     map.touchZoomRotate.disableRotation();
@@ -455,7 +461,14 @@ export default function MadridMap() {
       setSelected(null);
     });
 
+    let lastW = container.clientWidth;
+    let lastH = container.clientHeight;
     const resizeObserver = new ResizeObserver(() => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (w === lastW && h === lastH) return;
+      lastW = w;
+      lastH = h;
       map.resize();
     });
     resizeObserver.observe(container);
