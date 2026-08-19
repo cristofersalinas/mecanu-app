@@ -4,6 +4,8 @@
  * grabaría dos veces.
  *
  * Nada se pide a la red hasta un sí explícito (ver GoogleTag).
+ * Vercel Analytics y Speed Insights se montan en el mismo gate: no son
+ * GTM, pero sí miden visitas y Core Web Vitals.
  */
 export const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? "GTM-T8TJGTJQ";
 

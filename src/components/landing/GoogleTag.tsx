@@ -18,6 +18,8 @@ import {
   claritySnippet,
   gtmSnippet,
 } from "@/lib/landing/analytics";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { LandingCopy } from "@/lib/landing/copy";
 import { copyFor } from "@/lib/landing/copy";
 import { localeFromPathname, type Locale } from "@/lib/landing/locales";
@@ -77,6 +79,18 @@ export function GoogleTag({
           <Script id="clarity" strategy="afterInteractive">
             {claritySnippet(CLARITY_ID)}
           </Script>
+          <Analytics
+            beforeSend={(event) => {
+              if (event.url.includes("/panel") || event.url.includes("/conductor")) return null;
+              return event;
+            }}
+          />
+          <SpeedInsights
+            beforeSend={(event) => {
+              if (event.url.includes("/panel") || event.url.includes("/conductor")) return null;
+              return event;
+            }}
+          />
         </>
       ) : null}
 
