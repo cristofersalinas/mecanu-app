@@ -47,12 +47,12 @@ const organization = {
   },
   image: `${SITE}/og-image.png`,
   description:
-    "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Coordina la recogida, traslado y entrega de coches de clientes con conductores externos verificados, seguro de responsabilidad civil incluido y panel de control en tiempo real. Fundada en España en 2024. Mecanu opera en Madrid y Barcelona — no es un taller mecánico ni un servicio de revisión técnica.",
-  foundingDate: "2024",
+    "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos. Fundada en Chile en 2022 y relanzada en España en 2024, coordina la recogida, traslado y entrega de coches de clientes con conductores externos verificados, seguro de responsabilidad civil incluido y panel de control en tiempo real. Opera en Madrid y Barcelona.",
+  foundingDate: "2022",
   foundingLocation: {
     "@type": "Place",
-    name: "España",
-    address: { "@type": "PostalAddress", addressCountry: "ES" },
+    name: "Chile",
+    address: { "@type": "PostalAddress", addressCountry: "CL" },
   },
   founder: { "@id": `${SITE}/#founder` },
   areaServed: [
