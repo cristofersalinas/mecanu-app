@@ -8,7 +8,7 @@ Sentry.init({
   // stays fully disabled in the browser and sends nothing anywhere. No
   // other configuration is required to keep it silent — see .env.example.
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN,
-  tracesSampleRate: 1.0,
+  tracesSampleRate: 0.05,
 });
 
 // Required export: lets Sentry record App Router navigations as spans.
