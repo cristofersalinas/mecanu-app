@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { localeFromPathname } from "@/lib/landing/locales";
+import { defenderPeticion } from "@/lib/security/proxy-defensa";
 import {
   comprobarRateLimit,
   ipDeRequest,
@@ -46,11 +47,14 @@ function esAppProtegida(pathname: string) {
   );
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-mecanu-pathname", pathname);
   requestHeaders.set("x-mecanu-locale", localeFromPathname(pathname));
+
+  const defensa = await defenderPeticion(request);
+  if (defensa) return defensa;
 
   if (soloLanding && esAppProtegida(pathname)) {
     // Un 302 a la landing desde una llamada de datos rompería el cliente del
@@ -93,5 +97,20 @@ export const config = {
     "/conductor",
     "/conductor/:path*",
     "/api/:path*",
+    "/wp-admin",
+    "/wp-admin/:path*",
+    "/wp-login.php",
+    "/xmlrpc.php",
+    "/.env",
+    "/.git/:path*",
+    "/phpmyadmin",
+    "/phpmyadmin/:path*",
+    "/admin.php",
+    "/config.php",
+    "/backup.sql",
+    "/.aws/:path*",
+    "/assistant",
+    "/assistant/:path*",
+    "/internal/:path*",
   ],
 };
