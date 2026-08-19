@@ -19,9 +19,17 @@ export default function PrivacidadPage() {
 
         <p>
           Mecanu trata datos de quien visita mecanu.com. El texto general de esta
-          política (responsable, derechos, cookies de analítica) se completa cuando
-          el aviso legal esté redactado. Lo que sigue ya está en vigor: el registro
-          de seguridad.
+          política (responsable, derechos) se completa cuando el aviso legal esté
+          redactado. Lo que sigue ya está en vigor.
+        </p>
+
+        <h2 style={{ fontSize: "1.1rem" }}>Cookies de analítica</h2>
+        <p>
+          Si aceptas el aviso, cargamos Google Analytics 4 (identificador
+          G-MRS0P42Z2L) para saber qué páginas de la web pública se leen. Google
+          recibe la visita. Si rechazas, no se pide el script y no se envía nada
+          a Google. El panel del taller y la app del conductor no llevan esta
+          etiqueta. Puedes cambiar de opinión borrando las cookies de este sitio.
         </p>
 
         <h2 style={{ fontSize: "1.1rem" }}>Registro de seguridad</h2>

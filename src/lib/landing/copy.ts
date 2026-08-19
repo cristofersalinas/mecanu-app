@@ -80,6 +80,13 @@ export type LandingCopy = {
     notFound: { kicker: string; headline: string; subtext: string; cta: string };
     server: { kicker: string; headline: string; subtext: string; cta: string; retry: string };
   };
+  consent: {
+    titulo: string;
+    cuerpo: string;
+    aceptar: string;
+    rechazar: string;
+    gestionar: string;
+  };
 };
 
 const es: LandingCopy = {
@@ -256,6 +263,14 @@ const es: LandingCopy = {
       cta: "Volver a la portada",
       retry: "Reintentar",
     },
+  },
+  consent: {
+    titulo: "Cookies en Mecanu",
+    cuerpo:
+      "Si nos lo permites, usamos Google Analytics para saber qué páginas se leen. Puedes decir que no y la web funciona igual.",
+    aceptar: "Aceptar",
+    rechazar: "Rechazar",
+    gestionar: "Más info",
   },
 };
 
@@ -434,6 +449,14 @@ const ca: LandingCopy = {
       retry: "Tornar-ho a provar",
     },
   },
+  consent: {
+    titulo: "Galetes a Mecanu",
+    cuerpo:
+      "Si ens ho permets, fem servir Google Analytics per saber quines pàgines es llegeixen. Pots dir que no i el web funciona igual.",
+    aceptar: "Acceptar",
+    rechazar: "Rebutjar",
+    gestionar: "Més info",
+  },
 };
 
 const en: LandingCopy = {
@@ -604,6 +627,14 @@ const en: LandingCopy = {
       retry: "Try again",
     },
   },
+  consent: {
+    titulo: "Cookies at Mecanu",
+    cuerpo:
+      "If you let us, we use Google Analytics to see which pages get read. You can say no and the site still works.",
+    aceptar: "Accept",
+    rechazar: "Reject",
+    gestionar: "More info",
+  },
 };
 
 const pt: LandingCopy = {
@@ -773,6 +804,14 @@ const pt: LandingCopy = {
       cta: "Voltar à página inicial",
       retry: "Tentar de novo",
     },
+  },
+  consent: {
+    titulo: "Cookies na Mecanu",
+    cuerpo:
+      "Se nos autorizares, usamos o Google Analytics para saber que páginas são lidas. Podes dizer que não e o site funciona na mesma.",
+    aceptar: "Aceitar",
+    rechazar: "Rejeitar",
+    gestionar: "Mais info",
   },
 };
 

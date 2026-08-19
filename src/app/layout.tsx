@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
+import Script from "next/script";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { localeFromPathname, LOCALE_META } from "@/lib/landing/locales";
+import { copyFor } from "@/lib/landing/copy";
+import { CONSENT_DEFAULT, gtagDisponible } from "@/lib/landing/gtag";
+import { GoogleTag } from "@/components/landing/GoogleTag";
 import "./globals.css";
 
 /**
@@ -31,8 +35,20 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // Lee el idioma que marca `src/proxy.ts`. Eso hace el layout dinámico
   // (cada documento invoca una función). Quitar esta lectura dejaría lang=es
   // también en /en y /pt; el coste se documenta en SEGURIDAD-RUNBOOK.md.
-  const pathname = (await headers()).get("x-mecanu-pathname") ?? "/";
+  const requestHeaders = await headers();
+  const pathname = requestHeaders.get("x-mecanu-pathname") ?? "/";
   const locale = localeFromPathname(pathname);
+  const cookieInicial = requestHeaders.get("cookie") ?? "";
+
+  const esAppInterna =
+    pathname === "/panel" ||
+    pathname.startsWith("/panel/") ||
+    pathname === "/conductor" ||
+    pathname.startsWith("/conductor/") ||
+    pathname === "/api" ||
+    pathname.startsWith("/api/");
+
+  const analiticaPublica = !esAppInterna;
 
   return (
     <html lang={LOCALE_META[locale].htmlLang} className={`h-full antialiased ${plusJakartaSans.variable}`}>
@@ -51,7 +67,22 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=swap"
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        {/*
+          Una sola etiqueta de Google (gtag G-MRS0P42Z2L) en el documento.
+          Consent Mode denegado va aquí (justo en el head, sin red). gtag.js
+          solo se pide si hay consentimiento. No va en panel ni conductor.
+        */}
+        {analiticaPublica && gtagDisponible() ? (
+          <Script id="ga-consent-default" strategy="beforeInteractive">
+            {CONSENT_DEFAULT}
+          </Script>
+        ) : null}
+        {analiticaPublica ? (
+          <GoogleTag copy={copyFor(locale).consent} cookieInicial={cookieInicial} />
+        ) : null}
+      </body>
     </html>
   );
 }
