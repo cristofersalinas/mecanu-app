@@ -10,17 +10,24 @@ import {
   subscribeToConsent,
   consentSnapshot,
 } from "@/lib/landing/consent";
-import { GTM_ID, analiticaHabilitada, gtmSnippet } from "@/lib/landing/analytics";
+import {
+  CLARITY_ID,
+  GTM_ID,
+  analiticaHabilitada,
+  claritySnippet,
+  gtmSnippet,
+} from "@/lib/landing/analytics";
 import type { LandingCopy } from "@/lib/landing/copy";
 import styles from "@/app/landing.module.css";
 
 /**
- * Google Tag Manager (GTM-T8TJGTJQ), adaptado a Next: un solo contenedor por
- * documento, vía next/script. No se pega el HTML de Google a mano: en App
- * Router eso duplica la etiqueta o la mete en el panel y el conductor.
+ * GTM y Clarity, adaptados a Next: una etiqueta de cada por documento, vía
+ * next/script. No se pega el HTML a mano: en App Router eso duplica o lo
+ * mete en el panel y el conductor.
  *
- * gtm.js solo se pide si el visitante acepta. El default denegado vive en el
- * layout (beforeInteractive). GA4 no se carga aparte: sale del contenedor.
+ * Los scripts solo se piden si el visitante acepta. El default denegado vive
+ * en el layout (beforeInteractive). GA4 sale de GTM, no aparte. Clarity va
+ * en este archivo, no dentro de GTM: si estuviera en los dos, grabaría dos veces.
  */
 export function GoogleTag({
   copy,
@@ -51,9 +58,14 @@ export function GoogleTag({
   return (
     <>
       {cargar ? (
-        <Script id="gtm" strategy="afterInteractive">
-          {gtmSnippet(GTM_ID)}
-        </Script>
+        <>
+          <Script id="gtm" strategy="afterInteractive">
+            {gtmSnippet(GTM_ID)}
+          </Script>
+          <Script id="clarity" strategy="afterInteractive">
+            {claritySnippet(CLARITY_ID)}
+          </Script>
+        </>
       ) : null}
 
       {decidido ? null : (

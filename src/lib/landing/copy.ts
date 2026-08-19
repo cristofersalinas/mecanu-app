@@ -267,7 +267,7 @@ const es: LandingCopy = {
   consent: {
     titulo: "Cookies en Mecanu",
     cuerpo:
-      "Si nos lo permites, usamos Google Analytics para saber qué páginas se leen. Puedes decir que no y la web funciona igual.",
+      "Si nos lo permites, usamos Google Analytics y Microsoft Clarity para saber qué páginas se leen y cómo se usa la web. Puedes decir que no y la web funciona igual.",
     aceptar: "Aceptar",
     rechazar: "Rechazar",
     gestionar: "Más info",
@@ -452,7 +452,7 @@ const ca: LandingCopy = {
   consent: {
     titulo: "Galetes a Mecanu",
     cuerpo:
-      "Si ens ho permets, fem servir Google Analytics per saber quines pàgines es llegeixen. Pots dir que no i el web funciona igual.",
+      "Si ens ho permets, fem servir Google Analytics i Microsoft Clarity per saber quines pàgines es llegeixen i com s'usa el web. Pots dir que no i el web funciona igual.",
     aceptar: "Acceptar",
     rechazar: "Rebutjar",
     gestionar: "Més info",
@@ -630,7 +630,7 @@ const en: LandingCopy = {
   consent: {
     titulo: "Cookies at Mecanu",
     cuerpo:
-      "If you let us, we use Google Analytics to see which pages get read. You can say no and the site still works.",
+      "If you let us, we use Google Analytics and Microsoft Clarity to see which pages get read and how the site is used. You can say no and the site still works.",
     aceptar: "Accept",
     rechazar: "Reject",
     gestionar: "More info",
@@ -808,7 +808,7 @@ const pt: LandingCopy = {
   consent: {
     titulo: "Cookies na Mecanu",
     cuerpo:
-      "Se nos autorizares, usamos o Google Analytics para saber que páginas são lidas. Podes dizer que não e o site funciona na mesma.",
+      "Se nos autorizares, usamos o Google Analytics e o Microsoft Clarity para saber que páginas são lidas e como o site é usado. Podes dizer que não e o site funciona na mesma.",
     aceptar: "Aceitar",
     rechazar: "Rejeitar",
     gestionar: "Mais info",

@@ -27,10 +27,12 @@ export default function PrivacidadPage() {
         <p>
           Si aceptas el aviso, cargamos Google Tag Manager (GTM-T8TJGTJQ). Desde
           ese contenedor se dispara Google Analytics 4 (G-MRS0P42Z2L) para saber
-          qué páginas de la web pública se leen. Google recibe la visita. Si
-          rechazas, no se pide el script y no se envía nada a Google. El panel
-          del taller y la app del conductor no llevan esta etiqueta. Puedes
-          cambiar de opinión borrando las cookies de este sitio.
+          qué páginas de la web pública se leen. También Microsoft Clarity
+          (proyecto y4kpmlt67l): mapas de calor y grabaciones de cómo se usa la
+          página. Google y Microsoft reciben esa visita. Si rechazas, no se pide
+          ningún script y no se envía nada. El panel del taller y la app del
+          conductor no llevan estas etiquetas. Puedes cambiar de opinión
+          borrando las cookies de este sitio.
         </p>
 
         <h2 style={{ fontSize: "1.1rem" }}>Registro de seguridad</h2>
