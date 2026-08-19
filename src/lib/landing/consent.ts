@@ -1,5 +1,5 @@
 /**
- * Preferencia de analítica. GA4 no carga hasta que esto es true.
+ * Preferencia de analítica. GTM (y con él GA4) no carga hasta que esto es true.
  * Cualquier valor raro se lee como "hay que preguntar", nunca como concedido.
  */
 export const CONSENT_COOKIE = "mecanu_consent";

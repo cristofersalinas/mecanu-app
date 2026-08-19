@@ -25,11 +25,12 @@ export default function PrivacidadPage() {
 
         <h2 style={{ fontSize: "1.1rem" }}>Cookies de analítica</h2>
         <p>
-          Si aceptas el aviso, cargamos Google Analytics 4 (identificador
-          G-MRS0P42Z2L) para saber qué páginas de la web pública se leen. Google
-          recibe la visita. Si rechazas, no se pide el script y no se envía nada
-          a Google. El panel del taller y la app del conductor no llevan esta
-          etiqueta. Puedes cambiar de opinión borrando las cookies de este sitio.
+          Si aceptas el aviso, cargamos Google Tag Manager (GTM-T8TJGTJQ). Desde
+          ese contenedor se dispara Google Analytics 4 (G-MRS0P42Z2L) para saber
+          qué páginas de la web pública se leen. Google recibe la visita. Si
+          rechazas, no se pide el script y no se envía nada a Google. El panel
+          del taller y la app del conductor no llevan esta etiqueta. Puedes
+          cambiar de opinión borrando las cookies de este sitio.
         </p>
 
         <h2 style={{ fontSize: "1.1rem" }}>Registro de seguridad</h2>

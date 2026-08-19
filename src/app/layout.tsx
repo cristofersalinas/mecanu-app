@@ -5,7 +5,8 @@ import Script from "next/script";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { localeFromPathname, LOCALE_META } from "@/lib/landing/locales";
 import { copyFor } from "@/lib/landing/copy";
-import { CONSENT_DEFAULT, gtagDisponible } from "@/lib/landing/gtag";
+import { readConsentFromCookieString } from "@/lib/landing/consent";
+import { analiticaHabilitada, CONSENT_DEFAULT, GTM_ID } from "@/lib/landing/analytics";
 import { GoogleTag } from "@/components/landing/GoogleTag";
 import "./globals.css";
 
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const pathname = requestHeaders.get("x-mecanu-pathname") ?? "/";
   const locale = localeFromPathname(pathname);
   const cookieInicial = requestHeaders.get("cookie") ?? "";
+  const consent = readConsentFromCookieString(cookieInicial);
 
   const esAppInterna =
     pathname === "/panel" ||
@@ -66,19 +68,35 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=swap"
         />
-      </head>
-      <body className="min-h-full flex flex-col">
-        {children}
         {/*
-          Una sola etiqueta de Google (gtag G-MRS0P42Z2L) en el documento.
-          Consent Mode denegado va aquí (justo en el head, sin red). gtag.js
-          solo se pide si hay consentimiento. No va en panel ni conductor.
+          Consent Mode denegado, lo más arriba posible en el <head>, sin red.
+          GTM (GTM-T8TJGTJQ) no se pide hasta que hay consentimiento: pegar
+          el snippet de Google tal cual saltaría el aviso de cookies.
         */}
-        {analiticaPublica && gtagDisponible() ? (
+        {analiticaPublica && analiticaHabilitada() ? (
           <Script id="ga-consent-default" strategy="beforeInteractive">
             {CONSENT_DEFAULT}
           </Script>
         ) : null}
+      </head>
+      <body className="min-h-full flex flex-col">
+        {/*
+          noscript de GTM justo después de <body>, como pide Google — pero
+          solo si ya hay un sí en la cookie. Pegarlo a todo el mundo saltaría
+          el aviso: quien navega sin JavaScript no puede aceptar.
+        */}
+        {analiticaPublica && analiticaHabilitada() && consent?.analitica ? (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+              title="Google Tag Manager"
+            />
+          </noscript>
+        ) : null}
+        {children}
         {analiticaPublica ? (
           <GoogleTag copy={copyFor(locale).consent} cookieInicial={cookieInicial} />
         ) : null}

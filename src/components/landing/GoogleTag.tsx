@@ -10,18 +10,17 @@ import {
   subscribeToConsent,
   consentSnapshot,
 } from "@/lib/landing/consent";
-import { GA4_ID, gtagDisponible } from "@/lib/landing/gtag";
+import { GTM_ID, analiticaHabilitada, gtmSnippet } from "@/lib/landing/analytics";
 import type { LandingCopy } from "@/lib/landing/copy";
 import styles from "@/app/landing.module.css";
 
 /**
- * La etiqueta de Google que pide el asistente de GA4, adaptada a Next:
- * un solo `gtag` por documento, inyectado con `next/script` (acaba en el
- * <head>). No se pega el HTML de Google a mano: en App Router eso duplica
- * la etiqueta o la mete en el panel y el conductor.
+ * Google Tag Manager (GTM-T8TJGTJQ), adaptado a Next: un solo contenedor por
+ * documento, vía next/script. No se pega el HTML de Google a mano: en App
+ * Router eso duplica la etiqueta o la mete en el panel y el conductor.
  *
- * gtag.js solo se pide a Google si el visitante acepta. El default denegado
- * vive en el layout (beforeInteractive).
+ * gtm.js solo se pide si el visitante acepta. El default denegado vive en el
+ * layout (beforeInteractive). GA4 no se carga aparte: sale del contenedor.
  */
 export function GoogleTag({
   copy,
@@ -37,7 +36,7 @@ export function GoogleTag({
   );
   const consent = useMemo(() => readConsentFromCookieString(cookies), [cookies]);
   const decidido = consent !== null;
-  const cargar = gtagDisponible() && consent?.analitica === true;
+  const cargar = analiticaHabilitada() && consent?.analitica === true;
 
   const guardar = useCallback((analitica: boolean) => {
     document.cookie = consentCookieHeader(analitica);
@@ -52,19 +51,9 @@ export function GoogleTag({
   return (
     <>
       {cargar ? (
-        <>
-          <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}
-            strategy="afterInteractive"
-          />
-          <Script id="ga-config" strategy="afterInteractive">
-            {`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', '${GA4_ID}');
-gtag('consent', 'update', { analytics_storage: 'granted' });`}
-          </Script>
-        </>
+        <Script id="gtm" strategy="afterInteractive">
+          {gtmSnippet(GTM_ID)}
+        </Script>
       ) : null}
 
       {decidido ? null : (
