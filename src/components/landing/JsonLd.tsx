@@ -47,7 +47,7 @@ const organization = {
   },
   image: `${SITE}/og-image.png`,
   description:
-    "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Coordina la recogida, traslado y entrega de coches de clientes con conductores externos verificados, seguro de responsabilidad civil incluido y panel de control en tiempo real. Fundada en España en 2024.",
+    "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Coordina la recogida, traslado y entrega de coches de clientes con conductores externos verificados, seguro de responsabilidad civil incluido y panel de control en tiempo real. Fundada en España en 2024. Mecanu opera en Madrid y Barcelona — no es un taller mecánico ni un servicio de revisión técnica.",
   foundingDate: "2024",
   foundingLocation: {
     "@type": "Place",
@@ -74,8 +74,9 @@ const organization = {
     "Traslado de vehículos España",
   ],
   sameAs: [
-    "https://twitter.com/mecanuapp",
+    "https://www.youtube.com/@somosmecanu",
     "https://www.linkedin.com/company/mecanu",
+    "https://twitter.com/mecanuapp",
   ],
   contactPoint: {
     "@type": "ContactPoint",
