@@ -28,6 +28,9 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
+  // Lee el idioma que marca `src/proxy.ts`. Eso hace el layout dinámico
+  // (cada documento invoca una función). Quitar esta lectura dejaría lang=es
+  // también en /en y /pt; el coste se documenta en SEGURIDAD-RUNBOOK.md.
   const pathname = (await headers()).get("x-mecanu-pathname") ?? "/";
   const locale = localeFromPathname(pathname);
 

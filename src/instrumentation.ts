@@ -13,14 +13,14 @@ export async function register() {
       // the SDK stays fully disabled and sends nothing anywhere. No other
       // configuration is required to keep it silent — see .env.example.
       dsn,
-      tracesSampleRate: 1.0,
+      tracesSampleRate: 0.05,
     });
   }
 
   if (process.env.NEXT_RUNTIME === "edge") {
     Sentry.init({
       dsn,
-      tracesSampleRate: 1.0,
+      tracesSampleRate: 0.05,
     });
   }
 }

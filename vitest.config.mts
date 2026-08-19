@@ -4,7 +4,7 @@ import path from 'node:path';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['src/lib/mecanu/**/*.test.ts'],
+    include: ['src/lib/mecanu/**/*.test.ts', 'src/lib/security/**/*.test.ts', 'src/lib/landing/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary'],

@@ -74,6 +74,7 @@ export type LandingCopy = {
     copyright: string;
     cta: string;
     langLabel: string;
+    privacidad: string;
   };
 };
 
@@ -235,6 +236,7 @@ const es: LandingCopy = {
     copyright: "© 2026 Mecanu",
     cta: "Hablar con Mecanu →",
     langLabel: "Idioma",
+    privacidad: "Privacidad",
   },
 };
 
@@ -396,6 +398,7 @@ const ca: LandingCopy = {
     copyright: "© 2026 Mecanu",
     cta: "Parlar amb Mecanu →",
     langLabel: "Idioma",
+    privacidad: "Privacitat",
   },
 };
 
@@ -550,6 +553,7 @@ const en: LandingCopy = {
     copyright: "© 2026 Mecanu",
     cta: "Talk to Mecanu →",
     langLabel: "Language",
+    privacidad: "Privacy",
   },
 };
 
@@ -704,6 +708,7 @@ const pt: LandingCopy = {
     copyright: "© 2026 Mecanu",
     cta: "Falar com Mecanu →",
     langLabel: "Idioma",
+    privacidad: "Privacidade",
   },
 };
 

@@ -69,7 +69,8 @@ export async function withIdempotency<Body, Result>(
       if (idempotencyKey) saveIdempotentResponse(idempotencyKey, err.status, body);
       return NextResponse.json(body, { status: err.status });
     }
-    // Server-side log; Sentry captures this too once a DSN is configured (see src/instrumentation.ts).
+    // Log interno. Al cliente solo le llega un código genérico: nada de stack,
+    // nombres de tabla ni mensajes de Postgres.
     console.error(err);
     return NextResponse.json(errorBody('internal_error', 'Error inesperado del servidor.'), { status: 500 });
   }

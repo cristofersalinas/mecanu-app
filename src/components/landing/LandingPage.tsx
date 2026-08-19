@@ -229,6 +229,7 @@ export function LandingPage({ locale }: { locale: Locale }) {
           </div>
           <div className={styles.footerBottom}>
             <span className={styles.copyright}>{copy.footer.copyright}</span>
+            <a className={styles.fLink} href="/privacidad">{copy.footer.privacidad}</a>
             <LanguageSwitch locale={locale} label={copy.footer.langLabel} />
             <a className={styles.footerCtaLink} href="#contacto">{copy.footer.cta}</a>
           </div>
