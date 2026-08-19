@@ -4,8 +4,6 @@ export type LandingMapCityId =
   | "madrid"
   | "barcelona"
   | "londres"
-  | "paris"
-  | "ginebra"
   | "zurich";
 
 export type LandingCopy = {
@@ -170,8 +168,8 @@ const es: LandingCopy = {
     { label: "Atención de cliente", href: "#contacto" },
   ],
   hero: {
-    kicker: "INFRAESTRUCTURA LOGÍSTICA",
-    kickerBrand: "PARA AUTOMOVILISTAS MODERNOS",
+    kicker: "",
+    kickerBrand: "LOGÍSTICA AUTOMOTRIZ",
     headline: "Tu taller no para cuando los coches se mueven.",
     subtext:
       "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones con clientes.",
@@ -187,8 +185,6 @@ const es: LandingCopy = {
       madrid: "Madrid",
       barcelona: "Barcelona",
       londres: "Londres",
-      paris: "París",
-      ginebra: "Ginebra",
       zurich: "Zúrich",
     },
     details: "Detalles",
@@ -482,8 +478,8 @@ const ca: LandingCopy = {
     { label: "Atenció al client", href: "#contacto" },
   ],
   hero: {
-    kicker: "INFRAESTRUCTURA LOGÍSTICA",
-    kickerBrand: "PER A AUTOMOBILISTES MODERNS",
+    kicker: "",
+    kickerBrand: "LOGÍSTICA AUTOMOTIVA",
     headline: "El teu taller no s'atura quan els cotxes es mouen.",
     subtext:
       "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions amb clients.",
@@ -499,8 +495,6 @@ const ca: LandingCopy = {
       madrid: "Madrid",
       barcelona: "Barcelona",
       londres: "Londres",
-      paris: "París",
-      ginebra: "Ginebra",
       zurich: "Zuric",
     },
     details: "Detalls",
@@ -794,8 +788,8 @@ const en: LandingCopy = {
     { label: "Customer service", href: "#contacto" },
   ],
   hero: {
-    kicker: "LOGISTICS INFRASTRUCTURE",
-    kickerBrand: "FOR MODERN MOTORISTS",
+    kicker: "",
+    kickerBrand: "AUTOMOTIVE LOGISTICS",
     headline: "Your shop never stops when cars move.",
     subtext:
       "Send cars where you need them, free the shop, and look after the customer. Every run under control. No friction with customers.",
@@ -811,8 +805,6 @@ const en: LandingCopy = {
       madrid: "Madrid",
       barcelona: "Barcelona",
       londres: "London",
-      paris: "Paris",
-      ginebra: "Geneva",
       zurich: "Zurich",
     },
     details: "Details",
@@ -1102,8 +1094,8 @@ const pt: LandingCopy = {
     { label: "Apoio ao cliente", href: "#contacto" },
   ],
   hero: {
-    kicker: "INFRAESTRUTURA LOGÍSTICA",
-    kickerBrand: "PARA AUTOMOBILISTAS MODERNOS",
+    kicker: "",
+    kickerBrand: "LOGÍSTICA AUTOMOTIVA",
     headline: "A tua oficina não para quando os carros se movem.",
     subtext:
       "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito com clientes.",
@@ -1119,8 +1111,6 @@ const pt: LandingCopy = {
       madrid: "Madrid",
       barcelona: "Barcelona",
       londres: "Londres",
-      paris: "Paris",
-      ginebra: "Genebra",
       zurich: "Zurique",
     },
     details: "Detalhes",

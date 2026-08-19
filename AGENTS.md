@@ -92,7 +92,9 @@ Archivos: `src/components/landing/MadridMap.tsx` + `src/app/landing.module.css`
 
 Hay **tres piezas** de control en el mapa:
 
-1. **React** — `.mapCityTabs`: ciudades visibles y centradas arriba.
+1. **React** — `.mapCitySwitcher`: botones rectangulares pegados (`.mapCityTabs`) o
+   desplegable ancho (`.mapCitySelect`) si no caben. Ciudades: Madrid, Barcelona,
+   Londres, Zúrich.
 2. **React** — `.mapControlsColumn`: botón reset (`.mapResetBtn`).
 3. **MapLibre** — `NavigationControl` inyectado en el canvas (zoom +/-).
 
@@ -101,8 +103,9 @@ Hay **tres piezas** de control en el mapa:
 - Reset, zoom y atribución comparten `--map-control-right` y se apilan **abajo a
   la derecha**. El zoom se posiciona en `.maplibregl-ctrl-bottom-right`, no
   moviendo las ciudades ni el reset.
-- Las ciudades no van en dropdown: se muestran en `.mapCityTabs`, centradas y
-  siempre visibles.
+- Las ciudades van en `.mapCityTabs` (segmento pegado, activo negro) centradas arriba.
+  Si el ancho no alcanza, `MadridMap` cambia a `.mapCitySelect` a ancho completo
+  (medición con `.mapCityTabsMeasure` + `ResizeObserver`).
 - MapLibre trae CSS global (`maplibre-gl/dist/maplibre-gl.css`) que **gana en
   cascada** si no se anula con la misma o mayor especificidad:
   - `.maplibregl-ctrl-group:not(:empty) { box-shadow: 0 0 0 2px rgb(0 0 0 / 0.1) }`
@@ -112,8 +115,7 @@ Hay **tres piezas** de control en el mapa:
     el bloque de zoom.
   - Hover/focus por defecto (gris / azul) distintos al design system.
 - Borde, sombra, radio y hover del zoom deben usar las variables
-  `--map-control-surface-*` y `var(--warm)`, igual que `.mapResetBtn` y el
-  chip activo de ciudad.
+  `--map-control-surface-*` y `var(--warm)`, igual que `.mapResetBtn`.
 - El reset vive **encima** del zoom; ambos quedan **encima** de la atribución
   compacta y con el mismo borde derecho.
 

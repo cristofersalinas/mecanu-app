@@ -76,7 +76,9 @@ export function LandingPage({ locale }: { locale: Locale }) {
         <section className={styles.heroGrid} id="inicio">
           <div className={styles.heroText}>
             <div className={styles.backedBy}>
-              <span className={styles.backedByText}>{copy.hero.kicker}</span>
+              {copy.hero.kicker ? (
+                <span className={styles.backedByText}>{copy.hero.kicker}</span>
+              ) : null}
               <span className={styles.backedByLogo}>{copy.hero.kickerBrand}</span>
             </div>
             <h1 className={styles.headline}>{copy.hero.headline}</h1>
@@ -138,15 +140,6 @@ export function LandingPage({ locale }: { locale: Locale }) {
 
         <section className={styles.hiringCta} id="flota">
           <div className={styles.ctaSection}>
-            <div className={styles.ctaImage}>
-              <Image
-                src="/landing/cta-car-split-collage.png"
-                alt={copy.hiring.photoAlt}
-                width={150}
-                height={128}
-                className={styles.ctaImagePhoto}
-              />
-            </div>
             <div className={styles.ctaText}>
               <h2 className={styles.ctaHeading}>{copy.hiring.heading}</h2>
               <p className={styles.ctaSubtext}>{copy.hiring.subtext}</p>
@@ -337,7 +330,7 @@ export function LandingPage({ locale }: { locale: Locale }) {
           <div className={styles.footerBottom}>
             <span className={styles.copyright}>{copy.footer.copyright}</span>
             <a className={styles.fLink} href="/privacidad">{copy.footer.privacidad}</a>
-            <LanguageSwitch locale={locale} label={copy.footer.langLabel} />
+            <LanguageSwitch locale={locale} label={copy.footer.langLabel} variant="footer" />
             <a className={styles.footerCtaLink} href={ctaHref}>{copy.footer.cta}</a>
           </div>
         </footer>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Map as MapLibreMap,
   NavigationControl,
@@ -325,10 +325,37 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
   const cityRef = useRef(CIUDAD_INICIAL);
   const ciudad = ciudadPorId(cityId);
   const prevCityIdRef = useRef<CiudadMapaId | null>(null);
+  const citySwitcherRef = useRef<HTMLDivElement>(null);
+  const cityTabsMeasureRef = useRef<HTMLDivElement>(null);
+  const [cityTabsCompact, setCityTabsCompact] = useState(false);
 
   useEffect(() => {
     cityRef.current = ciudad;
   }, [ciudad]);
+
+  useLayoutEffect(() => {
+    const switcher = citySwitcherRef.current;
+    const measure = cityTabsMeasureRef.current;
+    if (!switcher || !measure) return;
+
+    const update = () => {
+      setCityTabsCompact(measure.scrollWidth > switcher.clientWidth + 1);
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(switcher);
+    return () => observer.disconnect();
+  }, [copy]);
+
+  function seleccionarCiudad(id: CiudadMapaId) {
+    cityRef.current = ciudadPorId(id);
+    setCityId(id);
+  }
+
+  function etiquetaCiudad(item: CiudadMapa): string {
+    return copy.ciudades[item.id] ?? item.label;
+  }
 
   const clearResetTimer = () => {
     if (resetTimerRef.current == null) return;
@@ -654,24 +681,49 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
       onPointerEnter={clearResetTimer}
       onPointerLeave={scheduleReset}
     >
-      <div className={styles.mapCityTabs} role="group" aria-label={copy.citySwitchAria}>
-        {CIUDADES_MAPA.map((item) => {
-          const active = item.id === cityId;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={active ? styles.mapCityTabActive : styles.mapCityTab}
-              aria-pressed={active}
-              onClick={() => {
-                cityRef.current = ciudadPorId(item.id);
-                setCityId(item.id);
-              }}
-            >
-              {copy.ciudades[item.id] ?? item.label}
-            </button>
-          );
-        })}
+      <div ref={citySwitcherRef} className={styles.mapCitySwitcher}>
+        <div
+          ref={cityTabsMeasureRef}
+          className={styles.mapCityTabsMeasure}
+          aria-hidden="true"
+        >
+          {CIUDADES_MAPA.map((item) => (
+            <span key={item.id} className={styles.mapCityTab}>
+              {etiquetaCiudad(item)}
+            </span>
+          ))}
+        </div>
+        {cityTabsCompact ? (
+          <select
+            className={styles.mapCitySelect}
+            value={cityId}
+            aria-label={copy.citySwitchAria}
+            onChange={(evento) => seleccionarCiudad(evento.target.value as CiudadMapaId)}
+          >
+            {CIUDADES_MAPA.map((item) => (
+              <option key={item.id} value={item.id}>
+                {etiquetaCiudad(item)}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className={styles.mapCityTabs} role="group" aria-label={copy.citySwitchAria}>
+            {CIUDADES_MAPA.map((item) => {
+              const active = item.id === cityId;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={active ? styles.mapCityTabActive : styles.mapCityTab}
+                  aria-pressed={active}
+                  onClick={() => seleccionarCiudad(item.id)}
+                >
+                  {etiquetaCiudad(item)}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
       <div className={styles.mapControlsColumn}>
         <button

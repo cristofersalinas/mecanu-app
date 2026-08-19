@@ -782,54 +782,108 @@
   background: var(--soft);
 }
 
-.mapCityTabs {
+.mapCitySwitcher {
   position: absolute;
   top: var(--map-control-top);
   left: 50%;
   z-index: 5;
-  display: flex;
-  justify-content: center;
-  gap: .35rem;
   width: min(calc(100% - 2rem), 760px);
-  padding: .15rem;
-  overflow-x: auto;
-  scrollbar-width: none;
   transform: translateX(-50%);
 }
 
-.mapCityTabs::-webkit-scrollbar {
-  display: none;
+.mapCityTabsMeasure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  display: flex;
+  gap: 0;
+  width: max-content;
+  height: 0;
+  overflow: hidden;
+}
+
+.mapCityTabsMeasure .mapCityTab {
+  flex: 0 0 auto;
+}
+
+.mapCityTabs {
+  display: flex;
+  width: 100%;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper);
 }
 
 .mapCityTab,
 .mapCityTabActive {
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-width: 0;
   min-height: var(--map-city-tab-h);
-  padding: .45rem .8rem;
-  border: var(--map-control-surface-border);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .9);
-  box-shadow: var(--map-control-surface-shadow);
+  padding: .45rem .55rem;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--paper);
+  box-shadow: none;
   color: var(--ink);
   cursor: pointer;
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
   white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.15s, color 0.15s;
 }
 
-.mapCityTab:hover,
-.mapCityTab:focus-visible,
-.mapCityTabActive {
-  border-color: var(--ink);
-  outline: none;
+.mapCityTab:last-child,
+.mapCityTabActive:last-child {
+  border-right: 0;
 }
 
 .mapCityTab:hover,
 .mapCityTab:focus-visible {
-  background: #fff;
+  background: var(--soft);
+  outline: none;
 }
 
 .mapCityTabActive {
-  background: var(--warm);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.mapCityTabActive:hover,
+.mapCityTabActive:focus-visible {
+  background: #2d2d2d;
+  color: var(--paper);
+}
+
+.mapCitySelect {
+  display: block;
+  width: 100%;
+  min-height: var(--map-city-tab-h);
+  padding: 0 2rem 0 .75rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background:
+    var(--paper)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%230f0f0f' d='M1.4 1.4 6 6l4.6-4.6L12 3.8 6 9.8 0 3.8z'/%3E%3C/svg%3E")
+    no-repeat right .7rem center / 12px 8px;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 500;
+  appearance: none;
+}
+
+.mapCitySelect:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
 }
 
 .mapControlsColumn {
@@ -1244,30 +1298,13 @@
 .ctaSection {
   min-height: 130px;
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 2rem;
   padding: 1.35rem 1.5rem;
   border: 1px solid var(--line);
   border-radius: 3px;
   background: var(--paper);
-}
-
-.ctaImage {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 150px;
-  height: 128px;
-  overflow: hidden;
-  border-radius: 2px;
-}
-
-.ctaImagePhoto {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .ctaRouteDrawing {
@@ -1823,8 +1860,18 @@
 }
 
 /* La flecha gira al abrir; el icono de translate no. */
-.langTrigger[aria-expanded="true"] > :last-child {
+.langTrigger[aria-expanded="true"] .langTriggerChevron {
   transform: rotate(180deg);
+}
+
+.langTriggerFlag {
+  display: none;
+  line-height: 0;
+}
+
+.langTriggerFlag svg {
+  display: block;
+  border: 1px solid rgb(0 0 0 / 12%);
 }
 
 .langMenu {
@@ -1879,17 +1926,55 @@
   margin-right: .45rem;
 }
 
-/* En la cabecera el desplegable cae hacia abajo; en el pie sube, que es el
-   comportamiento por defecto de .langMenu. */
+.langSwitchMobile {
+  display: none;
+  margin-right: .35rem;
+}
+
+/* Cabecera desktop: desplegable hacia abajo. */
 .langSwitchHeader .langMenu {
   top: calc(100% + 6px);
   bottom: auto;
 }
 
-.mobileLang {
-  margin-top: .85rem;
-  padding-top: .85rem;
-  border-top: 1px solid var(--line);
+/* Home móvil: translate + bandera activa; menú solo banderas. */
+.langSwitchMobile .langTrigger {
+  gap: 5px;
+  height: 36px;
+  padding: 0 .45rem;
+}
+
+.langSwitchMobile .langTriggerFlag {
+  display: block;
+}
+
+.langSwitchMobile .langTriggerLabel,
+.langSwitchMobile .langTriggerChevron {
+  display: none;
+}
+
+.langSwitchMobile .langMenu {
+  top: calc(100% + 6px);
+  bottom: auto;
+  right: 0;
+  left: auto;
+  min-width: auto;
+  padding: 6px;
+}
+
+.langSwitchMobile .langOption {
+  justify-content: center;
+  min-width: 36px;
+  padding: .35rem .45rem;
+}
+
+.langSwitchMobile .langOptionName,
+.langSwitchMobile .langOptionCheck {
+  display: none;
+}
+
+.langSwitchMobile .langOption[aria-current="page"] {
+  background: var(--wash, rgb(0 0 0 / 5%));
 }
 
 @media (max-width: 900px) {
@@ -2000,8 +2085,12 @@
   }
 
   .heroVisual {
-    aspect-ratio: 4 / 3;
-    min-height: 240px;
+    aspect-ratio: 4 / 3.35;
+    min-height: 272px;
+  }
+
+  .heroPhotoCalle {
+    object-position: 65% 70%;
   }
 
   .logoBand,
@@ -2042,17 +2131,20 @@
     --map-control-bottom: .7rem;
   }
 
-  .mapCityTabs {
+  .mapCitySwitcher {
     top: .7rem;
     width: calc(100% - 1.4rem);
-    padding: .1rem;
-    gap: .3rem;
   }
 
   .mapCityTab,
   .mapCityTabActive {
     min-height: var(--map-city-tab-h);
-    padding: .45rem .7rem;
+    padding: .45rem .45rem;
+    font-size: .72rem;
+  }
+
+  .mapCitySelect {
+    min-height: var(--map-city-tab-h);
     font-size: .72rem;
   }
 
@@ -2146,12 +2238,6 @@
     padding: 1.25rem;
   }
 
-  .hiringCta .ctaImage {
-    width: 120px;
-    height: 102px;
-    justify-self: start;
-  }
-
   .hiringCta .ctaButtonWrapper {
     margin-left: 0;
   }
@@ -2213,6 +2299,47 @@
     display: none;
   }
 
+  .langSwitchMobile {
+    display: inline-flex;
+  }
+
+  .langSwitchFooter .langTrigger {
+    gap: 0;
+    min-width: 36px;
+    justify-content: center;
+    padding: 0 .45rem;
+  }
+
+  .langSwitchFooter .langTriggerFlag {
+    display: block;
+  }
+
+  .langSwitchFooter .langTriggerTranslate,
+  .langSwitchFooter .langTriggerLabel,
+  .langSwitchFooter .langTriggerChevron {
+    display: none;
+  }
+
+  .langSwitchFooter .langMenu {
+    min-width: auto;
+    padding: 6px;
+  }
+
+  .langSwitchFooter .langOption {
+    justify-content: center;
+    min-width: 36px;
+    padding: .35rem .45rem;
+  }
+
+  .langSwitchFooter .langOptionName,
+  .langSwitchFooter .langOptionCheck {
+    display: none;
+  }
+
+  .langSwitchFooter .langOption[aria-current="page"] {
+    background: var(--wash, rgb(0 0 0 / 5%));
+  }
+
   .fLink {
     display: inline-flex;
     align-items: flex-start;
@@ -2229,6 +2356,11 @@
     align-items: flex-start;
     flex-direction: column;
     gap: .65rem;
+  }
+
+  .footerBottom .langMenu {
+    right: auto;
+    left: 0;
   }
 }
 
