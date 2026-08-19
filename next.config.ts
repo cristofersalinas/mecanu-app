@@ -1,8 +1,19 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import { cabecerasDeSeguridad } from "./src/lib/security/csp";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: cabecerasDeSeguridad({
+          desarrollo: process.env.NODE_ENV === "development",
+        }),
+      },
+    ];
+  },
 };
 
 // Wraps the Next.js config with Sentry's build-time behavior (adds

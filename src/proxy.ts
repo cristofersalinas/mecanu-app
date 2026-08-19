@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { localeFromPathname } from "@/lib/landing/locales";
+import {
+  comprobarRateLimit,
+  ipDeRequest,
+  metodoEsEscritura,
+  REGLA_API_ESCRITURA,
+  REGLA_API_LECTURA,
+} from "@/lib/security/rate-limit";
 
 /**
  * Hace dos cosas, ambas antes de que se renderice nada:
@@ -52,6 +59,21 @@ export function proxy(request: NextRequest) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
     return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  if (pathname === "/api" || pathname.startsWith("/api/")) {
+    const ip = ipDeRequest(request.headers);
+    const regla = metodoEsEscritura(request.method) ? REGLA_API_ESCRITURA : REGLA_API_LECTURA;
+    const limite = comprobarRateLimit(`api:${ip}`, Date.now(), regla);
+    if (!limite.permitido) {
+      return NextResponse.json(
+        { error: { code: "rate_limited", message: "Demasiadas peticiones. Espera un momento." } },
+        {
+          status: 429,
+          headers: { "Retry-After": String(limite.retryAfterSeg) },
+        },
+      );
+    }
   }
 
   return NextResponse.next({ request: { headers: requestHeaders } });
