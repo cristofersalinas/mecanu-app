@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/ds/Logo";
+import { CityPageJsonLd } from "@/components/landing/JsonLd";
 
 export const dynamic = "force-static";
 
@@ -39,6 +40,15 @@ export const metadata: Metadata = {
 export default function BarcelonaPage() {
   return (
     <main style={{ background: "#fafaf8", minHeight: "100dvh", fontFamily: "var(--font-plus-jakarta-sans), sans-serif", color: "#0f0f0f" }}>
+      <CityPageJsonLd
+        city="Barcelona"
+        slug="barcelona"
+        description="Mecanu coordina la recogida y entrega de vehículos de clientes para talleres mecánicos en Barcelona. Conductores verificados, seguro incluido, trazabilidad en tiempo real."
+        lat={41.3851}
+        lng={2.1734}
+        postalCode="08001"
+        addressRegion="Cataluña"
+      />
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.1rem 2.5rem", borderBottom: "1px solid #e5e5e0" }}>
         <Link href="/" aria-label="Mecanu — volver a la web" style={{ color: "#0f0f0f", textDecoration: "none" }}>
           <Logo height={20} />

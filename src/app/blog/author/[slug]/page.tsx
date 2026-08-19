@@ -62,14 +62,16 @@ export default async function AuthorPage({ params }: Props) {
         )}
         <h1 className={styles.authorPageName}>{author.name}</h1>
         <p className={styles.authorPageBio}>{author.bio}</p>
+      </div>
 
-        {/* Posts del autor */}
-        <div className={styles.authorPagePosts}>
-          <p className={styles.authorPagePostsLabel}>Artículos</p>
-          <div className={styles.relatedGrid}>
+      {/* Posts del autor — cuadrícula a ancho completo */}
+      {posts.length > 0 && (
+        <div className={styles.postsSection}>
+          <p className={styles.postsSectionLabel}>Artículos de {author.name}</p>
+          <div className={styles.postsGrid}>
             {posts.map((p) => (
-              <Link key={p.slug} href={`/blog/${p.slug}`} className={styles.relatedCard}>
-                <div className={styles.relatedThumb}>
+              <Link key={p.slug} href={`/blog/${p.slug}`} className={styles.postCard}>
+                <div className={styles.postThumb}>
                   <Image
                     src={p.coverImage}
                     alt={p.coverAlt}
@@ -78,14 +80,14 @@ export default async function AuthorPage({ params }: Props) {
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 </div>
-                <span className={styles.relatedCat}>{p.category}</span>
-                <p className={styles.relatedTitle}>{p.title}</p>
-                <span className={styles.relatedByline}>{formatDate(p.publishedAt)}</span>
+                <span className={styles.postCat}>{p.category}</span>
+                <p className={styles.postTitle}>{p.title}</p>
+                <span className={styles.postByline}>{formatDate(p.publishedAt)}</span>
               </Link>
             ))}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Footer */}
       <footer className={styles.footer}>

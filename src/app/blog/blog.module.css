@@ -769,8 +769,9 @@
 .authorPage {
   max-width: 680px;
   margin: 0 auto;
-  padding: 5rem 2.5rem 2rem;
+  padding: 5rem 2.5rem 3rem;
   text-align: center;
+  border-bottom: 1px solid var(--line);
 }
 
 .authorPageAvatar {
@@ -824,21 +825,6 @@
   line-height: 1.65;
 }
 
-.authorPagePosts {
-  border-top: 1px solid var(--line);
-  padding-top: 3rem;
-  text-align: left;
-}
-
-.authorPagePostsLabel {
-  font-size: .68rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--line);
-}
 
 /* ─── Responsive ─── */
 @media (max-width: 900px) {

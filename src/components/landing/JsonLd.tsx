@@ -12,27 +12,55 @@
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mecanu.com";
 
+// Entidad de la persona fundadora — ayuda a desambiguar "Mecanu" de la empresa
+// chilena anterior que cerró en 2024 y aparece en los primeros resultados
+const founder = {
+  "@type": "Person",
+  "@id": `${SITE}/#founder`,
+  name: "Cristofer Salinas",
+  url: "https://www.linkedin.com/in/cristofersalinas",
+  sameAs: ["https://www.linkedin.com/in/cristofersalinas"],
+  jobTitle: "Founder & CEO",
+  worksFor: { "@id": `${SITE}/#organization` },
+  description: "Emprendedor por afición, vocación y profesión. Fundador de Mecanu.",
+  knowsAbout: [
+    "Logística automotriz",
+    "Talleres mecánicos",
+    "Operaciones B2B",
+    "Producto digital",
+  ],
+};
+
 const organization = {
   "@type": "Organization",
   "@id": `${SITE}/#organization`,
   name: "Mecanu",
+  alternateName: ["Mecanu.com", "Mecanu logística talleres"],
   url: SITE,
   logo: {
     "@type": "ImageObject",
+    "@id": `${SITE}/#logo`,
     url: `${SITE}/og-image.png`,
     width: 1200,
     height: 630,
+    caption: "Mecanu — Logística de vehículos para talleres mecánicos",
   },
+  image: `${SITE}/og-image.png`,
   description:
-    "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos. Coordina la recogida, traslado y entrega de coches con conductores externos verificados, seguro incluido y panel de control en tiempo real.",
+    "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Coordina la recogida, traslado y entrega de coches de clientes con conductores externos verificados, seguro de responsabilidad civil incluido y panel de control en tiempo real. Fundada en España en 2024.",
   foundingDate: "2024",
+  foundingLocation: {
+    "@type": "Place",
+    name: "España",
+    address: { "@type": "PostalAddress", addressCountry: "ES" },
+  },
+  founder: { "@id": `${SITE}/#founder` },
   areaServed: [
-    { "@type": "City", name: "Madrid" },
-    { "@type": "City", name: "Barcelona" },
+    { "@type": "City", name: "Madrid", "@id": "https://www.wikidata.org/wiki/Q2807" },
+    { "@type": "City", name: "Barcelona", "@id": "https://www.wikidata.org/wiki/Q1492" },
+    { "@type": "AdministrativeArea", name: "España" },
     { "@type": "City", name: "London" },
     { "@type": "City", name: "São Paulo" },
-    { "@type": "City", name: "San Francisco" },
-    { "@type": "City", name: "New York" },
   ],
   knowsAbout: [
     "Logística de vehículos para talleres mecánicos",
@@ -41,6 +69,9 @@ const organization = {
     "Software de gestión de traslados de vehículos",
     "Alternativa a grúas para talleres",
     "Vehicle collection and delivery for auto repair shops",
+    "Taller mecánico Madrid",
+    "Taller mecánico Barcelona",
+    "Traslado de vehículos España",
   ],
   sameAs: [
     "https://twitter.com/mecanuapp",
@@ -51,6 +82,15 @@ const organization = {
     contactType: "sales",
     url: `${SITE}/contacto`,
     availableLanguage: ["Spanish", "Catalan", "English", "Portuguese"],
+  },
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Servicios de logística de vehículos",
+    itemListElement: [
+      { "@type": "Offer", name: "Recogida y entrega de vehículos para talleres en Madrid", url: `${SITE}/madrid` },
+      { "@type": "Offer", name: "Recogida y entrega de vehículos para talleres en Barcelona", url: `${SITE}/barcelona` },
+      { "@type": "Offer", name: "Panel de gestión para talleres mecánicos", url: `${SITE}/para-talleres` },
+    ],
   },
 };
 
@@ -219,7 +259,7 @@ const itemList = {
   })),
 };
 
-const graph = [organization, website, softwareApp, faqPage, itemList];
+const graph = [founder, organization, website, softwareApp, faqPage, itemList];
 
 export function JsonLd() {
   return (
@@ -285,6 +325,73 @@ export function BlogPostJsonLd({
     ].join(", "),
   };
 
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
+/** JSON-LD para páginas de ciudad (LocalBusiness + Service) */
+export function CityPageJsonLd({
+  city,
+  slug,
+  description,
+  lat,
+  lng,
+  postalCode,
+  addressRegion,
+  addressCountry = "ES",
+}: {
+  city: string;
+  slug: string;
+  description: string;
+  lat: number;
+  lng: number;
+  postalCode: string;
+  addressRegion: string;
+  addressCountry?: string;
+}) {
+  const url = `${SITE}/${slug}`;
+  const data = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Service",
+        "@id": `${url}#service`,
+        name: `Mecanu — Recogida y entrega de vehículos para talleres en ${city}`,
+        description,
+        provider: { "@id": `${SITE}/#organization` },
+        areaServed: {
+          "@type": "City",
+          name: city,
+          address: { "@type": "PostalAddress", addressLocality: city, addressRegion, addressCountry },
+        },
+        url,
+        serviceType: "Logística de vehículos",
+        audience: { "@type": "BusinessAudience", audienceType: "Talleres mecánicos" },
+      },
+      {
+        "@type": "LocalBusiness",
+        "@id": `${SITE}/#localbusiness-${city.toLowerCase()}`,
+        name: `Mecanu ${city}`,
+        description,
+        url,
+        image: `${SITE}/og-image.png`,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: city,
+          postalCode,
+          addressRegion,
+          addressCountry,
+        },
+        geo: { "@type": "GeoCoordinates", latitude: lat, longitude: lng },
+        priceRange: "€€",
+        parentOrganization: { "@id": `${SITE}/#organization` },
+      },
+    ],
+  };
   return (
     <script
       type="application/ld+json"
