@@ -6,11 +6,12 @@ import { Button } from '@/components/ds/Button';
 import { Checkbox } from '@/components/ds/Checkbox';
 import { Icon } from '@/components/ds/Icon';
 import {
-  CANALES_SEED, CampanaItem, ERRORES, ESTADO_MENSAJE, ETIQUETA_ORIGEN, MAX_CUERPO, MENSAJE, MensajeWa,
+  CANALES_SEED, CampanaItem, ERRORES, ESTADO_MENSAJE, ETIQUETA_ORIGEN, HOY, MAX_CUERPO, MENSAJE, MensajeWa,
   PRESUPUESTO_META, RESPUESTAS_DEMO, cliente, detalleHallazgo, enviar, estadoVentana, e164, fmtDia,
   fmtDinero, fmtReloj, fmtTel, fromISO, payloadRecordatorio, payloadTexto, rangoFecha, renderMensaje,
   toISO, valoresOportunidad, vehiculo, etiquetaVehiculo,
 } from '../data';
+import { comercialBloqueado, semaforoVigencia } from '@/lib/mecanu/campanas-vigencia';
 import { usePanel } from '../store';
 import { Input, Tabs } from '../ui/Primitives';
 import { CrearRutaModal } from './CrearRutaModal';
@@ -19,7 +20,13 @@ import styles from '../panel.module.css';
 let waSeq = 0;
 const nuevoId = () => `wa-local-${++waSeq}`;
 
-export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCerrar: () => void }) {
+export function WhatsAppPanel({
+  campanaId, desbloqueadas = new Set<string>(), onCerrar,
+}: {
+  campanaId: string;
+  desbloqueadas?: ReadonlySet<string>;
+  onCerrar: () => void;
+}) {
   const p = usePanel();
   const campana = p.campanaPorId(campanaId);
 
@@ -28,7 +35,13 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
   // uno existente, así que todo useState de aquí abajo ya nace con los datos de LA
   // campaña correcta sin necesitar un efecto que la resetee a mano.
   const [tab, setTab] = useState<'previa' | 'chat'>('previa');
-  const [seleccion, setSeleccion] = useState<string[]>(() => campana ? campana.items.map((i) => i.id) : []);
+  const [seleccion, setSeleccion] = useState<string[]>(() =>
+    campana
+      ? campana.items
+        .filter((i) => !comercialBloqueado(semaforoVigencia(i.fecha, HOY)) || desbloqueadas.has(i.id))
+        .map((i) => i.id)
+      : [],
+  );
   const [abiertos, setAbiertos] = useState<string[]>([]);
   const [nombreOv, setNombreOv] = useState<string | null>(null);
   const [fechaOv, setFechaOv] = useState<string | null>(null);
@@ -39,6 +52,7 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
   const [input, setInput] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [crearRuta, setCrearRuta] = useState(false);
+  const [pantallaCompleta, setPantallaCompleta] = useState(false);
   const chatRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -47,13 +61,21 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 
   const optIn = CANALES_SEED[campanaId]?.optIn ?? 'IN';
 
+  const seleccionPresupuesto = useMemo(() => {
+    if (!campana || !desbloqueadas.size) return seleccion;
+    const desbloqueadasDeCampana = campana.items
+      .filter((item) => desbloqueadas.has(item.id))
+      .map((item) => item.id);
+    return [...new Set([...seleccion, ...desbloqueadasDeCampana])];
+  }, [campana, desbloqueadas, seleccion]);
+
   const valores = useMemo(() => {
     if (!campana) return null;
     const ov: { nombre?: string; fecha?: string } = {};
     if (nombreOv !== null) ov.nombre = nombreOv;
     if (fechaOv !== null) ov.fecha = fechaOv;
-    return valoresOportunidad(campana, seleccion, ov);
-  }, [campana, seleccion, nombreOv, fechaOv]);
+    return valoresOportunidad(campana, seleccionPresupuesto, ov);
+  }, [campana, seleccionPresupuesto, nombreOv, fechaOv]);
 
   const ultimaEntrada = useMemo(() => {
     const entradas = mensajes.filter((m) => m.dir === 'in');
@@ -72,10 +94,19 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 
   const avisos: { titulo: string; detalle: string }[] = [];
   if (optIn === 'OUT') avisos.push(ERRORES[368]);
-  if (!seleccion.length) avisos.push({ titulo: 'Sin hallazgos marcados', detalle: 'Marca al menos un servicio para poder enviar el recordatorio.' });
+  if (!seleccionPresupuesto.length) avisos.push({ titulo: 'Sin hallazgos marcados', detalle: 'Marca al menos un servicio para poder enviar el recordatorio.' });
   if (cuerpo.length > MAX_CUERPO) avisos.push({ titulo: 'Mensaje demasiado largo', detalle: `El cuerpo admite ${MAX_CUERPO} caracteres.` });
+  const todaVigente = campana.items.length
+    ? campana.items.every((it) => comercialBloqueado(semaforoVigencia(it.fecha, HOY)) && !desbloqueadas.has(it.id))
+    : comercialBloqueado(semaforoVigencia(campana.fecha, HOY)) && !desbloqueadas.has(campana.id);
+  if (todaVigente) {
+    avisos.push({
+      titulo: 'Aún no toca',
+      detalle: 'Estos servicios tienen fecha recomendada a más de 45 días. Se ven, pero no se manda presupuesto hasta que falten 45 días o menos. Si el cliente llega antes, es un check-in, no un envío.',
+    });
+  }
 
-  const noEnviar = optIn === 'OUT' || !seleccion.length || enviando || cuerpo.length > MAX_CUERPO;
+  const noEnviar = optIn === 'OUT' || !seleccionPresupuesto.length || enviando || cuerpo.length > MAX_CUERPO || todaVigente;
 
   const enviarRecordatorio = async () => {
     setEnviando(true);
@@ -118,15 +149,37 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 
   return (
     <aside
-      className={styles.fichaIn}
+      className={`${styles.fichaIn} ${pantallaCompleta ? styles.whatsAppPanelFullScreen : ''}`}
       style={{
-        flex: 'none', width: 400, minHeight: 0, display: 'flex', flexDirection: 'column',
-        border: '1px solid var(--mecanu-border)', borderRadius: 12, background: 'var(--mecanu-neutral-0)', overflow: 'hidden',
+        flex: pantallaCompleta ? 'none' : '0 0 400px',
+        width: pantallaCompleta ? undefined : 420,
+        minHeight: 0, display: 'flex', flexDirection: 'column',
+        border: 'none',
+        borderLeft: pantallaCompleta ? 'none' : '1px solid var(--mecanu-border)',
+        borderRadius: 0,
+        background: 'var(--mecanu-neutral-0)', overflow: 'hidden',
       }}
     >
-      <header style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '14px 16px 10px', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
+      <header style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '20px 20px 16px', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
+        {pantallaCompleta ? (
+          <Button
+            kind="tertiary"
+            size="compact"
+            icon="arrow_back"
+            aria-label="Volver a Campañas"
+            onClick={() => setPantallaCompleta(false)}
+          />
+        ) : null}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className={styles.eyebrow}>WhatsApp Business</div>
+          {pantallaCompleta ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span className={styles.eyebrow}>Campañas</span>
+              <span aria-hidden style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>WhatsApp Business</span>
+            </div>
+          ) : (
+            <div className={styles.eyebrow}>WhatsApp Business</div>
+          )}
           <div style={{ fontSize: 15, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {c ? c.nombre : '—'}
           </div>
@@ -134,14 +187,21 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
             {fmtTel(c?.telefono ?? null)} · {etiquetaVehiculo(v)} {v?.matricula ?? ''}
           </div>
           <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-            <Badge kind={optIn === 'IN' ? 'positive' : 'alert'}>{optIn === 'IN' ? 'Opt-in activo' : 'Dado de baja'}</Badge>
-            <Badge kind={ventana.abierta ? 'info' : 'neutral'}>{ventana.abierta ? 'Ventana 24 h abierta' : 'Ventana cerrada'}</Badge>
+            <Badge inverted kind={optIn === 'IN' ? 'positive' : 'alert'}>{optIn === 'IN' ? 'Opt-in activo' : 'Dado de baja'}</Badge>
+            <Badge inverted kind={ventana.abierta ? 'info' : 'neutral'}>{ventana.abierta ? 'Ventana 24 h abierta' : 'Ventana cerrada'}</Badge>
           </div>
         </div>
+        <Button
+          kind="tertiary"
+          size="compact"
+          icon={pantallaCompleta ? 'close_fullscreen' : 'open_in_full'}
+          aria-label={pantallaCompleta ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
+          onClick={() => setPantallaCompleta((actual) => !actual)}
+        />
         <Button kind="tertiary" size="compact" icon="close" onClick={onCerrar} />
       </header>
 
-      <div style={{ padding: '0 16px' }}>
+      <div style={{ padding: '0 20px' }}>
         <Tabs
           items={[{ id: 'previa', label: 'Recordatorio' }, { id: 'chat', label: 'Conversación', badge: mensajes.length }]}
           activeId={tab}
@@ -150,26 +210,34 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
       </div>
 
       {tab === 'previa' ? (
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <section>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <span className={styles.eyebrow} style={{ flex: 1 }}>Hallazgos incluidos</span>
               <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
-                {seleccion.length} de {campana.items.length}
+                {seleccionPresupuesto.length} de {campana.items.length}
               </span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {campana.items.map((it) => (
+              {campana.items.map((it) => {
+                const bloqueado = comercialBloqueado(semaforoVigencia(it.fecha, HOY)) && !desbloqueadas.has(it.id);
+                return (
                 <HallazgoFila
                   key={it.id}
                   item={it}
-                  marcado={seleccion.includes(it.id)}
+                  marcado={seleccionPresupuesto.includes(it.id)}
                   abierto={abiertos.includes(it.id)}
                   detalle={detalleHallazgo(campana, it)}
-                  onToggle={() => setSeleccion((s) => (s.includes(it.id) ? s.filter((x) => x !== it.id) : [...s, it.id]))}
+                  bloqueado={bloqueado}
+                  desbloqueado={desbloqueadas.has(it.id)}
+                  onToggle={() => {
+                    if (bloqueado) return;
+                    setSeleccion((s) => (s.includes(it.id) ? s.filter((x) => x !== it.id) : [...s, it.id]));
+                  }}
                   onToggleDetalle={() => setAbiertos((a) => (a.includes(it.id) ? a.filter((x) => x !== it.id) : [...a, it.id]))}
                 />
-              ))}
+                );
+              })}
               {campana.items.length === 0 ? (
                 <div style={{ padding: 12, fontSize: 12, color: 'var(--mecanu-neutral-300)' }}>
                   Esta campaña no tiene hallazgos de inspección: el presupuesto lo cotizó el taller.
@@ -269,7 +337,7 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 
           <section className={styles.panelBox} style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Badge kind={meta?.kind ?? 'neutral'}>{meta?.label ?? campana.estado}</Badge>
+              <Badge inverted kind={meta?.kind ?? 'neutral'}>{meta?.label ?? campana.estado}</Badge>
               <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
                 {campana.presupuesto.modo === 'solo_total' ? 'Solo total' : 'Con desglose'}
               </span>
@@ -277,7 +345,14 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {meta?.siguiente && meta.accion ? (
-                <Button kind="secondary" size="compact" onClick={() => p.avanzarCampana(campana.id)}>{meta.accion}</Button>
+                <Button
+                  kind="secondary"
+                  size="compact"
+                  disabled={todaVigente}
+                  onClick={() => p.avanzarCampana(campana.id)}
+                >
+                  {meta.accion}
+                </Button>
               ) : null}
               {campana.estado === 'enviada' ? (
                 <Button kind="tertiary" size="compact" onClick={() => p.rechazarCampana(campana.id)}>Marcar rechazada</Button>
@@ -292,7 +367,7 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
                 type="button"
                 className={styles.linkBtn}
                 onClick={() => {
-                  p.irA('tablero', 'traslados');
+                  p.irA('tablero');
                   p.seleccionar({ kind: 'ruta', id: campana.rutaGeneradaId as string }, 'ficha');
                 }}
               >
@@ -410,25 +485,28 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 }
 
 function HallazgoFila({
-  item, marcado, abierto, detalle, onToggle, onToggleDetalle,
+  item, marcado, abierto, detalle, bloqueado, desbloqueado, onToggle, onToggleDetalle,
 }: {
   item: CampanaItem;
   marcado: boolean;
   abierto: boolean;
   detalle: ReturnType<typeof detalleHallazgo>;
+  bloqueado: boolean;
+  desbloqueado: boolean;
   onToggle: () => void;
   onToggleDetalle: () => void;
 }) {
   return (
-    <div className={styles.panelBox} style={{ padding: 10 }}>
+    <div className={styles.panelBox} style={{ padding: 10, opacity: bloqueado ? 0.7 : 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Checkbox checked={marcado} onChange={onToggle} />
+        <Checkbox checked={marcado} disabled={bloqueado} onChange={onToggle} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {item.servicio ? item.servicio.nombre : item.falla}
           </div>
           <div style={{ fontSize: 11, color: item.origen === 'confirmado' ? 'var(--mecanu-alert)' : 'var(--mecanu-warning)' }}>
             {ETIQUETA_ORIGEN[item.origen]} · {item.etiqueta}
+            {bloqueado ? ' · Aún no toca' : desbloqueado ? ' · Añadido al presupuesto' : ''}
           </div>
         </div>
         <span style={{ fontSize: 13, fontWeight: 700 }}>{fmtDinero(item.valor)}</span>
@@ -442,7 +520,7 @@ function HallazgoFila({
           <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>{detalle.titulo}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
             {detalle.tags.map((t) => (
-              <span key={t} style={{ padding: '1px 7px', borderRadius: 999, background: 'var(--mecanu-neutral-25)', fontSize: 11 }}>{t}</span>
+              <span key={t} style={{ padding: '1px 7px', borderRadius: 999, background: 'var(--mecanu-neutral-700)', color: 'var(--mecanu-neutral-0)', fontSize: 11 }}>{t}</span>
             ))}
           </div>
           {detalle.movimientoTexto ? (

@@ -60,6 +60,7 @@ export const dirVaga = (dir: string | null): string => dirCorta(dir).replace(/\s
 export const misIds = (s: AppState): string[] =>
   TURNO.map((e) => e.tid)
     .concat(s.tomados)
+    .filter((tid) => !s.jobOv[tid]?.oculto)
     .filter((v, i, a) => a.indexOf(v) === i);
 
 export const cfgDe = (tid: string): EntradaTurno | null =>
@@ -85,8 +86,9 @@ export const hechoDe = (tid: string, s: AppState): boolean => {
 export const activoId = (s: AppState): string | null =>
   misIds(s).find((tid) => !hechoDe(tid, s) && EN_RUTA.includes(subDe(tid, s))) ?? null;
 
-/** R2: sin ventana comprometida no hay hueco en la jornada; el traslado existe aparte. */
-export const winDe = (tid: string): Ventana | null => {
+export const winDe = (tid: string, s?: AppState): Ventana | null => {
+  const ov = s?.jobOv[tid];
+  if (ov && Object.prototype.hasOwnProperty.call(ov, 'win')) return ov.win ?? null;
   const cfg = cfgDe(tid);
   if (cfg && cfg.off === null) return null;
   if (cfg?.off) {
@@ -154,7 +156,7 @@ export const buildJob = (tid: string, s: AppState): Job | null => {
     estado: meta.label,
     estadoKind: meta.kind,
     ribbon: meta.ribbon,
-    win: winDe(tid),
+    win: winDe(tid, s),
     seguro,
     /* R9: la cobertura se comunica con icono, nunca icono + texto. */
     segIcon: seguro ? 'verified_user' : 'gpp_maybe',
@@ -174,6 +176,7 @@ export const buildJob = (tid: string, s: AppState): Job | null => {
 type JobConVentana = Job & { win: Ventana };
 
 const tieneVentana = (j: Job): j is JobConVentana => j.win !== null;
+const DURACION_VENTANA_MIN = 60;
 
 /**
  * Agenda ordenada + riesgo (R5): si B empieza antes de que A pueda cerrarse
@@ -216,6 +219,60 @@ export const solapa = (win: Ventana | null, s: AppState): JobConVentana | null =
       return ini < b && a < fin;
     }) ?? null
   );
+};
+
+export const solapaExcepto = (win: Ventana | null, s: AppState, tidOmitido: string): JobConVentana | null => {
+  if (!win) return null;
+  const ini = hhmm(win.fecha, win.inicio).getTime();
+  const fin = hhmm(win.fecha, win.fin).getTime();
+  return (
+    agenda(s).find((j) => {
+      if (j.tid === tidOmitido) return false;
+      const a = hhmm(j.win.fecha, j.win.inicio).getTime();
+      const b = hhmm(j.win.fecha, j.win.fin).getTime();
+      return ini < b + MARGEN_MIN * 60000 && a < fin + MARGEN_MIN * 60000;
+    }) ?? null
+  );
+};
+
+export const moverVentana = (base: Ventana, minutos: number): Ventana => {
+  const ini = hhmm(base.fecha, base.inicio);
+  const nuevaIni = new Date(ini.getTime() + minutos * 60000);
+  const nuevaFin = new Date(nuevaIni.getTime() + DURACION_VENTANA_MIN * 60000);
+  return {
+    fecha: new Date(nuevaIni.getFullYear(), nuevaIni.getMonth(), nuevaIni.getDate()),
+    inicio: hh(nuevaIni),
+    fin: hh(nuevaFin),
+  };
+};
+
+export const siguienteVentanaLibre = (
+  base: Ventana,
+  s: AppState,
+  tidOmitido: string,
+  desplazamientoInicialMin: number,
+): Ventana | null => {
+  let candidata = moverVentana(base, desplazamientoInicialMin);
+  for (let i = 0; i < 8; i++) {
+    const choque = solapaExcepto(candidata, s, tidOmitido);
+    if (!choque) return candidata;
+    const finChoque = hhmm(choque.win.fecha, choque.win.fin);
+    const baseChoque = new Date(
+      finChoque.getFullYear(),
+      finChoque.getMonth(),
+      finChoque.getDate(),
+      finChoque.getHours(),
+      finChoque.getMinutes() + MARGEN_MIN,
+      0,
+      0,
+    );
+    candidata = {
+      fecha: new Date(baseChoque.getFullYear(), baseChoque.getMonth(), baseChoque.getDate()),
+      inicio: hh(baseChoque),
+      fin: hh(new Date(baseChoque.getTime() + DURACION_VENTANA_MIN * 60000)),
+    };
+  }
+  return null;
 };
 
 /** Ventana de la card: tamaño constante, solo cambia el color. */

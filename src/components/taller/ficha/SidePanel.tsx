@@ -18,47 +18,48 @@ export function SidePanel() {
     <aside
       className={styles.fichaIn}
       style={{
-        flex: 'none', width: 340, minHeight: 0, display: 'flex', flexDirection: 'column',
+        flex: 'none', width: 420, minHeight: 0, display: 'flex', flexDirection: 'column',
         borderLeft: '1px solid var(--mecanu-border)', background: 'var(--mecanu-neutral-0)', overflow: 'hidden',
       }}
     >
-      <header style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '14px 14px 10px', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
+      <header style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '20px 20px 16px', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className={styles.eyebrow}>{resumen.kindLabel}</div>
           <button
             type="button"
             className={styles.linkBtn}
-            style={{ fontSize: 16, color: 'var(--mecanu-text-primary-light)' }}
+            style={{ marginTop: 4, fontSize: 20, lineHeight: '24px', fontWeight: 600, color: 'var(--mecanu-text-primary-light)', textAlign: 'left' }}
             onClick={() => p.setModoFicha('ficha')}
           >
             {resumen.titulo}
           </button>
-          <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>{resumen.subtitulo}</div>
+          <div style={{ marginTop: 2, fontSize: 12, lineHeight: '16px', color: 'var(--mecanu-text-secondary-light)' }}>{resumen.subtitulo}</div>
         </div>
         <Button kind="tertiary" size="compact" icon="open_in_full" onClick={() => p.setModoFicha('ficha')} />
         <Button kind="tertiary" size="compact" icon="close" onClick={() => p.seleccionar(null)} />
       </header>
 
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '16px 20px 0' }}>
           {resumen.badges.map((b) => (
             <Badge key={b.text} kind={b.kind} icon={b.icon}>{b.text}</Badge>
           ))}
         </div>
 
-        <div>
+        <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
           {resumen.props.map((pr) => (
-            <div key={pr.label} className={styles.rowKV} style={{ gridTemplateColumns: '110px 1fr' }}>
+            <div key={pr.label} className={styles.rowKV} style={{ gridTemplateColumns: '132px 1fr', padding: '8px 0' }}>
               <span>{pr.label}</span>
               <span>{pr.value}</span>
             </div>
           ))}
         </div>
 
-        {resumen.relacionados.filter((g) => g.items.length).map((g) => (
-          <div key={g.titulo}>
-            <div className={styles.eyebrow} style={{ marginBottom: 6 }}>{g.titulo}</div>
-            <div>
+        <div style={{ padding: '0 20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {resumen.relacionados.filter((g) => g.items.length).map((g) => (
+            <div key={g.titulo}>
+              <div className={styles.eyebrow} style={{ marginBottom: 8 }}>{g.titulo}</div>
+              <div className={styles.panelBox} style={{ overflow: 'hidden' }}>
               {g.items.map((it, i) => (
                 <ListItem
                   key={`${it.id}-${i}`}
@@ -70,13 +71,14 @@ export function SidePanel() {
                   onClick={() => { if (it.destino) p.seleccionar(it.destino, 'panel'); }}
                 />
               ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        <Button kind="secondary" size="compact" icon="open_in_full" fullWidth onClick={() => p.setModoFicha('ficha')}>
-          Ver ficha completa
-        </Button>
+          <Button kind="secondary" size="compact" icon="open_in_full" fullWidth onClick={() => p.setModoFicha('ficha')}>
+            Ver ficha completa
+          </Button>
+        </div>
       </div>
     </aside>
   );

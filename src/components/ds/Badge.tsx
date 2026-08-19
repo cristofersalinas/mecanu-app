@@ -9,6 +9,8 @@ export interface BadgeProps {
   icon?: string;
   children?: ReactNode;
   style?: CSSProperties;
+  /** Fondo semántico sólido y letra blanca. */
+  inverted?: boolean;
 }
 
 const KINDS: Record<BadgeKind, { bg: string; fg: string; dot: string }> = {
@@ -20,8 +22,17 @@ const KINDS: Record<BadgeKind, { bg: string; fg: string; dot: string }> = {
   brand: { bg: 'var(--mecanu-electric-100)', fg: 'var(--mecanu-emerald-800)', dot: 'var(--mecanu-electric-600)' },
 };
 
-export function Badge({ kind = 'neutral', dot = true, icon, children, style }: BadgeProps) {
-  const k = KINDS[kind] ?? KINDS.neutral;
+const KINDS_INVERTED: Record<BadgeKind, { bg: string; fg: string; dot: string }> = {
+  info: { bg: 'var(--mecanu-info)', fg: 'var(--mecanu-neutral-0)', dot: 'var(--mecanu-neutral-0)' },
+  warning: { bg: 'var(--mecanu-warning)', fg: 'var(--mecanu-neutral-0)', dot: 'var(--mecanu-neutral-0)' },
+  positive: { bg: 'var(--mecanu-positive)', fg: 'var(--mecanu-neutral-0)', dot: 'var(--mecanu-neutral-0)' },
+  alert: { bg: 'var(--mecanu-alert)', fg: 'var(--mecanu-neutral-0)', dot: 'var(--mecanu-neutral-0)' },
+  neutral: { bg: 'var(--mecanu-neutral-700)', fg: 'var(--mecanu-neutral-0)', dot: 'var(--mecanu-neutral-200)' },
+  brand: { bg: 'var(--mecanu-electric-600)', fg: 'var(--mecanu-neutral-0)', dot: 'var(--mecanu-neutral-0)' },
+};
+
+export function Badge({ kind = 'neutral', dot = true, icon, children, style, inverted }: BadgeProps) {
+  const k = (inverted ? KINDS_INVERTED : KINDS)[kind] ?? (inverted ? KINDS_INVERTED : KINDS).neutral;
   return (
     <span
       style={{

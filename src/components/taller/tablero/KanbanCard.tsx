@@ -3,7 +3,7 @@
 import { DragEvent, useState } from 'react';
 import { Icon } from '@/components/ds/Icon';
 import {
-  actividadDeRuta, cliente, ESTADO, esArrastrable, fmtDia, fmtDinero, nombreCliente1,
+  actividadDeRuta, cliente, colorDeKind, ESTADO, esArrastrable, fmtDia, fmtDinero, nombreCliente1,
   RutaVista, SUBESTADO, TagRuta, TAGS_MANUALES, vehiculo, etiquetaVehiculo,
 } from '../data';
 import styles from '../panel.module.css';
@@ -29,6 +29,38 @@ function ultimaActividad(rutaId: string): string {
   }
 }
 
+function calleSucursal(direccion: string | null): string | null {
+  if (!direccion) return null;
+  const primerTramo = direccion.split(',')[0]?.trim();
+  if (!primerTramo) return null;
+  const sinNumero = primerTramo.replace(/\s+\d+\S*$/, '');
+  if (/^carrer /i.test(sinNumero)) return sinNumero.replace(/^carrer(?: de| del| de la)?\s+/i, 'C/ ');
+  if (/^calle /i.test(sinNumero)) return sinNumero.replace(/^calle\s+/i, 'C/ ');
+  if (/^avenida /i.test(sinNumero)) return sinNumero.replace(/^avenida\s+/i, 'Av. ');
+  if (/^avinguda /i.test(sinNumero)) return sinNumero.replace(/^avinguda\s+/i, 'Av. ');
+  return sinNumero;
+}
+
+function locParadaLigera(p: RutaVista['paradaOrigen'] | RutaVista['paradaDestino']) {
+  if (!p) return { bold: 'Sin parada', sub: '' };
+  if (p.tipo === 'cliente') {
+    return {
+      bold: p.sublocalidad ?? p.localidad ?? 'Sin zona registrada',
+      sub: p.sublocalidad && p.localidad ? p.localidad : '',
+    };
+  }
+  if (p.subtipo === 'taller') {
+    return {
+      bold: 'Taller',
+      sub: calleSucursal(p.direccion) ?? '',
+    };
+  }
+  return {
+    bold: p.etiqueta || 'Parada',
+    sub: [p.sublocalidad, p.localidad].filter(Boolean).join(' · '),
+  };
+}
+
 export function KanbanCard({
   ruta, tags, arrastrando, onDragStart, onDragEnd, onClick, onCancelar, onToggleTag,
 }: Props) {
@@ -40,6 +72,9 @@ export function KanbanCard({
   const draggable = esArrastrable(ruta.estado);
   const bloqueado = cfg?.edicion === 'bloqueado';
   const puedeCancelar = ruta.estado !== 'cancelado' && ruta.estado !== 'completado';
+  const origen = locParadaLigera(ruta.paradaOrigen);
+  const destino = locParadaLigera(ruta.paradaDestino);
+  const subColor = colorDeKind(sub?.kind ?? cfg?.kind);
 
   return (
     <div
@@ -50,16 +85,16 @@ export function KanbanCard({
       onClick={onClick}
       style={{ cursor: draggable ? 'grab' : 'pointer', position: 'relative' }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, minHeight: 20 }}>
         {sub ? (
           <span
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 999,
-              background: 'var(--mecanu-neutral-25)', fontSize: 11, fontWeight: 700,
-              color: 'var(--mecanu-text-secondary-light)',
+              flex: 'none', display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontSize: 10, lineHeight: '12px', fontWeight: 700, textTransform: 'uppercase',
+              letterSpacing: '.04em', color: subColor, whiteSpace: 'nowrap',
             }}
           >
-            <span style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--mecanu-neutral-300)' }} />
+            <span style={{ width: 6, height: 6, borderRadius: 999, background: subColor }} />
             {sub.label}
           </span>
         ) : null}
@@ -67,7 +102,7 @@ export function KanbanCard({
         <button
           type="button"
           className={styles.iconBtn}
-          style={{ width: 24, height: 24 }}
+          style={{ width: 20, height: 20, border: '1px dashed var(--mecanu-border)', borderRadius: 4, color: 'var(--mecanu-neutral-300)' }}
           title="Añadir etiqueta manual"
           aria-label="Añadir etiqueta manual"
           onClick={(e) => { e.stopPropagation(); setTagsAbierto((t) => !t); }}
@@ -83,7 +118,7 @@ export function KanbanCard({
           <button
             type="button"
             className={styles.iconBtn}
-            style={{ width: 24, height: 24 }}
+            style={{ width: 20, height: 20, borderRadius: 5 }}
             title="Cancelar traslado"
             aria-label="Cancelar traslado"
             onClick={(e) => { e.stopPropagation(); onCancelar(); }}
@@ -120,50 +155,50 @@ export function KanbanCard({
         </div>
       ) : null}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, paddingTop: 6, borderTop: '1px solid var(--mecanu-border-subtle)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Icon name="directions_car" size="sm" color="var(--mecanu-text-secondary-light)" />
-          <span style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 16, lineHeight: '22px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {etiquetaVehiculo(v)}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Icon name="person" size="sm" color="var(--mecanu-text-secondary-light)" />
-          <span style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 12, lineHeight: '16px', color: 'var(--mecanu-text-secondary-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {c ? nombreCliente1(c.nombre) : (ruta.matriculaLead ? 'Lead sin cliente' : 'Sin cliente')}
           </span>
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-          {ruta.importe ? fmtDinero(ruta.importe) : 'Sin valorar'} · {v?.matricula ?? ruta.matriculaLead ?? '—'}
+        <span style={{ flex: 1, fontSize: 12, lineHeight: '16px', color: 'var(--mecanu-text-secondary-light)' }}>
+          {ruta.importe ? fmtDinero(ruta.importe, true) : 'Sin valorar'} · {v?.matricula ?? ruta.matriculaLead ?? '—'}
         </span>
         <span
           title={ruta.seguro ? 'Traslado con cobertura de seguro' : 'Sin cobertura de seguro'}
           style={{ display: 'flex', color: ruta.seguro ? 'var(--mecanu-positive)' : 'var(--mecanu-neutral-300)' }}
         >
-          <Icon name={ruta.seguro ? 'shield' : 'shield_with_heart'} size="sm" />
+          <Icon name="shield" size="sm" filled={ruta.seguro} />
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, paddingTop: 5, borderTop: '1px solid var(--mecanu-border-subtle)' }}>
         {[
-          { icon: 'arrow_downward', label: 'Origen', bold: ruta.etiquetaOrigen, sub: ruta.paradaOrigen?.sublocalidad ?? ruta.paradaOrigen?.localidad },
-          { icon: 'arrow_upward', label: 'Destino', bold: ruta.etiquetaDestino, sub: ruta.paradaDestino?.sublocalidad ?? ruta.paradaDestino?.localidad },
+          { icon: 'arrow_downward', label: 'Origen', color: 'var(--mecanu-electric-600)', bold: origen.bold, sub: origen.sub },
+          { icon: 'arrow_upward', label: 'Destino', color: 'var(--mecanu-warning)', bold: destino.bold, sub: destino.sub },
         ].map((b) => (
-          <div key={b.label} style={{ padding: '7px 9px', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
+          <div key={b.label} style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
-              <Icon name={b.icon} size="sm" color="var(--mecanu-neutral-300)" />
-              <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--mecanu-neutral-300)' }}>
+              <Icon name={b.icon} size="sm" color={b.color} />
+              <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--mecanu-text-secondary-light)' }}>
                 {b.label}
               </span>
             </div>
-            <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 13, lineHeight: '15px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {b.bold ?? '—'}
             </div>
             {b.sub ? (
-              <div style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: 11, lineHeight: '13px', marginTop: '1.5px', color: 'var(--mecanu-text-secondary-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {b.sub}
               </div>
             ) : null}
@@ -171,9 +206,9 @@ export function KanbanCard({
         ))}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingTop: 5, borderTop: '1px solid var(--mecanu-border-subtle)' }}>
         <Icon name="schedule" size="sm" color="var(--mecanu-text-secondary-light)" />
-        <span style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
+        <span style={{ fontSize: 12, lineHeight: '16px', color: 'var(--mecanu-text-secondary-light)' }}>
           {ruta.franja
             ? `${ruta.fecha ? fmtDia(ruta.fecha) : ''} · ${ruta.franja}`
             : ruta.franjaPropuesta
@@ -182,7 +217,7 @@ export function KanbanCard({
         </span>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 7, borderTop: '1px solid var(--mecanu-border-subtle)' }}>
         {tags.length ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
             {tags.map((t) => (
@@ -190,11 +225,12 @@ export function KanbanCard({
                 key={t.id}
                 title={t.derivado ? 'Etiqueta derivada (calculada por el sistema)' : 'Etiqueta manual'}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 3, padding: '1px 7px', borderRadius: 999,
-                  fontSize: 11, fontWeight: 600,
+                  display: 'inline-flex', alignItems: 'center', gap: 3, height: 20, padding: '0 6px', borderRadius: 4,
+                  fontSize: 10, lineHeight: '12px', fontWeight: 700,
                   background: t.derivado ? 'var(--mecanu-neutral-25)' : 'var(--mecanu-neutral-0)',
                   color: t.derivado ? 'var(--mecanu-text-secondary-light)' : t.color,
-                  border: t.derivado ? '1px solid transparent' : `1px solid ${t.color}`,
+                  border: `1px solid ${t.derivado ? 'transparent' : t.color}`,
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {t.emoji ? `${t.emoji} ` : ''}{t.label}
@@ -202,9 +238,17 @@ export function KanbanCard({
             ))}
           </div>
         ) : null}
-        <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {ultimaActividad(ruta.id)}
-        </span>
+        {tags.length ? (
+          <div style={{ borderTop: '1px solid var(--mecanu-border-subtle)', paddingTop: 5 }}>
+            <span style={{ fontSize: 11, lineHeight: '15px', color: 'var(--mecanu-neutral-300)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {ultimaActividad(ruta.id)}
+            </span>
+          </div>
+        ) : (
+          <span style={{ fontSize: 11, lineHeight: '15px', color: 'var(--mecanu-neutral-300)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {ultimaActividad(ruta.id)}
+          </span>
+        )}
       </div>
     </div>
   );

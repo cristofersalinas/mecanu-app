@@ -72,6 +72,7 @@ export type Solicitud = {
   motivo: string;
   ts: Date;
   estado: 'pendiente' | 'resuelta';
+  resolucion?: string | null;
 };
 
 export type Incidente = { ts: Date; tipo: 'siniestro' };
@@ -178,7 +179,7 @@ export type DialogoState = {
 
 export type ToastState = { texto: string; deshacer: (() => void) | null };
 
-export type JobOv = { sub?: Subestado; done?: boolean };
+export type JobOv = { sub?: Subestado; done?: boolean; win?: Ventana | null; oculto?: boolean };
 
 /** Política de reparto del taller. `manual` esconde la bolsa de disponibles. */
 export type Politica = 'manual' | 'horario' | 'libre';

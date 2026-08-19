@@ -3,7 +3,7 @@ import {
   fmtDinero, maskTel, maskDireccion, nombreCorto, nombreCliente1,
   normalizePlate, fuzzyScore, buscarMatricula, franjasConflictan, parseFranja,
   localizarDireccion, verificarDireccion, CLIENTES, VEHICULOS, CONDUCTORES,
-  SERVICIOS, IVA,
+  SERVICIOS, IVA, OPORTUNIDADES_BASE,
 } from './mecanu-data';
 import { SERVICIO_TRASLADO_ID } from './mecanu-pipeline';
 
@@ -154,4 +154,15 @@ describe('Volumen de datos sembrados coincide con lo documentado en CLAUDE.md', 
   it('14 clientes', () => expect(CLIENTES).toHaveLength(14));
   it('18 vehículos', () => expect(VEHICULOS).toHaveLength(18));
   it('6 conductores', () => expect(CONDUCTORES).toHaveLength(6));
+});
+
+describe('Fixtures de Campañas: la tabla puede enseñar cada estado de la demo', () => {
+  it('incluye un servicio vencido, uno vigente dentro de 60 días y un auto con varios tipos', () => {
+    const items = OPORTUNIDADES_BASE.flatMap((o) => o.items);
+    const tiposDeLaDemo = new Set(items.map((item) => item.tipo));
+
+    expect(items.some((item) => item.dias < 0)).toBe(true);
+    expect(items.some((item) => item.dias > 45 && item.dias < 60)).toBe(true);
+    expect(tiposDeLaDemo.size).toBeGreaterThanOrEqual(6);
+  });
 });

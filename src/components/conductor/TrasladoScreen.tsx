@@ -278,7 +278,7 @@ export function TrasladoScreen({
               <div style={{ fontSize: 12, lineHeight: '17px', color: 'var(--mecanu-neutral-700)' }}>
                 {sol.estado === 'pendiente'
                   ? SOL_META[sol.tipo].badge + ' · ' + sol.motivo + ' · esperando al taller'
-                  : 'El taller ya respondió a tu solicitud'}
+                  : (sol.resolucion ?? 'El taller ya respondió a tu solicitud')}
               </div>
             </div>
           ) : null}

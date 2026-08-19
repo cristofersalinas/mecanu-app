@@ -54,7 +54,7 @@ export function construirResumen(sel: Seleccion, rutas: RutaVista[]): ResumenFic
       subtitulo: `${etiquetaVehiculo(v)} · ${v?.matricula ?? r.matriculaLead ?? 'Sin matrícula'}`,
       badges: [
         { kind: est?.kind ?? 'neutral', text: est?.label ?? r.estado },
-        ...(sub ? [{ kind: 'neutral' as const, text: sub.label }] : []),
+        ...(sub ? [{ kind: (sub.kind ?? 'neutral') as BadgeFicha['kind'], text: sub.label }] : []),
         { kind: r.seguro ? 'positive' : 'neutral', icon: 'shield', text: r.seguro ? 'Con cobertura' : 'Sin cobertura' },
       ],
       props: [

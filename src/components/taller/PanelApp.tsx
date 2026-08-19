@@ -6,12 +6,13 @@ import { Button } from '@/components/ds/Button';
 import { Icon } from '@/components/ds/Icon';
 import { Logo } from '@/components/ds/Logo';
 import { Toast } from '@/components/ds/Toast';
-import { NAV_ITEMS, NavId, PanelProvider, usePanel } from './store';
+import { NAV_ITEMS, NavId, PanelProvider, SUBNAV_DEFAULT, usePanel } from './store';
 import { SidebarNav } from './ui/Primitives';
 import styles from './panel.module.css';
 
 import { GeneralDashboard } from './general/GeneralDashboard';
 import { TableroView } from './tablero/TableroView';
+import { CampanasView } from './campanas/CampanasView';
 import { ContactosView } from './contactos/ContactosView';
 import { TemparioView } from './tempario/TemparioView';
 import { ConductoresModule } from './conductores/ConductoresModule';
@@ -23,6 +24,7 @@ import { InspeccionModal } from './ficha/InspeccionModal';
 const TITULOS: Record<NavId, string> = {
   general: 'General',
   tablero: 'Tablero',
+  campanas: 'Campañas',
   contactos: 'Contactos',
   tempario: 'Tempario',
   conductores: 'Conductores',
@@ -48,7 +50,7 @@ function Shell() {
   const [agendarPeticion, setAgendarPeticion] = useState(0);
   const [servicioPeticion, setServicioPeticion] = useState(0);
 
-  const hayMigas = p.sub !== p.nav && !!SUBTITULOS[p.sub];
+  const hayMigas = p.sub !== SUBNAV_DEFAULT[p.nav] && !!SUBTITULOS[p.sub];
 
   return (
     <div className={styles.root}>
@@ -130,7 +132,7 @@ function Shell() {
             </h1>
           </div>
           <div style={{ flex: 1 }} />
-          {p.nav === 'tablero' && p.sub === 'traslados' ? (
+          {p.nav === 'tablero' ? (
             <Button kind="primary" size="compact" icon="add" onClick={() => setAgendarPeticion((n) => n + 1)}>
               Agendar
             </Button>
@@ -153,6 +155,7 @@ function Shell() {
           >
             {p.nav === 'general' ? <GeneralDashboard /> : null}
             {p.nav === 'tablero' ? <TableroView agendarPeticion={agendarPeticion} /> : null}
+            {p.nav === 'campanas' ? <CampanasView /> : null}
             {p.nav === 'contactos' ? <ContactosView /> : null}
             {p.nav === 'tempario' ? <TemparioView servicioPeticion={servicioPeticion} /> : null}
             {p.nav === 'conductores' ? <ConductoresModule /> : null}

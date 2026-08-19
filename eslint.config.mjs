@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Reference material from the Claude Design handoff, not shipped app code.
     "_source/**",
+    "_diseno-ideal/**",
+    // Vendored maplibre-gl worker bundles copied by `npm run copy:maplibre`.
+    "public/maplibre/**",
   ]),
 ]);
 

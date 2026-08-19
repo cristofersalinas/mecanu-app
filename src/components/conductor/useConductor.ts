@@ -43,6 +43,7 @@ import {
   fechaLbl,
   itvDias,
   nivelDeTestigo,
+  siguienteVentanaLibre,
   solapa,
 } from './selectors';
 import type {
@@ -1100,33 +1101,120 @@ export function useConductor(opts: OpcionesConductor = {}) {
     const st = ref.current;
     const tid = Object.keys(st.solicitudes).find((k) => st.solicitudes[k]?.estado === 'pendiente');
     if (!tid) return;
+    const j = buildJob(tid, st);
+    if (!j) return;
     const sol = st.solicitudes[tid]!;
-    patch((prev) => ({
-      solicitudes: { ...prev.solicitudes, [tid]: { ...sol, estado: 'resuelta' } },
-      ...(sol.tipo === 'no_rodante' && prev.checkins[tid]
-        ? {
-            checkins: {
-              ...prev.checkins,
-              [tid]: {
-                ...prev.checkins[tid]!,
-                testigos: (prev.checkins[tid]!.testigos ?? []).filter(
-                  (k) => nivelDeTestigo(k) !== 'rojo',
-                ),
-                rojoResuelto: true,
-              },
-            },
-          }
-        : {}),
-    }));
-    log(
-      tid,
-      'cambio_estado',
-      sol.tipo === 'no_rodante'
-        ? 'El taller revisó el testigo: el coche puede circular'
-        : 'El taller respondió a tu solicitud',
-    );
+    let toastTxt = 'El taller ha respondido';
+    let logTxt = 'El taller respondió a tu solicitud';
+
+    patch((prev) => {
+      const baseSol = { ...sol, estado: 'resuelta' as const, resolucion: 'El taller revisó tu solicitud.' };
+      const next: Partial<AppState> = {
+        solicitudes: { ...prev.solicitudes, [tid]: baseSol },
+      };
+
+      if (sol.tipo === 'reagenda') {
+        const actual = j.win;
+        const motivo = (MOTIVOS.reagenda.find((m) => m.label === sol.motivo)?.id ?? 'otro') as
+          | 'solape'
+          | 'retraso'
+          | 'cliente_ausente'
+          | 'otro';
+
+        const candidata =
+          actual == null
+            ? null
+            : motivo === 'cliente_ausente'
+              ? siguienteVentanaLibre(actual, prev, tid, 24 * 60)
+              : motivo === 'otro'
+                ? null
+                : siguienteVentanaLibre(actual, prev, tid, motivo === 'retraso' ? 120 : 90);
+
+        if (candidata) {
+          const dia = fechaLbl(candidata.fecha);
+          const resolucion = `El taller te lo ha movido a ${dia.toLowerCase()} · ${candidata.inicio}-${candidata.fin}.`;
+          next.jobOv = {
+            ...prev.jobOv,
+            [tid]: { ...prev.jobOv[tid], win: candidata },
+          };
+          next.solicitudes = {
+            ...prev.solicitudes,
+            [tid]: { ...baseSol, resolucion },
+          };
+          toastTxt = `El taller reagendó a ${dia} · ${candidata.inicio}`;
+          logTxt = `El taller reagendó el servicio a ${dia.toLowerCase()} de ${candidata.inicio} a ${candidata.fin}`;
+        } else {
+          const resolucion = 'El taller lo ha reasignado a otro conductor para evitar solapes.';
+          next.jobOv = {
+            ...prev.jobOv,
+            [tid]: { ...prev.jobOv[tid], oculto: true },
+          };
+          next.solicitudes = {
+            ...prev.solicitudes,
+            [tid]: { ...baseSol, resolucion },
+          };
+          next.vista = prev.sel === tid ? 'lista' : prev.vista;
+          next.sel = prev.sel === tid ? null : prev.sel;
+          next.sheet = prev.sheet?.tid === tid ? null : prev.sheet;
+          toastTxt = 'El taller lo ha reasignado a otro conductor';
+          logTxt = 'El taller reasignó el servicio a otro conductor para no crear un solape';
+        }
+      }
+
+      if (sol.tipo === 'rechazo') {
+        const resolucion = 'El taller lo ha retirado de tu jornada y lo revisará con otra asignación.';
+        next.jobOv = {
+          ...prev.jobOv,
+          [tid]: { ...prev.jobOv[tid], oculto: true },
+        };
+        next.solicitudes = {
+          ...prev.solicitudes,
+          [tid]: { ...baseSol, resolucion },
+        };
+        next.vista = prev.sel === tid ? 'lista' : prev.vista;
+        next.sel = prev.sel === tid ? null : prev.sel;
+        next.sheet = prev.sheet?.tid === tid ? null : prev.sheet;
+        toastTxt = 'El taller ha retirado este traslado de tu jornada';
+        logTxt = 'El taller aceptó tu rechazo y retiró el traslado de tu jornada';
+      }
+
+      if (sol.tipo === 'fallido') {
+        const resolucion = 'El taller confirmó el fallido y cierra este intento.';
+        next.jobOv = {
+          ...prev.jobOv,
+          [tid]: { ...prev.jobOv[tid], done: true },
+        };
+        next.solicitudes = {
+          ...prev.solicitudes,
+          [tid]: { ...baseSol, resolucion },
+        };
+        toastTxt = 'El taller confirmó el fallido';
+        logTxt = 'El taller confirmó el fallido en origen';
+      }
+
+      if (sol.tipo === 'no_rodante' && prev.checkins[tid]) {
+        const resolucion = 'El taller revisó el aviso y libera el coche para circular.';
+        next.checkins = {
+          ...prev.checkins,
+          [tid]: {
+            ...prev.checkins[tid]!,
+            testigos: (prev.checkins[tid]!.testigos ?? []).filter((k) => nivelDeTestigo(k) !== 'rojo'),
+            rojoResuelto: true,
+          },
+        };
+        next.solicitudes = {
+          ...prev.solicitudes,
+          [tid]: { ...baseSol, resolucion },
+        };
+        toastTxt = 'El taller liberó el coche para circular';
+        logTxt = 'El taller revisó el testigo: el coche puede circular';
+      }
+
+      return next;
+    });
+    log(tid, 'cambio_estado', logTxt);
     flash(tid);
-    toast('El taller ha respondido');
+    toast(toastTxt);
   }, [flash, log, patch, toast]);
 
   /* --------- incidencias --------- */

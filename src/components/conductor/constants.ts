@@ -62,10 +62,10 @@ export const POOL: EntradaTurno[] = [
 
 export const SUB_META: Record<Subestado, { label: string; kind: BadgeKind; ribbon: string }> = {
   agendado: { label: 'Por iniciar', kind: 'neutral', ribbon: 'Por iniciar' },
-  en_camino_origen: { label: 'En camino', kind: 'info', ribbon: 'En ruta · en camino' },
-  en_origen: { label: 'En el origen', kind: 'info', ribbon: 'En ruta · en el origen' },
-  en_transito: { label: 'En tránsito', kind: 'info', ribbon: 'En ruta · en tránsito' },
-  en_destino: { label: 'En el destino', kind: 'info', ribbon: 'En ruta · en el destino' },
+  en_camino_origen: { label: 'En camino', kind: 'positive', ribbon: 'En ruta · en camino' },
+  en_origen: { label: 'En el origen', kind: 'positive', ribbon: 'En ruta · en el origen' },
+  en_transito: { label: 'En tránsito', kind: 'positive', ribbon: 'En ruta · en tránsito' },
+  en_destino: { label: 'En el destino', kind: 'positive', ribbon: 'En ruta · en el destino' },
   completado: { label: 'Completado', kind: 'positive', ribbon: 'Completado' },
 };
 

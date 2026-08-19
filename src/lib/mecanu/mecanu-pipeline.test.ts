@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   puedeEditar, esArrastrable, aceptaDrop, seComunicaAlCliente, subestadoMeta,
   ESTADO, SUBESTADOS_FRIOS, PASOS_EN_RUTA, PRESUPUESTO_PENDIENTES,
+  colorDeKind, kindDeSubestado,
 } from './mecanu-pipeline';
 
 describe('Solo Prospectos es arrastrable en el kanban', () => {
@@ -114,5 +115,48 @@ describe('Badge de la pestaña Campañas: qué estados de presupuesto cuentan co
     for (const estado of ['enviada', 'aceptada', 'rechazada', 'caducada']) {
       expect(PRESUPUESTO_PENDIENTES).not.toContain(estado);
     }
+  });
+});
+
+describe('Semáforo de columnas y subestados', () => {
+  it('las columnas siguen el ciclo: espera, en curso, en taller, alerta', () => {
+    expect(ESTADO.prospectos.kind).toBe('neutral');
+    expect(ESTADO.agendado.kind).toBe('neutral');
+    expect(ESTADO.en_ruta.kind).toBe('positive');
+    expect(ESTADO.en_taller.kind).toBe('info');
+    expect(ESTADO.completado.kind).toBe('positive');
+    expect(ESTADO.cancelado.kind).toBe('alert');
+  });
+
+  it('el taller debe atender: sin fecha, sin conductor y cierre pendiente', () => {
+    expect(kindDeSubestado('prospectos', 'sin_fecha')).toBe('alert');
+    expect(kindDeSubestado('agendado', 'sin_conductor')).toBe('alert');
+    expect(kindDeSubestado('completado', 'pendiente_cierre')).toBe('alert');
+  });
+
+  it('esperar al cliente es neutro', () => {
+    expect(kindDeSubestado('prospectos', 'oferta_enviada')).toBe('neutral');
+    expect(kindDeSubestado('prospectos', 'propuesto')).toBe('neutral');
+  });
+
+  it('en curso es verde y en taller es azul', () => {
+    for (const sub of PASOS_EN_RUTA) {
+      expect(kindDeSubestado('en_ruta', sub)).toBe('positive');
+    }
+    expect(kindDeSubestado('en_taller', 'esperando_agenda_vuelta')).toBe('info');
+    expect(kindDeSubestado('en_taller', 'oportunidad_vuelta')).toBe('info');
+  });
+
+  it('un problema o alerta no usa el color de ciclo', () => {
+    expect(kindDeSubestado('prospectos', 'caducado')).toBe('alert');
+    expect(kindDeSubestado('completado', 'con_incidencia')).toBe('alert');
+    expect(kindDeSubestado('cancelado', 'fallido_origen')).toBe('alert');
+  });
+
+  it('colorDeKind traduce info a azul y alert a rojo', () => {
+    expect(colorDeKind('info')).toBe('var(--mecanu-info)');
+    expect(colorDeKind('alert')).toBe('var(--mecanu-alert)');
+    expect(colorDeKind('positive')).toBe('var(--mecanu-positive)');
+    expect(colorDeKind('neutral')).toBe('var(--mecanu-neutral-300)');
   });
 });

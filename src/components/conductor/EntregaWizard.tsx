@@ -49,7 +49,7 @@ export function EntregaWizard({
           display: 'flex',
           alignItems: 'center',
           gap: 6,
-          padding: '18px 14px 10px',
+          padding: '46px 14px 10px',
           borderBottom: '1px solid var(--mecanu-border-subtle)',
         }}
       >

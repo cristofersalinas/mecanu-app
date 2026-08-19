@@ -8,7 +8,7 @@ import { ErrorState } from '@/components/ds/ErrorState';
 import { Icon } from '@/components/ds/Icon';
 import { MetricsCard } from '@/components/ds/MetricsCard';
 import {
-  CONDUCTORES, ESTADOS, ESTADO, EstadoRuta, KPIS_RUTAS, RutaVista, cliente, fuzzyScore,
+  CONDUCTORES, ESTADOS, ESTADO, EstadoRuta, KPIS_RUTAS, RutaVista, cliente, colorDeKind, fuzzyScore,
   nombreCorto, toISO, vehiculo,
 } from '../data';
 import { usePanel } from '../store';
@@ -518,12 +518,12 @@ export function TrasladosView({ agendarPeticion }: Props) {
                 onDragLeave={() => setDropCol((c) => (c === col.id ? null : c))}
                 onDrop={(e) => onDrop(e, col.id)}
                 style={{
-                  flex: 'none', width: 268, display: 'flex', flexDirection: 'column', minHeight: 0,
+                  flex: 'none', width: 253, display: 'flex', flexDirection: 'column', minHeight: 0,
                   borderRadius: 12, background: 'var(--mecanu-neutral-25)', padding: 8,
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 4px 8px' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 999, background: `var(--mecanu-${col.kind === 'brand' ? 'electric-600' : col.kind})` }} />
+                  <span style={{ width: 8, height: 8, borderRadius: 999, background: colorDeKind(col.kind) }} />
                   <span style={{ flex: 1, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em' }}>
                     {col.label}
                   </span>

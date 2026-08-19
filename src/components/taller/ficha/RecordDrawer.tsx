@@ -70,11 +70,11 @@ export function RecordDrawer() {
         aria-modal="true"
         aria-label={`Ficha de ${resumen.titulo}`}
         style={{
-          width: 'min(1120px, 96vw)', display: 'flex', flexDirection: 'column',
+          width: 'min(1200px, 96vw)', display: 'flex', flexDirection: 'column',
           background: 'var(--mecanu-neutral-0)', boxShadow: '-16px 0 48px rgba(22,23,24,.24)',
         }}
       >
-        <header style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 18px', borderBottom: '1px solid var(--mecanu-border)' }}>
+        <header style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px', borderBottom: '1px solid var(--mecanu-border)' }}>
           <span className={styles.eyebrow}>{resumen.kindLabel}</span>
           <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
           <span style={{ fontSize: 13, fontWeight: 700 }}>{resumen.titulo}</span>
@@ -83,19 +83,19 @@ export function RecordDrawer() {
           <Button kind="tertiary" size="compact" icon="close" onClick={() => p.seleccionar(null)} />
         </header>
 
-        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '300px minmax(0,1fr) 260px' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '340px minmax(420px,1fr) 290px' }}>
           {/* Columna izquierda */}
-          <div style={{ minHeight: 0, overflowY: 'auto', padding: 18, borderRight: '1px solid var(--mecanu-border-subtle)' }}>
+          <div style={{ minHeight: 0, overflowY: 'auto', padding: '20px 20px 40px', borderRight: '1px solid var(--mecanu-border)' }}>
             <div className={styles.eyebrow}>{resumen.kindLabel}</div>
-            <h2 style={{ margin: '2px 0 2px', fontSize: 20, fontWeight: 700 }}>{resumen.titulo}</h2>
-            <div style={{ fontSize: 13, color: 'var(--mecanu-text-secondary-light)' }}>{resumen.subtitulo}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '10px 0 16px' }}>
+            <h2 style={{ margin: '4px 0 4px', fontSize: 22, lineHeight: '28px', fontWeight: 700 }}>{resumen.titulo}</h2>
+            <div style={{ fontSize: 13, lineHeight: '18px', color: 'var(--mecanu-text-secondary-light)' }}>{resumen.subtitulo}</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '12px 0 18px' }}>
               {resumen.badges.map((b) => <Badge key={b.text} kind={b.kind} icon={b.icon}>{b.text}</Badge>)}
             </div>
 
             <Seccion titulo="Datos" abierta={secciones.datos} onToggle={() => toggle('datos')}>
               {resumen.props.map((pr) => (
-                <div key={pr.label} className={styles.rowKV} style={{ gridTemplateColumns: '110px 1fr' }}>
+                <div key={pr.label} className={styles.rowKV} style={{ gridTemplateColumns: '110px 1fr', padding: '6px 0', borderBottom: 'none' }}>
                   <span>{pr.label}</span>
                   <span>{pr.value}</span>
                 </div>
@@ -115,7 +115,7 @@ export function RecordDrawer() {
                       {ct.nombre.split(/\s+/).slice(0, 2).map((x) => x[0]).join('')}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>{nombreCorto(ct.nombre)}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{nombreCorto(ct.nombre)}</div>
                       <div style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>{ct.relacion}</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
                         <Icon name="call" size="sm" />{ct.telefono ?? '—'}
@@ -169,7 +169,7 @@ export function RecordDrawer() {
 
           {/* Columna central */}
           <div style={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '0 18px' }}>
+            <div style={{ padding: '0 24px' }}>
               <Tabs
                 items={tabs.map((t) => ({ id: t.id, label: t.bloqueada ? `${t.label} 🔒`.replace(' 🔒', '') : t.label }))}
                 activeId={tab}
@@ -177,7 +177,7 @@ export function RecordDrawer() {
               />
             </div>
 
-            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 24px 48px', display: 'flex', flexDirection: 'column', gap: 18 }}>
               {tab === 'facturacion' || tab === 'documentos' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '48px 0', color: 'var(--mecanu-neutral-300)' }}>
                   <Icon name="lock" size="xl" />
@@ -209,7 +209,7 @@ export function RecordDrawer() {
                     <section className={styles.panelBox} style={{ padding: 14 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                         <span className={styles.eyebrow} style={{ flex: 1 }}>Seguimiento de agendamiento (CRM)</span>
-                        <Badge kind={ruta.subestado === 'caducado' ? 'alert' : 'info'}>
+                        <Badge kind={SUBESTADO[`prospectos.${ruta.subestado}`]?.kind ?? 'neutral'}>
                           {SUBESTADO[`prospectos.${ruta.subestado}`]?.label ?? ruta.subestado}
                         </Badge>
                       </div>
@@ -308,7 +308,7 @@ export function RecordDrawer() {
                           kind="tertiary"
                           size="compact"
                           icon="open_in_new"
-                          onClick={() => { p.irA('tablero', 'campanas'); p.seleccionar(null); }}
+                          onClick={() => { p.irA('campanas'); p.seleccionar(null); }}
                         >
                           Abrir en Campañas
                         </Button>
@@ -530,7 +530,7 @@ export function RecordDrawer() {
           </div>
 
           {/* Rail derecho */}
-          <div className={styles.fichaRail} style={{ minHeight: 0, overflowY: 'auto', padding: 18, borderLeft: '1px solid var(--mecanu-border-subtle)' }}>
+          <div className={styles.fichaRail} style={{ width: 290, flex: 'none', minHeight: 0, overflowY: 'auto', padding: '18px 18px 40px', borderLeft: '1px solid var(--mecanu-border)', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Seccion titulo={`Tareas · ${tareas.filter((t) => !t.hecha).length}`} abierta={secciones.tareas} onToggle={() => toggle('tareas')}>
               {tareas.map((t) => {
                 const vencida = !t.hecha && t.fecha.getTime() < ahora;

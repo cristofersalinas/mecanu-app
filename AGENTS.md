@@ -55,18 +55,20 @@ criterio implícito.
 
 ## Qué leer primero, en orden
 
-1. `CLAUDE.md` — contexto de producto y decisiones cerradas. Léelo antes que nada:
-   ahí está la mitad de las respuestas a preguntas que podrías estar a punto de
-   volver a hacer.
-2. `ARQUITECTURA.md` — qué vive dónde y por qué.
-3. `src/lib/mecanu/types.ts` — las formas de datos reales, con comentarios de qué
+1. `DECISIONES.md` — el porqué estratégico (qué se eligió, qué se descartó).
+   Si una propuesta lo contradice, no improvises: discútelo.
+2. `CLAUDE.md` — contexto de producto y decisiones cerradas de dominio.
+   Léelo antes de tocar estados, dinero o el kanban.
+3. `ARQUITECTURA.md` — qué vive dónde y por qué.
+4. `src/lib/mecanu/types.ts` — las formas de datos reales, con comentarios de qué
    es decisión de producto y qué es campo `// REVISAR`.
-4. `MODELO-DATOS.md` — si vas a tocar el esquema de Postgres.
-5. `CONTRATOS-API.md` — si vas a tocar `/api/v1/*` o el cliente que las llama desde
+5. `MODELO-DATOS.md` — si vas a tocar el esquema de Postgres.
+6. `CONTRATOS-API.md` — si vas a tocar `/api/v1/*` o el cliente que las llama desde
    el conductor.
-6. `PREGUNTAS-ABIERTAS.md` — antes de asumir cualquier cosa que el código deja
+7. `PREGUNTAS-ABIERTAS.md` — antes de asumir cualquier cosa que el código deja
    ambigua, comprueba si ya está anotada ahí. Si no está y tú también la
    encontraste ambigua, añádela — no la resuelvas en silencio con una suposición.
+8. `CAMPANAS-MODELO.md` — si vas a tocar Campañas / alertas / presupuestos en vuelo.
 
 ## Cómo verificar que un cambio no rompe nada
 
@@ -97,3 +99,13 @@ solo contra `npm run dev`.
 
 `feature/<nombre>` → PR a `staging` → verificar en el preview de Vercel de
 `staging` → PR `staging` → `main` → producción. Detalle en `docs/BRANCHING.md`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

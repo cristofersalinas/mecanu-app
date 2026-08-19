@@ -14,11 +14,12 @@ import {
 
 /* ------------------------- Navegación ------------------------- */
 
-export type NavId = 'general' | 'tablero' | 'contactos' | 'tempario' | 'conductores' | 'config';
+export type NavId = 'general' | 'tablero' | 'campanas' | 'contactos' | 'tempario' | 'conductores' | 'config';
 
 export const NAV_ITEMS: { id: NavId; label: string; icon: string }[] = [
   { id: 'general', label: 'General', icon: 'dashboard' },
   { id: 'tablero', label: 'Tablero', icon: 'view_kanban' },
+  { id: 'campanas', label: 'Campañas', icon: 'campaign' },
   { id: 'contactos', label: 'Contactos', icon: 'contacts' },
   { id: 'tempario', label: 'Tempario', icon: 'menu_book' },
   { id: 'conductores', label: 'Conductores', icon: 'local_shipping' },
@@ -28,6 +29,7 @@ export const NAV_ITEMS: { id: NavId; label: string; icon: string }[] = [
 export const SUBNAV_DEFAULT: Record<NavId, string> = {
   general: 'general',
   tablero: 'traslados',
+  campanas: 'campanas',
   contactos: 'clientes',
   tempario: 'tempario',
   conductores: 'conductores',
@@ -358,6 +360,12 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const irA = useCallback((n: NavId, s?: string) => {
     setNav(n);
     setSub(s ?? SUBNAV_DEFAULT[n]);
+    /* SidePanel / RecordDrawer viven en el shell, no en cada módulo. Si no se
+       cierra la selección al cambiar de sitio, el detalle del módulo anterior
+       se queda pegado a la derecha. Quien necesite abrir otra ficha al llegar
+       (p. ej. «ver la ruta generada») llama a seleccionar() justo después. */
+    setSeleccion(null);
+    setModoFicha('panel');
   }, []);
 
   const seleccionar = useCallback((s: Seleccion | null, modo?: 'panel' | 'ficha') => {

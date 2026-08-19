@@ -32,6 +32,36 @@
     0 0 0 12px #0b0c0c;
 }
 
+.notch {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 28px;
+  background: #0b0c0c;
+  border-radius: 0 0 16px 16px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.notchDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #1c2b26;
+}
+
+.notchBar {
+  width: 32px;
+  height: 5px;
+  border-radius: 999px;
+  background: #141516;
+}
+
 @media (max-width: 480px) {
   .escenario {
     padding: 0;
@@ -44,6 +74,10 @@
     max-height: none;
     border-radius: 0;
     box-shadow: none;
+  }
+  .notch,
+  .homeIndicatorWrap {
+    display: none;
   }
   .pie {
     display: none;
@@ -61,6 +95,25 @@
   font-weight: 700;
   color: var(--mecanu-neutral-900);
   z-index: 50;
+}
+
+.homeIndicatorWrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 7px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 65;
+}
+
+.homeIndicator {
+  width: 130px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--mecanu-neutral-900);
+  opacity: 0.85;
 }
 
 .pie {

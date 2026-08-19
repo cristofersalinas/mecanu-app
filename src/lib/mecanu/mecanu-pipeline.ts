@@ -26,6 +26,15 @@ export interface SubestadoCfg {
   id: string;
   label: string;
   desc: string;
+  /**
+   * Semáforo visual (ciclo normal):
+   * - `alert`    = el taller debe atenderlo, o es un problema/alerta
+   * - `neutral`  = se espera respuesta del cliente
+   * - `positive` = en curso
+   * - `info`     = el vehículo está en taller
+   * Un problema o alerta no usa el color de ciclo: siempre `alert`.
+   */
+  kind: Kind;
   /** true = no se muestra en el pipeline activo (vista "Leads fríos") */
   fueraDelPipeline?: boolean;
 }
@@ -58,21 +67,21 @@ export interface EstadoCfg {
 
 export const ESTADOS: EstadoCfg[] = [
   {
-    id: 'prospectos', label: 'Prospectos', kind: 'brand',
+    id: 'prospectos', label: 'Prospectos', kind: 'neutral',
     desc: 'Todavía sin fecha agendada',
     paso: 0,
     arrastrable: true,          // se puede sacar una card de esta columna
     aceptaDrop: false,          // no se puede soltar aquí
     edicion: 'todo',
     subestados: [
-      { id: 'sin_fecha',      label: 'Sin fecha',       desc: 'Matrícula registrada, sin cita' },
-      { id: 'oferta_enviada', label: 'Oferta enviada',  desc: 'Esperando que el cliente elija horario' },
-      { id: 'propuesto',      label: 'Fecha propuesta', desc: 'El taller propuso ventana, falta que el cliente confirme' },
-      { id: 'caducado',       label: 'Caducado',        desc: '14 días sin respuesta a la oferta', fueraDelPipeline: true },
+      { id: 'sin_fecha',      label: 'Sin fecha',       desc: 'Matrícula registrada, sin cita', kind: 'alert' },
+      { id: 'oferta_enviada', label: 'Oferta enviada',  desc: 'Esperando que el cliente elija horario', kind: 'neutral' },
+      { id: 'propuesto',      label: 'Fecha propuesta', desc: 'El taller propuso ventana, falta que el cliente confirme', kind: 'neutral' },
+      { id: 'caducado',       label: 'Caducado',        desc: '14 días sin respuesta a la oferta', kind: 'alert', fueraDelPipeline: true },
     ],
   },
   {
-    id: 'agendado', label: 'Agendado', kind: 'info',
+    id: 'agendado', label: 'Agendado', kind: 'neutral',
     desc: 'Ventana comprometida con el cliente',
     paso: 1,
     arrastrable: false,
@@ -80,13 +89,13 @@ export const ESTADOS: EstadoCfg[] = [
     dropAccion: 'agendar',
     edicion: ['ventana', 'conductor', 'tags'],
     subestados: [
-      { id: 'sin_conductor', label: 'Sin conductor', desc: 'Ventana fijada, falta asignar conductor' },
-      { id: 'asignado',      label: 'Asignado',      desc: 'Conductor asignado, pendiente de que acepte' },
-      { id: 'aceptado',      label: 'Aceptado',      desc: 'El conductor aceptó el servicio' },
+      { id: 'sin_conductor', label: 'Sin conductor', desc: 'Ventana fijada, falta asignar conductor', kind: 'alert' },
+      { id: 'asignado',      label: 'Asignado',      desc: 'Conductor asignado, pendiente de que acepte', kind: 'neutral' },
+      { id: 'aceptado',      label: 'Aceptado',      desc: 'El conductor aceptó el servicio', kind: 'neutral' },
     ],
   },
   {
-    id: 'en_ruta', label: 'En ruta', kind: 'info',
+    id: 'en_ruta', label: 'En ruta', kind: 'positive',
     desc: 'Hay un tramo ejecutándose',
     paso: 2,
     arrastrable: false,
@@ -94,23 +103,23 @@ export const ESTADOS: EstadoCfg[] = [
     edicion: 'bloqueado',
     soloConductor: true,        // los subestados solo los mueve el conductor
     subestados: [
-      { id: 'en_camino_origen', label: 'En camino al origen', desc: 'El conductor va hacia el punto de recogida' },
-      { id: 'en_origen',        label: 'En el origen',        desc: 'Conductor en el punto de recogida' },
-      { id: 'en_transito',      label: 'En tránsito',         desc: 'Vehículo en movimiento hacia el destino' },
-      { id: 'en_destino',       label: 'En el destino',       desc: 'Conductor en el punto de entrega' },
+      { id: 'en_camino_origen', label: 'En camino al origen', desc: 'El conductor va hacia el punto de recogida', kind: 'positive' },
+      { id: 'en_origen',        label: 'En el origen',        desc: 'Conductor en el punto de recogida', kind: 'positive' },
+      { id: 'en_transito',      label: 'En tránsito',         desc: 'Vehículo en movimiento hacia el destino', kind: 'positive' },
+      { id: 'en_destino',       label: 'En el destino',       desc: 'Conductor en el punto de entrega', kind: 'positive' },
     ],
   },
   {
-    id: 'en_taller', label: 'En taller', kind: 'warning',
+    id: 'en_taller', label: 'En taller', kind: 'info',
     desc: 'El vehículo reposa en una parada de proveedor',
     paso: 3,
     arrastrable: false,
     aceptaDrop: false,
     edicion: ['clienteTieneAuto', 'tags', 'vuelta'],
     subestados: [
-      { id: 'esperando_agenda_vuelta',   label: 'Esperando agenda de vuelta', desc: 'La vuelta existe pero no tiene fecha' },
-      { id: 'oportunidad_vuelta',        label: 'Oportunidad de vuelta',      desc: 'No hay vuelta creada: upsell vivo' },
-      { id: 'pendiente_confirmar_retiro',label: 'Pendiente de confirmar retiro', desc: 'Fue solo ida; falta confirmar si el cliente ya retiró el coche' },
+      { id: 'esperando_agenda_vuelta',   label: 'Esperando agenda de vuelta', desc: 'La vuelta existe pero no tiene fecha', kind: 'info' },
+      { id: 'oportunidad_vuelta',        label: 'Oportunidad de vuelta',      desc: 'No hay vuelta creada: upsell vivo', kind: 'info' },
+      { id: 'pendiente_confirmar_retiro',label: 'Pendiente de confirmar retiro', desc: 'Fue solo ida; falta confirmar si el cliente ya retiró el coche', kind: 'info' },
     ],
   },
   {
@@ -121,10 +130,10 @@ export const ESTADOS: EstadoCfg[] = [
     aceptaDrop: false,
     edicion: 'bloqueado',
     subestados: [
-      { id: 'ok',                   label: 'Terminado',            desc: 'Devuelto al cliente y firmado' },
-      { id: 'retirado_por_cliente', label: 'Retirado por el cliente', desc: 'El cliente se llevó el coche sin vuelta' },
-      { id: 'con_incidencia',       label: 'Con incidencia',       desc: 'Cerrado con una incidencia registrada' },
-      { id: 'pendiente_cierre',     label: 'Pendiente de cierre',  desc: 'Falta documentación para cerrar' },
+      { id: 'ok',                   label: 'Terminado',            desc: 'Devuelto al cliente y firmado', kind: 'positive' },
+      { id: 'retirado_por_cliente', label: 'Retirado por el cliente', desc: 'El cliente se llevó el coche sin vuelta', kind: 'positive' },
+      { id: 'con_incidencia',       label: 'Con incidencia',       desc: 'Cerrado con una incidencia registrada', kind: 'alert' },
+      { id: 'pendiente_cierre',     label: 'Pendiente de cierre',  desc: 'Falta documentación para cerrar', kind: 'alert' },
     ],
   },
   {
@@ -137,10 +146,10 @@ export const ESTADOS: EstadoCfg[] = [
     exigeMotivo: true,
     edicion: 'bloqueado',
     subestados: [
-      { id: 'por_cliente',    label: 'Por el cliente',   desc: 'El cliente anuló el servicio' },
-      { id: 'por_taller',     label: 'Por el taller',    desc: 'El taller anuló el servicio' },
-      { id: 'fallido_origen', label: 'Fallido en origen',desc: 'No-show del cliente en la recogida' },
-      { id: 'fallido_ruta',   label: 'Fallido en ruta',  desc: 'El tramo no se pudo completar' },
+      { id: 'por_cliente',    label: 'Por el cliente',   desc: 'El cliente anuló el servicio', kind: 'alert' },
+      { id: 'por_taller',     label: 'Por el taller',    desc: 'El taller anuló el servicio', kind: 'alert' },
+      { id: 'fallido_origen', label: 'Fallido en origen',desc: 'No-show del cliente en la recogida', kind: 'alert' },
+      { id: 'fallido_ruta',   label: 'Fallido en ruta',  desc: 'El tramo no se pudo completar', kind: 'alert' },
     ],
   },
 ];
@@ -180,14 +189,30 @@ export const SUBESTADOS_FRIOS = ESTADOS
 /** Orden en el que avanza el conductor dentro de EN RUTA. */
 export const PASOS_EN_RUTA = ESTADO.en_ruta.subestados.map((s) => s.id);
 
+/** Color CSS del semáforo de pipeline. Neutral no tiene token `--mecanu-neutral`. */
+export const COLOR_KIND: Record<Kind, string> = {
+  brand: 'var(--mecanu-electric-600)',
+  info: 'var(--mecanu-info)',
+  warning: 'var(--mecanu-warning)',
+  positive: 'var(--mecanu-positive)',
+  alert: 'var(--mecanu-alert)',
+  neutral: 'var(--mecanu-neutral-300)',
+};
+
+export const colorDeKind = (kind: Kind | undefined | null): string =>
+  COLOR_KIND[kind ?? 'neutral'];
+
+export const kindDeSubestado = (estadoId: string, subId: string): Kind =>
+  subestadoMeta(estadoId, subId)?.kind ?? 'neutral';
+
 /* --------------------------------------------------------------
    2 · TRASLADOS (tramos): estado de ejecución
    -------------------------------------------------------------- */
 
 export const ESTADOS_TRAMO: Record<EstadoTramo, { label: string; kind: Kind }> = {
   sin_agenda:  { label: 'Sin agenda',  kind: 'neutral' },
-  agendado:    { label: 'Agendado',    kind: 'info' },
-  en_curso:    { label: 'En curso',    kind: 'info' },
+  agendado:    { label: 'Agendado',    kind: 'neutral' },
+  en_curso:    { label: 'En curso',    kind: 'positive' },
   completado:  { label: 'Completado',  kind: 'positive' },
   cancelado:   { label: 'Cancelado',   kind: 'alert' },
 };

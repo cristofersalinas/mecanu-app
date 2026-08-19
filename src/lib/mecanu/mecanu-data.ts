@@ -645,8 +645,8 @@ const OPORTUNIDADES_RAW: OportunidadRaw[] = [
   { id: 'OP-3001', clienteId: 'c4', vehiculoId: 'v4', inspeccionId: null,
     fotoSeed: 'chk9973-neumatico', ultimo: { dow: 1, hora: 10 },
     items: [
-      { tipo: 'neumaticos', origen: 'confirmado', dias: 4, falla: 'Neumático delantero derecho al 20 %', registroIdx: 1, datos: { posicion: 'Delantero derecho', vidaPct: 20, marca: 'Michelin' } },
-      { tipo: 'alineacion', origen: 'confirmado', dias: 4, falla: 'Convergencia fuera de rango', registroIdx: 0, datos: { desviacion: '0,4°', eje: 'Eje delantero' } },
+      { tipo: 'neumaticos', origen: 'confirmado', dias: -3, falla: 'Neumático delantero derecho al 20 %', registroIdx: 1, datos: { posicion: 'Delantero derecho', vidaPct: 20, marca: 'Michelin' } },
+      { tipo: 'alineacion', origen: 'confirmado', dias: -3, falla: 'Convergencia fuera de rango', registroIdx: 0, datos: { desviacion: '0,4°', eje: 'Eje delantero' } },
       { tipo: 'frenos', origen: 'estimado', dias: 18, falla: 'Pastillas delanteras al 25 %', registroIdx: 0, datos: { posicion: 'Delanteras', mm: 4 } },
       { tipo: 'escobillas', origen: 'estimado', dias: 30, falla: 'Goma endurecida', registroIdx: 0, datos: { estado: 'Goma endurecida' } },
     ] },
@@ -665,6 +665,7 @@ const OPORTUNIDADES_RAW: OportunidadRaw[] = [
       { tipo: 'itv', origen: 'confirmado', dias: 41, falla: 'ITV vence el 30 de junio', registroIdx: 0, datos: { estado: 'Próxima a vencer' } },
       { tipo: 'focos', origen: 'estimado', dias: 41, falla: 'Luz de matrícula fundida', registroIdx: 0, datos: { posicion: 'Matrícula', opacidadPct: 60 } },
       { tipo: 'aceite', origen: 'estimado', dias: 45, falla: '102.400 km sin registro de cambio', registroIdx: 1, datos: { kmActual: 102400, kmProximo: 115000 } },
+      { tipo: 'bateria', origen: 'estimado', dias: 55, falla: 'Batería con más de 4 años de uso', registroIdx: 0, datos: { voltaje: 12.1, antiguedad: '4 años de uso' } },
     ] },
   { id: 'OP-3004', clienteId: 'c3', vehiculoId: 'v3', inspeccionId: 'CHK-9973',
     fotoSeed: 'chk9971-neumaticos', ultimo: { dow: 3, hora: 9 },

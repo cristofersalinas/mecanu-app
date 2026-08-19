@@ -76,4 +76,7 @@ diseño construido en Claude Design (formato `.dc.html`). Estructura:
 | `src/styles/ds` | Tokens CSS del design system (colores, tipografía, espaciado, radios, elevación, motion, iconos) |
 
 ## Landing page pública
-- Diseño pendiente — no construir aún
+- `src/app/page.tsx` + `src/app/landing.module.css`. Página pública de
+  adquisición para talleres: rotación de vehículos, espacio productivo,
+  control de traslados, flota externa y cobertura Mecanu. No incluye una
+  sección de recursos.

@@ -297,6 +297,7 @@ export interface SubestadoCfg {
   id: string;
   label: string;
   desc: string;
+  kind: 'brand' | 'info' | 'warning' | 'positive' | 'alert' | 'neutral';
   fueraDelPipeline?: boolean;
   estadoId?: string;
 }
@@ -415,6 +416,7 @@ export const sugerirDirecciones = m.sugerirDirecciones as (q: string, limit?: nu
 export const puedeEditar = m.puedeEditar as (estadoId: string, campo: string) => boolean;
 export const esArrastrable = m.esArrastrable as (estadoId: string) => boolean;
 export const aceptaDrop = m.aceptaDrop as (estadoId: string) => boolean;
+export const colorDeKind = m.colorDeKind as (kind: EstadoCfg['kind'] | undefined | null) => string;
 export const campanasPendientes = m.campanasPendientes as (lista?: Campana[]) => number;
 export const historialInspeccionesVehiculo = m.historialInspeccionesVehiculo as (vehiculoId: string) => Date[];
 

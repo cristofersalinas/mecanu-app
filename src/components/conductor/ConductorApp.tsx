@@ -43,6 +43,11 @@ export function ConductorApp(props: OpcionesConductor) {
   return (
     <div className={css.escenario}>
       <div className={css.dispositivo}>
+        <div className={css.notch} aria-hidden="true">
+          <span className={css.notchDot} />
+          <span className={css.notchBar} />
+        </div>
+
         <div className={css.barraEstado}>
           <span>{clock || '--:--'}</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -180,6 +185,10 @@ export function ConductorApp(props: OpcionesConductor) {
             ) : null}
           </div>
         ) : null}
+
+        <div className={css.homeIndicatorWrap} aria-hidden="true">
+          <div className={css.homeIndicator} />
+        </div>
       </div>
 
       {/* Controles de demo, fuera del aparato: no forman parte de la app. */}
