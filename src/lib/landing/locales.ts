@@ -36,3 +36,8 @@ export function localeFromPathname(pathname: string): Locale {
 }
 
 export const LOCALE_COOKIE = "mecanu_locale";
+
+/** Política de cookies del idioma: `/cookies`, `/ca/cookies`, `/en/cookies`… */
+export function cookiesPathFor(locale: Locale): string {
+  return locale === DEFAULT_LOCALE ? "/cookies" : `/${locale}/cookies`;
+}

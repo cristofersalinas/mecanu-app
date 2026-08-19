@@ -1,6 +1,31 @@
 import { DEFAULT_LOCALE, type Locale } from "./locales";
 
+export type ConsentCopy = {
+  titulo: string;
+  cuerpo: string;
+  enlacePolitica: string;
+  aceptar: string;
+  rechazar: string;
+  gestionar: string;
+  guardar: string;
+  necesarias: string;
+  necesariasNota: string;
+  analitica: string;
+  analiticaNota: string;
+  marketing: string;
+  marketingNota: string;
+};
+
+export type CookiesPageCopy = {
+  titulo: string;
+  intro: string;
+  placeholder: string;
+  volver: string;
+};
+
 export type LandingCopy = {
+  consent: ConsentCopy;
+  cookiesPage: CookiesPageCopy;
   meta: { title: string; description: string };
   nav: {
     homeAria: string;
@@ -35,7 +60,15 @@ export type LandingCopy = {
     talk: string;
   };
   statsAria: string;
-  stats: { numero: string; valor: string; etiqueta: string; texto: string; enlace?: string }[];
+  stats: {
+    numero: string;
+    valor: string;
+    etiqueta: string;
+    texto: string;
+    enlace?: string;
+    /** Alt de la foto de la tarjeta, en el idioma de la versión. */
+    fotoAlt: string;
+  }[];
   hiw: {
     eyebrow: string;
     heading: string;
@@ -78,6 +111,30 @@ export type LandingCopy = {
 };
 
 const es: LandingCopy = {
+  consent: {
+    titulo: "Cookies en Mecanu",
+    cuerpo:
+      "Usamos cookies propias para que el sitio funcione y, solo si nos lo permites, cookies de análisis para entender qué partes de la web resultan útiles. Puedes cambiar de opinión cuando quieras.",
+    enlacePolitica: "Ver la política de cookies",
+    aceptar: "Aceptar todo",
+    rechazar: "Rechazar todo",
+    gestionar: "Gestionar categorías",
+    guardar: "Guardar preferencias",
+    necesarias: "Necesarias",
+    necesariasNota: "Hacen funcionar el sitio. No se pueden desactivar.",
+    analitica: "Analítica",
+    analiticaNota: "Nos dicen qué páginas se leen y dónde se atasca la gente.",
+    marketing: "Marketing",
+    marketingNota: "Permiten medir campañas y mostrar anuncios relevantes.",
+  },
+  cookiesPage: {
+    titulo: "Política de cookies",
+    intro:
+      "Esta página explica qué cookies usa mecanu.com, para qué sirven y cómo cambiar tu elección.",
+    placeholder:
+      "PENDIENTE: texto legal por redactar. Debe detallar el responsable del tratamiento, la lista de cookies con proveedor, finalidad y caducidad, la base jurídica de cada categoría y cómo ejercer los derechos del RGPD.",
+    volver: "Volver a la portada",
+  },
   meta: {
     title: "Mecanu | Logística para talleres",
     description:
@@ -107,7 +164,7 @@ const es: LandingCopy = {
   hero: {
     kicker: "DISEÑADO PARA",
     kickerBrand: "TALLERES EN MOVIMIENTO",
-    headline: "Cars move. Your shop never stops.",
+    headline: "Los coches se mueven. Tu taller no para.",
     subtext:
       "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones.",
     primary: "Ver cómo funciona",
@@ -127,6 +184,7 @@ const es: LandingCopy = {
       numero: "01",
       valor: "1 h",
       etiqueta: "VENTANA HORARIA",
+      fotoAlt: "Tablero de traslados con las paradas del día",
       texto:
         "Recogidas y entregas coordinadas en un rango claro, para que el cliente y el taller sepan cuándo ocurre.",
       enlace: "Ver cómo funciona",
@@ -135,6 +193,7 @@ const es: LandingCopy = {
       numero: "02",
       valor: "24/7",
       etiqueta: "ESTADO VISIBLE",
+      fotoAlt: "Conductor de Mecanu al volante durante un traslado",
       texto:
         "Cada movimiento queda registrado: conductor, estado, fotos y firma desde la recogida hasta la entrega.",
       enlace: "Ver cómo funciona",
@@ -143,6 +202,7 @@ const es: LandingCopy = {
       numero: "03",
       valor: "40 km",
       etiqueta: "PRUEBA EN RUTA",
+      fotoAlt: "Malla de cobertura de Mecanu sobre el mapa",
       texto:
         "Cobertura pensada para el riesgo real de mover vehículos bajo custodia del taller, también en pruebas.",
     },
@@ -239,6 +299,30 @@ const es: LandingCopy = {
 };
 
 const ca: LandingCopy = {
+  consent: {
+    titulo: "Galetes a Mecanu",
+    cuerpo:
+      "Fem servir galetes pròpies perquè el lloc funcioni i, només si ens ho permets, galetes d'anàlisi per entendre quines parts del web resulten útils. Pots canviar d'opinió quan vulguis.",
+    enlacePolitica: "Veure la política de galetes",
+    aceptar: "Acceptar-ho tot",
+    rechazar: "Rebutjar-ho tot",
+    gestionar: "Gestionar categories",
+    guardar: "Desar preferències",
+    necesarias: "Necessàries",
+    necesariasNota: "Fan funcionar el lloc. No es poden desactivar.",
+    analitica: "Analítica",
+    analiticaNota: "Ens diuen quines pàgines es llegeixen i on s'encalla la gent.",
+    marketing: "Màrqueting",
+    marketingNota: "Permeten mesurar campanyes i mostrar anuncis rellevants.",
+  },
+  cookiesPage: {
+    titulo: "Política de galetes",
+    intro:
+      "Aquesta pàgina explica quines galetes fa servir mecanu.com, per a què serveixen i com canviar la teva elecció.",
+    placeholder:
+      "PENDENT: text legal per redactar. Ha de detallar el responsable del tractament, la llista de galetes amb proveïdor, finalitat i caducitat, la base jurídica de cada categoria i com exercir els drets del RGPD.",
+    volver: "Tornar a la portada",
+  },
   meta: {
     title: "Mecanu | Logística per a tallers",
     description:
@@ -268,7 +352,7 @@ const ca: LandingCopy = {
   hero: {
     kicker: "DISSENYAT PER A",
     kickerBrand: "TALLERS EN MOVIMENT",
-    headline: "Cars move. Your shop never stops.",
+    headline: "Els cotxes es mouen. El teu taller no s'atura.",
     subtext:
       "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions.",
     primary: "Veure com funciona",
@@ -288,6 +372,7 @@ const ca: LandingCopy = {
       numero: "01",
       valor: "1 h",
       etiqueta: "FRANJA HORÀRIA",
+      fotoAlt: "Tauler de trasllats amb les parades del dia",
       texto:
         "Recollides i lliuraments coordinats en una franja clara, perquè el client i el taller sàpiguen quan passa.",
       enlace: "Veure com funciona",
@@ -296,6 +381,7 @@ const ca: LandingCopy = {
       numero: "02",
       valor: "24/7",
       etiqueta: "ESTAT VISIBLE",
+      fotoAlt: "Conductor de Mecanu al volant durant un trasllat",
       texto:
         "Cada moviment queda registrat: conductor, estat, fotos i signatura des de la recollida fins al lliurament.",
       enlace: "Veure com funciona",
@@ -304,6 +390,7 @@ const ca: LandingCopy = {
       numero: "03",
       valor: "40 km",
       etiqueta: "PROVA EN RUTA",
+      fotoAlt: "Malla de cobertura de Mecanu sobre el mapa",
       texto:
         "Cobertura pensada per al risc real de moure vehicles sota custòdia del taller, també en proves.",
     },
@@ -400,6 +487,30 @@ const ca: LandingCopy = {
 };
 
 const en: LandingCopy = {
+  consent: {
+    titulo: "Cookies at Mecanu",
+    cuerpo:
+      "We use our own cookies to keep the site working and, only if you let us, analytics cookies to understand which parts of the site are useful. You can change your mind at any time.",
+    enlacePolitica: "Read the cookie policy",
+    aceptar: "Accept all",
+    rechazar: "Reject all",
+    gestionar: "Manage categories",
+    guardar: "Save preferences",
+    necesarias: "Necessary",
+    necesariasNota: "They keep the site working. These cannot be turned off.",
+    analitica: "Analytics",
+    analiticaNota: "They tell us which pages get read and where people get stuck.",
+    marketing: "Marketing",
+    marketingNota: "They let us measure campaigns and show relevant ads.",
+  },
+  cookiesPage: {
+    titulo: "Cookie policy",
+    intro:
+      "This page explains which cookies mecanu.com uses, what they are for, and how to change your choice.",
+    placeholder:
+      "PENDING: legal text to be written. It must set out the data controller, the list of cookies with provider, purpose and expiry, the legal basis for each category, and how to exercise GDPR rights.",
+    volver: "Back to the home page",
+  },
   meta: {
     title: "Mecanu | Logistics for shops",
     description:
@@ -449,6 +560,7 @@ const en: LandingCopy = {
       numero: "01",
       valor: "1 h",
       etiqueta: "TIME WINDOW",
+      fotoAlt: "Transfer board showing the day's stops",
       texto: "Collections and deliveries in a clear window. Shop and customer both know when.",
       enlace: "See how it works",
     },
@@ -456,6 +568,7 @@ const en: LandingCopy = {
       numero: "02",
       valor: "24/7",
       etiqueta: "VISIBLE STATUS",
+      fotoAlt: "A Mecanu driver at the wheel during a transfer",
       texto: "Every run is logged: driver, status, photos and signature, collection to delivery.",
       enlace: "See how it works",
     },
@@ -463,6 +576,7 @@ const en: LandingCopy = {
       numero: "03",
       valor: "40 km",
       etiqueta: "ROAD TEST",
+      fotoAlt: "Mecanu's coverage mesh over the map",
       texto: "Cover for the real risk of moving cars in the shop’s care — including road tests.",
     },
   ],
@@ -554,6 +668,30 @@ const en: LandingCopy = {
 };
 
 const pt: LandingCopy = {
+  consent: {
+    titulo: "Cookies na Mecanu",
+    cuerpo:
+      "Usamos cookies próprios para o site funcionar e, apenas se nos autorizares, cookies de análise para perceber que partes do site são úteis. Podes mudar de ideias quando quiseres.",
+    enlacePolitica: "Ver a política de cookies",
+    aceptar: "Aceitar tudo",
+    rechazar: "Rejeitar tudo",
+    gestionar: "Gerir categorias",
+    guardar: "Guardar preferências",
+    necesarias: "Necessárias",
+    necesariasNota: "Fazem o site funcionar. Não podem ser desativadas.",
+    analitica: "Análise",
+    analiticaNota: "Dizem-nos que páginas são lidas e onde as pessoas encalham.",
+    marketing: "Marketing",
+    marketingNota: "Permitem medir campanhas e mostrar anúncios relevantes.",
+  },
+  cookiesPage: {
+    titulo: "Política de cookies",
+    intro:
+      "Esta página explica que cookies o mecanu.com usa, para que servem e como alterar a tua escolha.",
+    placeholder:
+      "PENDENTE: texto legal por redigir. Deve indicar o responsável pelo tratamento, a lista de cookies com fornecedor, finalidade e validade, a base jurídica de cada categoria e como exercer os direitos do RGPD.",
+    volver: "Voltar à página inicial",
+  },
   meta: {
     title: "Mecanu | Logística para oficinas",
     description:
@@ -583,7 +721,7 @@ const pt: LandingCopy = {
   hero: {
     kicker: "DESENHADO PARA",
     kickerBrand: "OFICINAS EM MOVIMENTO",
-    headline: "Cars move. Your shop never stops.",
+    headline: "Os carros movem-se. A tua oficina não para.",
     subtext:
       "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito.",
     primary: "Ver como funciona",
@@ -603,6 +741,7 @@ const pt: LandingCopy = {
       numero: "01",
       valor: "1 h",
       etiqueta: "JANELA HORÁRIA",
+      fotoAlt: "Painel de transferências com as paragens do dia",
       texto: "Recolhas e entregas numa janela clara. Oficina e cliente sabem quando.",
       enlace: "Ver como funciona",
     },
@@ -610,6 +749,7 @@ const pt: LandingCopy = {
       numero: "02",
       valor: "24/7",
       etiqueta: "ESTADO À VISTA",
+      fotoAlt: "Condutor da Mecanu ao volante durante uma transferência",
       texto: "Cada movimento fica registado: condutor, estado, fotos e assinatura, da recolha à entrega.",
       enlace: "Ver como funciona",
     },
@@ -617,6 +757,7 @@ const pt: LandingCopy = {
       numero: "03",
       valor: "40 km",
       etiqueta: "TESTE EM ESTRADA",
+      fotoAlt: "Malha de cobertura da Mecanu sobre o mapa",
       texto: "Cobertura para o risco real de mover carros à guarda da oficina — também em testes.",
     },
   ],

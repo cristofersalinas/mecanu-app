@@ -6,6 +6,8 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import MadridMap from "@/components/landing/MadridMap";
 import { copyFor } from "@/lib/landing/copy";
 import { type Locale } from "@/lib/landing/locales";
+import { landingJsonLd } from "@/lib/landing/structured-data";
+import { StickyCta } from "@/components/landing/StickyCta";
 import styles from "@/app/landing.module.css";
 
 const interTight = Inter_Tight({
@@ -37,6 +39,16 @@ export function LandingPage({ locale }: { locale: Locale }) {
 
   return (
     <main className={`${styles.page} ${interTight.variable}`}>
+      {/*
+        JSON-LD en el cuerpo y no en `metadata`: la Metadata API de Next no
+        expone `application/ld+json`, y este es el patrón que documenta Next
+        para datos estructurados en App Router. El contenido sale de
+        `structured-data.ts`, generado a partir del copy del idioma.
+      */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(landingJsonLd(locale)) }}
+      />
       <div className={styles.pageRail}>
         <LandingHeader locale={locale} copy={copy.nav} productos={copy.productos} />
 
@@ -91,7 +103,9 @@ export function LandingPage({ locale }: { locale: Locale }) {
                   <img
                     className={styles.statPhoto}
                     src={foto.src}
-                    alt=""
+                    alt={metrica.fotoAlt}
+                    loading="lazy"
+                    decoding="async"
                     style={{
                       objectPosition: `${foto.x} ${foto.y}`,
                       transform: `scale(${foto.zoom})`,
@@ -234,6 +248,8 @@ export function LandingPage({ locale }: { locale: Locale }) {
           </div>
         </footer>
       </div>
+
+      <StickyCta label={copy.hero.secondary} href="#contacto" />
     </main>
   );
 }

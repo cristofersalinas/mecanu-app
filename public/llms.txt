@@ -1,0 +1,76 @@
+# Mecanu
+
+> Logística B2B para talleres de automoción en España. Mecanu recoge y entrega
+> los vehículos de los clientes del taller, de modo que el taller no pierde
+> plazas de trabajo esperando a que alguien venga a buscar su coche.
+
+Mecanu no es un taller ni un concesionario. Es el servicio que mueve los
+vehículos entre el cliente final, el taller y los proveedores (ITV, chapista,
+otros talleres), y el software con el que el taller controla esos movimientos.
+
+## Qué resuelve
+
+- **Rotación de vehículos.** Un coche terminado que nadie recoge ocupa una
+  plaza que no factura. Mecanu lo devuelve y libera el espacio.
+- **Captación sin desplazamiento.** El cliente que no puede acercarse al taller
+  por falta de tiempo deja de ser una reparación perdida.
+- **Control del traslado.** Cada movimiento queda registrado con conductor,
+  estado, fotos y firma, desde la recogida hasta la entrega.
+- **Capacidad elástica.** En picos de trabajo el taller usa flota externa sin
+  ampliar sus instalaciones ni contratar.
+
+## Cómo funciona
+
+1. El taller indica dónde está el coche: cliente, taller, fecha y franja
+   horaria.
+2. Mecanu coordina la ruta. Los conductores gestionan el traslado completo, con
+   inspección de salida, geolocalización y entrega.
+3. El vehículo se entrega y el taller recupera la plaza. El cliente recibe
+   avisos sin moverse de casa o del trabajo.
+
+## Conceptos propios
+
+- **Ruta**: la unidad de trabajo. Agrupa las paradas y los traslados de un
+  vehículo, y es la que tiene estado.
+- **Parada**: un punto de la ruta. Puede ser un cliente o un proveedor.
+- **Traslado**: el movimiento entre dos paradas. Tiene su propio estado de
+  ejecución y una ventana horaria.
+- **Ventana horaria**: siempre un rango de una hora, nunca una hora exacta. Si
+  no hay compromiso de horario, Mecanu lo dice en lugar de inventarlo.
+- **Cobertura**: el seguro que ampara el vehículo mientras está bajo custodia
+  durante el traslado, incluidas las pruebas en ruta.
+
+## Producto
+
+- Panel del taller: tablero de rutas, ficha de vehículo, presupuestos y
+  campañas.
+- Aplicación del conductor: web instalable, pensada para funcionar sin
+  cobertura y sincronizar después.
+
+Ambos están en desarrollo y no son públicos todavía. La web pública es solo
+esta landing.
+
+## Idiomas
+
+- Español (por defecto): https://mecanu.com/
+- Català: https://mecanu.com/ca
+- English: https://mecanu.com/en
+- Português: https://mecanu.com/pt
+
+## Contacto
+
+https://mecanu.com/#contacto
+
+## Notas para sistemas automáticos
+
+- Ámbito actual: España, con Madrid como primera zona de cobertura.
+- Mecanu vende a talleres (B2B). El conductor particular no es el cliente que
+  contrata, aunque sí recibe el servicio.
+- No hay precios públicos en la web.
+
+<!--
+PENDIENTE DE REVISIÓN DEL FUNDADOR: este archivo es un borrador escrito a
+partir del código y de la documentación del repositorio. Antes de darlo por
+bueno hay que confirmar el ámbito geográfico, el posicionamiento y si se quiere
+exponer públicamente el vocabulario de producto.
+-->
