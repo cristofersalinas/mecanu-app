@@ -76,6 +76,10 @@ export type LandingCopy = {
     langLabel: string;
     privacidad: string;
   };
+  errors: {
+    notFound: { kicker: string; headline: string; subtext: string; cta: string };
+    server: { kicker: string; headline: string; subtext: string; cta: string; retry: string };
+  };
 };
 
 const es: LandingCopy = {
@@ -237,6 +241,21 @@ const es: LandingCopy = {
     cta: "Hablar con Mecanu →",
     langLabel: "Idioma",
     privacidad: "Privacidad",
+  },
+  errors: {
+    notFound: {
+      kicker: "ERROR 404",
+      headline: "Los coches no se detienen. Esta página, sí.",
+      subtext: "Hemos buscado esta ruta en el recinto. No está. Ni en el patio de espera.",
+      cta: "Volver a la portada",
+    },
+    server: {
+      kicker: "ERROR 500",
+      headline: "El taller sigue abierto. El servidor, de momento, no.",
+      subtext: "Hemos dejado el vehículo en zona segura. Puedes reintentar o volver al inicio.",
+      cta: "Volver a la portada",
+      retry: "Reintentar",
+    },
   },
 };
 
@@ -400,6 +419,21 @@ const ca: LandingCopy = {
     langLabel: "Idioma",
     privacidad: "Privacitat",
   },
+  errors: {
+    notFound: {
+      kicker: "ERROR 404",
+      headline: "Els cotxes no s'aturen. Aquesta pàgina, sí.",
+      subtext: "Hem buscat aquesta ruta al recinte. No hi és. Ni al pati d'espera.",
+      cta: "Tornar a la portada",
+    },
+    server: {
+      kicker: "ERROR 500",
+      headline: "El taller continua obert. El servidor, de moment, no.",
+      subtext: "Hem deixat el vehicle en zona segura. Pots tornar-ho a provar o tornar a l'inici.",
+      cta: "Tornar a la portada",
+      retry: "Tornar-ho a provar",
+    },
+  },
 };
 
 const en: LandingCopy = {
@@ -555,6 +589,21 @@ const en: LandingCopy = {
     langLabel: "Language",
     privacidad: "Privacy",
   },
+  errors: {
+    notFound: {
+      kicker: "ERROR 404",
+      headline: "Cars don't stop. This page did.",
+      subtext: "We looked for this route on the lot. It isn't there. Not even in the waiting bay.",
+      cta: "Back to the home page",
+    },
+    server: {
+      kicker: "ERROR 500",
+      headline: "The shop is still open. The server, for now, is not.",
+      subtext: "We parked the vehicle somewhere safe. You can try again or go home.",
+      cta: "Back to the home page",
+      retry: "Try again",
+    },
+  },
 };
 
 const pt: LandingCopy = {
@@ -709,6 +758,21 @@ const pt: LandingCopy = {
     cta: "Falar com Mecanu →",
     langLabel: "Idioma",
     privacidad: "Privacidade",
+  },
+  errors: {
+    notFound: {
+      kicker: "ERROR 404",
+      headline: "Os carros não param. Esta página, sim.",
+      subtext: "Procurámos esta rota no recinto. Não está. Nem no pátio de espera.",
+      cta: "Voltar à página inicial",
+    },
+    server: {
+      kicker: "ERROR 500",
+      headline: "A oficina continua aberta. O servidor, por agora, não.",
+      subtext: "Deixámos o veículo em zona segura. Podes tentar de novo ou voltar ao início.",
+      cta: "Voltar à página inicial",
+      retry: "Tentar de novo",
+    },
   },
 };
 
