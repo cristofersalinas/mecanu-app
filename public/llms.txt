@@ -1,0 +1,37 @@
+# Mecanu
+
+> Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Coordina la recogida, traslado y entrega de coches de clientes con conductores verificados, seguro de responsabilidad civil incluido, y un panel de control en tiempo real.
+
+## Qué hace Mecanu
+
+- Los talleres mecánicos usan Mecanu para mover los coches de sus clientes sin que el cliente tenga que ir al taller.
+- El servicio incluye conductores externos verificados, cobertura de seguro en cada traslado y trazabilidad completa (fotos, estado, geolocalización).
+- El taller opera desde un panel web que gestiona las recogidas, las ventanas horarias y el estado de cada vehículo.
+- Mecanu no es una app de reparación a domicilio ni un taller propio: es la capa logística entre el taller y el cliente.
+
+## Mercados
+
+España (Madrid, Barcelona, Valencia). Expansión planificada a Reino Unido y Brasil.
+
+## Fundador
+
+Cristofer Salinas — emprendedor con experiencia previa en el sector automotriz. Perfil público en LinkedIn: https://www.linkedin.com/in/cristofersalinas
+
+## Páginas clave
+
+- Landing: https://mecanu.com/
+- Blog operativo: https://mecanu.com/blog
+- Contacto: https://mecanu.com/contacto
+- En inglés: https://mecanu.com/en
+- En catalán: https://mecanu.com/ca
+- En portugués: https://mecanu.com/pt
+
+## Artículos del blog
+
+- https://mecanu.com/blog/talleres-que-pierden-clientes — Por qué los talleres pierden clientes sin saberlo
+- https://mecanu.com/blog/conductores-externos-para-talleres — Conductores externos para talleres: cuándo tiene sentido y cómo funciona
+- https://mecanu.com/blog/seguro-responsabilidad-civil-traslados — Seguro de responsabilidad civil en traslados de vehículos
+
+## Palabras clave relevantes
+
+recogida de coches para talleres, entrega de vehículos taller mecánico, logística vehículos talleres España, conductor externo taller Madrid, conductor externo taller Barcelona, traslado coches taller, software gestión taller recogidas, mecánico a domicilio alternativa, liberar plaza taller, experiencia cliente taller mecánico

@@ -52,6 +52,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
+  // Money pages (ciudad + caso de uso)
+  const moneyPages = [
+    { url: `${SITE}/madrid`, priority: 0.9, changeFrequency: "monthly" as const },
+    { url: `${SITE}/barcelona`, priority: 0.9, changeFrequency: "monthly" as const },
+    { url: `${SITE}/para-talleres`, priority: 0.85, changeFrequency: "monthly" as const },
+  ].map((p) => ({ ...p, lastModified: now }));
+
   // Política de privacidad
   const staticPages = [
     {
@@ -64,6 +71,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     ...landingPages,
+    ...moneyPages,
     ...contactoPages,
     blogIndex,
     ...blogPosts,

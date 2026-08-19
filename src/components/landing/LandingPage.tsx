@@ -240,9 +240,10 @@ export function LandingPage({ locale }: { locale: Locale }) {
               <a className={styles.fLink} href="#inicio">{copy.footer.arriba}</a>
             </div>
             <div className={styles.footerCol}>
-              <p className={styles.colLabel}>{copy.footer.contacto}</p>
-              <a className={styles.fLink} href={ctaHref}>{copy.footer.hablar}</a>
-              <a className={styles.fLink} href="#inicio">{copy.footer.arriba}</a>
+              <p className={styles.colLabel}>Ciudades</p>
+              <a className={styles.fLink} href="/madrid">Madrid</a>
+              <a className={styles.fLink} href="/barcelona">Barcelona</a>
+              <a className={styles.fLink} href="/para-talleres">Para talleres</a>
             </div>
           </div>
           <div className={styles.footerBottom}>
