@@ -107,7 +107,7 @@ const es: LandingCopy = {
   hero: {
     kicker: "DISEÑADO PARA",
     kickerBrand: "TALLERES EN MOVIMIENTO",
-    headline: "Cars move. Your shop never stops.",
+    headline: "Los coches se mueven. Tu taller no para.",
     subtext:
       "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones.",
     primary: "Ver cómo funciona",
@@ -268,7 +268,7 @@ const ca: LandingCopy = {
   hero: {
     kicker: "DISSENYAT PER A",
     kickerBrand: "TALLERS EN MOVIMENT",
-    headline: "Cars move. Your shop never stops.",
+    headline: "Els cotxes es mouen. El teu taller no s'atura.",
     subtext:
       "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions.",
     primary: "Veure com funciona",
@@ -583,7 +583,7 @@ const pt: LandingCopy = {
   hero: {
     kicker: "DESENHADO PARA",
     kickerBrand: "OFICINAS EM MOVIMENTO",
-    headline: "Cars move. Your shop never stops.",
+    headline: "Os carros movem-se. A tua oficina não para.",
     subtext:
       "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito.",
     primary: "Ver como funciona",
