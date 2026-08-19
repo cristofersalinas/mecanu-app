@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Mecanu">
+  <!--
+    Favicon: volante sobre fondo transparente. Next lo sirve por estar en
+    app/icon.svg, sin declararlo en ninguna parte.
+
+    El aro llega justo al borde del lienzo (radio 14,3 mas medio trazo = 16),
+    asi que ocupa todo el circulo disponible sin margen. Los radios se dibujan
+    pasados de largo y el buje se pinta encima: los extremos quedan tapados y
+    no hay que cuadrar longitudes a mano.
+
+    Sin tildes a proposito. Turbopack procesa este archivo como imagen y falla
+    la build entera si encuentra un byte que no sea UTF-8 valido; ya paso una
+    vez. No es una preferencia de estilo.
+
+    A 16 px se ve el trazo entero o no se ve nada, de ahi que sea tan grueso.
+  -->
+  <style>
+    /*
+      Negro sobre pestana clara, blanco sobre pestana oscura. Un negro fijo
+      desaparece en los navegadores con tema oscuro, que es donde mas se mira.
+    */
+    :root { --icono: #0f0f0f; }
+    @media (prefers-color-scheme: dark) {
+      :root { --icono: #ffffff; }
+    }
+  </style>
+
+  <g fill="none" stroke="var(--icono, #0f0f0f)" stroke-width="3.4">
+    <circle cx="16" cy="16" r="14.3" />
+    <path d="M3 16h26M16 16v13" />
+  </g>
+  <circle cx="16" cy="16" r="4.4" fill="var(--icono, #0f0f0f)" />
+</svg>
