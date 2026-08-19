@@ -1,8 +1,24 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import { cabecerasDeSeguridad } from "./src/lib/security/csp";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  poweredByHeader: false,
+  async headers() {
+    const seguridad = cabecerasDeSeguridad({
+      desarrollo: process.env.NODE_ENV === "development",
+    });
+    const cacheInmutable = {
+      key: "Cache-Control",
+      value: "public, max-age=31536000, immutable",
+    };
+    return [
+      { source: "/:path*", headers: seguridad },
+      { source: "/landing/:path*", headers: [cacheInmutable] },
+      { source: "/icons/:path*", headers: [cacheInmutable] },
+      { source: "/maplibre/:path*", headers: [cacheInmutable] },
+    ];
+  },
 };
 
 // Wraps the Next.js config with Sentry's build-time behavior (adds
