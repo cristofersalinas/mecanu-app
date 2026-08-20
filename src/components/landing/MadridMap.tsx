@@ -344,9 +344,9 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
     if (!tabs || cityTabsCompact) return;
 
     const syncThumb = () => {
-      const active = tabs.querySelector<HTMLElement>("[aria-pressed='true']");
+      const active = tabs.querySelector<HTMLButtonElement>("[aria-pressed='true']");
       if (!active) return;
-      const buttons = [...tabs.querySelectorAll("button")];
+      const buttons = [...tabs.querySelectorAll<HTMLButtonElement>("button")];
       const index = buttons.indexOf(active);
       const last = buttons.length - 1;
       const x = index === 0 ? 0 : active.offsetLeft;
