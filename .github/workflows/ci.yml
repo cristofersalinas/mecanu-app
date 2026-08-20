@@ -1,7 +1,9 @@
 name: CI
 
-# Runs on every push and every pull request. The job name `production-gate`
-# is the required status check on `main` (GitHub ruleset). Do not rename it.
+# Job name `production-gate` is the required GitHub check on `main`.
+# It must stay the same as Vercel: `npm run build` (TypeScript included).
+# Lint/test run separately so a warning-turned-error elsewhere cannot hide
+# a green production build, and a red build cannot be merged.
 on:
   push:
     branches:
@@ -32,9 +34,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Same command Vercel runs. If this fails, production must not update.
-      - name: Build
+      - name: Build (same as Vercel)
         run: npm run build
+
+  quality:
+    name: lint-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Lint
         run: npm run lint
