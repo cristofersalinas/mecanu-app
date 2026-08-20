@@ -1,7 +1,7 @@
 name: CI
 
-# Runs on every push and every pull request targeting any branch, so both
-# feature branches and the staging/main integration branches get checked.
+# Runs on every push and every pull request. The job name `production-gate`
+# is the required status check on `main` (GitHub ruleset). Do not rename it.
 on:
   push:
     branches:
@@ -10,17 +10,19 @@ on:
     branches:
       - "**"
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-and-test:
-    name: Build, lint, and test
+  production-gate:
+    name: production-gate
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # No .nvmrc exists in this repo yet, so this pins Node 20 directly.
-      # If an .nvmrc is added later, switch this to
-      # `node-version-file: ".nvmrc"` instead of a hardcoded version.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -30,21 +32,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Same command Vercel runs. If this fails, production must not update.
       - name: Build
         run: npm run build
 
       - name: Lint
         run: npm run lint
 
-      # NOTE: the "test" script depends on the Vitest setup landing in a
-      # separate task. Once package.json has a "test" script wired to
-      # Vitest, this step will start actually running the suite. Until
-      # then this step will fail loudly if "test" is missing, which is
-      # the correct signal to finish that setup before relying on CI.
       - name: Test
         run: npm test
-
-# Deploy gate: this workflow must be configured as a required status check
-# (GitHub branch protection, or Vercel's "wait for CI" setting) on `staging`
-# and `main` so that a failing build/lint/test blocks the deploy instead of
-# shipping broken code.

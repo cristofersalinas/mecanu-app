@@ -69,10 +69,19 @@ npm run lint    # eslint
 npm test        # vitest sobre src/lib/mecanu — ver Bloque C
 ```
 
-Los tres corren en CI en cada push (`.github/workflows/ci.yml`) — un PR con esos
-tres en rojo no debería mergearse, aunque hoy nada lo bloquea automáticamente a
-nivel de plataforma (eso es configuración de branch protection en GitHub, fuera
-del alcance de este repo).
+Los tres corren en CI en cada push (`.github/workflows/ci.yml`). El job se llama
+**`production-gate`**. En `main` es un check **obligatorio** (ruleset de GitHub):
+un PR en rojo no se puede mergear, ni siquiera a mano.
+
+**Nunca** `gh pr merge` hasta que CI esté verde. Usa:
+
+```bash
+./scripts/merge-pr-if-green.sh <numero-pr>
+```
+
+Si Vercel falla *después* del merge, mecanu.com se queda en el deploy anterior.
+El workflow `production-deploy-watch.yml` abre un issue `deploy-production`.
+Confirma el alias: `npx vercel inspect mecanu.com` (status Ready, commit nuevo).
 
 Para verificar visualmente que el panel y el conductor siguen viéndose igual tras
 un cambio de infraestructura (no de producto): `npm run dev`, abre `/panel` y
