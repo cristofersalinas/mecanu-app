@@ -75,8 +75,12 @@ export type LandingCopy = {
     solucion: string;
     como: string;
     cobertura: string;
+    queEsMecanu: string;
     recursos: string;
     ideas: string;
+    paraTalleres: string;
+    trasladosMadrid: string;
+    trasladosBarcelona: string;
     hablar: string;
     arriba: string;
     copyright: string;
@@ -211,10 +215,10 @@ const es: LandingCopy = {
     },
     {
       numero: "03",
-      valor: "+1 plaza",
-      etiqueta: "CAPACIDAD AL DÍA",
+      valor: "12-30%",
+      etiqueta: "MÁS ROTACIÓN DE COCHES",
       texto:
-        "Devuelves el coche terminado el mismo día y abres hueco para otra OR sin ampliar la nave.",
+        "Más vehículos entran y salen el mismo día: recoges, reparas y entregas sin que el coche ocupe plaza de más. Más capacidad sin ampliar la nave.",
     },
   ],
   hiw: {
@@ -257,16 +261,16 @@ const es: LandingCopy = {
     read: "Leer →",
     items: [
       {
-        categoria: "GUÍA",
-        titulo: "Cómo liberar una plaza cuando el coche ya está terminado",
-        icono: "garage",
-        visual: "articleWorkshop",
-      },
-      {
         categoria: "EXPERIENCIA",
         titulo: "El cliente se acostumbró al delivery y los talleres no se quedan atrás",
         icono: "schedule",
         visual: "articleWindow",
+      },
+      {
+        categoria: "GUÍA",
+        titulo: "Cómo liberar una plaza cuando el coche ya está terminado",
+        icono: "garage",
+        visual: "articleWorkshop",
       },
       {
         categoria: "MECANU",
@@ -299,7 +303,7 @@ const es: LandingCopy = {
       },
       {
         icono: "chat",
-        texto: "Automatiza la atención al cliente con inteligencia artificial, hasta donde tú quieras.",
+        texto: "Automatiza la atención al cliente con inteligencia artificial.",
       },
       {
         icono: "verified_user",
@@ -326,8 +330,12 @@ const es: LandingCopy = {
     solucion: "La solución",
     como: "Cómo funciona",
     cobertura: "Cobertura",
+    queEsMecanu: "Qué es Mecanu",
     recursos: "Recursos",
     ideas: "Ideas para el taller",
+    paraTalleres: "Para talleres",
+    trasladosMadrid: "Traslados en Madrid",
+    trasladosBarcelona: "Traslados en Barcelona",
     hablar: "Hablar con Mecanu",
     arriba: "Volver arriba",
     copyright: "© 2026 Mecanu",
@@ -521,10 +529,10 @@ const ca: LandingCopy = {
     },
     {
       numero: "03",
-      valor: "+1 plaça",
-      etiqueta: "CAPACITAT AL DIA",
+      valor: "12-30%",
+      etiqueta: "MÉS ROTACIÓ DE COTXES",
       texto:
-        "Retornes el cotxe acabat el mateix dia i obres espai per a una altra OR sense ampliar la nau.",
+        "Més vehicles entren i surten el mateix dia: reculls, reparés i lliures sense que el cotxe ocupi plaça de més. Més capacitat sense ampliar la nau.",
     },
   ],
   hiw: {
@@ -567,16 +575,16 @@ const ca: LandingCopy = {
     read: "Llegir →",
     items: [
       {
-        categoria: "GUIA",
-        titulo: "Com alliberar una plaça quan el cotxe ja està acabat",
-        icono: "garage",
-        visual: "articleWorkshop",
-      },
-      {
         categoria: "EXPERIÈNCIA",
         titulo: "El client s'ha acostumat al delivery i els tallers no es queden enrere",
         icono: "schedule",
         visual: "articleWindow",
+      },
+      {
+        categoria: "GUIA",
+        titulo: "Com alliberar una plaça quan el cotxe ja està acabat",
+        icono: "garage",
+        visual: "articleWorkshop",
       },
       {
         categoria: "MECANU",
@@ -609,7 +617,7 @@ const ca: LandingCopy = {
       },
       {
         icono: "chat",
-        texto: "Automatitza l'atenció al client amb intel·ligència artificial, fins on tu vulguis.",
+        texto: "Automatitza l'atenció al client amb intel·ligència artificial.",
       },
       {
         icono: "verified_user",
@@ -636,8 +644,12 @@ const ca: LandingCopy = {
     solucion: "La solució",
     como: "Com funciona",
     cobertura: "Cobertura",
+    queEsMecanu: "Què és Mecanu",
     recursos: "Recursos",
     ideas: "Idees per al taller",
+    paraTalleres: "Per a tallers",
+    trasladosMadrid: "Trasllats a Madrid",
+    trasladosBarcelona: "Trasllats a Barcelona",
     hablar: "Parlar amb Mecanu",
     arriba: "Tornar a dalt",
     copyright: "© 2026 Mecanu",
@@ -831,10 +843,10 @@ const en: LandingCopy = {
     },
     {
       numero: "03",
-      valor: "+1 bay",
-      etiqueta: "CAPACITY TODAY",
+      valor: "12-30%",
+      etiqueta: "MORE VEHICLE TURNOVER",
       texto:
-        "Return the finished car the same day and free a bay for another job without expanding the shop.",
+        "More cars in and out the same day: pick up, repair and return without a finished car tying up a bay. More capacity without expanding the shop.",
     },
   ],
   hiw: {
@@ -873,16 +885,16 @@ const en: LandingCopy = {
     read: "Read →",
     items: [
       {
-        categoria: "GUIDE",
-        titulo: "How to free a bay when the car is done",
-        icono: "garage",
-        visual: "articleWorkshop",
-      },
-      {
         categoria: "EXPERIENCE",
         titulo: "Customers got used to delivery. Shops aren't staying behind.",
         icono: "schedule",
         visual: "articleWindow",
+      },
+      {
+        categoria: "GUIDE",
+        titulo: "How to free a bay when the car is done",
+        icono: "garage",
+        visual: "articleWorkshop",
       },
       {
         categoria: "MECANU",
@@ -915,7 +927,7 @@ const en: LandingCopy = {
       },
       {
         icono: "chat",
-        texto: "Automate customer care with AI, as far as you want.",
+        texto: "Automate customer care with AI.",
       },
       {
         icono: "verified_user",
@@ -942,8 +954,12 @@ const en: LandingCopy = {
     solucion: "The solution",
     como: "How it works",
     cobertura: "Cover",
+    queEsMecanu: "What is Mecanu",
     recursos: "Resources",
     ideas: "Ideas for the shop",
+    paraTalleres: "For workshops",
+    trasladosMadrid: "Vehicle moves in Madrid",
+    trasladosBarcelona: "Vehicle moves in Barcelona",
     hablar: "Talk to Mecanu",
     arriba: "Back to top",
     copyright: "© 2026 Mecanu",
@@ -1137,10 +1153,10 @@ const pt: LandingCopy = {
     },
     {
       numero: "03",
-      valor: "+1 lugar",
-      etiqueta: "CAPACIDADE NO DIA",
+      valor: "12-30%",
+      etiqueta: "MAIS ROTAÇÃO DE VIATURAS",
       texto:
-        "Devolves o carro terminado no mesmo dia e abres espaço para outra OR sem ampliar a oficina.",
+        "Mais viaturas entram e saem no mesmo dia: recolhes, reparas e entregas sem o carro ocupar lugar a mais. Mais capacidade sem ampliar a oficina.",
     },
   ],
   hiw: {
@@ -1179,16 +1195,16 @@ const pt: LandingCopy = {
     read: "Ler →",
     items: [
       {
-        categoria: "GUIA",
-        titulo: "Como libertar um lugar quando o carro já está pronto",
-        icono: "garage",
-        visual: "articleWorkshop",
-      },
-      {
         categoria: "EXPERIÊNCIA",
         titulo: "O cliente habituou-se ao delivery e as oficinas não ficam atrás",
         icono: "schedule",
         visual: "articleWindow",
+      },
+      {
+        categoria: "GUIA",
+        titulo: "Como libertar um lugar quando o carro já está pronto",
+        icono: "garage",
+        visual: "articleWorkshop",
       },
       {
         categoria: "MECANU",
@@ -1221,7 +1237,7 @@ const pt: LandingCopy = {
       },
       {
         icono: "chat",
-        texto: "Automatiza o atendimento ao cliente com inteligência artificial, até onde quiseres.",
+        texto: "Automatiza o atendimento ao cliente com inteligência artificial.",
       },
       {
         icono: "verified_user",
@@ -1248,8 +1264,12 @@ const pt: LandingCopy = {
     solucion: "A solução",
     como: "Como funciona",
     cobertura: "Cobertura",
+    queEsMecanu: "O que é a Mecanu",
     recursos: "Recursos",
     ideas: "Ideias para a oficina",
+    paraTalleres: "Para oficinas",
+    trasladosMadrid: "Traslados em Madrid",
+    trasladosBarcelona: "Traslados em Barcelona",
     hablar: "Falar com Mecanu",
     arriba: "Voltar ao topo",
     copyright: "© 2026 Mecanu",
