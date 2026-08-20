@@ -49,7 +49,8 @@ criterio implícito.
    ahí está la mitad de las respuestas a preguntas que podrías estar a punto de
    volver a hacer. Beneficios y propuesta de valor comercial:
    `docs/PROPUESTA-VALOR.md` — anotar ahí un claim nuevo antes de subirlo a la
-   landing.
+   landing. Responsive de la landing pública: `docs/LANDING-RESPONSIVIDAD-FULL.md`
+   (snapshot **ResponsividadFull**).
 2. `ARQUITECTURA.md` — qué vive dónde y por qué.
 3. `src/lib/mecanu/types.ts` — las formas de datos reales, con comentarios de qué
    es decisión de producto y qué es campo `// REVISAR`.
@@ -85,42 +86,51 @@ solo un CSS distinto. Si tocas `globals.css`, `layout.tsx`, o cualquier cosa que
 cargue un recurso externo, verifica contra `npm run build && npx next start`, no
 solo contra `npm run dev`.
 
-## Landing — controles del mapa (MapLibre)
+## Landing — hero, mapa y controles (ResponsividadFull)
 
-Archivos: `src/components/landing/MadridMap.tsx` + `src/app/landing.module.css`
-(`.mapSection`).
+Archivos: `src/components/landing/MadridMap.tsx`, `LandingPage.tsx`,
+`src/app/landing.module.css`. Detalle y cómo restaurar el snapshot:
+`docs/LANDING-RESPONSIVIDAD-FULL.md`. Tag git: `ResponsividadFull`.
 
-Hay **tres piezas** de control en el mapa:
+### Hero
 
-1. **React** — `.mapCitySwitcher`: botones rectangulares pegados (`.mapCityTabs`) o
-   desplegable ancho (`.mapCitySelect`) si no caben. Ciudades: Madrid, Barcelona,
-   Londres, Zúrich.
-2. **React** — `.mapControlsColumn`: botón reset (`.mapResetBtn`).
-3. **MapLibre** — `NavigationControl` inyectado en el canvas (zoom +/-).
+- Horizontal **>720px**; columna (texto / foto) **≤720px**.
+- 721–1200px: altura del grid −12% hacia 720px; márgenes kicker/titular/descripción
+  se compactan (ver el doc). No usar `width: 105%` en el titular: desalinea.
+- Foto ≤720px: altura con `aspect-ratio` del contenedor (no `100vw`) + `cover` y
+  `scale(1.14)` para no dejar fondo gris.
+- Botones: columna a **≤449px**; fila 450–720; ~290px en 721–919; **190px** ≥920px.
+- `.page button` solo `font-family: inherit` (nunca `font: inherit`: pisa el
+  `font-size` de las ciudades).
+
+### Ciudades (cápsula)
+
+- `.mapCityTabs` es `inline-flex` / `width: auto` (no estirar a 760px).
+- Activo: `.mapCityThumb` deslizante. Primera/última ciudad: thumb a `top: 0` /
+  `height: 100%` para igualar la curva. Solape −10px solo en
+  `.mapCityTabs > button + button`.
+- Compacto: `.mapCitySelect` si no caben (`.mapCityTabsMeasure`).
+
+### Reset, zoom, atribución
+
+Hay **tres piezas**, las tres en la vertical derecha (`--map-control-right`):
+
+1. **React** — `.mapCitySwitcher` arriba (cápsula o select).
+2. **React** — `.mapControlsColumn`: reset (`.mapResetBtn`) + zoom (`.mapZoomGroup`).
+3. **MapLibre** — atribución compacta («i») en `.maplibregl-ctrl-bottom-right`.
 
 **Reglas de alineación (no iterar a ciegas):**
 
-- Reset, zoom y atribución comparten `--map-control-right` y se apilan **abajo a
-  la derecha**. El zoom se posiciona en `.maplibregl-ctrl-bottom-right`, no
-  moviendo las ciudades ni el reset.
-- Las ciudades van en `.mapCityTabs` (segmento pegado, activo negro) centradas arriba.
-  Si el ancho no alcanza, `MadridMap` cambia a `.mapCitySelect` a ancho completo
-  (medición con `.mapCityTabsMeasure` + `ResizeObserver`).
-- MapLibre trae CSS global (`maplibre-gl/dist/maplibre-gl.css`) que **gana en
-  cascada** si no se anula con la misma o mayor especificidad:
-  - `.maplibregl-ctrl-group:not(:empty) { box-shadow: 0 0 0 2px rgb(0 0 0 / 0.1) }`
-    — anillo oscuro distinto al resto; hay que sobreescribir con
-    `--map-control-surface-shadow`.
-  - `.maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 10px 10px 0 }` — desplaza
-    el bloque de zoom.
-  - Hover/focus por defecto (gris / azul) distintos al design system.
-- Borde, sombra, radio y hover del zoom deben usar las variables
-  `--map-control-surface-*` y `var(--warm)`, igual que `.mapResetBtn`.
-- El reset vive **encima** del zoom; ambos quedan **encima** de la atribución
-  compacta y con el mismo borde derecho.
+- Hueco `--map-control-gap: .5rem`. Tamaño botón y «i»: **32px**.
+- La columna va `bottom: bottom + attrib-size + gap` para no pisar la i.
+- MapLibre CSS global gana si no se anula con la misma especificidad:
+  - `.maplibregl-ctrl-group:not(:empty)` — anillo; usar `--map-control-surface-shadow`.
+  - `.maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 10px 10px 0 }` —
+    anular a `margin: 0` y `right`/`bottom` con las variables.
+- Borde, sombra y hover del zoom = mismas variables que `.mapResetBtn`.
 
-Si tocas esto, verifica en `/` desktop: ciudades arriba y centradas; reset, +/-
-y atribución en la misma vertical derecha; sombra y borde visualmente idénticos.
+Si tocas esto, verifica en `/`: ciudades centradas arriba; reset, +/- e i en la
+misma vertical derecha, sin solaparse; hero en 720 / 450 / <450.
 
 ## Ramas
 

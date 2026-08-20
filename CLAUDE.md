@@ -76,4 +76,7 @@ diseño construido en Claude Design (formato `.dc.html`). Estructura:
 | `src/styles/ds` | Tokens CSS del design system (colores, tipografía, espaciado, radios, elevación, motion, iconos) |
 
 ## Landing page pública
-- Diseño pendiente — no construir aún
+
+Implementada. Snapshot de responsive: tag **`ResponsividadFull`**,
+`docs/LANDING-RESPONSIVIDAD-FULL.md`. Copy comercial: `docs/PROPUESTA-VALOR.md`
+antes de un claim nuevo en `src/lib/landing/copy.ts`.
