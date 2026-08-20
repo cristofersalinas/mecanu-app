@@ -6,7 +6,7 @@ set -euo pipefail
 
 PR="${1:?Uso: $0 <numero-de-pr>}"
 
-echo "Esperando production-gate del PR #$PR…"
+echo "Esperando production-gate del PR #${PR}..."
 for _ in $(seq 1 60); do
   if gh pr checks "$PR" 2>/dev/null | grep -E '^production-gate[[:space:]]+pass' >/dev/null; then
     echo "production-gate en verde."
