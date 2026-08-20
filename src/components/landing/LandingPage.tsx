@@ -57,8 +57,8 @@ const STAT_FOTOS = {
 const STAT_PHOTO = [STAT_FOTOS.tablero, STAT_FOTOS.volante, STAT_FOTOS.malla] as const;
 
 const RESOURCE_POSTS = [
-  getPost("cliente-no-recoge-el-coche"),
   getPost("tu-taller-tambien-puede-entregar-como-un-delivery"),
+  getPost("cliente-no-recoge-el-coche"),
   getPost("conductores-externos-para-talleres"),
 ] as const;
 
@@ -293,7 +293,7 @@ export function LandingPage({ locale }: { locale: Locale }) {
               <Logo variant="dark" height={19} />
               <p className={styles.footerTagline}>{copy.footer.tagline}</p>
               <div className={styles.socialLinks}>
-                <a href={ctaHref}>{copy.footer.contacto}</a>
+                <a className={styles.btnPrimary} href={ctaHref}>{copy.footer.hablar}</a>
               </div>
             </div>
             <div className={styles.footerCol}>
@@ -301,19 +301,16 @@ export function LandingPage({ locale }: { locale: Locale }) {
               <a className={styles.fLink} href="#solucion">{copy.footer.solucion}</a>
               <a className={styles.fLink} href="#como-funciona">{copy.footer.como}</a>
               <a className={styles.fLink} href="#cobertura">{copy.footer.cobertura}</a>
+              <Link className={styles.fLink} href="/que-es-mecanu">{copy.footer.queEsMecanu}</Link>
             </div>
             <div className={styles.footerCol}>
               <p className={styles.colLabel}>{copy.footer.recursos}</p>
               <a className={styles.fLink} href="#recursos">{copy.footer.ideas}</a>
+              <Link className={styles.fLink} href="/para-talleres">{copy.footer.paraTalleres}</Link>
+              <Link className={styles.fLink} href="/madrid">{copy.footer.trasladosMadrid}</Link>
+              <Link className={styles.fLink} href="/barcelona">{copy.footer.trasladosBarcelona}</Link>
               <a className={styles.fLink} href={ctaHref}>{copy.footer.hablar}</a>
               <a className={styles.fLink} href="#inicio">{copy.footer.arriba}</a>
-            </div>
-            <div className={styles.footerCol}>
-              <p className={styles.colLabel}>Ciudades</p>
-              <Link className={styles.fLink} href="/madrid">Madrid</Link>
-              <Link className={styles.fLink} href="/barcelona">Barcelona</Link>
-              <Link className={styles.fLink} href="/para-talleres">Para talleres</Link>
-              <Link className={styles.fLink} href="/que-es-mecanu">Qué es Mecanu</Link>
             </div>
             <div className={styles.footerCol}>
               <p className={styles.colLabel}>Comparativas</p>
@@ -328,10 +325,11 @@ export function LandingPage({ locale }: { locale: Locale }) {
             </div>
           </div>
           <div className={styles.footerBottom}>
+            <div className={styles.footerBottomMeta}>
+              <LanguageSwitch locale={locale} label={copy.footer.langLabel} variant="footer" />
+              <a className={styles.fLink} href="/privacidad">{copy.footer.privacidad}</a>
+            </div>
             <span className={styles.copyright}>{copy.footer.copyright}</span>
-            <a className={styles.fLink} href="/privacidad">{copy.footer.privacidad}</a>
-            <LanguageSwitch locale={locale} label={copy.footer.langLabel} variant="footer" />
-            <a className={styles.footerCtaLink} href={ctaHref}>{copy.footer.cta}</a>
           </div>
         </footer>
       </div>

@@ -3,7 +3,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Map as MapLibreMap,
-  NavigationControl,
   setWorkerUrl,
   type GeoJSONSource,
   type LngLatBounds,
@@ -196,6 +195,7 @@ let lockVistaId = 0;
 
 function encajarCiudad(map: MapLibreMap, ciudad: CiudadMapa, duration: number): number {
   const lockId = ++lockVistaId;
+  map.stop();
   map.setMaxBounds(null);
   map.setMinZoom(1);
   const view = vistaCiudad(map, ciudad);
@@ -207,7 +207,11 @@ function encajarCiudad(map: MapLibreMap, ciudad: CiudadMapa, duration: number): 
       if (lockId !== lockVistaId) return;
       bloquearVista(map);
     });
-    map.easeTo({ ...view, duration });
+    map.easeTo({
+      ...view,
+      duration,
+      easing: (t) => 1 - (1 - t) ** 3,
+    });
   }
   return view.zoom;
 }
@@ -326,12 +330,39 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
   const ciudad = ciudadPorId(cityId);
   const prevCityIdRef = useRef<CiudadMapaId | null>(null);
   const citySwitcherRef = useRef<HTMLDivElement>(null);
+  const cityTabsRef = useRef<HTMLDivElement>(null);
   const cityTabsMeasureRef = useRef<HTMLDivElement>(null);
   const [cityTabsCompact, setCityTabsCompact] = useState(false);
+  const [cityThumb, setCityThumb] = useState({ x: 0, w: 0, ready: false });
 
   useEffect(() => {
     cityRef.current = ciudad;
   }, [ciudad]);
+
+  useLayoutEffect(() => {
+    const tabs = cityTabsRef.current;
+    if (!tabs || cityTabsCompact) return;
+
+    const syncThumb = () => {
+      const active = tabs.querySelector<HTMLElement>("[aria-pressed='true']");
+      if (!active) return;
+      const buttons = [...tabs.querySelectorAll("button")];
+      const index = buttons.indexOf(active);
+      const last = buttons.length - 1;
+      const x = index === 0 ? 0 : active.offsetLeft;
+      const w = index === 0
+        ? active.offsetLeft + active.offsetWidth
+        : index === last
+          ? tabs.clientWidth - active.offsetLeft
+          : active.offsetWidth;
+      setCityThumb({ x, w, ready: true });
+    };
+
+    syncThumb();
+    const observer = new ResizeObserver(syncThumb);
+    observer.observe(tabs);
+    return () => observer.disconnect();
+  }, [cityId, copy, cityTabsCompact]);
 
   useLayoutEffect(() => {
     const switcher = citySwitcherRef.current;
@@ -407,8 +438,6 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
     });
 
     map.touchZoomRotate.disableRotation();
-    // Zoom +/-: estilos y alineación en landing.module.css — ver AGENTS.md § mapa MapLibre
-    map.addControl(new NavigationControl({ showCompass: false }), "bottom-right");
     mapRef.current = map;
 
     const onTrackpadPinch = (event: WheelEvent) => {
@@ -665,7 +694,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
     preloadCityPhotos(ciudad);
     aplicarFuentes(map, ciudad, nombreCiudad(copy, ciudad));
     aplicarSeleccion(map, null);
-    defaultZoomRef.current = encajarCiudad(map, ciudad, 700);
+    defaultZoomRef.current = encajarCiudad(map, ciudad, 1100);
   }, [cityId, ciudad, copy]);
 
   useEffect(() => {
@@ -674,9 +703,19 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
     aplicarSeleccion(map, selected);
   }, [selected]);
 
+  const sinTalleres = ciudad.talleres.length === 0;
+
+  const acercarMapa = () => {
+    mapRef.current?.zoomIn({ duration: 200 });
+  };
+
+  const alejarMapa = () => {
+    mapRef.current?.zoomOut({ duration: 200 });
+  };
+
   return (
     <section
-      className={styles.mapSection}
+      className={`${styles.mapSection} ${sinTalleres ? styles.mapSectionComingSoon : ""}`}
       aria-label={copy.sectionAria.replace("{city}", nombreCiudad(copy, ciudad))}
       onPointerEnter={clearResetTimer}
       onPointerLeave={scheduleReset}
@@ -707,7 +746,24 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
             ))}
           </select>
         ) : (
-          <div className={styles.mapCityTabs} role="group" aria-label={copy.citySwitchAria}>
+          <div
+            ref={cityTabsRef}
+            className={styles.mapCityTabs}
+            role="group"
+            aria-label={copy.citySwitchAria}
+          >
+            <span
+              className={
+                cityThumb.ready
+                  ? styles.mapCityThumb
+                  : `${styles.mapCityThumb} ${styles.mapCityThumbInit}`
+              }
+              aria-hidden="true"
+              style={{
+                width: cityThumb.w,
+                transform: `translateX(${cityThumb.x}px)`,
+              }}
+            />
             {CIUDADES_MAPA.map((item) => {
               const active = item.id === cityId;
               return (
@@ -725,24 +781,75 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
           </div>
         )}
       </div>
-      <div className={styles.mapControlsColumn}>
-        <button
-          type="button"
-          className={styles.mapResetBtn}
-          aria-label="Volver a la vista de ciudad"
-          onClick={() => {
-            const map = mapRef.current;
-            if (!map) return;
-            clearResetTimer();
-            setSelected(null);
-            aplicarSeleccion(map, null);
-            defaultZoomRef.current = encajarCiudad(map, cityRef.current, 700);
-          }}
-        >
-          <Icon name="my_location" size="sm" />
-        </button>
+      {!sinTalleres ? (
+        <div className={styles.mapControlsColumn}>
+          <button
+            type="button"
+            className={styles.mapResetBtn}
+            aria-label="Volver a la vista de ciudad"
+            onClick={() => {
+              const map = mapRef.current;
+              if (!map) return;
+              clearResetTimer();
+              setSelected(null);
+              aplicarSeleccion(map, null);
+              defaultZoomRef.current = encajarCiudad(map, cityRef.current, 700);
+            }}
+          >
+            <Icon name="my_location" size="sm" />
+          </button>
+          <div className={styles.mapZoomGroup}>
+            <button
+              type="button"
+              className={styles.mapZoomBtn}
+              aria-label="Acercar mapa"
+              onClick={acercarMapa}
+            >
+              +
+            </button>
+            <button
+              type="button"
+              className={styles.mapZoomBtn}
+              aria-label="Alejar mapa"
+              onClick={alejarMapa}
+            >
+              −
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <div className={styles.mapStage}>
+        <div ref={containerRef} className={styles.mapCanvas} />
+        {sinTalleres ? (
+          <article
+            className={`${styles.mapPlaceCard} ${styles.mapPlaceCardComingSoon}`}
+            aria-live="polite"
+          >
+            {ciudad.id === "barcelona" ? (
+              <div className={styles.mapPlacePhotoPlaceholder}>
+                <img
+                  className={styles.mapPlacePhotoImg}
+                  src="/landing/map-barcelona.png"
+                  alt="Mosaico de un reloj de arena, estilo trencadís de Barcelona"
+                />
+              </div>
+            ) : (
+              <div className={styles.mapPlacePhoto} aria-hidden="true">
+                <Icon name="storefront" size="xl" />
+              </div>
+            )}
+            <div className={styles.mapPlaceBody}>
+              <strong>{nombreCiudad(copy, ciudad)}</strong>
+              <p>{copy.comingSoon}</p>
+              <div className={styles.mapPlaceActions}>
+                <a className={styles.btnPrimary} href="#contacto">
+                  {copy.talk}
+                </a>
+              </div>
+            </div>
+          </article>
+        ) : null}
       </div>
-      <div ref={containerRef} className={styles.mapCanvas} />
       {selected ? (
         <article className={styles.mapPlaceCard} aria-live="polite">
           <StreetViewPhoto taller={selected} />
@@ -758,31 +865,6 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
               >
                 {copy.details}
               </a>
-              <a className={styles.btnPrimary} href="#contacto">
-                {copy.talk}
-              </a>
-            </div>
-          </div>
-        </article>
-      ) : ciudad.talleres.length === 0 ? (
-        <article className={styles.mapPlaceCard} aria-live="polite">
-          {ciudad.id === "barcelona" ? (
-            <div className={styles.mapPlacePhotoPlaceholder}>
-              <img
-                className={styles.mapPlacePhotoImg}
-                src="/landing/map-barcelona.png"
-                alt="Mosaico de un reloj de arena, estilo trencadís de Barcelona"
-              />
-            </div>
-          ) : (
-            <div className={styles.mapPlacePhoto} aria-hidden="true">
-              <Icon name="storefront" size="xl" />
-            </div>
-          )}
-          <div className={styles.mapPlaceBody}>
-            <strong>{nombreCiudad(copy, ciudad)}</strong>
-            <p>{copy.comingSoon}</p>
-            <div className={styles.mapPlaceActions}>
               <a className={styles.btnPrimary} href="#contacto">
                 {copy.talk}
               </a>
