@@ -8,16 +8,23 @@ PR="${1:?Uso: $0 <numero-de-pr>}"
 
 echo "Esperando production-gate del PR #${PR}..."
 for _ in $(seq 1 60); do
-  if gh pr checks "$PR" 2>/dev/null | grep -E '^production-gate[[:space:]]+pass' >/dev/null; then
+  # Text `gh pr checks` exits 1 if *any* check is red (e.g. lint). With
+  # pipefail that hid a green production-gate. JSON + jq does not.
+  states="$(gh pr checks "$PR" --json name,state --jq '[.[] | select(.name=="production-gate") | .state] | unique | .[]' || true)"
+  if echo "$states" | grep -Eq 'FAILURE|ERROR|CANCELLED|TIMED_OUT'; then
+    echo "production-gate en rojo. No se mergea (mecanu.com se quedaría en el deploy anterior)." >&2
+    gh pr checks "$PR" || true
+    exit 1
+  fi
+  if echo "$states" | grep -Eq 'PENDING|IN_PROGRESS|QUEUED|WAITING|EXPECTED'; then
+    sleep 10
+    continue
+  fi
+  if echo "$states" | grep -Eq 'SUCCESS'; then
     echo "production-gate en verde."
     gh pr merge "$PR" --merge --delete-branch
     echo "Mergeado. Confirma producción: npx vercel inspect mecanu.com"
     exit 0
-  fi
-  if gh pr checks "$PR" 2>/dev/null | grep -E '^production-gate[[:space:]]+fail' >/dev/null; then
-    echo "production-gate en rojo. No se mergea (mecanu.com se quedaría en el deploy anterior)." >&2
-    gh pr checks "$PR" || true
-    exit 1
   fi
   sleep 10
 done
