@@ -67,6 +67,9 @@ for (const canal of catalogo.channels) {
   console.log(`#${canal.name}  ${ch.id}${ch.created ? "  (creado)" : "  (ya existía)"}`);
 }
 
+await invitarHumanosACanales(ids);
+await publicarMapaCanales(ids);
+
 const general = await buscarCanal("general");
 if (general) {
   try {
@@ -89,6 +92,11 @@ if (creados > 0) {
   });
 }
 
+console.log("");
+console.log("Únete a los canales (Browse channels o estos enlaces):");
+for (const canal of catalogo.channels) {
+  console.log(`  https://app.slack.com/client/${auth.team_id}/${ids[canal.key]}  → #${canal.name}`);
+}
 console.log("");
 console.log("Invita a Cursor al canal de trabajo (una vez):");
 console.log("  en Slack, #ordenes → /invite @Mecanu y /invite @Cursor");
@@ -218,6 +226,72 @@ async function asegurarPin(channelId, texto) {
   } catch (err) {
     // El mensaje quedó; el pin es cosmético.
     throw new Error(`pins.add: ${err.message}`);
+  }
+}
+
+/** Une a todos los humanos del workspace a los canales Mecanu (necesita scope users:read). */
+async function invitarHumanosACanales(ids) {
+  let miembros = [];
+  try {
+    let cursor;
+    do {
+      const page = await slack("users.list", {
+        limit: 200,
+        ...(cursor ? { cursor } : {}),
+      });
+      miembros = miembros.concat(
+        (page.members || []).filter((u) => !u.is_bot && !u.deleted && u.id !== "USLACKBOT"),
+      );
+      cursor = page.response_metadata?.next_cursor || "";
+    } while (cursor);
+  } catch (err) {
+    console.error(
+      `No pude listar usuarios (${err.message}). Reinstala la app con el manifest (users:read) y vuelve a correr bootstrap.`,
+    );
+    return;
+  }
+  if (miembros.length === 0) return;
+
+  for (const canal of catalogo.channels) {
+    const channel = ids[canal.key];
+    if (!channel) continue;
+    let ok = 0;
+    for (const m of miembros) {
+      try {
+        await slack("conversations.invite", { channel, users: m.id });
+        ok += 1;
+      } catch (err) {
+        const msg = String(err.message);
+        if (
+          msg.includes("already_in_channel") ||
+          msg.includes("cant_invite_self") ||
+          msg.includes("user_is_bot")
+        ) {
+          ok += 1;
+        } else {
+          console.error(`#${canal.name}: invite ${m.name || m.id}: ${msg}`);
+        }
+      }
+    }
+    console.log(`#${canal.name}: ${ok}/${miembros.length} humanos en el canal`);
+  }
+}
+
+async function publicarMapaCanales(ids) {
+  const lineas = [
+    "Mapa de canales Mecanu (únete si no los ves en la barra):",
+    ...catalogo.channels.map(
+      (c) => `• <#${ids[c.key]}> — ${c.purpose}`,
+    ),
+  ];
+  try {
+    await slack("chat.postMessage", {
+      channel: ids.ordenes || ids.alertas,
+      text: lineas.join("\n"),
+      unfurl_links: false,
+    });
+  } catch (err) {
+    console.error(`mapa canales: ${err.message}`);
   }
 }
 
