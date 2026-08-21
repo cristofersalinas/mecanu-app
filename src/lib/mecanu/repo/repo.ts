@@ -138,6 +138,14 @@ export interface CancelarRutaInput {
   motivo: string;
 }
 
+export interface AgendarRutaInput {
+  rutaId: string;
+  fecha: Date;
+  /** p. ej. "10:00–11:00" */
+  franja: string;
+  conductorId: string | null;
+}
+
 /* ==============================================================
    La interfaz
    ============================================================== */
@@ -203,6 +211,10 @@ export interface MecanuRepo {
   crearRutaDesdeCampana(input: CrearRutaDesdeCampanaInput): Promise<Ruta>;
   actualizarTagsManual(input: ActualizarTagsManualInput): Promise<Ruta>;
   cancelarRuta(input: CancelarRutaInput): Promise<Ruta>;
+  /** Panel: fija ventana + opcional conductor en el tramo activo / primero. */
+  agendarRuta(input: AgendarRutaInput): Promise<Ruta>;
+  /** Panel: conductor en el tramo activo de la ruta (o el primero). */
+  asignarConductorRuta(rutaId: string, conductorId: string | null): Promise<Ruta>;
 
   /* ---------- Solicitudes del conductor: bandeja del taller ---------- */
   /** `HANDOFF.md §7.3` — entidad decidida pero no construida en el prototipo original.

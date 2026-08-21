@@ -22,7 +22,7 @@ import type {
   AsignarConductorInput, CambiarEstadoPresupuestoInput, CambiarSubestadoTramoInput,
   CancelarRutaInput, CheckinInput, ConfirmacionInput, CrearRutaDesdeCampanaInput,
   EntregaInput, HallazgoCampanaInput, IncidenciaInput, MecanuRepo,
-  ReasignarConductorInput, SolicitudInput,
+  ReasignarConductorInput, SolicitudInput, AgendarRutaInput,
 } from './repo';
 import {
   construirVista, mapCampana, mapCliente, mapConductor, mapLog, mapParada, mapPerfilAUsuario,
@@ -692,6 +692,53 @@ export const supabaseRepo: MecanuRepo = {
       cancelada_en: new Date().toISOString(),
     }).eq('id', rutaId);
     throwPg(error, 'cancelar');
+    const r = await this.getRuta(rutaId);
+    if (!r) throw new Error(`Ruta ${rutaId} no encontrada`);
+    return r;
+  },
+
+  async agendarRuta({ rutaId, fecha, franja, conductorId }: AgendarRutaInput) {
+    const partes = franja.split(/[–—-]/).map((s) => s.trim()).filter(Boolean);
+    const inicio = partes[0] ?? '10:00';
+    const fin = partes[1] ?? '11:00';
+    const fechaIso = fecha.toISOString().slice(0, 10);
+    const subestado = conductorId ? 'asignado' : 'sin_conductor';
+    const { error: er } = await sb().from('rutas').update({
+      estado: 'agendado',
+      subestado,
+    }).eq('id', rutaId);
+    throwPg(er, 'agendar ruta');
+    const tramos = await this.listTramosDeRuta(rutaId);
+    const t = tramos[0];
+    if (t) {
+      const { error: et } = await sb().from('traslados').update({
+        ventana_fecha: fechaIso,
+        ventana_inicio: inicio,
+        ventana_fin: fin,
+        ventana_modo: 'fija_taller',
+        conductor_id: conductorId,
+        estado: 'agendado',
+      }).eq('id', t.id);
+      throwPg(et, 'agendar traslado');
+    }
+    const r = await this.getRuta(rutaId);
+    if (!r) throw new Error(`Ruta ${rutaId} no encontrada`);
+    return r;
+  },
+
+  async asignarConductorRuta(rutaId: string, conductorId: string | null) {
+    const tramos = await this.listTramosDeRuta(rutaId);
+    const t = tramos.find((x) => x.estado !== 'completado') ?? tramos[0];
+    if (!t) throw new Error(`Ruta ${rutaId} sin traslados`);
+    await this.reasignarConductorTramo({ tramoId: t.id, conductorId });
+    const ruta = await this.getRuta(rutaId);
+    if (!ruta) throw new Error(`Ruta ${rutaId} no encontrada`);
+    if (ruta.estado === 'agendado') {
+      const { error } = await sb().from('rutas').update({
+        subestado: conductorId ? 'asignado' : 'sin_conductor',
+      }).eq('id', rutaId);
+      throwPg(error, 'asignar subestado');
+    }
     const r = await this.getRuta(rutaId);
     if (!r) throw new Error(`Ruta ${rutaId} no encontrada`);
     return r;

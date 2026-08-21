@@ -96,19 +96,23 @@ export function CrearRutaModal({
               size="compact"
               icon="add_road"
               disabled={total <= 0}
-              onClick={() => {
+              onClick={async () => {
                 const desdeDeber = p.deberActivo?.entidadKind === 'campana' && p.deberActivo.entidadId === campana.id;
-                const id = p.crearRutaDesdeCampana(campana.id, {
-                  modo: salida,
-                  lineas: lineasActivas,
-                  total,
-                  servicio: `${TIPO_LABEL[tipoServicio] ?? tipoServicio} · ${campana.falla}`,
-                  fecha: conFecha ? fromISO(fechaISO) : null,
-                  franja: conFecha ? franja : null,
-                  etiquetaDestino: TIPO_LABEL[tipoServicio] ?? 'Taller',
-                });
-                cerrar();
-                if (!desdeDeber) p.seleccionar({ kind: 'ruta', id }, 'ficha');
+                try {
+                  const id = await p.crearRutaDesdeCampana(campana.id, {
+                    modo: salida,
+                    lineas: lineasActivas,
+                    total,
+                    servicio: `${TIPO_LABEL[tipoServicio] ?? tipoServicio} · ${campana.falla}`,
+                    fecha: conFecha ? fromISO(fechaISO) : null,
+                    franja: conFecha ? franja : null,
+                    etiquetaDestino: TIPO_LABEL[tipoServicio] ?? 'Taller',
+                  });
+                  cerrar();
+                  if (!desdeDeber) p.seleccionar({ kind: 'ruta', id }, 'ficha');
+                } catch {
+                  /* toast ya lo pone el store */
+                }
               }}
             >
               Crear ruta

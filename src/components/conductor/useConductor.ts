@@ -34,8 +34,11 @@ import {
   TESTIGOS,
   TURNO,
   VIDEO_MAX_S,
+  reemplazarTurnoYPool,
+  type EntradaTurno,
 } from './constants';
 import * as D from './data';
+import { aplicarSnapshotConductor } from './vivo';
 import {
   accionDe,
   activoId,
@@ -206,7 +209,8 @@ export function useConductor(opts: OpcionesConductor = {}) {
    * ensuciar el estado ni provocar un desajuste de hidratación.
    */
   const montado = useSyncExternalStore(suscribirNada, () => true, () => false);
-  const cargando = !montado;
+  const [hidrandoSupabase, setHidrandoSupabase] = useState(false);
+  const cargando = !montado || hidrandoSupabase;
 
   /* Espejo del estado para leerlo desde callbacks sin recrearlos en cada render. */
   const ref = useRef(s);
@@ -217,6 +221,54 @@ export function useConductor(opts: OpcionesConductor = {}) {
   const patch = useCallback((p: Partial<AppState> | ((prev: AppState) => Partial<AppState>)) => {
     setS((prev) => ({ ...prev, ...(typeof p === 'function' ? p(prev) : p) }));
   }, []);
+
+  useEffect(() => {
+    if (!montado) return;
+    if (process.env.NEXT_PUBLIC_MECANU_USE_SUPABASE !== '1') return;
+    let cancelado = false;
+    setHidrandoSupabase(true);
+    (async () => {
+      try {
+        const res = await fetch(`/api/v1/conductor/snapshot?conductorId=${encodeURIComponent(MI_ID)}`);
+        if (!res.ok) throw new Error(`snapshot ${res.status}`);
+        const raw = await res.json();
+        if (cancelado) return;
+        const revive = <T,>(v: T): T => {
+          if (v == null || typeof v !== 'object') return v;
+          if (Array.isArray(v)) return v.map((x) => revive(x)) as T;
+          const out: Record<string, unknown> = {};
+          for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+            if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
+              const d = new Date(val);
+              out[k] = Number.isNaN(d.getTime()) ? val : d;
+            } else if (val && typeof val === 'object') out[k] = revive(val);
+            else out[k] = val;
+          }
+          return out as T;
+        };
+        aplicarSnapshotConductor({
+          tramos: revive(raw.tramos ?? []),
+          rutas: revive(raw.rutas ?? []),
+          vehiculos: revive(raw.vehiculos ?? []),
+          paradas: revive(raw.paradas ?? []),
+          clientesPorVehiculo: revive(raw.clientesPorVehiculo ?? {}),
+        });
+        const turno = (raw.turno ?? []) as EntradaTurno[];
+        const pool = (raw.pool ?? []) as EntradaTurno[];
+        reemplazarTurnoYPool(turno, pool);
+        const jobOv: AppState['jobOv'] = {};
+        TURNO.forEach((e) => {
+          jobOv[e.tid] = { sub: e.sub, done: e.sub === 'completado' };
+        });
+        patch({ jobOv, checkins: {}, inspecciones: {}, solicitudes: {} });
+      } catch (e) {
+        console.warn('[conductor] hidratar Supabase falló, sigo con mock', e);
+      } finally {
+        if (!cancelado) setHidrandoSupabase(false);
+      }
+    })();
+    return () => { cancelado = true; };
+  }, [montado, patch]);
 
   const timers = useRef<{ toast?: number; flash?: number; sync?: number; rec?: number; voz?: number }>({});
   const media = useRef<{
