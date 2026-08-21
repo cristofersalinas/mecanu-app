@@ -3,7 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowser } from '@/lib/supabase/browser';
-import styles from './panel-auth.module.css';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Icon } from '@/components/ds/Icon';
 
 export function PanelNuevaContrasenaForm() {
   const router = useRouter();
@@ -41,11 +44,11 @@ export function PanelNuevaContrasenaForm() {
   }
 
   return (
-    <form className={styles.form} onSubmit={onSubmit}>
-      <label className={styles.label}>
-        Nueva contraseña
-        <input
-          className={styles.input}
+    <form className="space-y-4" onSubmit={onSubmit}>
+      <div className="space-y-2">
+        <Label htmlFor="new-pass">Nueva contraseña</Label>
+        <Input
+          id="new-pass"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -53,11 +56,11 @@ export function PanelNuevaContrasenaForm() {
           minLength={8}
           autoComplete="new-password"
         />
-      </label>
-      <label className={styles.label}>
-        Repetir contraseña
-        <input
-          className={styles.input}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="new-pass2">Repetir contraseña</Label>
+        <Input
+          id="new-pass2"
           type="password"
           value={password2}
           onChange={(e) => setPassword2(e.target.value)}
@@ -65,11 +68,15 @@ export function PanelNuevaContrasenaForm() {
           minLength={8}
           autoComplete="new-password"
         />
-      </label>
-      <button className={styles.btn} type="submit" disabled={sending}>
+      </div>
+      <p className="flex gap-2 text-xs text-neutral-500">
+        <Icon name="encrypted" size="sm" />
+        Se guarda cifrada. Tras guardar entras directo al panel.
+      </p>
+      <Button type="submit" className="w-full" size="lg" disabled={sending}>
         {sending ? 'Guardando…' : 'Guardar y entrar'}
-      </button>
-      {err ? <p className={styles.err}>{err}</p> : null}
+      </Button>
+      {err ? <p className="text-sm font-medium text-red-700">{err}</p> : null}
     </form>
   );
 }

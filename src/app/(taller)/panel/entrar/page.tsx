@@ -1,5 +1,5 @@
 import { PanelLoginForm } from '@/components/auth/PanelLoginForm';
-import styles from '@/components/auth/panel-auth.module.css';
+import { AuthShell } from '@/components/auth/AuthShell';
 
 export const metadata = {
   title: 'Entrar al panel · Mecanu',
@@ -8,12 +8,11 @@ export const metadata = {
 
 export default function PanelEntrarPage() {
   return (
-    <main className={styles.page}>
-      <div className={styles.card}>
-        <h1 className={styles.brand}>Mecanu</h1>
-        <p className={styles.sub}>Panel del taller. Email, teléfono o Google.</p>
-        <PanelLoginForm />
-      </div>
-    </main>
+    <AuthShell
+      title="Entra al panel"
+      subtitle="Email y contraseña, teléfono o Google. Solo para el equipo del taller."
+    >
+      <PanelLoginForm />
+    </AuthShell>
   );
 }

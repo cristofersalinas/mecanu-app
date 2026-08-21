@@ -4,7 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowser } from '@/lib/supabase/browser';
-import styles from './panel-auth.module.css';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { GoogleIcon } from '@/components/auth/GoogleIcon';
+import { Icon } from '@/components/ds/Icon';
+import { cn } from '@/lib/utils';
 
 type Canal = 'email' | 'telefono';
 
@@ -59,18 +65,17 @@ export function PanelLoginForm() {
     setSending(true);
     try {
       const sb = createSupabaseBrowser();
-      const phone = normalizarTelefono(telefono);
-      const { error } = await sb.auth.signInWithOtp({ phone });
+      const { error } = await sb.auth.signInWithOtp({ phone: normalizarTelefono(telefono) });
       if (error) {
         setErr(
-          error.message.includes('Unsupported') || error.message.includes('Phone')
-            ? 'El SMS no está activo aún en este proyecto. Usa email o Google, o activa Phone en Supabase Auth.'
+          error.message.includes('Phone') || error.message.includes('Unsupported')
+            ? 'SMS aún no activo en este proyecto. Usa email o Google.'
             : error.message,
         );
         return;
       }
       setOtpEnviado(true);
-      setMsg('Te hemos enviado un código por SMS.');
+      setMsg('Código enviado por SMS.');
     } catch (ex) {
       setErr(ex instanceof Error ? ex.message : 'No se pudo enviar el SMS');
     } finally {
@@ -107,11 +112,10 @@ export function PanelLoginForm() {
     setSending(true);
     try {
       const sb = createSupabaseBrowser();
-      const origin = window.location.origin;
       const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${origin}/auth/callback?next=${encodeURIComponent('/panel')}`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/panel')}`,
         },
       });
       if (error) setErr(error.message);
@@ -122,41 +126,46 @@ export function PanelLoginForm() {
   }
 
   return (
-    <div>
-      <div className={styles.tabs} role="tablist" aria-label="Cómo entrar">
-        <button
-          type="button"
-          className={`${styles.tab} ${canal === 'email' ? styles.tabActive : ''}`}
-          onClick={() => setCanal('email')}
-        >
-          Email
-        </button>
-        <button
-          type="button"
-          className={`${styles.tab} ${canal === 'telefono' ? styles.tabActive : ''}`}
-          onClick={() => setCanal('telefono')}
-        >
-          Teléfono
-        </button>
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-1 rounded-xl bg-neutral-100 p-1">
+        {(['email', 'telefono'] as const).map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => setCanal(c)}
+            className={cn(
+              'rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
+              canal === c ? 'bg-white text-neutral-950 shadow-sm' : 'text-neutral-500',
+            )}
+          >
+            {c === 'email' ? 'Email' : 'Teléfono'}
+          </button>
+        ))}
       </div>
 
       {canal === 'email' ? (
-        <form className={styles.form} onSubmit={loginEmail}>
-          <label className={styles.label}>
-            Email
-            <input
-              className={styles.input}
+        <form className="space-y-4" onSubmit={loginEmail}>
+          <div className="space-y-2">
+            <Label htmlFor="login-email">Email del taller</Label>
+            <Input
+              id="login-email"
               type="email"
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@taller.es"
               required
             />
-          </label>
-          <label className={styles.label}>
-            Contraseña
-            <input
-              className={styles.input}
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="login-pass">Contraseña</Label>
+              <Link href="/panel/recuperar" className="text-xs font-semibold text-neutral-600 underline-offset-2 hover:underline">
+                ¿La olvidaste?
+              </Link>
+            </div>
+            <Input
+              id="login-pass"
               type="password"
               autoComplete="current-password"
               value={password}
@@ -164,60 +173,80 @@ export function PanelLoginForm() {
               required
               minLength={8}
             />
-          </label>
-          <button className={styles.btn} type="submit" disabled={sending}>
+          </div>
+          <Button type="submit" className="w-full" size="lg" disabled={sending}>
             {sending ? 'Entrando…' : 'Entrar al panel'}
-          </button>
+          </Button>
         </form>
       ) : (
-        <form className={styles.form} onSubmit={otpEnviado ? verificarOtp : enviarOtpTelefono}>
-          <label className={styles.label}>
-            Teléfono
-            <input
-              className={styles.input}
+        <form className="space-y-4" onSubmit={otpEnviado ? verificarOtp : enviarOtpTelefono}>
+          <div className="space-y-2">
+            <Label htmlFor="login-tel">Teléfono</Label>
+            <Input
+              id="login-tel"
               type="tel"
-              autoComplete="tel"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
               placeholder="+34 600 000 000"
               required
               disabled={otpEnviado}
             />
-          </label>
+          </div>
           {otpEnviado ? (
-            <label className={styles.label}>
-              Código SMS
-              <input
-                className={styles.input}
+            <div className="space-y-2">
+              <Label htmlFor="login-otp">Código SMS</Label>
+              <Input
+                id="login-otp"
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 required
               />
-            </label>
+            </div>
           ) : null}
-          <p className={styles.hint}>
-            Requiere Phone provider + SMS en Supabase (Twilio u otro). Si no está activo, usa email.
+          <p className="flex gap-2 text-xs text-neutral-500">
+            <Icon name="info" size="sm" />
+            El SMS requiere Phone + Twilio en Supabase. Si no está activo, usa email o Google.
           </p>
-          <button className={styles.btn} type="submit" disabled={sending}>
+          <Button type="submit" className="w-full" size="lg" disabled={sending}>
             {sending ? 'Espera…' : otpEnviado ? 'Verificar y entrar' : 'Enviar código'}
-          </button>
+          </Button>
         </form>
       )}
 
-      <div className={styles.divider}>o</div>
-      <button className={styles.btnGoogle} type="button" onClick={loginGoogle} disabled={sending}>
-        Continuar con Google
-      </button>
-
-      <div className={styles.links}>
-        <Link href="/panel/registro">Crear cuenta</Link>
-        <Link href="/panel/recuperar">Recuperar contraseña</Link>
-        <Link href="/entrar">Soy conductor</Link>
+      <div className="flex items-center gap-3">
+        <Separator className="flex-1" />
+        <span className="text-xs font-medium text-neutral-400">o continúa con</span>
+        <Separator className="flex-1" />
       </div>
-      {msg ? <p className={styles.ok}>{msg}</p> : null}
-      {err ? <p className={styles.err}>{err}</p> : null}
+
+      <Button
+        type="button"
+        variant="secondary"
+        size="lg"
+        className="w-full"
+        onClick={loginGoogle}
+        disabled={sending}
+      >
+        <GoogleIcon />
+        Continuar con Google
+      </Button>
+
+      <p className="text-center text-sm text-neutral-500">
+        ¿Primera vez?{' '}
+        <Link href="/panel/registro" className="font-semibold text-neutral-950 underline-offset-2 hover:underline">
+          Crear cuenta del taller
+        </Link>
+      </p>
+      <p className="text-center text-xs text-neutral-400">
+        <Link href="/entrar" className="underline-offset-2 hover:underline">
+          Soy conductor (magic link)
+        </Link>
+      </p>
+
+      {msg ? <p className="text-sm font-medium text-emerald-700">{msg}</p> : null}
+      {err ? <p className="text-sm font-medium text-red-700">{err}</p> : null}
     </div>
   );
 }

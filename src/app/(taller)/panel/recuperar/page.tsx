@@ -1,5 +1,5 @@
 import { PanelRecuperarForm } from '@/components/auth/PanelRecuperarForm';
-import styles from '@/components/auth/panel-auth.module.css';
+import { AuthShell } from '@/components/auth/AuthShell';
 
 export const metadata = {
   title: 'Recuperar contraseña · Mecanu',
@@ -8,12 +8,11 @@ export const metadata = {
 
 export default function PanelRecuperarPage() {
   return (
-    <main className={styles.page}>
-      <div className={styles.card}>
-        <h1 className={styles.brand}>Recuperar contraseña</h1>
-        <p className={styles.sub}>Te enviamos un enlace al correo de la cuenta.</p>
-        <PanelRecuperarForm />
-      </div>
-    </main>
+    <AuthShell
+      title="Recuperar contraseña"
+      subtitle="Te mandamos un enlace seguro al correo de la cuenta. No pedimos la contraseña antigua."
+    >
+      <PanelRecuperarForm />
+    </AuthShell>
   );
 }
