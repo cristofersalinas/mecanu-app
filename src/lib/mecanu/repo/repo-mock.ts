@@ -14,6 +14,8 @@
  */
 import * as M from '../mecanu-rutas';
 import * as W from '../mecanu-whatsapp';
+import { crearRutaDesdeCampana as construirRutaDesdeCampana } from '../crear-ruta-desde-campana';
+import { cliente as lookupCliente } from '../mecanu-data';
 import type {
   Actividad, AutomatizacionEjecucion, Campana, Cliente, Conductor, Inspeccion, Log, Parada, Presupuesto,
   Ruta, RutaVista, Servicio, Solicitud, TagRuta, Tramo, UsuarioBackoffice, Vehiculo,
@@ -109,19 +111,20 @@ function sembrarBackoffice() {
   USUARIOS.push(
     {
       id: 'u-dueno', nombre: 'Cristofer Salinas', email: 'crist@mecanu.com',
-      telefono: null, rol: 'dueno', estado: 'activo', conductorId: null,
+      telefono: null, documento: '00000000T', rol: 'dueno', estado: 'activo', conductorId: null,
       invitadEn: alta, activadoEn: alta,
     },
     {
       id: 'u-op', nombre: 'Rubén Ortega', email: 'ruben@talleres.es',
-      telefono: '910 220 900', rol: 'operacion', estado: 'activo', conductorId: null,
+      telefono: '910 220 900', documento: '12345678Z', rol: 'operacion', estado: 'activo', conductorId: null,
       invitadEn: alta, activadoEn: alta,
     },
-    ...m.CONDUCTORES.map((c) => ({
+    ...m.CONDUCTORES.map((c, i) => ({
       id: `u-${c.id}`,
       nombre: c.nombre,
       email: `${c.id}@conductores.mecanu.com`,
       telefono: c.telefono,
+      documento: `${10000000 + i}A`,
       rol: 'conductor' as const,
       estado: 'activo' as const,
       conductorId: c.id,
@@ -358,12 +361,38 @@ export const mockRepo: MecanuRepo = {
   },
 
   async crearRutaDesdeCampana(input: CrearRutaDesdeCampanaInput) {
-    // El mock no construye una Ruta nueva completa (paradas/tramos reales) porque el
-    // modelo actual las precalcula todas al arrancar el proceso — crear una ruta viva
-    // requeriría replicar esa lógica de construcción para un solo registro. Se deja
-    // como límite documentado del mock, no como lógica de negocio a adivinar aquí.
-    // Ver PREGUNTAS-ABIERTAS.md.
-    throw new Error(`crearRutaDesdeCampana: no implementado en el mock (campaña ${input.campanaId})`);
+    const campana = m.campana(input.campanaId);
+    if (!campana) throw new Error(`Campaña ${input.campanaId} no encontrada`);
+    let seq = 1100 + m.RUTAS.length;
+    const built = construirRutaDesdeCampana(campana, input, {
+      nextRutaId: () => {
+        const id = `TR-${seq}`;
+        seq += 1;
+        return id;
+      },
+      direccionCliente: campana.clienteId
+        ? (lookupCliente(campana.clienteId)?.direccion ?? null)
+        : null,
+    });
+    m.PARADAS.push(...built.paradas);
+    m.TRASLADOS.push(...built.tramos);
+    m.PRESUPUESTOS.push(built.presupuesto);
+    m.RUTAS.push(built.ruta);
+    campana.rutaGeneradaId = built.ruta.id;
+    campana.presupuesto = built.presupuesto;
+    campana.presupuestoId = built.presupuesto.id;
+    campana.estado = 'aceptada';
+    const vista = m.rutaVista(built.ruta.id);
+    if (vista) m.RUTAS_VISTA.push(vista);
+    const t0 = built.tramos[0];
+    if (t0) {
+      nuevoLog(t0.id, 'cambio_estado', 'Rubén Ortega', 'manual', {
+        a: 'creado',
+        texto: `Ruta ${built.ruta.id} creada desde campaña ${campana.id}`,
+        rutaId: built.ruta.id,
+      });
+    }
+    return built.ruta;
   },
 
   async actualizarTagsManual({ rutaId, tagsManual }) {

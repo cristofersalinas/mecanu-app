@@ -7,4 +7,6 @@ export { buildAnalitica } from './analitica';
 export { proponerAutomatizaciones, aplicarAutomatizaciones } from './automations';
 export { buildSnapshot } from './snapshot';
 export type { MundoBackoffice } from './mundo';
-export type { SnapshotBackoffice } from './snapshot';
+export type { SnapshotBackoffice, FilaEquipo } from './snapshot';
+export { buscarContactos } from './buscar-contactos';
+export type { ContactoBusqueda } from './buscar-contactos';

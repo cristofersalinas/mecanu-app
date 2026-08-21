@@ -314,6 +314,10 @@ export function useConductor(opts: OpcionesConductor = {}) {
       const st = typeof window === 'undefined' ? null : window.localStorage;
       const items = encolarItem(leerCola(st), 'accion');
       escribirCola(items, st);
+      void (async () => {
+        const { escribirColaAsync } = await import('@/lib/mecanu/cola-offline');
+        await escribirColaAsync(items, st);
+      })();
       patch((prev) => ({ queue: items.length, bytes: prev.bytes + bytes, sync: 'offline' }));
     },
     [patch],

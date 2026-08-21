@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition, type ReactNode } from 'react';
+import { useMemo, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
 import { Avatar } from '@/components/ds/Avatar';
 import { Badge } from '@/components/ds/Badge';
 import type { BadgeKind } from '@/components/ds/Badge';
@@ -11,8 +11,18 @@ import { ErrorState } from '@/components/ds/ErrorState';
 import { Icon } from '@/components/ds/Icon';
 import { Input } from '@/components/ds/Input';
 import { Logo } from '@/components/ds/Logo';
+import { SearchInput } from '@/components/ds/SearchInput';
 import type { SnapshotBackoffice } from '@/lib/mecanu/backoffice';
-import { AUTOMATIZACIONES, fmtHorasHasta } from '@/lib/mecanu/backoffice';
+import { AUTOMATIZACIONES, buscarContactos, fmtHorasHasta } from '@/lib/mecanu/backoffice';
+import {
+  escribirImpersonation,
+  getImpersonationServerSnapshot,
+  getImpersonationSnapshot,
+  limpiarImpersonation,
+  portalParaContacto,
+  subscribeImpersonation,
+  type ImpersonationContext,
+} from '@/lib/mecanu/backoffice/impersonation';
 import type { EstadoSolicitud, PresupuestoEstado } from '@/lib/mecanu/types';
 import {
   asignarHuecoAction,
@@ -60,6 +70,11 @@ export function BackofficeApp({ snapshot }: { snapshot: SnapshotBackoffice }) {
   const [nav, setNav] = useState<NavId>('hoy');
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const impersonation = useSyncExternalStore(
+    subscribeImpersonation,
+    getImpersonationSnapshot,
+    getImpersonationServerSnapshot,
+  );
 
   const criticas = snapshot.alertas.filter((a) => a.severidad === 'critica').length;
   const pendientes = snapshot.solicitudes.filter((s) => s.estado === 'pendiente');
@@ -73,6 +88,10 @@ export function BackofficeApp({ snapshot }: { snapshot: SnapshotBackoffice }) {
         setError(e instanceof Error ? e.message : 'No se pudo completar');
       }
     });
+  }
+
+  function salirImpersonation() {
+    limpiarImpersonation(window.sessionStorage);
   }
 
   return (
@@ -101,6 +120,15 @@ export function BackofficeApp({ snapshot }: { snapshot: SnapshotBackoffice }) {
       </nav>
 
       <div className={styles.main}>
+        {impersonation ? (
+          <div className={styles.impersonationBanner} role="status">
+            <span>
+              Estás viendo como <strong>{impersonation.nombre}</strong>
+              {impersonation.tipo === 'conductor' ? ' (conductor)' : ' (taller)'}
+            </span>
+            <Button size="compact" kind="secondary" onClick={salirImpersonation}>Salir de vista</Button>
+          </div>
+        ) : null}
         <header className={styles.header}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 800 }}>Backoffice</div>
@@ -124,7 +152,21 @@ export function BackofficeApp({ snapshot }: { snapshot: SnapshotBackoffice }) {
           {nav === 'bandeja' ? <Bandeja snapshot={snapshot} run={run} pending={pending} /> : null}
           {nav === 'cobertura' ? <Cobertura snapshot={snapshot} run={run} pending={pending} /> : null}
           {nav === 'dinero' ? <Dinero snapshot={snapshot} /> : null}
-          {nav === 'equipo' ? <Equipo snapshot={snapshot} run={run} pending={pending} /> : null}
+          {nav === 'equipo' ? (
+            <Equipo
+              snapshot={snapshot}
+              run={run}
+              pending={pending}
+              onVerUsuario={(ctx) => {
+                escribirImpersonation(ctx, window.sessionStorage);
+                const portal = portalParaContacto(
+                  ctx.tipo === 'conductor' ? 'conductor' : 'operacion',
+                  ctx.conductorId ?? null,
+                );
+                window.open(portal.href, '_blank', 'noopener,noreferrer');
+              }}
+            />
+          ) : null}
           {nav === 'automatizaciones' ? <Autos snapshot={snapshot} run={run} pending={pending} /> : null}
         </div>
       </div>
@@ -374,22 +416,67 @@ function Dinero({ snapshot }: { snapshot: SnapshotBackoffice }) {
 }
 
 function Equipo({
-  snapshot, run, pending,
+  snapshot, run, pending, onVerUsuario,
 }: {
   snapshot: SnapshotBackoffice;
   run: (fn: () => Promise<void>) => void;
   pending: boolean;
+  onVerUsuario: (ctx: ImpersonationContext) => void;
 }) {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
+  const [q, setQ] = useState('');
+  const [menuAbierto, setMenuAbierto] = useState<string | null>(null);
   const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
+
+  const contactos = useMemo(
+    () => snapshot.equipo.map((u) => ({
+      usuarioId: u.usuarioId,
+      nombre: u.nombre,
+      documento: u.documento,
+      email: u.email,
+      telefono: u.telefono,
+      rol: u.rol,
+      estado: u.estado,
+      tallerNombre: u.tallerNombre,
+      conductorId: u.conductorId,
+    })),
+    [snapshot.equipo],
+  );
+
+  const filtrados = useMemo(() => buscarContactos(contactos, q), [contactos, q]);
+
+  function verUsuario(u: (typeof snapshot.equipo)[number]) {
+    setMenuAbierto(null);
+    const portal = portalParaContacto(u.rol, u.conductorId);
+    onVerUsuario({
+      tipo: portal.tipo,
+      usuarioId: u.usuarioId,
+      nombre: u.nombre,
+      tallerId: 'taller-rodriguez',
+      conductorId: u.conductorId,
+      actorRealId: snapshot.actor.id,
+      actorRealNombre: snapshot.actor.nombre,
+      startedAt: new Date().toISOString(),
+    });
+  }
 
   return (
     <div className={styles.block}>
-      <h2>Usuarios internos</h2>
+      <h2>Contactos</h2>
       <p className={styles.muted}>
-        El cliente no tiene login aquí. Conductor entra al PWA solo si su usuario está activo. El último dueño no se puede dar de baja.
+        Usuarios del taller y conductores. Busca por nombre, DNI, email o teléfono.
+        «Ver usuario» abre el panel o la app del conductor como ellos (impersonación).
       </p>
+      <div className={styles.searchRow}>
+        <SearchInput
+          fullWidth
+          shortcut={false}
+          placeholder="Buscar nombre, DNI, email, teléfono…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </div>
       <div className={styles.formInvitar}>
         <Input label="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
         <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -410,37 +497,108 @@ function Equipo({
         zebra
         columns={[
           { key: 'nombre', label: 'Nombre' },
-          { key: 'rol', label: 'Rol', width: 110 },
-          { key: 'estado', label: 'Estado', width: 110 },
-          { key: 'proceso', label: 'Onboarding conductor' },
-          { key: 'acciones', label: '', width: 280, render: (r) => r.acciones as ReactNode },
+          { key: 'documento', label: 'DNI', width: 110 },
+          { key: 'email', label: 'Email' },
+          { key: 'rol', label: 'Rol', width: 100 },
+          { key: 'estado', label: 'Estado', width: 100 },
+          { key: 'acciones', label: '', width: 48, render: (r) => r.acciones as ReactNode },
         ]}
-        rows={snapshot.equipo.map((u) => ({
-          id: u.usuarioId,
-          nombre: u.nombre,
-          rol: u.rol,
-          estado: u.estado,
-          proceso: u.procesoLabel ?? '—',
-          acciones: (
-            <span className={styles.rowActions}>
-              {u.estado === 'invitado' ? (
-                <Button size="compact" disabled={pending} onClick={() => run(() => transicionarUsuarioAction(u.usuarioId, 'activo'))}>Activar</Button>
-              ) : null}
-              {u.estado === 'activo' && u.rol !== 'dueno' ? (
-                <Button size="compact" kind="secondary" disabled={pending} onClick={() => run(() => transicionarUsuarioAction(u.usuarioId, 'suspendido'))}>Suspender</Button>
-              ) : null}
-              {u.estado === 'suspendido' ? (
-                <Button size="compact" disabled={pending} onClick={() => run(() => transicionarUsuarioAction(u.usuarioId, 'activo'))}>Reactivar</Button>
-              ) : null}
-              {u.conductorId && u.puedeSupervision ? (
-                <Button size="compact" kind="tertiary" disabled={pending} onClick={() => run(() => transicionarProcesoAction(u.conductorId!, 'en_supervision'))}>A supervisión</Button>
-              ) : null}
-              {u.conductorId && u.puedeActivar ? (
-                <Button size="compact" kind="tertiary" disabled={pending} onClick={() => run(() => transicionarProcesoAction(u.conductorId!, 'activo'))}>Activar solo</Button>
-              ) : null}
-            </span>
-          ),
-        }))}
+        rows={filtrados.map((c) => {
+          const u = snapshot.equipo.find((x) => x.usuarioId === c.usuarioId)!;
+          return {
+            id: c.usuarioId,
+            nombre: c.nombre,
+            documento: c.documento ?? '—',
+            email: c.email,
+            rol: c.rol,
+            estado: c.estado,
+            acciones: (
+              <div className={styles.kebabWrap}>
+                <button
+                  type="button"
+                  className={styles.kebabBtn}
+                  aria-label={`Acciones de ${c.nombre}`}
+                  aria-expanded={menuAbierto === c.usuarioId}
+                  onClick={() => setMenuAbierto((id) => (id === c.usuarioId ? null : c.usuarioId))}
+                >
+                  <Icon name="more_vert" size="sm" />
+                </button>
+                {menuAbierto === c.usuarioId ? (
+                  <div className={styles.kebabMenu} role="menu">
+                    <button type="button" role="menuitem" onClick={() => verUsuario(u)}>
+                      Ver usuario
+                    </button>
+                    {u.estado === 'invitado' ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={pending}
+                        onClick={() => {
+                          setMenuAbierto(null);
+                          run(() => transicionarUsuarioAction(u.usuarioId, 'activo'));
+                        }}
+                      >
+                        Activar
+                      </button>
+                    ) : null}
+                    {u.estado === 'activo' && u.rol !== 'dueno' ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={pending}
+                        onClick={() => {
+                          setMenuAbierto(null);
+                          run(() => transicionarUsuarioAction(u.usuarioId, 'suspendido'));
+                        }}
+                      >
+                        Suspender
+                      </button>
+                    ) : null}
+                    {u.estado === 'suspendido' ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={pending}
+                        onClick={() => {
+                          setMenuAbierto(null);
+                          run(() => transicionarUsuarioAction(u.usuarioId, 'activo'));
+                        }}
+                      >
+                        Reactivar
+                      </button>
+                    ) : null}
+                    {u.conductorId && u.puedeSupervision ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={pending}
+                        onClick={() => {
+                          setMenuAbierto(null);
+                          run(() => transicionarProcesoAction(u.conductorId!, 'en_supervision'));
+                        }}
+                      >
+                        A supervisión
+                      </button>
+                    ) : null}
+                    {u.conductorId && u.puedeActivar ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={pending}
+                        onClick={() => {
+                          setMenuAbierto(null);
+                          run(() => transicionarProcesoAction(u.conductorId!, 'activo'));
+                        }}
+                      >
+                        Activar solo
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ),
+          };
+        })}
       />
     </div>
   );

@@ -100,17 +100,16 @@ Está en [Variables](https://vercel.com/cristofersalar-4089s-projects/mecanu-app
 ### 5. Correo `privacidad@mecanu.com` — HECHO
 
 Buzón / alias activo. La web ya lo cita en `/privacidad`. Seguir mirando ese inbox cuando lleguen derechos RGPD.
-### 6. WhatsApp ITV — PENDIENTE
 
-No está en las variables de Vercel (lo busqué por nombre).  
-[Variables](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/settings/environment-variables) Production:  
-`NEXT_PUBLIC_ITV_WHATSAPP` = `346XXXXXXXX` (solo dígitos, con 34) → Redeploy.
+### 6. WhatsApp ITV — HECHO
+
+`NEXT_PUBLIC_ITV_WHATSAPP=34633760969` en Production (redeploy 21 ago). Es solo `wa.me/34633760969?text=…`, no Cloud API.
 
 ### 7. Comprobar el PR y el panel en local — PENDIENTE (tú)
 
 - PR: https://github.com/cristofersalinas/mecanu-app/pull/20 — **mergeado** 21 ago 15:02.  
   Tablero de Tareas (Pendiente → En curso → Hecho / Cancelado), cabeceras sticky, subestados cortos, backoffice, legales, Slack.
-- En tu Mac: `npm run demo` → `/panel` (Tareas) y `/conductor` (En camino / En origen / En tránsito / En destino).
+- En tu Mac: `npm run demo` → `/panel` (Tareas), `/conductor`, `/backoffice` → Equipo (búsqueda + Ver usuario).
 
 ### 8. Logs de sondeo — PENDIENTE (tú, de vez en cuando)
 
@@ -121,34 +120,30 @@ Campos: `ip`, `geo`, `ruta`, `tipo`. Tipos: `honeypot_hit`, `fake_login`, `canar
 
 ## B. Tú, no es un click en Vercel (sigue contando)
 
-### 9. Giro SII + IVA de servicios al exterior
+### 9. Giro SII + IVA — APARCADO
 
-Cuando factures a talleres UE. Contexto: [docs/FACTURACION-CHILE.md](docs/FACTURACION-CHILE.md).  
-No implementar cobro en producto hasta que traigas cómo quieres cobrar (SpA, impuestos, checklist).
+No se implementa cobro en producto por ahora. Contexto si vuelve: [docs/FACTURACION-CHILE.md](docs/FACTURACION-CHILE.md).
 
-### 10. Auth — tres decisiones, luego lo abro yo
+### 10. Auth — defaults cerrados (21 ago)
 
-Hoy no hay login. `/panel` y `/conductor` en internet siguen cortados a propósito.
+1. **Un taller = un tenant** (`taller_id` en schema).
+2. **Conductor:** magic link (email) — UI login en oleada siguiente.
+3. **Interno vs red:** RLS por `conductores.red` + rol en `app_metadata`.
+4. **Impersonación:** Equipo → ⋮ → Ver usuario (mock en sessionStorage; cookie firmada en oleada auth).
 
-1. Un taller = un tenant, o varios en la misma instancia.
-2. Cómo entra el conductor al móvil (magic link, código, app).
-3. Qué ve un conductor de red vs uno interno (eso va a RLS, no al cliente).
-
-Hasta entonces: **no** pongas `MECANU_EXPONER_APPS=1` en Production.
+Hasta login real + RLS testeado: **no** `MECANU_EXPONER_APPS=1` en Production.
 
 ### 11. No aplicar `0005_security_events.sql`
 
-Hasta el bloque 1 de acceso en **mecanu-dev**. La tabla es para un panel futuro. Hoy: logs de Vercel + Sentry.
+Hasta el bloque de acceso en **mecanu-dev**. Hoy: logs de Vercel + Sentry. Sí aplicar `0001`–`0004` + `0006` (`npm run db:migrate` con token o SQL Editor).
 
 ### 12. Subdominios / partir el repo
 
-Aparcado a propósito (ago 2026): un repo, un deploy.  
-Más adelante: `panel.mecanu…` sobre el mismo deploy (barato). Monorepo real solo si hay deploys independientes de verdad.
+Aparcado a propósito (ago 2026): un repo, un deploy.
 
-### 13. Revisión legal / DPO
+### 13. Revisión legal / DPO — APARCADO
 
-Páginas ya publicadas (aviso, privacidad, cookies, términos, accesibilidad; titular SpA RUT 77.620.433-1).  
-Buzón `privacidad@mecanu.com` **activo**. Sigue: revisar textos con asesoría si sube el volumen de leads; DPO no es obligatorio hoy. `docs/CUMPLIMIENTO-UE.md`.
+Páginas publicadas; `privacidad@` activo. Revisión con asesoría cuando suba el volumen.
 
 ---
 
@@ -157,18 +152,20 @@ Buzón `privacidad@mecanu.com` **activo**. Sigue: revisar textos con asesoría s
 | Qué | Estado |
 |---|---|
 | Corte de panel/conductor/API en Vercel | Hecho (`proxy.ts`; contacto e ITV públicos) |
-| Pipeline Tareas de avance, sticky, subestados cortos | Hecho, mergeado en #20 |
-| Copy conductor = panel (En origen / En destino) | Hecho |
-| Páginas legales + identidad SpA | Hecho |
-| Backoffice mock, onboarding, Slack bot | Hecho, mergeado en #20 |
-| Auth (login, sesión, RLS) | Pendiente de las 3 decisiones del §10 |
-| `crearRutaDesdeCampana` de verdad | Pendiente (el mock lanza error) |
-| Migrar `data.ts` al `repo` | Pendiente (~30 pantallas) |
-| Cola offline del conductor en IndexedDB | Pendiente (hoy se pierde al recargar) |
-| WhatsApp Cloud API de verdad | Pendiente (hoy es simulación; el número ITV es el §6) |
+| Pipeline Tareas / sticky / subestados | Hecho |
+| Páginas legales + Slack bot | Hecho |
+| Migraciones 0001–0004 + 0006 (idempotencia) | Hecho en repo; aplicar en mecanu-dev |
+| Cliente Supabase server-only | Hecho |
+| Idempotencia Postgres (+ fallback memoria) | Hecho |
+| `crearRutaDesdeCampana` de verdad | Hecho (lógica pura + mock) |
+| Cola conductor IndexedDB | Hecho (con fallback localStorage) |
+| Equipo: búsqueda + ⋮ Ver usuario | Hecho (impersonación mock) |
+| Auth login UI + RLS fino | Pendiente (defaults arriba) |
+| Migrar `data.ts` al `repo` | Pendiente |
+| WhatsApp Cloud API de verdad | Pendiente (el wa.me ITV ya está) |
 | Fotos/vídeo/firmas en Storage | Pendiente |
-| Idempotencia en Postgres | Pendiente (`Map` en memoria) |
-| P0 seguridad → Slack + dedupe (T3 / `#senales`) | Pendiente de tus 2 respuestas A0.4 |
+| `repo-supabase.ts` completo | Pendiente |
+| Aplicar `0005` | Pendiente |
 
 ---
 

@@ -134,6 +134,72 @@
   margin-bottom: 16px;
 }
 
+.searchRow {
+  margin-bottom: 12px;
+}
+
+.impersonationBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kebabWrap {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.kebabBtn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  color: var(--mecanu-text-secondary-light);
+}
+
+.kebabBtn:hover {
+  background: var(--mecanu-neutral-50, #f0f0f0);
+}
+
+.kebabMenu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 20;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid var(--mecanu-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.kebabMenu button {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.kebabMenu button:hover {
+  background: var(--mecanu-neutral-25);
+}
+
 @media (max-width: 720px) {
   .formInvitar { grid-template-columns: 1fr; }
 }

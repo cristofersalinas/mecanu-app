@@ -534,6 +534,8 @@ export const UsuarioBackofficeSchema = z.object({
   nombre: z.string(),
   email: z.string(),
   telefono: z.string().nullable(),
+  /** DNI/NIE u otro documento — searchable en backoffice Equipo */
+  documento: z.string().nullable(),
   rol: RolBackofficeSchema,
   estado: EstadoUsuarioBackofficeSchema,
   /** si rol=conductor, apunta a Conductor.id — un conductor sin usuario no entra al PWA */

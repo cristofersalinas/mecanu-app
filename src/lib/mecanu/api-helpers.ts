@@ -4,7 +4,11 @@
  */
 import { NextResponse } from 'next/server';
 import type { ZodType } from 'zod';
-import { getIdempotentResponse, saveIdempotentResponse, IDEMPOTENCY_HEADER } from './idempotency';
+import {
+  getIdempotentResponseAsync,
+  saveIdempotentResponseAsync,
+  IDEMPOTENCY_HEADER,
+} from './idempotency';
 
 export class ApiError extends Error {
   status: number;
@@ -40,7 +44,7 @@ export async function withIdempotency<Body, Result>(
   const idempotencyKey = request.headers.get(IDEMPOTENCY_HEADER);
 
   if (idempotencyKey) {
-    const cached = getIdempotentResponse(idempotencyKey);
+    const cached = await getIdempotentResponseAsync(idempotencyKey);
     if (cached) return NextResponse.json(cached.body, { status: cached.status });
   }
 
@@ -61,12 +65,12 @@ export async function withIdempotency<Body, Result>(
 
   try {
     const result = await handler(parsed.data);
-    if (idempotencyKey) saveIdempotentResponse(idempotencyKey, 200, result);
+    if (idempotencyKey) await saveIdempotentResponseAsync(idempotencyKey, 200, result);
     return NextResponse.json(result, { status: 200 });
   } catch (err) {
     if (err instanceof ApiError) {
       const body = errorBody(err.code, err.message);
-      if (idempotencyKey) saveIdempotentResponse(idempotencyKey, err.status, body);
+      if (idempotencyKey) await saveIdempotentResponseAsync(idempotencyKey, err.status, body);
       return NextResponse.json(body, { status: err.status });
     }
     // Log interno. Al cliente solo le llega un código genérico: nada de stack,

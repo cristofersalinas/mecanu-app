@@ -9,6 +9,7 @@ function dueno(over: Partial<UsuarioBackoffice> = {}): UsuarioBackoffice {
     nombre: 'Cristofer',
     email: 'crist@mecanu.com',
     telefono: null,
+    documento: null,
     rol: 'dueno',
     estado: 'activo',
     conductorId: null,

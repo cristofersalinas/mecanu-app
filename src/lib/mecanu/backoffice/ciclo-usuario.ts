@@ -58,6 +58,7 @@ export function invitarUsuario(
     nombre: input.nombre.trim(),
     email,
     telefono: input.telefono ?? null,
+    documento: null,
     rol: input.rol,
     estado: 'invitado',
     conductorId: input.conductorId ?? null,
