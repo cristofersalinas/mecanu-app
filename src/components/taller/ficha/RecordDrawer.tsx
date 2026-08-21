@@ -9,6 +9,7 @@ import { ListItem } from '@/components/ds/ListItem';
 import { ProgressBar } from '@/components/ds/ProgressBar';
 import { StatusTimeline } from '@/components/ds/StatusTimeline';
 import { TimeWindow } from '@/components/ds/TimeWindow';
+import { esModoDemo } from '@/lib/entorno';
 import {
   CONDUCTORES, CLIENTES, LOG_TIPOS, ONBOARDING_META, ORDEN_ONBOARDING, ORIGEN_LINEA, PRESUPUESTO_META,
   SUBESTADO, TRIGGERS, VENTANA_MODOS, actividadDeRuta, conductor, contactosDeVehiculo, fmtDia, fmtDiaHora,
@@ -16,9 +17,12 @@ import {
 } from '../data';
 import { usePanel } from '../store';
 import { Input, Tabs } from '../ui/Primitives';
+import { ImporteIva } from '../ui/ImporteIva';
+import { NudgeZona } from '../ui/NudgeZona';
 import { useAhora } from '../ui/useCarga';
 import { construirResumen } from './resumen';
 import { AgendarModal } from '../tablero/AgendarModal';
+import { SelectorConductor } from './SelectorConductor';
 import styles from '../panel.module.css';
 
 type TabId = 'resumen' | 'actividad' | 'notas' | 'facturacion' | 'documentos';
@@ -35,6 +39,13 @@ export function RecordDrawer() {
   const sel = p.seleccion;
   const resumen = useMemo(() => (sel ? construirResumen(sel, p.rutas) : null), [sel, p.rutas]);
   const ruta = sel?.kind === 'ruta' ? p.rutas.find((r) => r.id === sel.id) ?? null : null;
+  const deber = p.deberActivo
+    && p.deberActivo.entidadKind === 'ruta'
+    && p.deberActivo.entidadId === ruta?.id
+    ? p.deberActivo
+    : null;
+  const nudgeConductor = deber?.zona === 'conductor';
+  const nudgeVentana = deber?.zona === 'ventana' || deber?.zona === 'vuelta';
 
   if (!sel || !resumen) return null;
 
@@ -62,7 +73,7 @@ export function RecordDrawer() {
   ];
 
   return (
-    <div className={styles.overlay} style={{ alignItems: 'stretch', justifyContent: 'flex-end', padding: 0 }} onClick={() => p.seleccionar(null)}>
+    <div className={styles.overlay} style={{ alignItems: 'stretch', justifyContent: 'flex-end', padding: 0 }} onClick={() => deber ? p.volverDeDeber() : p.seleccionar(null)}>
       <div
         className={styles.fichaIn}
         onClick={(e) => e.stopPropagation()}
@@ -75,13 +86,49 @@ export function RecordDrawer() {
         }}
       >
         <header style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 18px', borderBottom: '1px solid var(--mecanu-border)' }}>
-          <span className={styles.eyebrow}>{resumen.kindLabel}</span>
-          <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
-          <span style={{ fontSize: 13, fontWeight: 700 }}>{resumen.titulo}</span>
+          {deber ? (
+            <>
+              <button
+                type="button"
+                onClick={() => p.volverDeDeber()}
+                aria-label="Volver a Tareas"
+                className={styles.iconBtn}
+                style={{ width: 28, height: 28, border: '1px solid var(--mecanu-border)', borderRadius: 6, flex: 'none' }}
+              >
+                <Icon name="arrow_back" size="sm" />
+              </button>
+              <button type="button" className={styles.linkBtn} style={{ fontSize: 13, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }} onClick={() => p.volverDeDeber()}>
+                Tareas
+              </button>
+              <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }}>{deber.cta}</span>
+              <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>{resumen.titulo}</span>
+            </>
+          ) : (
+            <>
+              <span className={styles.eyebrow}>{resumen.kindLabel}</span>
+              <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>{resumen.titulo}</span>
+            </>
+          )}
           <div style={{ flex: 1 }} />
           <Button kind="tertiary" size="compact" icon="close_fullscreen" onClick={() => p.setModoFicha('panel')} />
-          <Button kind="tertiary" size="compact" icon="close" onClick={() => p.seleccionar(null)} />
+          <Button kind="tertiary" size="compact" icon="close" onClick={() => deber ? p.volverDeDeber() : p.seleccionar(null)} />
         </header>
+
+        {deber ? (
+          <div className={styles.deberBanner}>
+            <Icon name="bolt" size="md" color="var(--mecanu-electric-600)" />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 800 }}>{deber.titulo}</div>
+              <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>{deber.detalle}</div>
+            </div>
+            <Button kind="tertiary" size="compact" onClick={() => p.volverDeDeber()}>
+              Volver a Tareas
+            </Button>
+          </div>
+        ) : null}
 
         <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '300px minmax(0,1fr) 260px' }}>
           {/* Columna izquierda */}
@@ -132,32 +179,26 @@ export function RecordDrawer() {
             ) : null}
 
             {ruta ? (
-              <Seccion titulo="Conductor asignado" abierta={secciones.conductor} onToggle={() => toggle('conductor')}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <Icon name="sports_motorsports" size="sm" />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>
-                      {ruta.conductorId ? nombreCorto(conductor(ruta.conductorId)?.nombre ?? null) : 'Sin asignar'}
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
-                      {ruta.conductorId ? conductor(ruta.conductorId)?.furgoneta : 'La ruta quedará etiquetada como «Sin conductor»'}
-                    </div>
-                  </div>
-                </div>
+              <Seccion titulo="Conductor asignado" abierta={secciones.conductor || nudgeConductor} onToggle={() => toggle('conductor')}>
                 {puedeEditar(ruta.estado, 'conductor') ? (
-                  <select
-                    value={ruta.conductorId ?? ''}
-                    aria-label="Conductor asignado"
-                    style={{ width: '100%', height: 34 }}
-                    onChange={(e) => p.asignarConductor(ruta.id, e.target.value || null)}
-                  >
-                    <option value="">Sin conductor</option>
-                    {CONDUCTORES.map((c) => <option key={c.id} value={c.id}>{nombreCorto(c.nombre)}</option>)}
-                  </select>
+                  <SelectorConductor ruta={ruta} autoFocus={nudgeConductor} />
                 ) : (
-                  <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
-                    El conductor no se puede cambiar con la ruta en «{SUBESTADO[`${ruta.estado}.${ruta.subestado}`]?.label ?? ruta.estado}».
-                  </span>
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <Icon name="sports_motorsports" size="sm" />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>
+                          {ruta.conductorId ? nombreCorto(conductor(ruta.conductorId)?.nombre ?? null) : 'Sin asignar'}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
+                          {ruta.conductorId ? conductor(ruta.conductorId)?.furgoneta : 'En este estado no se puede cambiar el conductor.'}
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
+                      El conductor no se puede cambiar con la ruta en «{SUBESTADO[`${ruta.estado}.${ruta.subestado}`]?.label ?? ruta.estado}».
+                    </span>
+                  </>
                 )}
               </Seccion>
             ) : null}
@@ -171,9 +212,18 @@ export function RecordDrawer() {
           <div style={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '0 18px' }}>
               <Tabs
-                items={tabs.map((t) => ({ id: t.id, label: t.bloqueada ? `${t.label} 🔒`.replace(' 🔒', '') : t.label }))}
+                items={tabs.map((t) => ({
+                  id: t.id,
+                  label: t.bloqueada ? `${t.label} · Pronto` : t.label,
+                  disabled: t.bloqueada,
+                  disabledTitle: 'Esta pestaña llega en una próxima versión',
+                }))}
                 activeId={tab}
-                onChange={(id) => setTab(id as TabId)}
+                onChange={(id) => {
+                  const t = tabs.find((x) => x.id === id);
+                  if (t?.bloqueada) return;
+                  setTab(id as TabId);
+                }}
               />
             </div>
 
@@ -190,7 +240,40 @@ export function RecordDrawer() {
 
               {tab === 'resumen' && ruta ? (
                 <>
-                  {ruta.estado === 'en_taller' && ruta.subestado === 'oportunidad_vuelta' ? (
+                  {puedeEditar(ruta.estado, 'conductor') && (nudgeConductor || (ruta.estado === 'agendado' && !ruta.conductorId)) ? (
+                    <NudgeZona activo={nudgeConductor} hint={nudgeConductor ? deber?.hintNudge : undefined}>
+                      <section className={styles.panelBox} style={{ padding: 16 }}>
+                        <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>
+                          {nudgeConductor ? deber?.cta : 'Falta conductor'}
+                        </div>
+                        <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--mecanu-text-secondary-light)' }}>
+                          {nudgeConductor
+                            ? deber?.detalle
+                            : 'Sin conductor el traslado no sale. Elige flota del taller o Red Mecanu.'}
+                        </p>
+                        <SelectorConductor ruta={ruta} grande autoFocus={nudgeConductor} />
+                      </section>
+                    </NudgeZona>
+                  ) : null}
+
+                  {puedeEditar(ruta.estado, 'ventana') && (ruta.estado === 'prospectos' || deber?.zona === 'ventana') ? (
+                    <NudgeZona activo={deber?.zona === 'ventana'} hint={deber?.zona === 'ventana' ? deber.hintNudge : undefined}>
+                      <section className={styles.panelBox} style={{ padding: 16 }}>
+                        <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>
+                          {deber?.zona === 'ventana' ? deber.cta : 'Sin ventana con el cliente'}
+                        </div>
+                        <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--mecanu-text-secondary-light)' }}>
+                          Elige día y una franja de 1 hora. El conductor se puede asignar en el mismo paso. No se inventa la hora.
+                        </p>
+                        <Button kind="primary" size="compact" icon="event_available" onClick={() => setAgendar(true)}>
+                          Agendar ventana
+                        </Button>
+                      </section>
+                    </NudgeZona>
+                  ) : null}
+
+                  {ruta.estado === 'en_taller' && (ruta.subestado === 'oportunidad_vuelta' || ruta.subestado === 'esperando_agenda_vuelta') ? (
+                    <NudgeZona activo={deber?.zona === 'vuelta'} hint={deber?.zona === 'vuelta' ? deber.hintNudge : undefined}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, background: 'var(--mecanu-electric-100)' }}>
                       <Icon name="where_to_vote" size="lg" />
                       <div style={{ flex: 1 }}>
@@ -203,6 +286,7 @@ export function RecordDrawer() {
                         Agendar vuelta
                       </Button>
                     </div>
+                    </NudgeZona>
                   ) : null}
 
                   {ruta.estado === 'prospectos' ? (
@@ -239,18 +323,20 @@ export function RecordDrawer() {
                           </div>
                         </>
                       ) : null}
+                      {esModoDemo() ? (
                       <div style={{ marginTop: 10 }}>
                         <Button kind="tertiary" size="compact" icon="smart_toy" onClick={() => setAgendar(true)}>
                           Simular agendamiento del cliente
                         </Button>
                       </div>
+                      ) : null}
                     </section>
                   ) : null}
 
                   <section className={styles.panelBox} style={{ padding: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                       <span className={styles.eyebrow} style={{ flex: 1 }}>Ciclo de la ruta</span>
-                      {ruta.estado === 'en_ruta' ? (
+                      {ruta.estado === 'en_ruta' && esModoDemo() ? (
                         <Button kind="tertiary" size="compact" icon="smart_toy" onClick={() => p.avanzarSubestadoEnRuta(ruta.id)}>
                           Simular avance del conductor
                         </Button>
@@ -260,6 +346,7 @@ export function RecordDrawer() {
                   </section>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 }}>
+                    <NudgeZona activo={nudgeVentana && deber?.zona === 'ventana'} hint={nudgeVentana && deber?.zona === 'ventana' ? deber.hintNudge : undefined}>
                     <section className={styles.panelBox} style={{ padding: 14 }}>
                       <div className={styles.eyebrow} style={{ marginBottom: 8 }}>Ventana comunicada al cliente</div>
                       {ruta.franja ? (
@@ -276,7 +363,15 @@ export function RecordDrawer() {
                       <div style={{ marginTop: 6, fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
                         {ruta.ventanaModo ? VENTANA_MODOS[ruta.ventanaModo]?.label : 'Sin ventana comprometida'}
                       </div>
+                      {puedeEditar(ruta.estado, 'ventana') || puedeEditar(ruta.estado, 'vuelta') ? (
+                        <div style={{ marginTop: 12 }}>
+                          <Button kind="primary" size="compact" icon="event_available" onClick={() => setAgendar(true)}>
+                            {ruta.franja ? 'Cambiar ventana' : (deber?.cta ?? 'Agendar ventana')}
+                          </Button>
+                        </div>
+                      ) : null}
                     </section>
+                    </NudgeZona>
 
                     <section className={styles.panelBox} style={{ padding: 14 }}>
                       <div className={styles.eyebrow} style={{ marginBottom: 8 }}>Cobertura del traslado</div>
@@ -292,10 +387,11 @@ export function RecordDrawer() {
 
                     <section className={styles.panelBox} style={{ padding: 14 }}>
                       <div className={styles.eyebrow} style={{ marginBottom: 8 }}>Presupuesto</div>
-                      <div style={{ fontSize: 20, fontWeight: 800 }}>{ruta.importe ? fmtDinero(ruta.importe) : 'Sin valorar'}</div>
+                      <div style={{ fontSize: 20, fontWeight: 800 }}>
+                        {ruta.importe ? <ImporteIva texto={fmtDinero(ruta.importe)} /> : 'Sin valorar'}
+                      </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                         {presMeta ? <Badge kind={presMeta.kind}>{presMeta.label}</Badge> : null}
-                        <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>IVA incluido</span>
                       </div>
                     </section>
                   </div>

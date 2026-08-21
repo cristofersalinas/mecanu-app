@@ -324,10 +324,22 @@ export function LandingPage({ locale }: { locale: Locale }) {
               <Link className={styles.fLink} href="/cliente-no-recoge-coche">Cliente no recoge el coche</Link>
             </div>
           </div>
+          <div className={styles.footerCompliance} aria-label={copy.footer.cumplimientoTitulo}>
+            <div className={styles.complianceBadges}>
+              <span className={styles.complianceBadge}>RGPD</span>
+              <span className={styles.complianceBadge}>ePrivacy</span>
+              <span className={styles.complianceBadge}>LSSI-CE</span>
+            </div>
+            <p className={styles.complianceText}>{copy.footer.cumplimientoTexto}</p>
+          </div>
           <div className={styles.footerBottom}>
             <div className={styles.footerBottomMeta}>
               <LanguageSwitch locale={locale} label={copy.footer.langLabel} variant="footer" />
+              <a className={styles.fLink} href="/aviso-legal">{copy.footer.avisoLegal}</a>
               <a className={styles.fLink} href="/privacidad">{copy.footer.privacidad}</a>
+              <a className={styles.fLink} href="/cookies">{copy.footer.cookies}</a>
+              <a className={styles.fLink} href="/terminos">{copy.footer.terminos}</a>
+              <a className={styles.fLink} href="/accesibilidad">{copy.footer.accesibilidad}</a>
             </div>
             <span className={styles.copyright}>{copy.footer.copyright}</span>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import styles from "./ItvLeadForm.module.css";
 
 export type ItvLead = {
@@ -49,6 +50,7 @@ export function ItvLeadForm({ compact = false }: { compact?: boolean }) {
   const [lead, setLead] = useState<ItvLead>(INITIAL);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
 
   function set<K extends keyof ItvLead>(key: K, value: ItvLead[K]) {
     setLead((prev) => ({ ...prev, [key]: value }));
@@ -61,12 +63,16 @@ export function ItvLeadForm({ compact = false }: { compact?: boolean }) {
       setError("Nombre y teléfono de 9 dígitos, como mínimo.");
       return;
     }
+    if (!aceptaPrivacidad) {
+      setError("Marca la casilla de privacidad para continuar.");
+      return;
+    }
     setSending(true);
     try {
       await fetch("/api/v1/itv-leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(lead),
+        body: JSON.stringify({ ...lead, aceptaPrivacidad: true }),
       }).catch(() => null);
 
       const url = waUrl(lead);
@@ -145,9 +151,24 @@ export function ItvLeadForm({ compact = false }: { compact?: boolean }) {
         </select>
       </label>
 
+      <label className={styles.privacyCheck}>
+        <input
+          type="checkbox"
+          checked={aceptaPrivacidad}
+          onChange={(e) => setAceptaPrivacidad(e.target.checked)}
+        />
+        <span>
+          He leído y acepto la{" "}
+          <Link href="/privacidad" target="_blank" rel="noopener noreferrer">
+            política de privacidad
+          </Link>
+          .
+        </span>
+      </label>
+
       {error ? <p className={styles.error}>{error}</p> : null}
 
-      <button className={styles.submit} type="submit" disabled={sending}>
+      <button className={styles.submit} type="submit" disabled={sending || !aceptaPrivacidad}>
         {sending ? "Abriendo WhatsApp…" : "Enviar por WhatsApp"}
       </button>
       <p className={styles.legal}>

@@ -1,0 +1,133 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: 28px;
+  max-width: 1080px;
+  padding-bottom: 32px;
+}
+
+.h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 700;
+}
+
+.lead {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--mecanu-text-secondary-light);
+}
+
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--mecanu-border);
+  border-radius: 10px;
+  background: var(--mecanu-neutral-0);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.itemOn {
+  border-color: var(--mecanu-electric-600);
+  box-shadow: 0 0 0 1px var(--mecanu-electric-600);
+}
+
+.meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mecanu-text-secondary-light);
+}
+
+.escenario {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.progreso {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mecanu-neutral-300);
+}
+
+.tablero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--mecanu-border);
+  border-radius: 12px;
+  background: var(--mecanu-neutral-25);
+  min-height: 200px;
+}
+
+.zona {
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px dashed var(--mecanu-border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mecanu-neutral-700);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.zonaOn {
+  border-style: solid;
+  border-color: var(--mecanu-electric-600);
+  background: var(--mecanu-neutral-0);
+  color: var(--mecanu-neutral-900);
+  transform: translateY(-2px);
+}
+
+.globo {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--mecanu-neutral-900);
+  color: var(--mecanu-neutral-0);
+}
+
+.globoTitulo {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.globo p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--mecanu-neutral-200);
+}
+
+.globoAcciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

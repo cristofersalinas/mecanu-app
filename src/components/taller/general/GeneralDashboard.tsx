@@ -9,7 +9,9 @@ import {
   etiquetaVehiculo, RutaVista,
 } from '../data';
 import { CardsSkeleton, Eyebrow } from '../ui/Primitives';
+import { ImporteIva } from '../ui/ImporteIva';
 import { useCarga, useAhora } from '../ui/useCarga';
+import { COLUMNAS_TAREA } from '@/lib/mecanu/pipeline-tareas';
 import styles from '../panel.module.css';
 
 const DIA_MS = 86400000;
@@ -19,7 +21,7 @@ function iniciales(nombre: string): string {
 }
 
 export function GeneralDashboard() {
-  const { rutas, seleccionar } = usePanel();
+  const { rutas, seleccionar, irA, pipelineTareas, tareasPendientesN } = usePanel();
   const cargando = useCarga();
   const ahora = useAhora();
   const [rango, setRango] = useState<'7d' | '1m'>('7d');
@@ -37,7 +39,7 @@ export function GeneralDashboard() {
       { label: 'En taller', icono: 'garage', value: String(rutas.filter((r) => r.estado === 'en_taller').length) },
       { label: 'En ruta', icono: 'local_shipping', value: String(rutas.filter((r) => r.estado === 'en_ruta').length) },
       { label: 'Prospectos', icono: 'flag', value: String(rutas.filter((r) => r.estado === 'prospectos').length) },
-      { label: 'Facturado (cerrado)', icono: 'payments', value: fmtDinero(facturado, true) },
+      { label: 'Facturado (cerrado)', icono: 'payments', value: fmtDinero(facturado, true), iva: true },
     ];
   }, [rutas]);
 
@@ -119,14 +121,56 @@ export function GeneralDashboard() {
                 <Icon name={m.icono} size="sm" />
               </span>
             </div>
-            <span style={{ fontSize: 30, lineHeight: '34px', fontWeight: 700 }}>{m.value}</span>
+            <span style={{ fontSize: 30, lineHeight: '34px', fontWeight: 700 }}>
+              {'iva' in m && m.iva ? <ImporteIva texto={m.value} /> : m.value}
+            </span>
           </div>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px,1fr) minmax(320px,1.6fr)', gap: 16 }}>
-        <section className={styles.panelBox} style={{ padding: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(280px,0.8fr)', gap: 16, alignItems: 'stretch' }}>
+        <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
+              <Icon name="view_kanban" size="sm" />
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 700 }}>Tareas</span>
+            <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
+              {tareasPendientesN === 0
+                ? 'Nada pendiente. El pipeline está en Tablero.'
+                : `${tareasPendientesN} ${tareasPendientesN === 1 ? 'hueco' : 'huecos'} por cerrar.`}
+            </span>
+            <button
+              type="button"
+              className={styles.linkBtn}
+              style={{ fontSize: 12, fontWeight: 700 }}
+              onClick={() => irA('tablero', 'tareas')}
+            >
+              Abrir tablero
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 8 }}>
+            {COLUMNAS_TAREA.map((col) => (
+              <button
+                key={col.id}
+                type="button"
+                onClick={() => irA('tablero', 'tareas')}
+                style={{
+                  display: 'flex', flexDirection: 'column', gap: 4, padding: 12, borderRadius: 10, textAlign: 'left',
+                  border: '1px solid var(--mecanu-border)', background: 'var(--mecanu-neutral-25)', cursor: 'pointer', font: 'inherit',
+                }}
+              >
+                <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--mecanu-text-secondary-light)' }}>
+                  {col.label}
+                </span>
+                <span style={{ fontSize: 22, fontWeight: 800, lineHeight: '26px' }}>{pipelineTareas[col.id].length}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flex: 'none' }}>
             <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
               <Icon name="event" size="sm" />
             </span>
@@ -134,7 +178,7 @@ export function GeneralDashboard() {
           </div>
 
           {proxima && proxima.fecha ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 10, background: 'var(--mecanu-neutral-25)', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 10, background: 'var(--mecanu-neutral-25)', marginBottom: 12, flex: 'none' }}>
               <div style={{ textAlign: 'center', lineHeight: 1 }}>
                 <div style={{ fontSize: 26, fontWeight: 800 }}>{proxima.fecha.getDate()}</div>
                 <div style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--mecanu-neutral-300)' }}>
@@ -150,12 +194,12 @@ export function GeneralDashboard() {
             </div>
           ) : null}
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }}>
             {citas.map((c) => (
               <button
                 key={c.id}
                 type="button"
-                onClick={() => seleccionar({ kind: 'ruta', id: c.id }, 'panel')}
+                onClick={() => seleccionar({ kind: 'ruta', id: c.id }, 'ficha')}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', border: 'none',
                   borderBottom: '1px solid var(--mecanu-border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'left',
@@ -180,52 +224,52 @@ export function GeneralDashboard() {
             ) : null}
           </div>
         </section>
+      </div>
 
-        <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
-              <Icon name="bar_chart" size="sm" />
-            </span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Servicios de traslado</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ fontSize: 20, fontWeight: 800 }}>{totalGrafica}</span>
-                <span style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-                  en {rango === '7d' ? 'los últimos 7 días' : 'el último mes'}
-                </span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {(['7d', '1m'] as const).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRango(r)}
-                  className={styles.ghostBtn}
-                  style={{ background: rango === r ? 'var(--mecanu-neutral-25)' : undefined }}
-                >
-                  {r === '7d' ? '7 días' : '1 mes'}
-                </button>
-              ))}
+      <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
+            <Icon name="bar_chart" size="sm" />
+          </span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700 }}>Servicios de traslado</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <span style={{ fontSize: 20, fontWeight: 800 }}>{totalGrafica}</span>
+              <span style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
+                en {rango === '7d' ? 'los últimos 7 días' : 'el último mes'}
+              </span>
             </div>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flex: 1, minHeight: 150 }}>
-            {barras.map((b, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-text-secondary-light)' }}>{b.valor}</span>
-                <div
-                  style={{
-                    width: '100%', height: `${Math.max(4, (b.valor / maxBarra) * 120)}px`,
-                    borderRadius: '6px 6px 2px 2px', background: 'var(--mecanu-electric-600)',
-                  }}
-                />
-                <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>{b.label}</span>
-              </div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {(['7d', '1m'] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRango(r)}
+                className={styles.ghostBtn}
+                style={{ background: rango === r ? 'var(--mecanu-neutral-25)' : undefined }}
+              >
+                {r === '7d' ? '7 días' : '1 mes'}
+              </button>
             ))}
           </div>
-        </section>
-      </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, minHeight: 160 }}>
+          {barras.map((b, i) => (
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-text-secondary-light)' }}>{b.valor}</span>
+              <div
+                style={{
+                  width: '100%', height: `${Math.max(4, (b.valor / maxBarra) * 140)}px`,
+                  borderRadius: '6px 6px 2px 2px', background: 'var(--mecanu-electric-600)',
+                }}
+              />
+              <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>{b.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 16, paddingBottom: 8 }}>
         <section className={styles.panelBox} style={{ padding: 18 }}>

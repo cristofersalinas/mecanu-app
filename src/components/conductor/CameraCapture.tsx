@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { Icon } from '@/components/ds/Icon';
+import { esModoDemo } from '@/lib/entorno';
 import { FOTO_LADO, VIDEO_MAX_S } from './constants';
 import type { AccionesConductor } from './useConductor';
 import type { CamState } from './types';
@@ -104,7 +105,7 @@ export function CameraCapture({ cam, acciones }: { cam: CamState; acciones: Acci
               Volver
             </button>
           </div>
-          {/* Salida solo de prototipo: en producción la evidencia no se simula. */}
+          {esModoDemo() ? (
           <button
             type="button"
             onClick={esVideo ? simularVideo : simularFoto}
@@ -122,6 +123,7 @@ export function CameraCapture({ cam, acciones }: { cam: CamState; acciones: Acci
           >
             Simular captura (solo prototipo)
           </button>
+          ) : null}
         </div>
       </Marco>
     );

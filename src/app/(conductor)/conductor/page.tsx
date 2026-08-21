@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ConMarcoDemo } from '@/components/entorno/ConMarcoDemo';
 import { ConductorApp } from '@/components/conductor/ConductorApp';
 
 export const metadata: Metadata = {
@@ -11,5 +12,9 @@ export const metadata: Metadata = {
  * entre pantallas es estado de React, como en una app nativa.
  */
 export default function ConductorPage() {
-  return <ConductorApp />;
+  return (
+    <ConMarcoDemo>
+      <ConductorApp />
+    </ConMarcoDemo>
+  );
 }

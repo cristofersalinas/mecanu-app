@@ -58,6 +58,25 @@ describe('Qué se puede editar según el estado de la ruta', () => {
   });
 });
 
+describe('Label del subestado vs detalle', () => {
+  it('la card y el badge usan el nombre corto; la frase larga vive en desc', () => {
+    expect(subestadoMeta('en_ruta', 'en_camino_origen')?.label).toBe('En camino');
+    expect(subestadoMeta('en_ruta', 'en_camino_origen')?.desc).toMatch(/recogida/);
+    expect(subestadoMeta('en_taller', 'oportunidad_vuelta')?.label).toBe('Sin vuelta');
+    expect(subestadoMeta('en_taller', 'esperando_agenda_vuelta')?.label).toBe('Vuelta sin fecha');
+    expect(subestadoMeta('en_taller', 'pendiente_confirmar_retiro')?.label).toBe('Confirmar retiro');
+  });
+
+  it('ningún label de subestado es una frase de más de dos palabras largas', () => {
+    for (const estado of Object.values(ESTADO)) {
+      for (const sub of estado.subestados) {
+        expect(sub.label.split(/\s+/).length, `${estado.id}.${sub.id}`).toBeLessThanOrEqual(3);
+        expect(sub.desc.length, `${estado.id}.${sub.id}`).toBeGreaterThan(sub.label.length);
+      }
+    }
+  });
+});
+
 describe('Los 4 subestados de EN RUTA solo los mueve el conductor', () => {
   it('en_ruta está marcado soloConductor', () => {
     expect(ESTADO.en_ruta.soloConductor).toBe(true);

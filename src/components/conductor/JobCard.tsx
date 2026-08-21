@@ -78,7 +78,7 @@ export function JobCard({
             onClick={onLlamar}
             tabIndex={cajonAbierto ? 0 : -1}
             aria-hidden={!cajonAbierto}
-            aria-label="Llamar al cliente"
+            aria-label="Para, llama al cliente"
             style={{
               width: '100%',
               height: '100%',
@@ -95,7 +95,9 @@ export function JobCard({
             }}
           >
             <Icon name="call" size="lg" />
-            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.03em' }}>Llamar</span>
+            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.02em', textAlign: 'center', lineHeight: '13px' }}>
+              Para, llama
+            </span>
           </button>
         </div>
 

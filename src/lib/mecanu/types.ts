@@ -74,6 +74,14 @@ export type TipoInspeccion = z.infer<typeof TipoInspeccionSchema>;
 export const EstadoMensajeWaSchema = z.enum(['pending', 'sent', 'delivered', 'read', 'failed']);
 export type EstadoMensajeWa = z.infer<typeof EstadoMensajeWaSchema>;
 
+/** Columnas del kanban de tareas (Tablero → Tareas). No es el kanban de rutas.
+    La card no avanza por arrastre: Pendiente → Hecho solo al cerrar el hueco. */
+export const ColumnaTareaPipelineSchema = z.enum(['pendiente', 'hecho', 'cancelado']);
+export type ColumnaTareaPipeline = z.infer<typeof ColumnaTareaPipelineSchema>;
+
+export const ViaCierreTareaSchema = z.enum(['accion', 'archivada', 'cancelada']);
+export type ViaCierreTarea = z.infer<typeof ViaCierreTareaSchema>;
+
 /* ==============================================================
    Entidades base
    ============================================================== */
@@ -499,3 +507,63 @@ export const SolicitudSchema = z.object({
   resueltaEn: FechaSchema.nullable(),
 });
 export type Solicitud = z.infer<typeof SolicitudSchema>;
+
+/* ==============================================================
+   Backoffice — usuarios internos, alertas y log de automatizaciones
+   El cliente del taller no es un usuario de esta superficie (WhatsApp / link).
+   ============================================================== */
+
+export const RolBackofficeSchema = z.enum(['dueno', 'operacion', 'conductor']);
+export type RolBackoffice = z.infer<typeof RolBackofficeSchema>;
+
+export const EstadoUsuarioBackofficeSchema = z.enum(['invitado', 'activo', 'suspendido', 'baja']);
+export type EstadoUsuarioBackoffice = z.infer<typeof EstadoUsuarioBackofficeSchema>;
+
+export const AccionBackofficeSchema = z.enum([
+  'ver_backoffice',
+  'resolver_solicitud',
+  'asignar_conductor',
+  'gestionar_usuarios',
+  'ejecutar_automatizaciones',
+  'cambiar_proceso_conductor',
+]);
+export type AccionBackoffice = z.infer<typeof AccionBackofficeSchema>;
+
+export const UsuarioBackofficeSchema = z.object({
+  id: z.string(),
+  nombre: z.string(),
+  email: z.string(),
+  telefono: z.string().nullable(),
+  rol: RolBackofficeSchema,
+  estado: EstadoUsuarioBackofficeSchema,
+  /** si rol=conductor, apunta a Conductor.id — un conductor sin usuario no entra al PWA */
+  conductorId: z.string().nullable(),
+  invitadEn: FechaSchema,
+  activadoEn: FechaSchema.nullable(),
+});
+export type UsuarioBackoffice = z.infer<typeof UsuarioBackofficeSchema>;
+
+export const SeveridadAlertaSchema = z.enum(['critica', 'alta', 'media', 'info']);
+export type SeveridadAlerta = z.infer<typeof SeveridadAlertaSchema>;
+
+export const AlertaOperativaSchema = z.object({
+  id: z.string(),
+  severidad: SeveridadAlertaSchema,
+  titulo: z.string(),
+  detalle: z.string(),
+  entidadTipo: z.string(),
+  entidadId: z.string(),
+  reglaId: z.string(),
+  abiertaDesde: FechaSchema,
+});
+export type AlertaOperativa = z.infer<typeof AlertaOperativaSchema>;
+
+export const AutomatizacionEjecucionSchema = z.object({
+  id: z.string(),
+  reglaId: z.string(),
+  ts: FechaSchema,
+  entidadId: z.string(),
+  resultado: z.string(),
+  idempotencyKey: z.string(),
+});
+export type AutomatizacionEjecucion = z.infer<typeof AutomatizacionEjecucionSchema>;

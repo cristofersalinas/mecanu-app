@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { ConnectionBanner } from '@/components/ds/ConnectionBanner';
 import { Icon } from '@/components/ds/Icon';
 import { Skeleton } from '@/components/ds/Skeleton';
+import { esModoDemo } from '@/lib/entorno';
 import { agenda, buildJob } from './selectors';
 import { CameraCapture } from './CameraCapture';
 import { CheckinWizard } from './CheckinWizard';
@@ -55,6 +56,26 @@ export function ConductorApp(props: OpcionesConductor) {
         {s.sync !== 'synced' ? (
           <div style={{ flex: 'none' }}>
             <ConnectionBanner status={s.sync} queuedCount={s.queue} />
+            {s.queue > 0 ? (
+              <button
+                type="button"
+                onClick={acciones.reintentarCola}
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  background: '#FDEBDD',
+                  color: '#9C420B',
+                  font: 'inherit',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  padding: '6px 16px 10px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                Reintentar la misma cola
+              </button>
+            ) : null}
           </div>
         ) : null}
 
@@ -70,9 +91,26 @@ export function ConductorApp(props: OpcionesConductor) {
             }}
           >
             <Icon name="cloud_upload" size="sm" color="#9C420B" style={{ flex: 'none', fontSize: 17 }} />
-            <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 700, color: '#9C420B' }}>
+            <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 700, color: '#9C420B', flex: 1 }}>
               {avisoCola}
             </span>
+            <button
+              type="button"
+              onClick={acciones.reintentarCola}
+              style={{
+                flex: 'none',
+                border: 'none',
+                background: 'none',
+                font: 'inherit',
+                fontSize: 12,
+                fontWeight: 800,
+                color: '#9C420B',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              Reintentar
+            </button>
           </div>
         ) : null}
 
@@ -182,7 +220,7 @@ export function ConductorApp(props: OpcionesConductor) {
         ) : null}
       </div>
 
-      {/* Controles de demo, fuera del aparato: no forman parte de la app. */}
+      {esModoDemo() ? (
       <div className={css.pie}>
         <button type="button" className={css.pieBoton} onClick={acciones.toggleOnline}>
           <Icon name={s.online ? 'wifi_off' : 'wifi'} size="sm" style={{ fontSize: 16 }} />
@@ -198,6 +236,7 @@ export function ConductorApp(props: OpcionesConductor) {
           </>
         ) : null}
       </div>
+      ) : null}
     </div>
   );
 }

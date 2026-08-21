@@ -1,0 +1,54 @@
+{
+  "repo": "cristofersalinas/mecanu-app",
+  "generalTopic": "Mapa: #ordenes · #leads · #oportunidades · #csx · #alertas · #deploys",
+  "channels": [
+    {
+      "key": "ordenes",
+      "name": "ordenes",
+      "githubVar": null,
+      "purpose": "Único sitio para dar trabajo al agente. Aquí se menciona @Cursor.",
+      "topic": "Una tarea por hilo. Repo por defecto: cristofersalinas/mecanu-app. No mergees desde aquí. (No se llama #cursor: ese nombre lo ocupa la app Cursor.)",
+      "pin": "Así se da trabajo al agente\n\n1. Escribe en un hilo nuevo:\n@Cursor en mecanu-app: [una sola tarea]. Abre un PR a main. No mergees. Si algo no está en CLAUDE.md o PREGUNTAS-ABIERTAS.md, anótalo; no lo inventes.\n\n2. Sigue en el mismo hilo. Un @Cursor más es una instrucción extra al mismo agente, no uno nuevo.\n\n3. Para arrancar otro agente en el mismo hilo: @Cursor agent [otra tarea]\n\n4. Primera vez en este canal: /invite @Cursor y @Cursor settings → repositorio cristofersalinas/mecanu-app, rama main.\n\nNo uses este canal para charla. No pidas merge a main. CI rojo = no se mergea."
+    },
+    {
+      "key": "leads",
+      "name": "leads",
+      "githubVar": "SLACK_CHANNEL_LEADS",
+      "purpose": "Alguien rellenó Habla con Mecanu o ITV a domicilio. Llama o responde.",
+      "topic": "Leads de la web. También llega el email a cris@mecanu.com. No mezclar con #alertas.",
+      "pin": "Qué llega aquí\n\nHabla con Mecanu (/contacto): solicitud de taller, con teléfono y email.\nITV a domicilio: nombre, teléfono, ciudad, vehículo y si la ITV está caducada.\n\nEl formulario sigue guardándose en la Sheet y el email. Slack es el aviso inmediato.\n\nHay datos personales: no invites a gente de fuera a este workspace."
+    },
+    {
+      "key": "oportunidades",
+      "name": "oportunidades",
+      "githubVar": "SLACK_CHANNEL_OPORTUNIDADES",
+      "purpose": "Oportunidades de los talleres: creación, cambios de estado y nudges si no actúan.",
+      "topic": "Un hilo por oportunidad. Comentarios = acciones del taller. Si no hay movimiento, el bot sugiere seguimiento.",
+      "pin": "Cómo leer este canal\n\n1. Primer mensaje del hilo = oportunidad abierta (taller, sucursal, matrícula, importe IVA, estado).\n2. Cada comentario = quién actuó [rol] y a qué estado pasó.\n3. Si el taller no mueve: recordatorio paternalista (valorar / enviar / seguir / crear ruta).\n4. Tú puedes avisar al taller si ves estancamiento.\n\nEstados: Nueva → Estimado → Enviado → Confirmado (o Rechazado / Caducado)."
+    },
+    {
+      "key": "csx",
+      "name": "csx",
+      "githubVar": "SLACK_CHANNEL_CSX",
+      "purpose": "Destacados semanales, upsell de plan, llamada si no ofrecen, accionables CSX.",
+      "topic": "Lunes: Destacados. Upsell si Básico con ≥7 autos/semana u otras señales. Subuso = llamar.",
+      "pin": "Cómo usar #csx\n\n1. Destacados (lunes): métricas + citas de clientes + lista accionable CSX.\n2. Upsell: Básico→Pro (o Pro→Flota) si volumen ≥7 autos/semana, campañas manuales, buena conversión, flota llena o muchas tareas manuales.\n3. Subuso: poca o ninguna oferta a clientes → script de llamada «cómo te ha ido».\n4. Contamos autos (ruta con traslado), no tramos sueltos.\n\nNo es #oportunidades (eso es el funnel de una campaña). Aquí es la relación con el taller."
+    },
+    {
+      "key": "alertas",
+      "name": "alertas",
+      "githubVar": "SLACK_CHANNEL_ALERTAS",
+      "purpose": "Solo lo que exige actuación ahora: CI rojo en main, deploy fallido, o seguridad P0.",
+      "topic": "Si llega un mensaje aquí, hay que actuar. No es un diario.",
+      "pin": "Qué llega aquí (y qué no)\n\nSí: production-gate rojo en main. Deploy de mecanu.com fallido. Señales de seguridad P0.\n\nNo: CI en feature. Deploys OK (#deploys). Leads (#leads). Oportunidades (#oportunidades). CSX (#csx).\n\nSi silencias este canal, te enteras tarde de que producción está rota."
+    },
+    {
+      "key": "deploys",
+      "name": "deploys",
+      "githubVar": "SLACK_CHANNEL_DEPLOYS",
+      "purpose": "mecanu.com publicado. Informativo, no es una alarma.",
+      "topic": "Deploy de producción OK. Puedes silenciarlo si solo te importan las fallas (#alertas).",
+      "pin": "Aquí solo entra un deploy de producción que ha quedado Ready.\n\nPara confirmar el alias a mano: npx vercel inspect mecanu.com\n\nSi el deploy falla no aparece aquí: aparece en #alertas y se abre una issue deploy-production en GitHub."
+    }
+  ]
+}

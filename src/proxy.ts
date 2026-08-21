@@ -19,16 +19,16 @@ import {
  * Hace dos cosas, ambas antes de que se renderice nada:
  *
  * 1. Fuera de tu máquina, la única superficie pública es la landing.
- *    `/panel`, `/conductor` y `/api/v1/*` sirven datos mock. El corte cubre
+ *    `/panel`, `/conductor`, `/backoffice` y `/api/v1/*` sirven datos mock. El corte cubre
  *    producción **y** los previews de Vercel. Local (`next dev` / `next start`)
  *    no tiene `VERCEL=1` y sigue sirviendo las tres apps.
  *
  *    Para verificar panel/conductor en un preview de staging, pon
  *    `MECANU_EXPONER_APPS=1` solo en el entorno Preview, o entra con SSO.
- * 2. En la primera entrada a `/`, propone el idioma por país/región usando las
- *    cabeceras server-side de Vercel. Una ruta localizada o la cookie manual
- *    siempre ganan. Después marca el idioma en una cabecera para que el layout
- *    raíz pueda poner el `lang` correcto en el `<html>`.
+ * 2. En la primera entrada a `/`, propone el idioma con Accept-Language (y la
+ *    cookie manual si ya eligió). Una ruta localizada siempre gana. Después
+ *    marca el idioma en una cabecera para que el layout raíz pueda poner el
+ *    `lang` correcto en el `<html>`.
  *
  * Sobre el corte: en Vercel siempre, a propósito. Un preview de rama es una
  * URL pública (o pública el día que se apague el SSO) y el mock del panel no
@@ -57,6 +57,8 @@ function esAppProtegida(pathname: string) {
     pathname.startsWith("/panel/") ||
     pathname === "/conductor" ||
     pathname.startsWith("/conductor/") ||
+    pathname === "/backoffice" ||
+    pathname.startsWith("/backoffice/") ||
     pathname === "/api" ||
     pathname.startsWith("/api/")
   );
@@ -83,8 +85,8 @@ export async function proxy(request: NextRequest) {
         sameSite: "lax",
         secure: process.env.VERCEL === "1",
       });
-      // La respuesta depende de la IP/cookie del visitante. Nunca debe
-      // convertirse en una redirección compartida por la caché de Vercel.
+      // La respuesta depende de Accept-Language/cookie. Nunca debe convertirse
+      // en una redirección compartida por la caché de Vercel.
       respuesta.headers.set("Cache-Control", "private, no-store");
       return respuesta;
     }
@@ -130,6 +132,8 @@ export const config = {
     "/panel/:path*",
     "/conductor",
     "/conductor/:path*",
+    "/backoffice",
+    "/backoffice/:path*",
     "/api/:path*",
     "/wp-admin",
     "/wp-admin/:path*",

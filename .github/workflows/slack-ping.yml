@@ -1,0 +1,37 @@
+name: Slack ping
+
+# Comprueba que el bot y los channel ids están bien. No toca el código.
+# GitHub → Actions → Slack ping → Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      destino:
+        description: Canal de prueba
+        type: choice
+        required: true
+        default: alertas
+        options:
+          - alertas
+          - deploys
+          - leads
+          - oportunidades
+          - csx
+
+jobs:
+  ping:
+    name: ping
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Publicar
+        uses: ./.github/actions/notify-slack
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: ${{ inputs.destino == 'deploys' && vars.SLACK_CHANNEL_DEPLOYS || inputs.destino == 'leads' && vars.SLACK_CHANNEL_LEADS || inputs.destino == 'oportunidades' && vars.SLACK_CHANNEL_OPORTUNIDADES || inputs.destino == 'csx' && vars.SLACK_CHANNEL_CSX || vars.SLACK_CHANNEL_ALERTAS }}
+          text: >-
+            Ping de prueba desde GitHub Actions (${{ inputs.destino }}).
+            Si lees esto, el cableado de Slack está bien.
+            Quien lo lanzó: ${{ github.actor }}

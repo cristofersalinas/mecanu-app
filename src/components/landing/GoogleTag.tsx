@@ -81,13 +81,13 @@ export function GoogleTag({
           </Script>
           <Analytics
             beforeSend={(event) => {
-              if (event.url.includes("/panel") || event.url.includes("/conductor")) return null;
+              if (event.url.includes("/panel") || event.url.includes("/conductor") || event.url.includes("/backoffice")) return null;
               return event;
             }}
           />
           <SpeedInsights
             beforeSend={(event) => {
-              if (event.url.includes("/panel") || event.url.includes("/conductor")) return null;
+              if (event.url.includes("/panel") || event.url.includes("/conductor") || event.url.includes("/backoffice")) return null;
               return event;
             }}
           />
@@ -120,7 +120,7 @@ export function GoogleTag({
             <p className={styles.consentTitulo}>{copy.titulo}</p>
             <p className={styles.consentCuerpo}>{copy.cuerpo}</p>
             <div className={styles.consentAcciones}>
-              <Link href="/privacidad" className={styles.consentBtnTexto}>
+              <Link href="/cookies" className={styles.consentBtnTexto}>
                 {copy.gestionar}
               </Link>
               <button

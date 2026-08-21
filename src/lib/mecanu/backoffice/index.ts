@@ -1,0 +1,10 @@
+export { AUTOMATIZACIONES, puede, PERMISOS, SLA_NO_RODANTE_MIN, SLA_SOLICITUD_MIN } from './reglas';
+export { transicionarUsuario, invitarUsuario, puedeEntrarAppConductor, puedeTransicionarUsuario } from './ciclo-usuario';
+export { transicionarProceso, docsCompletos, puedeTomarBolsa } from './ciclo-conductor';
+export { huecosSinConductor, conflictoAlAsignar, bolsaDisponibles, fmtHorasHasta } from './cobertura';
+export { buildAlertas } from './alertas';
+export { buildAnalitica } from './analitica';
+export { proponerAutomatizaciones, aplicarAutomatizaciones } from './automations';
+export { buildSnapshot } from './snapshot';
+export type { MundoBackoffice } from './mundo';
+export type { SnapshotBackoffice } from './snapshot';

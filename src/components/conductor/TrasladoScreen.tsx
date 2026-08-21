@@ -5,6 +5,7 @@ import { Badge } from '@/components/ds/Badge';
 import { Icon } from '@/components/ds/Icon';
 import { StatusTimeline } from '@/components/ds/StatusTimeline';
 import { TimeWindow } from '@/components/ds/TimeWindow';
+import { esModoDemo } from '@/lib/entorno';
 import { iconoLog, SOL_META, TESTIGOS } from './constants';
 import * as D from './data';
 import {
@@ -478,10 +479,12 @@ export function TrasladoScreen({
           <BotonSecundario icono="sos" color="#A81823" onClick={() => acciones.irA('emergencias')}>
             Reportar incidencia o siniestro
           </BotonSecundario>
-          {/* Mock de desarrollo: en producción el subestado solo lo mueve el botón principal (R7). */}
-          <BotonSecundario icono="skip_next" onClick={onSimular}>
-            Simular · avanzar subestado
-          </BotonSecundario>
+          {/* El subestado en calle lo mueve el botón principal. Simular solo con `npm run demo`. */}
+          {esModoDemo() ? (
+            <BotonSecundario icono="skip_next" onClick={onSimular}>
+              Simular · avanzar subestado
+            </BotonSecundario>
+          ) : null}
         </div>
 
         <div style={{ paddingTop: 14, fontSize: 11, color: 'var(--mecanu-neutral-300)', textAlign: 'center' }}>

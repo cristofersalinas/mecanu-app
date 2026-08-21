@@ -20,6 +20,9 @@ export function SignatureCanvas({
 }) {
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const pintando = useRef(false);
+  const recorrido = useRef(0);
+  const ultimo = useRef<[number, number] | null>(null);
+  const TRAZO_MIN = 24;
 
   const ctx = useCallback(() => canvas.current?.getContext('2d') ?? null, []);
 
@@ -92,9 +95,11 @@ export function SignatureCanvas({
           e.preventDefault();
           e.currentTarget.setPointerCapture(e.pointerId);
           pintando.current = true;
+          recorrido.current = 0;
           const g = ctx();
           if (!g) return;
           const [x, y] = punto(e);
+          ultimo.current = [x, y];
           g.beginPath();
           g.moveTo(x, y);
         }}
@@ -104,15 +109,24 @@ export function SignatureCanvas({
           const g = ctx();
           if (!g) return;
           const [x, y] = punto(e);
+          const prev = ultimo.current;
+          if (prev) {
+            const dx = x - prev[0];
+            const dy = y - prev[1];
+            recorrido.current += Math.hypot(dx, dy);
+          }
+          ultimo.current = [x, y];
           g.lineTo(x, y);
           g.stroke();
-          if (!firmada) onFirmar();
+          if (!firmada && recorrido.current >= TRAZO_MIN) onFirmar();
         }}
         onPointerUp={() => {
           pintando.current = false;
+          ultimo.current = null;
         }}
         onPointerCancel={() => {
           pintando.current = false;
+          ultimo.current = null;
         }}
         style={{
           display: 'block',

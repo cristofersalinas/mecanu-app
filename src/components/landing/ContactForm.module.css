@@ -357,6 +357,28 @@
   margin: 0;
 }
 
+.privacyCheck {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ink, #0f0f0f);
+  cursor: pointer;
+}
+
+.privacyCheck input {
+  margin-top: 0.2rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
+}
+
+.privacyCheck a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* ─── Pantalla de gracias ─── */
 .thanks {
   flex: 1;

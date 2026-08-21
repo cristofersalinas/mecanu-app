@@ -49,12 +49,16 @@ Cuando se llenen las 3, deja la más antigua que ya no pegue y documenta cuáles
 
 ## Consultar quién te está sondeando
 
+Inventario completo de sensores, campos y qué hacer:
+[`docs/SLACK-SEGURIDAD.md`](./docs/SLACK-SEGURIDAD.md).
+
 Hasta que se aplique la migración `0005_security_events.sql` (no está aplicada):
 
 1. Vercel → Logs. Filtro de texto: `mecanu.security`.
-2. Cada línea es un JSON: `tipo`, `ip`, `geo`, `ruta`, `userAgent`, `ts`.
+2. Cada línea es un JSON: `tipo`, `ip`, `geo`, `ruta`, `userAgent`, `ts`, `extra`.
 3. Tipos: `honeypot_hit`, `fake_login`, `canary_used`, `assistant_prompt`, `assistant_injection`, `sondeo_sistematico`, `rate_limited`.
 4. Alertas inmediatas (si hay DSN de Sentry): `canary_used`, `assistant_injection`, `sondeo_sistematico`.
+5. Objetivo Slack: esos tres P0 a `#alertas` con el formato de `docs/SLACK-SEGURIDAD.md` §4.
 
 ## Cuota y gasto
 

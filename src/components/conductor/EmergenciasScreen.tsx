@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Icon } from '@/components/ds/Icon';
 import { EN_RUTA, TELEFONO_MECANU } from './constants';
 import * as D from './data';
@@ -19,6 +20,7 @@ export function EmergenciasScreen({ s, acciones }: { s: AppState; acciones: Acci
     .map((tid) => buildJob(tid, s))
     .filter((j): j is Job => j !== null)
     .filter((j) => !j.hecho && EN_RUTA.includes(j.sub));
+  const [confirmarTid, setConfirmarTid] = useState<string | null>(null);
 
   return (
     <div
@@ -169,10 +171,36 @@ export function EmergenciasScreen({ s, acciones }: { s: AppState; acciones: Acci
                   Siniestro reportado · {D.fmtHora(s.incidentes[j.tid]!.ts)}
                 </div>
               ) : (
+                <>
                 <IncidentButton
                   label="Mantén pulsado para reportar"
-                  onActivate={() => acciones.reportar(j.tid)}
+                  onActivate={() => setConfirmarTid(j.tid)}
                 />
+                {confirmarTid === j.tid ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      acciones.reportar(j.tid);
+                      setConfirmarTid(null);
+                    }}
+                    style={{
+                      width: '100%',
+                      minHeight: 48,
+                      marginTop: 8,
+                      border: '1px solid #F3C2C6',
+                      borderRadius: 10,
+                      background: '#A81823',
+                      color: '#fff',
+                      font: 'inherit',
+                      fontSize: 14,
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Confirmar siniestro · congela el viaje
+                  </button>
+                ) : null}
+                </>
               )}
             </div>
           ))}

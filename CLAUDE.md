@@ -69,10 +69,12 @@ diseño construido en Claude Design (formato `.dc.html`). Estructura:
 |---|---|
 | `src/app/(taller)/panel` | Panel de administración del taller (desktop) |
 | `src/app/(conductor)/conductor` | App web del conductor (móvil) |
+| `src/app/(backoffice)/backoffice` | Cockpit del dueño: alertas, bandeja, cobertura, dinero, equipo, cron |
 | `src/components/ds` | Librería de 47 componentes del design system Mecanu |
 | `src/components/taller` | Componentes propios del panel |
 | `src/components/conductor` | Componentes propios de la app del conductor |
-| `src/lib/mecanu` | Capa de datos y modelo (mecanu-data / mecanu-pipeline / mecanu-rutas / mecanu-whatsapp), sin backend |
+| `src/components/backoffice` | UI del backoffice (solo `repo`) |
+| `src/lib/mecanu` | Capa de datos y modelo (mecanu-data / mecanu-pipeline / mecanu-rutas / mecanu-whatsapp / backoffice), sin backend |
 | `src/styles/ds` | Tokens CSS del design system (colores, tipografía, espaciado, radios, elevación, motion, iconos) |
 
 ## Landing page pública

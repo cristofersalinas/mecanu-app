@@ -1,44 +1,35 @@
 import { describe, expect, it } from "vitest";
 import {
+  localeFromAcceptLanguage,
   localeFromCookieHeader,
-  localeFromGeoHeaders,
   localeFromPathname,
   preferredLocaleFromRequest,
 } from "./locales";
 
-function geo(country?: string, region?: string): Headers {
+function conAccept(acceptLanguage?: string): Headers {
   const headers = new Headers();
-  if (country) headers.set("x-vercel-ip-country", country);
-  if (region) headers.set("x-vercel-ip-country-region", region);
+  if (acceptLanguage) headers.set("accept-language", acceptLanguage);
   return headers;
 }
 
-describe("localeFromGeoHeaders", () => {
-  it("pone Catalunya entera en catalán, incluida Barcelona", () => {
-    expect(localeFromGeoHeaders(geo("ES", "CT"))).toBe("ca");
-    expect(localeFromGeoHeaders(geo("es", "es-ct"))).toBe("ca");
+describe("localeFromAcceptLanguage", () => {
+  it("elige el primer idioma soportado respetando q", () => {
+    expect(localeFromAcceptLanguage("ca-ES,ca;q=0.9,es;q=0.8")).toBe("ca");
+    expect(localeFromAcceptLanguage("es-ES,es;q=0.9,ca;q=0.8")).toBe("es");
+    expect(localeFromAcceptLanguage("en-US,en;q=0.9")).toBe("en");
+    expect(localeFromAcceptLanguage("pt-PT,pt;q=0.9,en;q=0.8")).toBe("pt");
   });
 
-  it("deja el resto de España y toda Latinoamérica en español", () => {
-    expect(localeFromGeoHeaders(geo("ES", "MD"))).toBe("es");
-    expect(localeFromGeoHeaders(geo("MX"))).toBe("es");
-    expect(localeFromGeoHeaders(geo("AR"))).toBe("es");
-    expect(localeFromGeoHeaders(geo("BR"))).toBe("es");
+  it("prioriza por calidad aunque el orden del header diga otra cosa", () => {
+    expect(localeFromAcceptLanguage("es;q=0.5,ca;q=0.9")).toBe("ca");
+    expect(localeFromAcceptLanguage("en;q=0.2,pt-BR;q=0.8")).toBe("pt");
   });
 
-  it("usa portugués en Portugal", () => {
-    expect(localeFromGeoHeaders(geo("PT"))).toBe("pt");
-  });
-
-  it("usa inglés en los países anglófonos definidos", () => {
-    for (const country of ["US", "GB", "IE", "CA", "AU", "NZ"]) {
-      expect(localeFromGeoHeaders(geo(country))).toBe("en");
-    }
-  });
-
-  it("hace fallback a español sin cabeceras o con un país no definido", () => {
-    expect(localeFromGeoHeaders(geo())).toBe("es");
-    expect(localeFromGeoHeaders(geo("DE"))).toBe("es");
+  it("hace fallback a español sin cabecera o sin coincidencia", () => {
+    expect(localeFromAcceptLanguage(undefined)).toBe("es");
+    expect(localeFromAcceptLanguage("")).toBe("es");
+    expect(localeFromAcceptLanguage("de-DE,de;q=0.9,fr;q=0.8")).toBe("es");
+    expect(localeFromAcceptLanguage("*")).toBe("es");
   });
 });
 
@@ -56,14 +47,14 @@ describe("localeFromCookieHeader", () => {
 });
 
 describe("preferredLocaleFromRequest", () => {
-  it("prioriza siempre la elección manual sobre la IP", () => {
-    expect(preferredLocaleFromRequest(geo("ES", "CT"), "mecanu_locale=en")).toBe("en");
-    expect(preferredLocaleFromRequest(geo("US"), "mecanu_locale=pt")).toBe("pt");
+  it("prioriza siempre la elección manual sobre Accept-Language", () => {
+    expect(preferredLocaleFromRequest(conAccept("ca"), "mecanu_locale=en")).toBe("en");
+    expect(preferredLocaleFromRequest(conAccept("en-US"), "mecanu_locale=pt")).toBe("pt");
   });
 
-  it("usa la ubicación si no hay una elección manual válida", () => {
-    expect(preferredLocaleFromRequest(geo("PT"), "")).toBe("pt");
-    expect(preferredLocaleFromRequest(geo("ES", "CT"), "mecanu_locale=xx")).toBe("ca");
+  it("usa Accept-Language si no hay una elección manual válida", () => {
+    expect(preferredLocaleFromRequest(conAccept("pt-PT,pt;q=0.9"), "")).toBe("pt");
+    expect(preferredLocaleFromRequest(conAccept("ca-ES"), "mecanu_locale=xx")).toBe("ca");
   });
 });
 

@@ -42,7 +42,7 @@ const INITIAL: Answers = {
   canal: "",
 };
 
-const TOTAL_STEPS = 11;
+const TOTAL_STEPS = 12;
 
 function renderPregunta(template: string, nombre: string): React.ReactNode {
   const parts = template.split(/\*\*(.*?)\*\*/g);
@@ -69,6 +69,7 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null);
   const restoredRef = useRef(false);
 
@@ -126,10 +127,14 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
   );
 
   async function submit(overrides?: Partial<Answers>) {
+    if (!aceptaPrivacidad) {
+      setError(copy.privacidadError);
+      return;
+    }
     setSending(true);
     setError(null);
     try {
-      const payload = { ...answers, ...overrides };
+      const payload = { ...answers, ...overrides, aceptaPrivacidad: true as const };
       const res = await fetch("/api/v1/contacto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -577,7 +582,7 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
                   className={`${styles.pill} ${answers.canal === op ? styles.pillSelected : ""}`}
                   onClick={() => {
                     set("canal", op);
-                    submit({ canal: op });
+                    setTimeout(advance, 120);
                   }}
                 >
                   <span className={styles.pillLetter}>{String.fromCharCode(65 + i)}</span>
@@ -585,9 +590,45 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
                 </button>
               ))}
             </div>
-            {error ? <p className={styles.error}>{error}</p> : null}
-            {sending ? <p className={styles.aviso}>…</p> : null}
             <div className={styles.actions}>
+              <button className={styles.btnBack} type="button" onClick={back}>
+                {copy.anterior}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Paso 12 — Privacidad + envío */}
+        {step === 12 && (
+          <div className={styles.stepWrap}>
+            <StepIndex step={12} />
+            <p className={styles.pregunta}>Último paso.</p>
+            <label className={styles.privacyCheck}>
+              <input
+                type="checkbox"
+                checked={aceptaPrivacidad}
+                onChange={(e) => {
+                  setAceptaPrivacidad(e.target.checked);
+                  setError(null);
+                }}
+              />
+              <span>
+                {copy.privacidadLabel}{" "}
+                <Link href="/privacidad" target="_blank" rel="noopener noreferrer">
+                  (/privacidad)
+                </Link>
+              </span>
+            </label>
+            {error ? <p className={styles.error}>{error}</p> : null}
+            <div className={styles.actions}>
+              <button
+                className={styles.btnPrimary}
+                type="button"
+                disabled={sending || !aceptaPrivacidad}
+                onClick={() => submit()}
+              >
+                {sending ? "…" : copy.enviar}
+              </button>
               <button className={styles.btnBack} type="button" onClick={back} disabled={sending}>
                 {copy.anterior}
               </button>

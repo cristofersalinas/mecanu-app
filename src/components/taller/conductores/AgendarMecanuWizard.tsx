@@ -311,9 +311,9 @@ export function AgendarMecanuWizard() {
                       Al ser el mismo día, la disponibilidad no está garantizada. Se habilita una línea directa con Mecanu
                       para gestionar la red interna. Mínimo 2 h de antelación.
                     </p>
-                    <button type="button" className={styles.linkBtn} onClick={() => p.toast('Llamando a Mecanu · 910 220 900', 'info')}>
+                    <a href="tel:910220900" className={styles.linkBtn}>
                       Llamar a Mecanu · 910 220 900
-                    </button>
+                    </a>
                   </div>
                 </div>
               ) : null}

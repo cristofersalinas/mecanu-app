@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ConMarcoDemo } from '@/components/entorno/ConMarcoDemo';
 import { PanelApp } from '@/components/taller/PanelApp';
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function PanelPage() {
-  return <PanelApp />;
+  return (
+    <ConMarcoDemo>
+      <PanelApp />
+    </ConMarcoDemo>
+  );
 }

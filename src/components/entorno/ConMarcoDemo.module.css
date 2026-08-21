@@ -1,0 +1,16 @@
+.marco {
+  min-height: 100%;
+}
+
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #3d2a00;
+  background: #f5c518;
+  text-align: center;
+}

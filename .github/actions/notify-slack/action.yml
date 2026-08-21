@@ -1,0 +1,38 @@
+name: Notify Slack
+description: Publica en un canal. Si faltan token o canal, no hace nada y no falla.
+
+inputs:
+  token:
+    description: Bot token xoxb- (secret SLACK_BOT_TOKEN)
+    required: false
+    default: ""
+  channel:
+    description: Channel ID C…
+    required: false
+    default: ""
+  text:
+    description: Texto del mensaje (mrkdwn)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Slack no configurado
+      if: ${{ inputs.token == '' || inputs.channel == '' }}
+      shell: bash
+      run: echo "Slack no configurado (falta token o channel id). No se notifica."
+
+    - name: Publicar
+      if: ${{ inputs.token != '' && inputs.channel != '' }}
+      continue-on-error: true
+      uses: slackapi/slack-github-action@v4.0.0
+      with:
+        method: chat.postMessage
+        token: ${{ inputs.token }}
+        payload: |
+          {
+            "channel": ${{ toJSON(inputs.channel) }},
+            "text": ${{ toJSON(inputs.text) }},
+            "unfurl_links": false,
+            "unfurl_media": false
+          }

@@ -1,77 +1,166 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Logo } from "@/components/ds/Logo";
-import styles from "@/app/landing.module.css";
+import { LegalDoc, LegalH2 } from "@/components/landing/LegalDoc";
+import {
+  ENCARGADOS_TRATAMIENTO,
+  PLAZOS_RETENCION,
+  entidadIdentificada,
+  legalEntidad,
+} from "@/lib/landing/legal-entidad";
 
 export const metadata: Metadata = {
   title: "Privacidad | Mecanu",
-  description: "Cómo trata Mecanu los datos de quien visita la web pública.",
+  description:
+    "Política de privacidad de Mecanu: responsable, finalidades, bases legales, derechos y encargados (RGPD / LOPDGDD).",
 };
 
 export default function PrivacidadPage() {
+  const e = legalEntidad();
+  const identificada = entidadIdentificada(e);
+
   return (
-    <main className={styles.page} style={{ padding: "3rem 1.5rem" }}>
-      <div style={{ maxWidth: "40rem", margin: "0 auto", display: "grid", gap: "1rem" }}>
-        <Link href="/" aria-label="Mecanu">
-          <Logo variant="dark" height={19} />
-        </Link>
-        <h1 style={{ fontSize: "1.8rem", lineHeight: 1.15 }}>Privacidad</h1>
+    <LegalDoc titulo="Política de privacidad">
+      <p>
+        Esta política explica cómo {e.nombreComercial} trata datos personales de quien visita{" "}
+        {e.web}, rellena un formulario o habla con nosotros por email o WhatsApp. Se adapta al
+        Reglamento (UE) 2016/679 (RGPD) y a la Ley Orgánica 3/2018 (LOPDGDD).
+      </p>
 
+      <LegalH2>1. Responsable del tratamiento</LegalH2>
+      {identificada ? (
+        <ul>
+          <li>
+            <strong>Identidad:</strong> {e.razonSocial} ({e.nombreComercial})
+            {e.formaJuridica ? ` — ${e.formaJuridica}` : null}
+          </li>
+          <li>
+            <strong>{e.idFiscalLabel}:</strong> {e.nif}
+          </li>
+          <li>
+            <strong>Domicilio:</strong> {e.domicilio} ({e.pais})
+          </li>
+          <li>
+            <strong>Email privacidad:</strong>{" "}
+            <a href={`mailto:${e.emailPrivacidad}`}>{e.emailPrivacidad}</a>
+          </li>
+          <li>
+            <strong>Email general:</strong>{" "}
+            <a href={`mailto:${e.emailContacto}`}>{e.emailContacto}</a>
+          </li>
+        </ul>
+      ) : (
         <p>
-          Mecanu trata datos de quien visita mecanu.com. El texto general de esta
-          política (responsable, derechos) se completa cuando el aviso legal esté
-          redactado. Lo que sigue ya está en vigor.
+          El responsable es la entidad mercantil detrás de la marca {e.nombreComercial}, con sede
+          en {e.pais}. Los datos societarios (razón social, NIF y domicilio) se publicarán en el{" "}
+          <Link href="/aviso-legal">aviso legal</Link> en cuanto estén inscritos y disponibles.
+          Mientras tanto, puedes ejercer derechos escribiendo a{" "}
+          <a href={`mailto:${e.emailPrivacidad}`}>{e.emailPrivacidad}</a> o a{" "}
+          <a href={`mailto:${e.emailContacto}`}>{e.emailContacto}</a>.
         </p>
+      )}
 
-        <h2 style={{ fontSize: "1.1rem" }}>Idioma por ubicación</h2>
-        <p>
-          En la primera entrada a la portada usamos el país y, en España, la
-          comunidad autónoma aproximados que Vercel adjunta a la petición para
-          elegir el idioma: Catalunya en catalán, Portugal en portugués, países
-          anglófonos en inglés y el resto en español. No pedimos ubicación GPS,
-          no instalamos un proveedor de geolocalización en el navegador y no
-          mostramos esa ubicación. Si eliges otro idioma, tu elección manual
-          tiene prioridad y se guarda en una cookie de preferencias.
-        </p>
+      <LegalH2>2. Qué datos tratamos y para qué</LegalH2>
+      <ul>
+        <li>
+          <strong>Navegación en la web pública.</strong> Idioma preferido (cookie técnica). Si
+          aceptas cookies de analítica: páginas vistas, dispositivo aproximado, interacciones
+          agregadas vía Google Analytics 4, Clarity, Vercel Analytics y Speed Insights. Base legal:
+          consentimiento (art. 6.1.a RGPD). Detalle en{" "}
+          <Link href="/cookies">política de cookies</Link>.
+        </li>
+        <li>
+          <strong>Idioma (primera visita).</strong> Cabecera HTTP{" "}
+          <code>Accept-Language</code> del navegador para proponer es, ca, en o pt. Si eliges
+          idioma a mano, queda en la cookie técnica <code>mecanu_locale</code>. Base: interés
+          legítimo de mostrar el idioma correcto (art. 6.1.f) + preferencia posterior.
+        </li>
+        <li>
+          <strong>Formulario de talleres (/contacto).</strong> Nombre, apellidos, email, teléfono,
+          datos del taller y respuestas del cuestionario. Finalidad: contactarte para valorar si
+          Mecanu encaja. Base: medidas precontractuales / consentimiento al enviar (art. 6.1.b y
+          6.1.a). Encargados: Google Sheets, Resend y Slack.
+        </li>
+        <li>
+          <strong>Formulario ITV a domicilio.</strong> Nombre, teléfono, ciudad, fecha, estado ITV
+          y tipo de vehículo. Finalidad: gestionar la solicitud y abrir WhatsApp con el mensaje
+          prellenado. Base: medidas precontractuales / consentimiento. Encargados: Google Sheets,
+          Resend y Slack. Meta (WhatsApp) trata el mensaje según sus condiciones cuando tú abres
+          la app.
+        </li>
+        <li>
+          <strong>Registro de seguridad.</strong> IP, geo del hosting, user-agent, ruta y payload
+          en superficies señuelo o de abuso. Base: interés legítimo de seguridad (art. 6.1.f). No
+          se usa para marketing. Plazo: {PLAZOS_RETENCION.registrosSeguridad}.
+        </li>
+        <li>
+          <strong>Panel del taller, app del conductor y backoffice.</strong> Hoy son prototipos
+          mock sin datos reales de clientes en producción pública. Cuando haya cuentas reales, esta
+          política se ampliará con roles, encargos del taller y plazos de evidencia (fotos, firmas).
+        </li>
+      </ul>
 
-        <h2 style={{ fontSize: "1.1rem" }}>Cookies de analítica</h2>
-        <p>
-          Si aceptas el aviso, cargamos Google Tag Manager (GTM-T8TJGTJQ). Desde
-          ese contenedor se dispara Google Analytics 4 (G-MRS0P42Z2L) para saber
-          qué páginas de la web pública se leen. También Microsoft Clarity
-          (proyecto y4kpmlt67l): mapas de calor y grabaciones de cómo se usa la
-          página. Google y Microsoft reciben esa visita. Si rechazas, no se pide
-          ningún script y no se envía nada. El panel del taller y la app del
-          conductor no llevan estas etiquetas. Puedes cambiar de opinión
-          con el botón «Configurar cookies» de la parte inferior o borrando la
-          cookie de consentimiento de este sitio.
-        </p>
+      <LegalH2>3. Destinatarios y transferencias internacionales</LegalH2>
+      <p>
+        No vendemos datos. Compartimos con encargados necesarios para prestar el servicio:
+      </p>
+      <ul>
+        {ENCARGADOS_TRATAMIENTO.map((x) => (
+          <li key={x.nombre}>
+            <strong>{x.nombre}.</strong> {x.finalidad}. Sede: {x.sede}. Transferencias:{" "}
+            {x.transferencias}.
+          </li>
+        ))}
+      </ul>
+      <p>
+        Cuando un encargado está fuera del EEE, usamos las garantías del capítulo V del RGPD
+        (cláusulas contractuales tipo de la Comisión Europea u otras medidas equivalentes).
+      </p>
 
-        <h2 style={{ fontSize: "1.1rem" }}>Registro de seguridad</h2>
-        <p>
-          Si alguien pide rutas que esta web no ofrece (paneles de WordPress,
-          ficheros de configuración, un asistente interno que no está enlazado) o
-          prueba credenciales inventadas, Mecanu guarda un registro: dirección IP,
-          país/región/ciudad que adjunta el proveedor de hosting, user-agent,
-          fecha y hora, ruta, y el contenido enviado a esas superficies señuelo
-          (incluido el texto de un mensaje al asistente interno).
-        </p>
-        <p>
-          Base legal: interés legítimo de seguridad (RGPD art. 6.1.f). Finalidad:
-          detectar abuso, defender el servicio en lanzamientos y, si hay daño,
-          sostener una denuncia. No se usa para marketing ni se vende.
-        </p>
-        <p>
-          Plazo: 90 días, después se borra. No hay geolocalización en el
-          navegador: solo las cabeceras que el hosting ya envía con la petición.
-        </p>
+      <LegalH2>4. Plazos de conservación</LegalH2>
+      <ul>
+        <li>Consentimiento de cookies: {PLAZOS_RETENCION.consentimientoCookies}.</li>
+        <li>Preferencia de idioma: {PLAZOS_RETENCION.preferenciaIdioma}.</li>
+        <li>Leads de contacto: {PLAZOS_RETENCION.leadsContacto}.</li>
+        <li>Leads ITV: {PLAZOS_RETENCION.leadsItv}.</li>
+        <li>Registros de seguridad: {PLAZOS_RETENCION.registrosSeguridad}.</li>
+      </ul>
 
-        <p>
-          <Link href="/" style={{ textDecoration: "underline" }}>
-            Volver a la portada
-          </Link>
-        </p>
-      </div>
-    </main>
+      <LegalH2>5. Tus derechos</LegalH2>
+      <p>
+        Puedes solicitar acceso, rectificación, supresión, oposición, limitación y portabilidad
+        escribiendo a <a href={`mailto:${e.emailPrivacidad}`}>{e.emailPrivacidad}</a>. También
+        puedes retirar el consentimiento de cookies con el botón «Configurar cookies» o en{" "}
+        <Link href="/cookies">/cookies</Link>.
+      </p>
+      <p>
+        Si no estás de acuerdo con cómo tratamos tus datos, puedes reclamar ante la{" "}
+        <a href={e.autoridadControl.url} rel="noopener noreferrer" target="_blank">
+          {e.autoridadControl.nombre}
+        </a>
+        {e.autoridadControlLocal ? (
+          <>
+            {" "}
+            o, en Chile, ante la{" "}
+            <a href={e.autoridadControlLocal.url} rel="noopener noreferrer" target="_blank">
+              {e.autoridadControlLocal.nombre}
+            </a>
+          </>
+        ) : null}
+        .
+      </p>
+
+      <LegalH2>6. Menores</LegalH2>
+      <p>
+        Los servicios de Mecanu están dirigidos a profesionales (talleres) y a conductores
+        adultos. No recogemos datos de menores de 14 años de forma consciente.
+      </p>
+
+      <LegalH2>7. Cambios</LegalH2>
+      <p>
+        Si cambia el tratamiento de forma relevante, actualizamos esta página y la fecha de
+        revisión. El historial de criterios técnicos vive en{" "}
+        <code>docs/CUMPLIMIENTO-UE.md</code> del repositorio.
+      </p>
+    </LegalDoc>
   );
 }

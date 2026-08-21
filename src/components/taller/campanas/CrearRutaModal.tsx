@@ -13,6 +13,13 @@ import styles from '../panel.module.css';
 
 type Salida = 'tal_cual' | 'editar' | 'solo_total';
 
+const TIPO_LABEL: Record<string, string> = {
+  taller: 'Taller',
+  itv: 'ITV',
+  chapista: 'Chapista',
+  otro: 'Proveedor',
+};
+
 /* Campaña aceptada → crear ruta. Tres salidas (decisión cerrada del producto):
    tal cual · editar líneas · solo total. Después, tipo de servicio y fecha:
    con fecha → Agendado; sin fecha → Prospectos. */
@@ -88,16 +95,20 @@ export function CrearRutaModal({
               kind="primary"
               size="compact"
               icon="add_road"
+              disabled={total <= 0}
               onClick={() => {
-                p.crearRutaDesdeCampana(campana.id, {
+                const desdeDeber = p.deberActivo?.entidadKind === 'campana' && p.deberActivo.entidadId === campana.id;
+                const id = p.crearRutaDesdeCampana(campana.id, {
                   modo: salida,
                   lineas: lineasActivas,
                   total,
-                  servicio: campana.falla,
+                  servicio: `${TIPO_LABEL[tipoServicio] ?? tipoServicio} · ${campana.falla}`,
                   fecha: conFecha ? fromISO(fechaISO) : null,
                   franja: conFecha ? franja : null,
+                  etiquetaDestino: TIPO_LABEL[tipoServicio] ?? 'Taller',
                 });
                 cerrar();
+                if (!desdeDeber) p.seleccionar({ kind: 'ruta', id }, 'ficha');
               }}
             >
               Crear ruta
@@ -107,7 +118,53 @@ export function CrearRutaModal({
       }
     >
       {paso === 1 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div
+            className={styles.panelBox}
+            style={{
+              padding: 12,
+              opacity: salida === 'solo_total' ? 0.55 : 1,
+            }}
+          >
+            <div className={styles.eyebrow} style={{ marginBottom: 8 }}>Desglose</div>
+            {(salida === 'editar' && lineas.length ? lineas : base).map((l, i) => {
+              const meta = ORIGEN_LINEA[l.origen];
+              return (
+                <div key={`${l.descripcion}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
+                  <Icon name={meta?.icono ?? 'edit'} size="sm" color={meta?.color} />
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 12 }}>{l.descripcion}</span>
+                  <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>{meta?.corto}</span>
+                  {salida === 'editar' ? (
+                    <>
+                      <input
+                        type="number"
+                        value={l.importe}
+                        aria-label={`Importe de ${l.descripcion}`}
+                        style={{ width: 88, height: 30 }}
+                        onChange={(e) => setLineas((ls) => ls.map((x, j) => (j === i ? { ...x, importe: Number(e.target.value) } : x)))}
+                      />
+                      <button
+                        type="button"
+                        className={styles.iconBtn}
+                        style={{ width: 26, height: 26 }}
+                        aria-label={`Quitar ${l.descripcion}`}
+                        onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))}
+                      >
+                        <Icon name="close" size="sm" />
+                      </button>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{fmtDinero(l.importe)}</span>
+                  )}
+                </div>
+              );
+            })}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, paddingTop: 10 }}>
+              <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>Total (IVA incluido)</span>
+              <span style={{ fontSize: 17, fontWeight: 800 }}>{fmtDinero(salida === 'solo_total' ? base.reduce((a, l) => a + l.importe, 0) : total)}</span>
+            </div>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {([
               ['tal_cual', 'Tal cual', 'Se crea con el desglose de la campaña, sin tocar nada.'],
@@ -122,7 +179,15 @@ export function CrearRutaModal({
                   borderColor: salida === id ? 'var(--mecanu-electric-600)' : undefined,
                 }}
               >
-                <Radio name="salida-ruta" value={id} checked={salida === id} onChange={() => setSalida(id)} />
+                <Radio
+                  name="salida-ruta"
+                  value={id}
+                  checked={salida === id}
+                  onChange={() => {
+                    setSalida(id);
+                    if (id === 'editar' && !lineas.length) setLineas(base);
+                  }}
+                />
                 <span>
                   <span style={{ display: 'block', fontSize: 13, fontWeight: 700 }}>{label}</span>
                   <span style={{ display: 'block', fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>{desc}</span>
@@ -141,47 +206,7 @@ export function CrearRutaModal({
               fullWidth
               caption="El taller cotiza en su propio sistema: la ruta se crea igual."
             />
-          ) : (
-            <div className={styles.panelBox} style={{ padding: 12 }}>
-              <div className={styles.eyebrow} style={{ marginBottom: 8 }}>Desglose</div>
-              {(salida === 'editar' && lineas.length ? lineas : base).map((l, i) => {
-                const meta = ORIGEN_LINEA[l.origen];
-                return (
-                  <div key={`${l.descripcion}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
-                    <Icon name={meta?.icono ?? 'edit'} size="sm" color={meta?.color} />
-                    <span style={{ flex: 1, minWidth: 0, fontSize: 12 }}>{l.descripcion}</span>
-                    <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>{meta?.corto}</span>
-                    {salida === 'editar' ? (
-                      <>
-                        <input
-                          type="number"
-                          value={l.importe}
-                          aria-label={`Importe de ${l.descripcion}`}
-                          style={{ width: 88, height: 30 }}
-                          onChange={(e) => setLineas((ls) => ls.map((x, j) => (j === i ? { ...x, importe: Number(e.target.value) } : x)))}
-                        />
-                        <button
-                          type="button"
-                          className={styles.iconBtn}
-                          style={{ width: 26, height: 26 }}
-                          aria-label={`Quitar ${l.descripcion}`}
-                          onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))}
-                        >
-                          <Icon name="close" size="sm" />
-                        </button>
-                      </>
-                    ) : (
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{fmtDinero(l.importe)}</span>
-                    )}
-                  </div>
-                );
-              })}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, paddingTop: 10 }}>
-                <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>Total (IVA incluido)</span>
-                <span style={{ fontSize: 17, fontWeight: 800 }}>{fmtDinero(total)}</span>
-              </div>
-            </div>
-          )}
+          ) : null}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

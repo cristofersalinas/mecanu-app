@@ -377,6 +377,10 @@ export function payloadRecordatorio(to: string, valores: ValoresMensaje): Payloa
   return { messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text',
     text: { preview_url: false, body: renderMensaje(valores) } };
 }
+export function payloadSeguimiento(to: string, valores: ValoresMensaje, cuerpo: string): PayloadWa {
+  return { messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text',
+    text: { preview_url: false, body: cuerpo } };
+}
 export function payloadTexto(to: string, body: string): PayloadWa {
   return { messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text', text: { preview_url: false, body } };
 }

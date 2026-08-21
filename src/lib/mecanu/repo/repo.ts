@@ -24,9 +24,11 @@
  * El mock de hoy hace (3) y (4) pero no (1)/(2) porque no hay base de datos.
  */
 import type {
-  Actividad, Campana, Cliente, Conductor, Inspeccion, Log, Parada, Presupuesto,
-  Ruta, RutaVista, Servicio, Solicitud, TagRuta, Tramo, Vehiculo,
+  Actividad, AutomatizacionEjecucion, Campana, Cliente, Conductor, Inspeccion, Log, Parada, Presupuesto,
+  ProcesoConductor, Ruta, RutaVista, Servicio, Solicitud, TagRuta, Tramo, UsuarioBackoffice, Vehiculo,
+  EstadoUsuarioBackoffice,
 } from '../types';
+import type { SnapshotBackoffice } from '../backoffice';
 
 /* ==============================================================
    Payloads de escritura
@@ -99,6 +101,9 @@ export interface HallazgoCampanaInput {
   trasladoId: string;
   testigo: string;
   nivel: number;
+  /** ITV: por qué se abre la oferta. El resto de testigos lo ignoran. */
+  detalle?: 'sin_pegatina' | 'vencida' | 'por_vencer' | null;
+  dias?: number | null;
 }
 
 export interface ReasignarConductorInput {
@@ -203,5 +208,22 @@ export interface MecanuRepo {
   /** `HANDOFF.md §7.3` — entidad decidida pero no construida en el prototipo original.
       Aquí SÍ vive (en memoria) porque es infraestructura nueva que este bloque añade. */
   listSolicitudesPendientes(): Promise<Solicitud[]>;
+  listSolicitudes(): Promise<Solicitud[]>;
   resolverSolicitud(id: string, resolucion: string, estado: Solicitud['estado']): Promise<Solicitud>;
+
+  /* ---------- Backoffice (dueño / operación) ---------- */
+  listUsuariosBackoffice(): Promise<UsuarioBackoffice[]>;
+  getUsuarioBackoffice(id: string): Promise<UsuarioBackoffice | null>;
+  invitarUsuarioBackoffice(actorId: string, input: {
+    nombre: string; email: string; rol: UsuarioBackoffice['rol'];
+    telefono?: string | null; conductorId?: string | null;
+  }): Promise<UsuarioBackoffice>;
+  transicionarUsuarioBackoffice(
+    actorId: string, usuarioId: string, hacia: EstadoUsuarioBackoffice,
+  ): Promise<UsuarioBackoffice>;
+  transicionarProcesoConductor(
+    actorId: string, conductorId: string, hacia: ProcesoConductor,
+  ): Promise<Conductor>;
+  getBackofficeSnapshot(actorId: string, ahora?: Date): Promise<SnapshotBackoffice>;
+  ejecutarAutomatizacionesBackoffice(actorId: string, ahora?: Date): Promise<AutomatizacionEjecucion[]>;
 }

@@ -96,47 +96,39 @@ export function JornadaScreen({
         >
           <span
             style={{
-              fontSize: 20,
-              lineHeight: 1,
-              fontWeight: 700,
+              fontSize: 13,
+              fontWeight: 800,
               color: pool.length ? 'var(--mecanu-emerald-800)' : 'var(--mecanu-neutral-900)',
             }}
           >
-            {pool.length}
-          </span>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: '.04em',
-              textTransform: 'uppercase',
-              color: 'var(--mecanu-neutral-700)',
-            }}
-          >
-            Disponibles
+            Disponibles ({pool.length})
           </span>
         </button>
         <span style={{ flex: 1 }} />
         <button
           type="button"
           onClick={() => acciones.irA('emergencias')}
-          aria-label="Emergencias"
+          aria-label="SOS"
           style={{
             flex: 'none',
-            width: 48,
-            height: 48,
+            minHeight: 48,
             marginRight: -10,
+            padding: '0 10px',
             borderRadius: 12,
             border: 'none',
             background: 'none',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            gap: 4,
             cursor: 'pointer',
             color: '#A81823',
+            font: 'inherit',
+            fontSize: 12,
+            fontWeight: 800,
           }}
         >
           <Icon name="sos" size="xl" />
+          SOS
         </button>
       </div>
 
@@ -192,12 +184,18 @@ export function JornadaScreen({
           )}
         </div>
 
-        {lista.length === 0 ? (
+        {lista.length === 0 && sinFecha.length === 0 ? (
           <div style={{ padding: '26px 0' }}>
             <ErrorState
               variant="empty"
-              title="Sin traslados agendados"
-              message="El taller no te ha asignado traslados con ventana horaria. Los que aún no tienen fecha no se muestran aquí."
+              title="Nada en tu jornada"
+              message={
+                pool.length
+                  ? 'No tienes traslados asignados. Hay disponibles para tomar.'
+                  : 'El taller aún no te ha asignado viajes. Cuando haya uno, sale aquí.'
+              }
+              actionLabel={pool.length ? 'Ver disponibles' : undefined}
+              onAction={pool.length ? () => acciones.irA('disponibles') : undefined}
             />
           </div>
         ) : null}
