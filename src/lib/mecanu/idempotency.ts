@@ -1,19 +1,10 @@
 /**
- * Idempotencia en memoria para las API routes de `src/app/api/v1/`.
- *
- * La app del conductor es offline-first: encola acciones localmente y las reintenta
- * al recuperar conexión (ver HANDOFF.md §7.5). Un reintento de red puede reenviar la
- * misma petición dos veces (el cliente nunca sabe con certeza si la primera llegó).
- * Cada escritura debe poder repetirse sin duplicar su efecto.
- *
- * Este módulo es un placeholder de desarrollo: un `Map` en memoria del proceso, que
- * se vacía en cada redeploy y no se comparte entre instancias serverless.
- *
- * // TODO API: sustituir por una tabla Postgres `idempotency_keys(key text primary key,
- * // response jsonb, created_at timestamptz)` con un índice único en `key` y un cron/TTL
- * // que la limpie pasadas ~48h. La escritura de la fila y la mutación de negocio deben
- * // ir en la misma transacción para que sean atómicas.
+ * Idempotencia: Postgres `idempotency_keys` si hay Supabase; si no, Map en memoria.
+ * Misma API pública que usaba el placeholder (api-helpers / withIdempotency).
  */
+import { getSupabaseServer, supabaseServerConfigured } from '@/lib/supabase/server';
+
+export const IDEMPOTENCY_HEADER = 'Idempotency-Key';
 
 interface CachedResponse {
   status: number;
@@ -21,7 +12,7 @@ interface CachedResponse {
   storedAt: number;
 }
 
-const TTL_MS = 24 * 60 * 60 * 1000;
+const TTL_MS = 48 * 60 * 60 * 1000;
 const store = new Map<string, CachedResponse>();
 
 function purgeExpired(now: number) {
@@ -30,16 +21,65 @@ function purgeExpired(now: number) {
   }
 }
 
-/** Devuelve la respuesta cacheada para esta clave, si existe y no ha expirado. */
 export function getIdempotentResponse(key: string): CachedResponse | null {
   purgeExpired(Date.now());
   return store.get(key) ?? null;
 }
 
-/** Registra la respuesta de una escritura contra su clave de idempotencia. */
 export function saveIdempotentResponse(key: string, status: number, body: unknown): void {
   store.set(key, { status, body, storedAt: Date.now() });
 }
 
-/** Header que el cliente debe enviar en cada escritura. Ver CONTRATOS-API.md. */
-export const IDEMPOTENCY_HEADER = 'Idempotency-Key';
+/** Lectura async (Postgres o memoria). */
+export async function getIdempotentResponseAsync(key: string): Promise<CachedResponse | null> {
+  if (supabaseServerConfigured()) {
+    const sb = getSupabaseServer();
+    if (sb) {
+      const { data, error } = await sb
+        .from('idempotency_keys')
+        .select('status, response, created_at')
+        .eq('key', key)
+        .maybeSingle();
+      if (!error && data) {
+        const storedAt = new Date(data.created_at as string).getTime();
+        if (Date.now() - storedAt <= TTL_MS) {
+          return {
+            status: data.status as number,
+            body: data.response,
+            storedAt,
+          };
+        }
+      }
+    }
+  }
+  return getIdempotentResponse(key);
+}
+
+/** Escritura async (Postgres + memoria de respaldo). */
+export async function saveIdempotentResponseAsync(
+  key: string,
+  status: number,
+  body: unknown,
+): Promise<void> {
+  saveIdempotentResponse(key, status, body);
+  if (!supabaseServerConfigured()) return;
+  const sb = getSupabaseServer();
+  if (!sb) return;
+  const { error } = await sb.from('idempotency_keys').upsert(
+    {
+      key,
+      status,
+      response: body as object,
+      created_at: new Date().toISOString(),
+    },
+    { onConflict: 'key' },
+  );
+  if (error) {
+    console.error('idempotency_keys upsert failed', error.message);
+  }
+}
+
+/** Tests: vacía el Map en memoria. */
+export function clearIdempotencyMemoryForTests(): void {
+  store.clear();
+}

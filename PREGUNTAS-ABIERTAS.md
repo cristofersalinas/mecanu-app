@@ -7,27 +7,15 @@ exhaustiva en vez de solo cómoda. Ordenada de más a menos urgente/bloqueante.
 ## Bloqueantes para un backend real
 
 ### 1. No hay autenticación, roles ni permisos
-El prototipo entero (panel y conductor) asume un único usuario implícito por
-superficie: el operador del taller en `/panel`, el conductor `d1` (Javier Molina)
-hardcodeado en `/conductor` (`MI_ID = 'd1'` en `src/components/conductor/constants.ts`).
-Ninguna API route verifica quién llama. Antes de tener datos reales de clientes en
-producción esto tiene que existir. Preguntas concretas sin responder:
-- ¿Un taller = un tenant, o puede haber varios talleres en la misma instancia? El
-  mock asume un único taller ("Talleres Rodríguez") en todas partes.
-- ¿Qué puede ver un conductor de red externa vs interna? `HANDOFF.md` §7.6 lo
-  menciona (`esExterno()`, `_dirVaga()`) pero es lógica de cliente hoy — debe
-  moverse al backend/RLS, nunca confiar en que el cliente se autolimite.
-- ¿Cómo se autentica un conductor en su móvil? ¿Magic link, código, app store?
+**Defaults cerrados 21 ago (plan backend):** un taller = un tenant (`taller_id`);
+conductor entra con magic link (email); interno vs red vía RLS + `app_metadata`;
+impersonación dueño desde backoffice Equipo → «Ver usuario» (mock ahora;
+cookie firmada en oleada auth). UI de login y policies finas siguen pendientes.
+Hasta entonces `/panel` y `/conductor` cortados en Vercel.
 
-### 2. `crearRutaDesdeCampana` no está implementado en el mock
-`src/lib/mecanu/repo/repo-mock.ts` lanza un error explícito si se llama. El modelo
-en memoria construye TODAS las rutas de golpe al arrancar el proceso
-(`mecanu-rutas.ts`, el bucle sobre `RUTAS_RAW`) — no hay una función aislada que
-sepa construir una ruta nueva completa (paradas + tramos + presupuesto) a partir de
-una campaña aceptada en runtime. Esa función hay que escribirla desde cero contra
-Postgres, no portarla del mock (no existe la pieza equivalente). Es el flujo
-"Campaña aceptada → modal Crear ruta" (`CLAUDE.md` decisión #9) — probablemente el
-primer caso de uso real de escritura compleja que toque el backend.
+### 2. `crearRutaDesdeCampana` — HECHO (21 ago)
+Lógica pura en `crear-ruta-desde-campana.ts` + implementación en `repo-mock.ts`.
+Falta persistir en Postgres vía `repo-supabase.ts`.
 
 ### 3. Los `data.ts` de los portales no pasan por `repo` todavía
 `src/components/taller/data.ts` y `src/components/conductor/data.ts` siguen

@@ -10,8 +10,11 @@ export interface FilaEquipo {
   usuarioId: string;
   nombre: string;
   email: string;
+  telefono: string | null;
+  documento: string | null;
   rol: UsuarioBackoffice['rol'];
   estado: UsuarioBackoffice['estado'];
+  tallerNombre: string | null;
   conductorId: string | null;
   proceso: string | null;
   procesoLabel: string | null;
@@ -44,8 +47,11 @@ export function buildSnapshot(mundo: MundoBackoffice, actorId: string): Snapshot
       usuarioId: u.id,
       nombre: u.nombre,
       email: u.email,
+      telefono: u.telefono,
+      documento: u.documento ?? null,
       rol: u.rol,
       estado: u.estado,
+      tallerNombre: u.rol === 'dueno' ? null : 'Talleres Rodríguez',
       conductorId: u.conductorId,
       proceso: c?.proceso ?? null,
       procesoLabel: c

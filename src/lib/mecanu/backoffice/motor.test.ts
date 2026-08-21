@@ -167,7 +167,7 @@ describe('Analítica de dinero', () => {
 describe('Usuarios de fixture', () => {
   it('el tipo UsuarioBackoffice se usa en el mundo', () => {
     const u: UsuarioBackoffice = {
-      id: 'u-1', nombre: 'A', email: 'a@b.c', telefono: null, rol: 'dueno',
+      id: 'u-1', nombre: 'A', email: 'a@b.c', telefono: null, documento: null, rol: 'dueno',
       estado: 'activo', conductorId: null, invitadEn: ahora, activadoEn: ahora,
     };
     expect(u.rol).toBe('dueno');
