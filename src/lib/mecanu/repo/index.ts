@@ -3,14 +3,17 @@
  * Actions, API routes) importa `repo` de aquí — nunca `repo-mock.ts` ni
  * `mecanu-rutas.ts` directamente.
  *
- * Cuando exista Supabase: crear `repo-supabase.ts` implementando `MecanuRepo` y
- * cambiar la línea de abajo por `export const repo: MecanuRepo = supabaseRepo;`,
- * probablemente eligiendo la implementación por `process.env.NEXT_PUBLIC_SUPABASE_URL`
- * si se quiere poder alternar entre mock y real sin tocar código.
+ * Por defecto: mock en memoria (panel/conductor UI).
+ * Con MECANU_USE_SUPABASE=1 + service_role: Postgres (mecanu-dev).
  */
+import { supabaseServerConfigured } from '@/lib/supabase/server';
 import { mockRepo } from './repo-mock';
+import { supabaseRepo } from './repo-supabase';
 import type { MecanuRepo } from './repo';
 
-export const repo: MecanuRepo = mockRepo;
+const useSupabase =
+  process.env.MECANU_USE_SUPABASE === '1' && supabaseServerConfigured();
+
+export const repo: MecanuRepo = useSupabase ? supabaseRepo : mockRepo;
 
 export type * from './repo';

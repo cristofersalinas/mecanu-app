@@ -7,15 +7,20 @@ exhaustiva en vez de solo cómoda. Ordenada de más a menos urgente/bloqueante.
 ## Bloqueantes para un backend real
 
 ### 1. No hay autenticación, roles ni permisos
-**Defaults cerrados 21 ago (plan backend):** un taller = un tenant (`taller_id`);
-conductor entra con magic link (email); interno vs red vía RLS + `app_metadata`;
-impersonación dueño desde backoffice Equipo → «Ver usuario» (mock ahora;
-cookie firmada en oleada auth). UI de login y policies finas siguen pendientes.
-Hasta entonces `/panel` y `/conductor` cortados en Vercel.
+**Defaults cerrados 21 ago:** un taller = un tenant (`taller_id`);
+**magic link solo para la app del conductor** (`/entrar` → `/conductor`);
+interno vs red vía RLS + `app_metadata`; impersonación dueño desde Equipo →
+«Ver usuario» (cookie firmada pendiente).
+**Login de `/panel` y `/backoffice`:** distinto del magic link — aún por decidir
+(contraseña, SSO, o invite del taller). No usar el enlace del conductor para
+abrir el panel.
+**Oleada auth:** `/entrar` + `/auth/callback`, `0007` RLS + `0008` storage,
+`repo-supabase` (`MECANU_USE_SUPABASE=1`), `npm run db:invitar` con
+`--rol conductor`. Hasta login+RLS estables: no `MECANU_EXPONER_APPS=1` en Production.
 
-### 2. `crearRutaDesdeCampana` — HECHO (21 ago)
-Lógica pura en `crear-ruta-desde-campana.ts` + implementación en `repo-mock.ts`.
-Falta persistir en Postgres vía `repo-supabase.ts`.
+### 2. `crearRutaDesdeCampana` — HECHO (mock + supabase)
+Lógica pura en `crear-ruta-desde-campana.ts`; mock y `repo-supabase` persisten
+(este último cuando `MECANU_USE_SUPABASE=1`).
 
 ### 3. Los `data.ts` de los portales no pasan por `repo` todavía
 `src/components/taller/data.ts` y `src/components/conductor/data.ts` siguen

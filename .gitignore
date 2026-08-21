@@ -42,3 +42,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 _source/
+
+# local / tooling
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+supabase/.temp/

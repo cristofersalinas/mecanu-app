@@ -19,6 +19,8 @@ const PRIVADO = [
   "/conductor/",
   "/backoffice",
   "/backoffice/",
+  "/entrar",
+  "/auth/",
   "/api/",
   "/_next/",
   "/assistant",
