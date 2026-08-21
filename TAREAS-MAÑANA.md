@@ -1,50 +1,96 @@
-# Tareas de la mañana
+# Lo que haces tú — una sola lista
 
-## Lo que haces tú (21 ago) — enlaces directos
+Proyecto Vercel: [cristofersalar-4089s-projects / mecanu-app](https://vercel.com/cristofersalar-4089s-projects/mecanu-app).  
+Si un enlace pide login, entra con Vercel y ábrelo otra vez.
 
-El código ya corta `/panel`, `/conductor`, `/backoffice` y `/api` en Vercel.
-Auth de producto **no** está: no lo actives en producción. Esto es para
-**publicar la landing** con defensa, no para abrir el panel.
+El código ya corta `/panel`, `/conductor`, `/backoffice` y `/api` en Vercel
+(excepto los POST públicos de contacto e ITV). Auth de producto **no** está:
+esto es para **publicar la landing**, no para abrir el panel.
 
-Hazlo **en este orden**. Attack Mode **antes** de quitar el SSO.
+**Orden:** Firewall + Attack Mode **antes** de quitar el SSO.
 
-1. **Attack Mode ON**  
-   [Firewall → Bot Management → Attack Mode](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/firewall)  
-   Enable. Los buscadores conocidos pasan. Un visitante real puede ver captcha: es esto, no un bug.
+| Sitio | Link |
+|---|---|
+| Proyecto | https://vercel.com/cristofersalar-4089s-projects/mecanu-app |
+| Firewall | https://vercel.com/cristofersalar-4089s-projects/mecanu-app/firewall |
+| SSO / Deployment Protection | https://vercel.com/cristofersalar-4089s-projects/mecanu-app/settings/deployment-protection |
+| Variables | https://vercel.com/cristofersalar-4089s-projects/mecanu-app/settings/environment-variables |
+| Deployments | https://vercel.com/cristofersalar-4089s-projects/mecanu-app/deployments |
+| Usage | https://vercel.com/cristofersalar-4089s-projects/usage |
+| Billing / spend | https://vercel.com/dashboard/billing |
+| Logs (busca `mecanu.security`) | https://vercel.com/cristofersalar-4089s-projects/mecanu-app/logs |
+| Web | https://mecanu.com |
 
-2. **Tres reglas del firewall** (Hobby solo tiene 3) — misma pantalla, pestaña de reglas:  
-   [Firewall de mecanu-app](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/firewall)  
-   - Challenge (o Deny) a **POST** a cualquier ruta.  
-   - Deny o rate-limit a `/wp-admin`, `/.env`, `/wp-login.php`.  
-   - Rate limit por IP en `/assistant` (tope duro; en código ya hay 8/min).  
-   Publica las reglas si Vercel las deja en borrador.
+---
 
-3. **Alertas de uso 50 % y 80 %**  
-   [Usage](https://vercel.com/cristofersalar-4089s-projects/usage) → Notifications / Usage alerts.
+### 1. Tres reglas del firewall
 
-4. **Tope de gasto**  
-   [Billing → Spend Management](https://vercel.com/dashboard/billing)  
-   En Hobby el riesgo no es la tarjeta: es quedarte sin cuota el resto del mes. Tope extra a 0 $ si te deja.
+Abre [Firewall](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/firewall) → Configure / Add rule (Custom rules). Hobby solo tiene **3**. Docs: [Custom rules](https://vercel.com/docs/vercel-firewall/vercel-waf/custom-rules). Publica si quedan en borrador.
 
-5. **Quitar el SSO** (cuando Attack Mode ya esté ON)  
-   [Deployment Protection](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/settings/deployment-protection)  
-   Standard Protection / Vercel Authentication → Off en **Production**.  
-   Comprueba en una ventana de incógnito: [mecanu.com](https://mecanu.com) carga sin login de Vercel, y [mecanu.com/panel](https://mecanu.com/panel) no enseña el mock.
+| # | Qué poner | Notas |
+|---|---|---|
+| 1 | Challenge (o Deny) a **POST**, **excepto** `/api/v1/contacto` y `/api/v1/itv-leads` | Si challengeas todos los POST, rompes los formularios |
+| 2 | Deny o rate-limit a `/wp-admin`, `/.env`, `/wp-login.php` | Flood de bots. Señuelos quieren hits lentos, no 100 req/s |
+| 3 | Rate limit por IP en `/assistant` (~8/min) | Señuelo con lógica; en código ya hay 8/min |
 
-6. **DSN de Sentry** (opcional, avisos al momento)  
-   [Crear proyecto / copiar DSN](https://sentry.io/) → Settings → Projects → Client Keys (DSN).  
-   Pégalo en [Variables de entorno de Vercel](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/settings/environment-variables) como `SENTRY_DSN` y `NEXT_PUBLIC_SENTRY_DSN` (Production). Redeploy.
+No gastes una regla en `/panel`: el proxy ya la cierra.
 
-7. **Buzón `privacidad@mecanu.com`**  
-   Si el correo es Google Workspace: [Admin → Usuarios](https://admin.google.com/ac/users) → crear o alias hacia el que leas.  
-   Si es el dominio en otro sitio: panel DNS / correo del registrador. La web ya lo cita en privacidad.
+### 2. Attack Mode, luego quitar el SSO
 
-8. **No hagas**  
-   - No apliques `supabase/migrations/0005_security_events.sql` hasta el bloque de acceso en **mecanu-dev**.  
-   - No pongas `MECANU_EXPONER_APPS=1` en Production.  
-   - Auth del panel/conductor: cuando quieras, dime las 3 decisiones (un taller = un tenant; cómo entra el conductor; red vs interno) y lo abro yo.
+Misma pantalla: [Firewall](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/firewall) → Bot Management → **Attack Mode → On**.  
+Docs: [Attack Mode](https://vercel.com/docs/vercel-firewall/attack-mode). Buscadores conocidos pasan. Un visitante real puede ver captcha: es esto, no un bug.
 
-Logs de sondeo: [Vercel Logs](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/logs) busca `mecanu.security`.
+Cuando Attack Mode esté ON, quita el SSO:
+
+[Deployment Protection](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/settings/deployment-protection)  
+Standard Protection / Vercel Authentication → **Off en Production** (previews pueden seguir con SSO).  
+Docs: [Deployment Protection](https://vercel.com/docs/deployment-protection).
+
+Incógnito: [mecanu.com](https://mecanu.com) carga sin login de Vercel. [mecanu.com/panel](https://mecanu.com/panel) **no** enseña el mock.
+
+### 3. Alertas de uso + tope de gasto
+
+| Qué | Dónde |
+|---|---|
+| Uso del equipo | [Usage](https://vercel.com/cristofersalar-4089s-projects/usage) |
+| Avisos 50 % y 80 % | Usage → Notifications / alertas, o notificaciones de la cuenta |
+| Tope 0 $ extra | [Billing → Spend Management](https://vercel.com/dashboard/billing) (o team → Settings → Billing) |
+
+En Hobby el riesgo no es la tarjeta: es quedarte sin cuota el resto del mes. Docs: [Spend Management](https://vercel.com/docs/limits/spend-management).
+
+### 4. Sentry (opcional)
+
+1. [sentry.io](https://sentry.io/) → proyecto Next.js (si no hay org, créala).  
+2. Settings → Client Keys (DSN). Ruta típica: `https://sentry.io/settings/<org>/projects/<proyecto>/keys/`
+3. Pega el mismo DSN en [Variables](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/settings/environment-variables) (Production **y** Preview):
+   - `SENTRY_DSN`
+   - `NEXT_PUBLIC_SENTRY_DSN`
+4. [Deployments](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/deployments) → menú del último Production → Redeploy.
+
+Sin DSN el SDK no sale a la red.
+
+### 5. Correo `privacidad@mecanu.com`
+
+Resend ([Domains](https://resend.com/domains)) sirve para **enviar** (`formulario@mecanu.com`). El buzón de **recibir** es Google Workspace o el DNS del dominio.
+
+- Google Workspace: [Admin → Usuarios](https://admin.google.com/ac/users) → usuario o alias `privacidad@` → el correo que leas (p. ej. cris@).
+- Otro DNS (Cloudflare, registrador): crea el buzón o la redirección ahí.
+- Prueba mandándote un mail a `privacidad@mecanu.com`.
+
+Giro SII + IVA exportación: no es un click en Vercel. Cuando factures, [docs/FACTURACION-CHILE.md](docs/FACTURACION-CHILE.md).
+
+### 6. WhatsApp ITV (opcional)
+
+[Variables](https://vercel.com/cristofersalar-4089s-projects/mecanu-app/settings/environment-variables) Production:  
+`NEXT_PUBLIC_ITV_WHATSAPP` = `346XXXXXXXX` (solo dígitos, con 34) → Redeploy.
+
+### 7. No hagas esto
+
+- **No** apliques `supabase/migrations/0005_security_events.sql` hasta el bloque de acceso en **mecanu-dev**.
+- **No** pongas `MECANU_EXPONER_APPS=1` en Production.
+- Auth del panel/conductor: cuando quieras, tres respuestas (un taller = un tenant; cómo entra el conductor; red vs interno) y lo abro yo.
+
+Si al abrir un link no ves el menú, dime qué pantalla te sale.
 
 ---
 
@@ -53,6 +99,7 @@ Logs de sondeo: [Vercel Logs](https://vercel.com/cristofersalar-4089s-projects/m
 Rama de entonces: `feature/capa-seguridad`.
 
 ## Auditoría (bloque 1)
+
 
 gitleaks 8.30.1 sobre los 31 commits del remoto: **0 secretos**. No hay `.env` en git. `service_role` solo aparece vacía en `.env.example`. **Nada que rotar por fuga en este historial.**
 
@@ -94,17 +141,6 @@ Vercel → Logs → busca `mecanu.security`. Campos `ip`, `geo`, `ruta`, `tipo`.
 | Con `VERCEL=1`, `/panel` y `/conductor` → 307 a `/`; `/api` → 404 | OK (simula preview y prod) |
 
 Se despliega. El único asterisco es el banner de anoche, que no está en esta rama.
-
-## Qué necesito de ti (histórico 19 ago — sustituido por la lista de arriba)
-
-1. **Firewall de Vercel (3 reglas)** — ver lista del 21 ago.
-2. **Attack Mode ON** antes de quitar el SSO y hacer la web pública.
-3. **Alertas de uso** al 50 % y 80 % + spend cap. Runbook.
-4. **DSN de Sentry** si quieres las alertas inmediatas. Sin DSN el SDK no sale a la red.
-5. **Texto legal** — páginas + `docs/CUMPLIMIENTO-UE.md` + identidad SpA chilena
-   en código. Queda: buzón `privacidad@mecanu.com` y revisión contable IVA/giro.
-6. **No aplicar** `0005_security_events.sql` hasta el bloque 1 de acceso en `mecanu-dev`.
-7. El botón de WhatsApp está en `feature/landing-whatsapp`, no en esta rama.
 
 ## Procesos Node colgados
 

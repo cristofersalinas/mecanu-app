@@ -81,6 +81,8 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
       const savedStep = sessionStorage.getItem(SESSION_STEP_KEY);
       if (savedStep) {
         const n = Math.max(1, Math.min(TOTAL_STEPS, Number(savedStep)));
+        // Hidratación desde sessionStorage: un setState al montar es el patrón correcto aquí.
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- restore wizard progress
         if (n !== 1) setStep(n);
       }
       const savedAnswers = sessionStorage.getItem(SESSION_KEY);

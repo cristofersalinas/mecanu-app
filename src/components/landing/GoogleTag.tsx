@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import Link from "next/link";
-import { useCallback, useMemo, useState, useSyncExternalStore, useEffect } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/ds/Icon";
 import {
   consentCookieHeader,
@@ -42,11 +42,12 @@ export function GoogleTag({
   cookieInicial: string;
 }) {
   // Si el copy se pasó como fallback (es), redetectarlo desde el pathname del cliente
-  const [copy, setCopy] = useState<LandingCopy["consent"]>(copyProp);
-  useEffect(() => {
-    const locale = localeFromPathname(window.location.pathname) as Locale;
-    setCopy(copyFor(locale).consent);
-  }, []);
+  const localeCliente = useSyncExternalStore(
+    () => () => {},
+    () => localeFromPathname(window.location.pathname) as Locale,
+    () => null as Locale | null,
+  );
+  const copy = localeCliente ? copyFor(localeCliente).consent : copyProp;
   const [bannerAbierto, setBannerAbierto] = useState(false);
   const cookies = useSyncExternalStore(
     subscribeToConsent,

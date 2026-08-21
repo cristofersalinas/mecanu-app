@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { Badge } from '@/components/ds/Badge';
 import { Button } from '@/components/ds/Button';
 import { Icon } from '@/components/ds/Icon';
@@ -28,14 +28,26 @@ function guardar(o: OnboardingTaller) {
   window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(o));
 }
 
-export function EncuestaOnboarding({ onAbrirAprender }: { onAbrirAprender: () => void }) {
-  const [o, setO] = useState<OnboardingTaller>(ONBOARDING_TALLER_INICIAL);
-  const [listo, setListo] = useState(false);
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    setO(leer());
-    setListo(true);
-  }, []);
+function suscribirOnboarding(onStoreChange: () => void) {
+  listeners.add(onStoreChange);
+  return () => {
+    listeners.delete(onStoreChange);
+  };
+}
+
+function bumpOnboarding() {
+  for (const l of listeners) l();
+}
+
+export function EncuestaOnboarding({ onAbrirAprender }: { onAbrirAprender: () => void }) {
+  const o = useSyncExternalStore(suscribirOnboarding, leer, () => ONBOARDING_TALLER_INICIAL);
+  const listo = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const tipo = listo ? encuestaPendiente(o) : null;
   if (!tipo) return null;
@@ -44,7 +56,7 @@ export function EncuestaOnboarding({ onAbrirAprender }: { onAbrirAprender: () =>
   function responder(si: boolean) {
     const next = responderEncuesta(o, si);
     guardar(next);
-    setO(next);
+    bumpOnboarding();
     if (si) onAbrirAprender();
   }
 
@@ -71,13 +83,9 @@ export function EncuestaOnboarding({ onAbrirAprender }: { onAbrirAprender: () =>
 
 export function TutorialesView() {
   const p = usePanel();
-  const [o, setO] = useState<OnboardingTaller>(ONBOARDING_TALLER_INICIAL);
+  const o = useSyncExternalStore(suscribirOnboarding, leer, () => ONBOARDING_TALLER_INICIAL);
   const [leccion, setLeccion] = useState<IdLeccionTaller | null>('agendar');
   const [paso, setPaso] = useState(0);
-
-  useEffect(() => {
-    setO(leer());
-  }, []);
 
   const pasos = leccion ? PASOS_LECCION[leccion] : [];
   const actual = pasos[paso] ?? null;
@@ -86,7 +94,7 @@ export function TutorialesView() {
 
   function persist(next: OnboardingTaller) {
     guardar(next);
-    setO(next);
+    bumpOnboarding();
   }
 
   function completar() {

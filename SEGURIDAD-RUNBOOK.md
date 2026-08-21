@@ -21,7 +21,7 @@ Sentry traza al 5 % (antes 100 %). Sin DSN configurado, no sale nada.
 
 En Vercel → Project → Firewall. Solo hay 3. Prioridad:
 
-1. **Challenge (o Deny si ya duele) a POST hacia cualquier ruta.** La landing no tiene formulario; un POST masivo solo pega a señuelos o a la API, que en Vercel ni se sirve. Máximo impacto, mínimo daño colateral.
+1. **Challenge (o Deny si ya duele) a POST, excepto `/api/v1/contacto` y `/api/v1/itv-leads`.** Esos dos son los formularios públicos. Challengear todos los POST los rompe.
 2. **Deny o rate-limit a paths de señuelo** si el Attack Challenge no basta: `/wp-admin`, `/.env`, `/wp-login.php`. Un escáner que los recorre en bucle es puro gasto. Los señuelos *quieren* hits lentos de humanos; un bot a 100 req/s no aporta y sí agota cuota — bloquea el flood, no el golpe suelto.
 3. **Rate limit por IP en `/assistant`.** Es la única ruta de señuelo que ejecuta lógica de verdad. 8/min en código; la regla 3 del firewall es el tope duro.
 
