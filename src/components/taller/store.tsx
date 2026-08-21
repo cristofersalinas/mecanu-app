@@ -15,12 +15,13 @@ import {
 } from '@/lib/mecanu/pipeline-tareas';
 import type { ColumnaTareaPipeline } from '@/lib/mecanu/types';
 import {
-  CAMPANAS, Campana, CANALES_SEED, CONDUCTORES, EstadoRuta, PresupuestoEstado, RUTAS_VISTA, RutaVista,
-  TALLER, Presupuesto, LineaPresupuesto, VEHICULOS, at, tagsDeRuta, TagRuta,
-  type CanalWa, type MensajeWa,
+  CAMPANAS, Campana, CANALES_SEED, CLIENTES, CONDUCTORES, EstadoRuta, PresupuestoEstado, RUTAS_VISTA, RutaVista,
+  SERVICIOS, TALLER, Presupuesto, LineaPresupuesto, VEHICULOS, at, tagsDeRuta, TagRuta,
+  type CanalWa, type MensajeWa, type Cliente, type Conductor, type Servicio, type Vehiculo,
 } from './data';
 import { deberesDesdePanel } from './deberes';
 import { notificarOportunidadSlack } from './slackOportunidades';
+import { reemplazarArray, revivirFechas, supabasePanelActivo } from './hidratar-panel';
 
 /* ------------------------- Navegación ------------------------- */
 
@@ -286,6 +287,10 @@ interface PanelStore {
   inspeccionAbierta: { rutaId: string; inspeccionId: string } | null;
   abrirInspeccion: (rutaId: string, inspeccionId: string) => void;
   cerrarInspeccion: () => void;
+
+  /** mock = arrays de mecanu-rutas; supabase = hidratado vía /api/v1/panel/snapshot */
+  fuenteDatos: 'mock' | 'supabase';
+  cargandoDatos: boolean;
 }
 
 const Ctx = createContext<PanelStore | null>(null);
@@ -324,9 +329,46 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [sub, setSub] = useState<string>('general');
 
   const [overlays, setOverlays] = useState<Record<string, Partial<RutaVista>>>({});
+  const [rutasBase, setRutasBase] = useState<RutaVista[]>(() => [...RUTAS_VISTA]);
   const [rutasNuevas, setRutasNuevas] = useState<RutaVista[]>([]);
+  const [campanasBase, setCampanasBase] = useState<Campana[]>(() => [...CAMPANAS]);
   const [campOverlays, setCampOverlays] = useState<Record<string, Partial<Campana>>>({});
   const [logsCampana, setLogsCampana] = useState<Record<string, LogCampana[]>>({});
+  const [fuenteDatos, setFuenteDatos] = useState<'mock' | 'supabase'>('mock');
+  const [cargandoDatos, setCargandoDatos] = useState(false);
+
+  useEffect(() => {
+    if (!supabasePanelActivo()) return;
+    let cancelado = false;
+    setCargandoDatos(true);
+    (async () => {
+      try {
+        const res = await fetch('/api/v1/panel/snapshot');
+        if (!res.ok) throw new Error(`snapshot ${res.status}`);
+        const raw = await res.json();
+        if (cancelado) return;
+        const rutas = revivirFechas(raw.rutas ?? []) as RutaVista[];
+        const campanas = revivirFechas(raw.campanas ?? []) as Campana[];
+        const clientes = revivirFechas(raw.clientes ?? []) as Cliente[];
+        const vehiculos = revivirFechas(raw.vehiculos ?? []) as Vehiculo[];
+        const conductores = revivirFechas(raw.conductores ?? []) as Conductor[];
+        const servicios = revivirFechas(raw.servicios ?? []) as Servicio[];
+        reemplazarArray(CLIENTES, clientes);
+        reemplazarArray(VEHICULOS, vehiculos);
+        reemplazarArray(CONDUCTORES, conductores);
+        reemplazarArray(SERVICIOS, servicios);
+        setRutasBase(rutas);
+        setCampanasBase(campanas);
+        setFuenteDatos('supabase');
+        setCondCfgState(condCfgInicial());
+      } catch (e) {
+        console.warn('[panel] no se pudo hidratar desde Supabase, sigo con mock', e);
+      } finally {
+        if (!cancelado) setCargandoDatos(false);
+      }
+    })();
+    return () => { cancelado = true; };
+  }, []);
 
   const [seleccion, setSeleccion] = useState<Seleccion | null>(null);
   const [modoFicha, setModoFicha] = useState<'panel' | 'ficha'>('panel');
@@ -369,13 +411,13 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   /* -- Derivados -- */
 
   const rutas = useMemo<RutaVista[]>(
-    () => [...RUTAS_VISTA, ...rutasNuevas].map((r) => (overlays[r.id] ? { ...r, ...overlays[r.id] } : r)),
-    [overlays, rutasNuevas],
+    () => [...rutasBase, ...rutasNuevas].map((r) => (overlays[r.id] ? { ...r, ...overlays[r.id] } : r)),
+    [overlays, rutasNuevas, rutasBase],
   );
 
   const campanas = useMemo<Campana[]>(
-    () => CAMPANAS.map((c) => (campOverlays[c.id] ? { ...c, ...campOverlays[c.id] } : c)),
-    [campOverlays],
+    () => campanasBase.map((c) => (campOverlays[c.id] ? { ...c, ...campOverlays[c.id] } : c)),
+    [campOverlays, campanasBase],
   );
 
   const rutaPorId = useCallback((id: string) => rutas.find((r) => r.id === id) ?? null, [rutas]);
@@ -827,6 +869,7 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     plantillas, guardarPlantilla, eliminarPlantilla,
     toasts, toast, cerrarToast,
     inspeccionAbierta, abrirInspeccion, cerrarInspeccion,
+    fuenteDatos, cargandoDatos,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
