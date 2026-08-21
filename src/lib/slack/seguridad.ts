@@ -6,28 +6,30 @@
 import type { EventoSeguridad } from "@/lib/security/events";
 import { publicarSlack, slackEscape } from "./notify";
 
-export const TIPOS_P0_SLACK: EventoSeguridad["tipo"][] = [
+export const TIPOS_P0_SLACK = [
   "canary_used",
   "assistant_injection",
   "sondeo_sistematico",
-];
+] as const;
+
+export type TipoP0Slack = (typeof TIPOS_P0_SLACK)[number];
 
 /** No reavisar el mismo tipo+IP en esta ventana (ms). */
 export const DEDUPE_P0_MS = 15 * 60 * 1000;
 
-const TAG: Record<(typeof TIPOS_P0_SLACK)[number], string> = {
+const TAG: Record<TipoP0Slack, string> = {
   canary_used: "#canary",
   assistant_injection: "#inyeccion",
   sondeo_sistematico: "#sondeo",
 };
 
-const TITULO: Record<(typeof TIPOS_P0_SLACK)[number], string> = {
+const TITULO: Record<TipoP0Slack, string> = {
   canary_used: "Canary usado — alguien reutilizó una trampa del .env falso",
   assistant_injection: "Inyección contra el asistente señuelo",
   sondeo_sistematico: "Sondeo sistemático — varios señuelos desde la misma IP",
 };
 
-const QUE_HACER: Record<(typeof TIPOS_P0_SLACK)[number], string> = {
+const QUE_HACER: Record<TipoP0Slack, string> = {
   canary_used:
     "Vercel Firewall → IP Blocking → Deny esa IP. No hace falta rotar secretos (canaries inertes).",
   assistant_injection:
@@ -38,7 +40,7 @@ const QUE_HACER: Record<(typeof TIPOS_P0_SLACK)[number], string> = {
 
 const ultimosAvisos = new Map<string, number>();
 
-export function esTipoP0Slack(tipo: EventoSeguridad["tipo"]): boolean {
+export function esTipoP0Slack(tipo: EventoSeguridad["tipo"]): tipo is TipoP0Slack {
   return (TIPOS_P0_SLACK as readonly string[]).includes(tipo);
 }
 
@@ -64,7 +66,7 @@ export function textoAlertaSeguridadP0(
   evento: EventoSeguridad,
   extra?: Record<string, unknown>,
 ): string {
-  const tipo = evento.tipo as (typeof TIPOS_P0_SLACK)[number];
+  const tipo = evento.tipo as TipoP0Slack;
   const geo = [evento.geo.pais, evento.geo.region, evento.geo.ciudad]
     .filter(Boolean)
     .join(" / ");
