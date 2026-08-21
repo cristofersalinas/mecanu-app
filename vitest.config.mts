@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       'src/lib/mecanu/**/*.test.ts',
       'src/lib/security/**/*.test.ts',
+      'src/lib/kapso/**/*.test.ts',
       'src/lib/landing/**/*.test.ts',
       'src/lib/slack/**/*.test.ts',
       'src/lib/next-invariants/**/*.test.ts',

@@ -30,6 +30,12 @@ describe("contentSecurityPolicy", () => {
     expect(prod).toContain("frame-ancestors 'none'");
   });
 
+  it("deja pasar los iframes de bandeja y setup de Kapso", () => {
+    expect(prod).toContain("https://inbox.kapso.ai");
+    expect(prod).toContain("https://app.kapso.ai");
+    expect(prod).toContain("frame-src");
+  });
+
   it("unsafe-eval solo en desarrollo", () => {
     expect(dev).toContain("unsafe-eval");
     expect(prod).not.toContain("unsafe-eval");

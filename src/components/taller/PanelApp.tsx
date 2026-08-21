@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '@/components/ds/Avatar';
 import { Button } from '@/components/ds/Button';
 import { Icon } from '@/components/ds/Icon';
@@ -16,6 +16,7 @@ import { ContactosView } from './contactos/ContactosView';
 import { TemparioView } from './tempario/TemparioView';
 import { ConductoresModule } from './conductores/ConductoresModule';
 import { ConfiguracionView } from './config/ConfiguracionView';
+import { WhatsAppBandeja } from './whatsapp/WhatsAppBandeja';
 import { EncuestaOnboarding } from './onboarding/OnboardingTaller';
 import { SidePanel } from './ficha/SidePanel';
 import { RecordDrawer } from './ficha/RecordDrawer';
@@ -27,6 +28,7 @@ const TITULOS: Record<NavId, string> = {
   contactos: 'Contactos',
   tempario: 'Tempario',
   conductores: 'Conductores',
+  whatsapp: 'WhatsApp',
   config: 'Configuración',
 };
 
@@ -42,6 +44,7 @@ const SUBTITULOS: Record<string, string> = {
   empresa: 'Empresa',
   sucursales: 'Sucursales',
   recepcion: 'Recepción',
+  whatsapp: 'WhatsApp',
 };
 
 function Shell() {
@@ -50,6 +53,27 @@ function Shell() {
   const [tooltip, setTooltip] = useState<{ label: string; y: number } | null>(null);
   const [agendarPeticion, setAgendarPeticion] = useState(0);
   const [servicioPeticion, setServicioPeticion] = useState(0);
+  const esBandeja = p.nav === 'whatsapp';
+  const redirectWhatsappVisto = useRef(false);
+
+  useEffect(() => {
+    if (redirectWhatsappVisto.current) return;
+    const q = new URLSearchParams(window.location.search);
+    const wa = q.get('whatsapp');
+    if (!wa) return;
+    redirectWhatsappVisto.current = true;
+    if (wa === 'ok') {
+      p.irA('config', 'whatsapp');
+      p.toast('WhatsApp Business conectado.', 'positive');
+    } else if (wa === 'error') {
+      p.irA('config', 'whatsapp');
+      p.toast('No se pudo conectar WhatsApp. Vuelve a intentarlo.', 'alert');
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete('whatsapp');
+    const qs = url.searchParams.toString();
+    window.history.replaceState({}, '', url.pathname + (qs ? `?${qs}` : '') + url.hash);
+  }, [p]);
 
   const hayMigas = p.sub !== p.nav && !!SUBTITULOS[p.sub];
   const trailDeber = p.deberActivo;
@@ -189,7 +213,7 @@ function Shell() {
             className={styles.dense}
             style={{
               flex: 1, minWidth: 0, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column',
-              padding: '14px 24px 16px', background: 'var(--mecanu-neutral-0)', position: 'relative',
+              padding: esBandeja ? 0 : '14px 24px 16px', background: 'var(--mecanu-neutral-0)', position: 'relative',
             }}
           >
             {p.nav === 'general' ? <GeneralDashboard /> : null}
@@ -197,6 +221,7 @@ function Shell() {
             {p.nav === 'contactos' ? <ContactosView /> : null}
             {p.nav === 'tempario' ? <TemparioView servicioPeticion={servicioPeticion} /> : null}
             {p.nav === 'conductores' ? <ConductoresModule /> : null}
+            {p.nav === 'whatsapp' ? <WhatsAppBandeja /> : null}
             {p.nav === 'config' ? <ConfiguracionView /> : null}
           </div>
 
