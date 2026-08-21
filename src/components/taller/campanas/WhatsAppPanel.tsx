@@ -8,10 +8,10 @@ import { Icon } from '@/components/ds/Icon';
 import { esModoDemo } from '@/lib/entorno';
 import {
   CampanaItem, ERRORES, ESTADO_MENSAJE, ETIQUETA_ORIGEN, MAX_CUERPO, MENSAJE, MensajeWa,
-  PRESUPUESTO_META, RESPUESTAS_DEMO, cliente, detalleHallazgo, enviar, estadoVentana, e164, fmtDia,
-  fmtDinero, fmtReloj, fmtTel, fromISO, payloadRecordatorio, payloadSeguimiento, payloadTexto, rangoFecha, renderMensaje,
-  toISO, valoresOportunidad, vehiculo, etiquetaVehiculo,
+  PRESUPUESTO_META, RESPUESTAS_DEMO, cliente, detalleHallazgo, estadoVentana, fmtDia,
+  fmtDinero, fmtReloj, fmtTel, fromISO, rangoFecha, renderMensaje, toISO, valoresOportunidad, vehiculo, etiquetaVehiculo,
 } from '../data';
+import { panelApi } from '../panel-api';
 import { usePanel } from '../store';
 import { Input, Tabs } from '../ui/Primitives';
 import { ImporteIva } from '../ui/ImporteIva';
@@ -24,6 +24,13 @@ import styles from '../panel.module.css';
 
 let waSeq = 0;
 const nuevoId = () => `wa-local-${++waSeq}`;
+
+function revivirMensajesWa(raw: unknown[]): MensajeWa[] {
+  return (raw ?? []).map((m) => {
+    const r = m as MensajeWa;
+    return { ...r, ts: new Date(r.ts) };
+  });
+}
 
 export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCerrar: () => void }) {
   const p = usePanel();
@@ -110,25 +117,28 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 
   const enviarProactivo = async () => {
     setEnviando(true);
-    const localId = nuevoId();
-    const tipo = modo === 'seguimiento' ? 'seguimiento' : 'recordatorio';
-    setMensajes((ms) => [...ms, { id: localId, dir: 'out', tipo, texto: cuerpo, ts: new Date(), estado: 'pending' }]);
+    const tipo = modo === 'seguimiento' ? 'seguimiento' as const : 'recordatorio' as const;
     try {
-      const to = e164(c?.telefono ?? null) ?? '';
-      const payload = modo === 'seguimiento'
-        ? payloadSeguimiento(to, valores, cuerpo)
-        : payloadRecordatorio(to, valores);
-      await enviar(payload, {
-        onEstado: (_id, estado) => {
-          setMensajes((ms) => ms.map((m) => (m.id === localId ? { ...m, estado: estado as MensajeWa['estado'] } : m)));
+      const res = await panelApi.enviarWhatsApp(campana.id, {
+        tipo,
+        seleccion,
+        overrides: {
+          ...(nombreOv !== null ? { nombre: nombreOv } : {}),
+          ...(fechaOv !== null ? { fecha: fechaOv } : {}),
         },
+        cuerpo: cuerpo,
       });
-      if (modo !== 'seguimiento') p.marcarCampanaEnviada(campana.id);
+      p.setCanalWa(campana.id, {
+        optIn: res.canal.optIn,
+        mensajes: revivirMensajesWa(res.canal.mensajes as unknown[]),
+      });
+      if (tipo === 'recordatorio' && campana.estado !== 'enviada') {
+        p.marcarCampanaEnviada(campana.id);
+      }
       p.toast(modo === 'seguimiento' ? 'Seguimiento enviado.' : 'Recordatorio enviado.');
       setTab('chat');
     } catch {
-      setMensajes((ms) => ms.map((m) => (m.id === localId ? { ...m, estado: 'failed', error: 131026 } : m)));
-      p.toast('No se pudo entregar el mensaje.', 'alert');
+      p.toast('No se pudo entregar el mensaje. Revisa KAPSO_API_KEY en el servidor.', 'alert');
     } finally {
       setEnviando(false);
     }
@@ -138,14 +148,20 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
     const texto = input.trim();
     if (!texto) return;
     setInput('');
-    const localId = nuevoId();
-    setMensajes((ms) => [...ms, { id: localId, dir: 'out', tipo: 'text', texto, ts: new Date(), estado: 'pending' }]);
-    await enviar(payloadTexto(e164(c?.telefono ?? null) ?? '', texto), {
-      onEstado: (_id, estado) => {
-        setMensajes((ms) => ms.map((m) => (m.id === localId ? { ...m, estado: estado as MensajeWa['estado'] } : m)));
-      },
-    });
-    if (p.deberActivo?.tipo === 'responder_oferta') p.volverDeDeber();
+    try {
+      const res = await panelApi.enviarWhatsApp(campana.id, {
+        tipo: 'text',
+        seleccion,
+        cuerpo: texto,
+      });
+      p.setCanalWa(campana.id, {
+        optIn: res.canal.optIn,
+        mensajes: revivirMensajesWa(res.canal.mensajes as unknown[]),
+      });
+      if (p.deberActivo?.tipo === 'responder_oferta') p.volverDeDeber();
+    } catch {
+      p.toast('No se pudo enviar el mensaje.', 'alert');
+    }
   };
 
   const simularRespuesta = () => {

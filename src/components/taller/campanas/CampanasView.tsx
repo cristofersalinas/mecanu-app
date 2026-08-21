@@ -11,6 +11,7 @@ import {
   nombreCorto, vehiculo,
 } from '../data';
 import { usePanel } from '../store';
+import { panelApi } from '../panel-api';
 import { CardsSkeleton, SearchInput } from '../ui/Primitives';
 import { ImporteIva } from '../ui/ImporteIva';
 import { useCarga } from '../ui/useCarga';
@@ -44,15 +45,45 @@ export function CampanasView() {
   const toggleSel = (id: string) =>
     setSeleccionadas((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
-  const enviarMasivo = () => {
+  const [enviandoMasivo, setEnviandoMasivo] = useState(false);
+
+  const enviarMasivo = async () => {
     if (!confirmarEnvio) {
       setConfirmarEnvio(true);
       return;
     }
-    seleccionadas.forEach((id) => p.marcarCampanaEnviada(id));
-    p.toast(`${seleccionadas.length} recordatorios enviados por WhatsApp.`);
+    setEnviandoMasivo(true);
+    let ok = 0;
+    let fail = 0;
+    for (const id of seleccionadas) {
+      const c = p.campanaPorId(id);
+      if (!c) continue;
+      try {
+        const res = await panelApi.enviarWhatsApp(id, {
+          tipo: 'recordatorio',
+          seleccion: c.items.map((i) => i.id),
+        });
+        p.setCanalWa(id, {
+          optIn: res.canal.optIn,
+          mensajes: (res.canal.mensajes as { ts: string }[]).map((m) => ({
+            ...m,
+            ts: new Date(m.ts),
+          })) as import('../data').MensajeWa[],
+        });
+        p.marcarCampanaEnviada(id);
+        ok += 1;
+      } catch {
+        fail += 1;
+      }
+    }
+    setEnviandoMasivo(false);
     setSeleccionadas([]);
     setConfirmarEnvio(false);
+    if (fail === 0) {
+      p.toast(`${ok} recordatorios enviados por WhatsApp.`);
+    } else {
+      p.toast(`${ok} enviados, ${fail} fallaron. Revisa KAPSO en el servidor.`, fail ? 'alert' : 'positive');
+    }
   };
 
   if (cargando) {
@@ -140,8 +171,8 @@ export function CampanasView() {
             >
               Cancelar
             </Button>
-            <Button kind="primary" size="compact" icon="send" onClick={enviarMasivo}>
-              {confirmarEnvio ? 'Confirmar envío' : 'Enviar recordatorios'}
+            <Button kind="primary" size="compact" icon="send" onClick={() => void enviarMasivo()} disabled={enviandoMasivo}>
+              {enviandoMasivo ? 'Enviando…' : confirmarEnvio ? 'Confirmar envío' : 'Enviar recordatorios'}
             </Button>
           </div>
         ) : null}
