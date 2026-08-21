@@ -19,7 +19,6 @@ type Answers = {
   paisCodigo: string;
   telefono: string;
   objetivo: string;
-  tipoTaller: string;
   uso: string[];
   ciudad: string;
   volumen: string;
@@ -34,7 +33,6 @@ const INITIAL: Answers = {
   paisCodigo: DEFAULT_COUNTRY.code,
   telefono: "",
   objetivo: "",
-  tipoTaller: "",
   uso: [],
   ciudad: "",
   volumen: "",
@@ -42,7 +40,7 @@ const INITIAL: Answers = {
   canal: "",
 };
 
-const TOTAL_STEPS = 12;
+const TOTAL_STEPS = 11;
 
 function renderPregunta(template: string, nombre: string): React.ReactNode {
   const parts = template.split(/\*\*(.*?)\*\*/g);
@@ -386,41 +384,10 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           </div>
         )}
 
-        {/* Paso 6 — Tipo de taller */}
+        {/* Paso 6 — Uso (selección múltiple, máx. 3) */}
         {step === 6 && (
           <div className={styles.stepWrap}>
             <StepIndex step={6} />
-            <p className={styles.pregunta}>
-              {renderPregunta(p.tipoTaller.pregunta, answers.nombre)}
-            </p>
-            <div className={styles.pills}>
-              {p.tipoTaller.opciones.map((op, i) => (
-                <button
-                  key={op}
-                  type="button"
-                  className={`${styles.pill} ${answers.tipoTaller === op ? styles.pillSelected : ""}`}
-                  onClick={() => {
-                    set("tipoTaller", op);
-                    setTimeout(advance, 120);
-                  }}
-                >
-                  <span className={styles.pillLetter}>{String.fromCharCode(65 + i)}</span>
-                  {op}
-                </button>
-              ))}
-            </div>
-            <div className={styles.actions}>
-              <button className={styles.btnBack} type="button" onClick={back}>
-                {copy.anterior}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 7 — Uso (selección múltiple, máx. 3) */}
-        {step === 7 && (
-          <div className={styles.stepWrap}>
-            <StepIndex step={7} />
             <p className={styles.pregunta}>
               {renderPregunta(p.uso.pregunta, answers.nombre)}
             </p>
@@ -465,10 +432,10 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           </div>
         )}
 
-        {/* Paso 8 — Ciudad */}
-        {step === 8 && (
+        {/* Paso 7 — Ciudad */}
+        {step === 7 && (
           <div className={styles.stepWrap}>
-            <StepIndex step={8} />
+            <StepIndex step={7} />
             <label className={styles.pregunta} htmlFor="cf-ciudad">
               {renderPregunta(p.ciudad.pregunta, answers.nombre)}
             </label>
@@ -503,10 +470,10 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           </div>
         )}
 
-        {/* Paso 9 — Volumen (rangos) */}
-        {step === 9 && (
+        {/* Paso 8 — Volumen (rangos) */}
+        {step === 8 && (
           <div className={styles.stepWrap}>
-            <StepIndex step={9} />
+            <StepIndex step={8} />
             <p className={styles.pregunta}>
               {renderPregunta(p.volumen.pregunta, answers.nombre)}
             </p>
@@ -535,10 +502,10 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           </div>
         )}
 
-        {/* Paso 10 — Nombre del negocio */}
-        {step === 10 && (
+        {/* Paso 9 — Nombre del negocio */}
+        {step === 9 && (
           <div className={styles.stepWrap}>
-            <StepIndex step={10} />
+            <StepIndex step={9} />
             <label className={styles.pregunta} htmlFor="cf-negocio">
               {renderPregunta(p.negocio.pregunta, answers.nombre)}
             </label>
@@ -569,10 +536,10 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           </div>
         )}
 
-        {/* Paso 11 — Canal de origen */}
-        {step === 11 && (
+        {/* Paso 10 — Canal de origen */}
+        {step === 10 && (
           <div className={styles.stepWrap}>
-            <StepIndex step={11} />
+            <StepIndex step={10} />
             <p className={styles.pregunta}>
               {renderPregunta(p.canal.pregunta, answers.nombre)}
             </p>
@@ -600,10 +567,10 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           </div>
         )}
 
-        {/* Paso 12 — Privacidad + envío */}
-        {step === 12 && (
+        {/* Paso 11 — Privacidad + envío */}
+        {step === 11 && (
           <div className={styles.stepWrap}>
-            <StepIndex step={12} />
+            <StepIndex step={11} />
             <p className={styles.pregunta}>Último paso.</p>
             <label className={styles.privacyCheck}>
               <input

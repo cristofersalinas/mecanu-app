@@ -125,10 +125,6 @@ export type LandingCopy = {
         pregunta: string;
         opciones: [string, string];
       };
-      tipoTaller: {
-        pregunta: string;
-        opciones: [string, string, string, string, string];
-      };
       uso: {
         pregunta: string;
         aviso: string;
@@ -410,16 +406,7 @@ const es: LandingCopy = {
         pregunta: "¿Qué quieres **hacer**?",
         opciones: ["Digitalizar mi taller actual", "Abrir un nuevo taller"],
       },
-      tipoTaller: {
-        pregunta: "¿Qué tipo de **taller** tienes?",
-        opciones: [
-          "Mecánica general",
-          "Carrocería y pintura",
-          "ITV / revisiones",
-          "Taller de flota",
-          "Otro",
-        ],
-      },
+
       uso: {
         pregunta: "¿Qué **problema quieres resolver** con Mecanu?",
         aviso: "Selecciona hasta 3 opciones.",
@@ -732,16 +719,7 @@ const ca: LandingCopy = {
         pregunta: "Què vols **fer**?",
         opciones: ["Digitalitzar el meu taller actual", "Obrir un taller nou"],
       },
-      tipoTaller: {
-        pregunta: "Quin tipus de **taller** tens?",
-        opciones: [
-          "Mecànica general",
-          "Carrosseria i pintura",
-          "ITV / revisions",
-          "Taller de flota",
-          "Altre",
-        ],
-      },
+
       uso: {
         pregunta: "Quin **problema vols resoldre** amb Mecanu?",
         aviso: "Selecciona fins a 3 opcions.",
@@ -1050,16 +1028,7 @@ const en: LandingCopy = {
         pregunta: "What do you want to **do**?",
         opciones: ["Digitise my current shop", "Open a new workshop"],
       },
-      tipoTaller: {
-        pregunta: "What type of **workshop** do you run?",
-        opciones: [
-          "General mechanics",
-          "Bodywork and paint",
-          "MOT / inspections",
-          "Fleet workshop",
-          "Other",
-        ],
-      },
+
       uso: {
         pregunta: "What **problem do you want to solve** with Mecanu?",
         aviso: "Select up to 3 options.",
@@ -1368,16 +1337,7 @@ const pt: LandingCopy = {
         pregunta: "O que queres **fazer**?",
         opciones: ["Digitalizar a minha oficina atual", "Abrir uma nova oficina"],
       },
-      tipoTaller: {
-        pregunta: "Que tipo de **oficina** tens?",
-        opciones: [
-          "Mecânica geral",
-          "Carroçaria e pintura",
-          "IPO / inspeções",
-          "Oficina de frota",
-          "Outro",
-        ],
-      },
+
       uso: {
         pregunta: "Que **problema queres resolver** com a Mecanu?",
         aviso: "Seleciona até 3 opções.",

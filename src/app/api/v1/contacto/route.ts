@@ -16,7 +16,6 @@ const schema = z.object({
   paisCodigo: z.string().min(2).max(4).optional(),
   telefono: z.string().min(6),
   objetivo: z.string().min(1),
-  tipoTaller: z.string().min(1),
   uso: z.array(z.string()).min(1).max(3),
   ciudad: z.string().min(1),
   volumen: z.string().min(1),
@@ -46,7 +45,7 @@ async function appendToSheet(data: z.infer<typeof schema>) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: sheetId,
-    range: "A:L",
+    range: "A:K",
     valueInputOption: "USER_ENTERED",
     requestBody: {
       values: [
@@ -59,7 +58,6 @@ async function appendToSheet(data: z.infer<typeof schema>) {
             ? telefonoConPrefijo(data.paisCodigo, data.telefono)
             : data.telefono,
           data.objetivo,
-          data.tipoTaller,
           data.uso.join(" / "),
           data.ciudad,
           data.volumen,
@@ -86,7 +84,6 @@ async function sendNotificationEmail(data: z.infer<typeof schema>) {
     ["Teléfono", telefono],
     ...(wa ? [["WhatsApp", wa] as [string, string]] : []),
     ["Objetivo", data.objetivo],
-    ["Tipo de taller", data.tipoTaller],
     ["Uso previsto", data.uso.join(", ")],
     ["Ciudad", data.ciudad],
     ["Vehículos/mes", data.volumen],
