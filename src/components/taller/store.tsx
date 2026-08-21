@@ -26,7 +26,7 @@ import { panelApi } from './panel-api';
 
 /* ------------------------- Navegación ------------------------- */
 
-export type NavId = 'general' | 'tablero' | 'contactos' | 'tempario' | 'conductores' | 'config';
+export type NavId = 'general' | 'tablero' | 'contactos' | 'tempario' | 'conductores' | 'whatsapp' | 'config';
 
 export const NAV_ITEMS: { id: NavId; label: string; icon: string }[] = [
   { id: 'general', label: 'General', icon: 'dashboard' },
@@ -34,6 +34,7 @@ export const NAV_ITEMS: { id: NavId; label: string; icon: string }[] = [
   { id: 'contactos', label: 'Contactos', icon: 'contacts' },
   { id: 'tempario', label: 'Tempario', icon: 'menu_book' },
   { id: 'conductores', label: 'Conductores', icon: 'local_shipping' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: 'chat' },
   { id: 'config', label: 'Configuración', icon: 'settings' },
 ];
 
@@ -43,6 +44,7 @@ export const SUBNAV_DEFAULT: Record<NavId, string> = {
   contactos: 'clientes',
   tempario: 'tempario',
   conductores: 'conductores',
+  whatsapp: 'whatsapp',
   config: 'perfil',
 };
 

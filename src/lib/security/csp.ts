@@ -37,6 +37,10 @@ const SENTRY = "https://*.ingest.sentry.io https://*.ingest.de.sentry.io";
 
 const FUENTES = "https://fonts.googleapis.com https://fonts.gstatic.com";
 
+/** Bandeja Inbox Embed + setup de WhatsApp Business (Kapso). No afloja frame-ancestors. */
+const KAPSO_FRAMES =
+  "https://inbox.kapso.ai https://app.kapso.ai https://setup.kapso.ai https://*.kapso.ai";
+
 export function contentSecurityPolicy(opts: { desarrollo: boolean }): string {
   const evalDev = opts.desarrollo ? " 'unsafe-eval'" : "";
 
@@ -48,7 +52,7 @@ export function contentSecurityPolicy(opts: { desarrollo: boolean }): string {
     `img-src 'self' data: blob: ${ANALYTICA} ${MAPA}`,
     `connect-src 'self' ${ANALYTICA} ${MAPA} ${SENTRY}`,
     "worker-src 'self' blob:",
-    "frame-src https://www.googletagmanager.com",
+    `frame-src https://www.googletagmanager.com ${KAPSO_FRAMES}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

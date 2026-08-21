@@ -7,7 +7,7 @@ exhaustiva en vez de solo cómoda. Ordenada de más a menos urgente/bloqueante.
 ## Bloqueantes para un backend real
 
 ### 1. Autenticación
-**Conductor:** magic link solo (`/entrar` → `/conductor`).
+**Conductor:** magic link solo, enviado por correo (el taller). No hay formulario web para pedirlo ni reenviarlo. `/entrar` solo explica eso; el enlace abre `/conductor`.
 **Panel:** email+contraseña, registro con verificación de email, recuperación,
 Google OAuth, y teléfono/SMS si Phone provider está activo en Supabase.
 Rutas: `/panel/entrar`, `/panel/registro`, `/panel/recuperar`,
@@ -113,14 +113,17 @@ en cada redeploy, no se comparte entre instancias serverless. Para Vercel
 producción con más de una instancia sirviendo tráfico a la vez.
 
 ### 16. Notificaciones (WhatsApp real, push al conductor)
-`readme.md` del design system y `HANDOFF.md` §8 son explícitos: "fuera del scope
-de este design system, lo gestiona otra capa". `mecanu-whatsapp.ts` es una
-simulación completa de la API de WhatsApp Cloud (payloads, ventana de 24h, estados
-de entrega) pero `enviar()` nunca llama a Meta de verdad. Conectar la API real es
-straightforward (el propio código lo dice: "solo se sustituye `enviar()` por el
-POST a /messages") pero requiere credenciales de WABA que no existen todavía.
-Notificaciones push al móvil del conductor (para solicitudes resueltas, nuevos
-traslados) no están ni simuladas.
+
+`mecanu-whatsapp.ts` sigue siendo la simulación de campañas (no se sustituye).
+Corte 1 (rama `feature/panel-whatsapp-inbox`): bandeja humana embebida en `/panel`
+(Inbox Embed de Kapso) + setup coexistence en Configuración. Cero IA.
+
+Corte 2 (después de `taller_id` en Postgres): persistir
+`talleres.kapso_customer_id` / `phone_number_id`, webhook
+`whatsapp.phone_number.created`, y dejar de leer el embed desde env global.
+No hay migración en este corte.
+
+Push al conductor: sigue sin simular ni implementar.
 
 ## Ambigüedades menores de tipo/forma
 
