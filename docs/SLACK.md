@@ -86,10 +86,11 @@ No actives también el Slack de Vercel hacia `#alertas` o `#deploys`:
 duplicarías el mismo aviso. El watcher del repo
 (`.github/workflows/production-deploy-watch.yml`) es la fuente.
 
-Sentry, cuando tenga DSN, se cablea en el propio Sentry hacia `#alertas`
-solo para `canary_used`, `assistant_injection`, `sondeo_sistematico`.
-No hace falta otro bot. Inventario profundo de sensores de abuso (IP,
-geo, evidencia, huecos): [`SLACK-SEGURIDAD.md`](./SLACK-SEGURIDAD.md).
+Sentry (errores de código) se puede enlazar en la UI de Sentry → `#alertas`
+solo *high priority* si quieres; no es obligatorio. La **seguridad P0**
+(`canary_used`, `assistant_injection`, `sondeo_sistematico`) ya publica a
+`#alertas` desde código (`src/lib/slack/seguridad.ts`, dedupe 15 min).
+Inventario de sensores: [`SLACK-SEGURIDAD.md`](./SLACK-SEGURIDAD.md).
 
 ## Montaje (una vez)
 

@@ -23,7 +23,7 @@ Mapa Slack de producto: [`SLACK-SENALES.md`](./SLACK-SENALES.md).
 | Sentry (si hay DSN) | Solo `canary_used`, `assistant_injection`, `sondeo_sistematico` | Según plan Sentry | Alertas inmediatas |
 | Tabla `security_events` | Misma forma + `extra` jsonb | 90 días (cuando exista) | Backoffice futuro / SQL |
 | Vercel Firewall → Logs | Challenge / Deny a nivel edge | Según Vercel | Antes de que llegue a Next |
-| Slack `#alertas` | Aún **no cableado** para seguridad | — | Objetivo: P0/P1 de esta lista |
+| Slack `#alertas` | **P0 cableado:** `canary_used`, `assistant_injection`, `sondeo_sistematico` (dedupe 15 min/IP). P1/P2 no. | — | Actuar ya |
 
 Una línea típica en Vercel Logs:
 
@@ -328,23 +328,20 @@ Tags: `#seguridad` + uno de `#sondeo` `#canary` `#inyeccion` `#login_falso` `#fl
 4. **Probe a `/panel` en prod** no deja evento dedicado.
 5. **Formularios reales** aún no unifican honeypot de campo + evento
    security.
-6. **Sin DSN de Sentry** → las 3 alertas “inmediatas” no empujan a
-   ningún lado fuera de los logs.
-7. **Slack seguridad** aún no publica (este doc es el contrato; falta el
-   cable `registrarEvento` → `#alertas`).
+7. **Slack seguridad P0** → `#alertas` vía `avisarSeguridadP0Slack` (dedupe 15 min
+   por tipo+IP). P1/honeypot suelto siguen en silencio.
+8. **Probe a `/panel` en prod** no deja evento dedicado.
 
 ---
 
-## 7. Orden de cableado a Slack (propuesto)
+## 7. Orden de cableado a Slack
 
-1. Publicar a `#alertas` en P0: `canary_used`, `sondeo_sistematico`,
-   `assistant_injection` (mismo criterio que Sentry hoy).
-2. P1: `fake_login` + `rate_limited` de honeypot.
+1. ~~Publicar a `#alertas` en P0~~ — **hecho** (`src/lib/slack/seguridad.ts`).
+2. P1: `fake_login` + `rate_limited` de honeypot (solo si hace falta; hoy silencio a propósito).
 3. Registrar también 429 de `/api` y `/assistant` como `rate_limited`.
-4. Nuevo tipo `surface_probe` para `/panel|/conductor|/backoffice` en
-   Vercel.
-5. Aplicar `0005` en `mecanu-dev` cuando el acceso esté listo; entonces
-   el digest P2 puede salir de SQL, no de logs efímeros.
+4. Nuevo tipo `surface_probe` para `/panel|/conductor|/backoffice` en Vercel.
+5. Aplicar `0005` en `mecanu-dev` cuando el acceso esté listo.
 
-Hasta (1), la forma de enterarte es: **Vercel → Logs → `mecanu.security`**
-y, si configuras DSN, Sentry para los tres P0.
+Requisito env: `SLACK_BOT_TOKEN` + `SLACK_CHANNEL_ALERTAS` en Vercel Production.
+Silencia notificaciones push de `#alertas` en el móvil si quieres; el canal
+sigue siendo el historial de “actuar ya”.

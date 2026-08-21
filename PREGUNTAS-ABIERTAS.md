@@ -164,8 +164,9 @@ Unificar antes de que el prefijo se filtre a lógica de negocio real en algún s
 ### 20. Identidad societaria para LSSI-CE / RGPD — resuelto (2026-08-20)
 Titular publicado: **Automotive Technologies SpA**, RUT **77.620.433-1**, Las Bellotas
 199 of. 91, Providencia, Chile (marca Mecanu). Vive en
-`src/lib/landing/legal-entidad.ts` (`LEGAL_DEFAULTS`). Sigue abierto: buzón
-`privacidad@mecanu.com` y confirmación contable del giro/IVA en servicios al exterior.
+`src/lib/landing/legal-entidad.ts` (`LEGAL_DEFAULTS`). Buzón
+`privacidad@mecanu.com` activo (2026-08-21). Sigue abierto: confirmación
+contable del giro/IVA en servicios al exterior (ver §21).
 
 ### 21. Facturación Chile → UE — aparcado a pedido del fundador
 Contexto guardado en `docs/FACTURACION-CHILE.md` (SpA vs persona natural, impuestos

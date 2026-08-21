@@ -75,3 +75,11 @@ export async function avisarCsxSlack(text: string): Promise<SlackPostResult> {
     text,
   });
 }
+
+/** Solo actuación urgente (CI, deploy fallido, seguridad P0). */
+export async function avisarAlertaSlack(text: string): Promise<SlackPostResult> {
+  return publicarSlack({
+    channel: process.env.SLACK_CHANNEL_ALERTAS,
+    text,
+  });
+}
