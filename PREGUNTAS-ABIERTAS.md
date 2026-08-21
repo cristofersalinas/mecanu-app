@@ -6,17 +6,19 @@ exhaustiva en vez de solo cómoda. Ordenada de más a menos urgente/bloqueante.
 
 ## Bloqueantes para un backend real
 
-### 1. No hay autenticación, roles ni permisos
-**Defaults cerrados 21 ago:** un taller = un tenant (`taller_id`);
-**magic link solo para la app del conductor** (`/entrar` → `/conductor`);
-interno vs red vía RLS + `app_metadata`; impersonación dueño desde Equipo →
-«Ver usuario» (cookie firmada pendiente).
-**Login de `/panel` y `/backoffice`:** distinto del magic link — aún por decidir
-(contraseña, SSO, o invite del taller). No usar el enlace del conductor para
-abrir el panel.
-**Oleada auth:** `/entrar` + `/auth/callback`, `0007` RLS + `0008` storage,
-`repo-supabase` (`MECANU_USE_SUPABASE=1`), `npm run db:invitar` con
-`--rol conductor`. Hasta login+RLS estables: no `MECANU_EXPONER_APPS=1` en Production.
+### 1. Autenticación
+**Conductor:** magic link solo (`/entrar` → `/conductor`).
+**Panel:** email+contraseña, registro con verificación de email, recuperación,
+Google OAuth, y teléfono/SMS si Phone provider está activo en Supabase.
+Rutas: `/panel/entrar`, `/panel/registro`, `/panel/recuperar`,
+`/panel/nueva-contrasena`. Botón «Entrar» en la landing → `/panel/entrar`.
+`npm run demo` sigue sin exigir login. Con keys Supabase y sin demo, `/panel`
+exige sesión y crea taller+perfil (`ensurePerfilPanel`).
+**Backoffice:** pendiente.
+**Dashboard:** activar «Allow new users to sign up» (panel); Google provider;
+Redirect URLs con `/auth/callback`. Phone opcional (Twilio).
+Hasta RLS+login estables en prod: no `MECANU_EXPONER_APPS=1` a ciegas — el
+proxy ya deja pasar `/panel/*` auth y el panel con sesión.
 
 ### 2. `crearRutaDesdeCampana` — HECHO (mock + supabase)
 Lógica pura en `crear-ruta-desde-campana.ts`; mock y `repo-supabase` persisten

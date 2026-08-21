@@ -14,44 +14,36 @@ import {
   REGLA_API_ESCRITURA,
   REGLA_API_LECTURA,
 } from "@/lib/security/rate-limit";
+import {
+  actualizarSesionSupabase,
+  esPanelApp,
+  esRutaAuthPanel,
+} from "@/lib/supabase/session-proxy";
 
 /**
- * Hace dos cosas, ambas antes de que se renderice nada:
- *
- * 1. Fuera de tu máquina, la única superficie pública es la landing.
- *    `/panel`, `/conductor`, `/backoffice` y `/api/v1/*` sirven datos mock. El corte cubre
- *    producción **y** los previews de Vercel. Local (`next dev` / `next start`)
- *    no tiene `VERCEL=1` y sigue sirviendo las tres apps.
- *
- *    Para verificar panel/conductor en un preview de staging, pon
- *    `MECANU_EXPONER_APPS=1` solo en el entorno Preview, o entra con SSO.
- * 2. En la primera entrada a `/`, propone el idioma con Accept-Language (y la
- *    cookie manual si ya eligió). Una ruta localizada siempre gana. Después
- *    marca el idioma en una cabecera para que el layout raíz pueda poner el
- *    `lang` correcto en el `<html>`.
- *
- * Sobre el corte: en Vercel siempre, a propósito. Un preview de rama es una
- * URL pública (o pública el día que se apague el SSO) y el mock del panel no
- * debe colgar ahí. Local no se toca.
- *
- * Es fail-closed: no depende de acordarse de poner una variable en Vercel.
- * Abrir las apps al público hay que pedirlo explícitamente con
- * `MECANU_EXPONER_APPS=1`.
- *
- * (Este archivo era `middleware.ts`. Next.js 16 renombró la convención a
- * `proxy`; la vieja sigue funcionando pero avisa de deprecación en cada build.)
+ * 1. Fuera de local: corte fail-closed de apps mock, salvo auth pública del panel
+ *    y panel con sesión válida.
+ * 2. Locale en `/`.
+ * 3. Refresco de cookies Supabase en rutas de panel/auth.
  */
 const soloLanding =
   process.env.VERCEL === "1" &&
   process.env.MECANU_EXPONER_APPS !== "1";
 
-function esAppProtegida(pathname: string) {
-  const apiPublica =
+function esApiPublica(pathname: string) {
+  return (
     pathname === "/api/v1/contacto" ||
     pathname.startsWith("/api/v1/contacto/") ||
     pathname === "/api/v1/itv-leads" ||
-    pathname.startsWith("/api/v1/itv-leads/");
-  if (apiPublica) return false;
+    pathname.startsWith("/api/v1/itv-leads/")
+  );
+}
+
+function esAppProtegida(pathname: string) {
+  if (esApiPublica(pathname)) return false;
+  if (esRutaAuthPanel(pathname)) return false;
+  if (pathname === "/auth" || pathname.startsWith("/auth/")) return false;
+  if (pathname === "/entrar" || pathname.startsWith("/entrar/")) return false;
   return (
     pathname === "/panel" ||
     pathname.startsWith("/panel/") ||
@@ -85,16 +77,28 @@ export async function proxy(request: NextRequest) {
         sameSite: "lax",
         secure: process.env.VERCEL === "1",
       });
-      // La respuesta depende de Accept-Language/cookie. Nunca debe convertirse
-      // en una redirección compartida por la caché de Vercel.
       respuesta.headers.set("Cache-Control", "private, no-store");
       return respuesta;
     }
   }
 
+  const tocaSupabase =
+    pathname.startsWith("/panel") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/entrar");
+  const { response: sesionRes, user } = tocaSupabase
+    ? await actualizarSesionSupabase(request)
+    : { response: NextResponse.next({ request: { headers: requestHeaders } }), user: null };
+
+  if (soloLanding && esPanelApp(pathname)) {
+    if (user) {
+      // Panel autenticado: dejar pasar aunque el mock aún no esté apagado.
+      return sesionRes;
+    }
+    return NextResponse.redirect(new URL("/panel/entrar", request.url));
+  }
+
   if (soloLanding && esAppProtegida(pathname)) {
-    // Un 302 a la landing desde una llamada de datos rompería el cliente del
-    // conductor en silencio: recibiría HTML donde espera JSON.
     if (pathname === "/api" || pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
@@ -116,6 +120,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  if (tocaSupabase) return sesionRes;
   return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
@@ -130,6 +135,10 @@ export const config = {
     "/pt/:path*",
     "/panel",
     "/panel/:path*",
+    "/entrar",
+    "/entrar/:path*",
+    "/auth",
+    "/auth/:path*",
     "/conductor",
     "/conductor/:path*",
     "/backoffice",

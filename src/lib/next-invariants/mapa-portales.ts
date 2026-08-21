@@ -28,6 +28,12 @@ export const PORTALES: PortalCanonico[] = [
     privado: false,
   },
   {
+    url: '/panel/entrar',
+    page: 'src/app/(taller)/panel/entrar/page.tsx',
+    entryImport: '@/components/auth/PanelLoginForm',
+    privado: false,
+  },
+  {
     url: '/panel',
     page: 'src/app/(taller)/panel/page.tsx',
     entryImport: '@/components/taller/PanelApp',

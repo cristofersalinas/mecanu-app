@@ -18,6 +18,7 @@ export type LandingCopy = {
     solucion: string;
     recursos: string;
     productos: string;
+    login: string;
     cta: string;
     langLabel: string;
   };
@@ -164,6 +165,7 @@ const es: LandingCopy = {
     solucion: "Solución",
     recursos: "Recursos",
     productos: "Productos",
+    login: "Entrar",
     cta: "Hablar con Mecanu",
     langLabel: "Idioma",
   },
@@ -477,6 +479,7 @@ const ca: LandingCopy = {
     solucion: "Solució",
     recursos: "Recursos",
     productos: "Productes",
+    login: "Entrar",
     cta: "Parlar amb Mecanu",
     langLabel: "Idioma",
   },
@@ -790,6 +793,7 @@ const en: LandingCopy = {
     solucion: "Solution",
     recursos: "Resources",
     productos: "Products",
+    login: "Log in",
     cta: "Talk to Mecanu",
     langLabel: "Language",
   },
@@ -1099,6 +1103,7 @@ const pt: LandingCopy = {
     solucion: "Solução",
     recursos: "Recursos",
     productos: "Produtos",
+    login: "Entrar",
     cta: "Falar com Mecanu",
     langLabel: "Idioma",
   },
