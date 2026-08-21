@@ -187,9 +187,15 @@ export function TrasladosView({ agendarPeticion }: Props) {
     setDragId(null);
     if (!id) return;
     const r = p.rutas.find((x) => x.id === id);
-    if (!r || !ESTADO[r.estado]?.arrastrable) return;
+    if (!r || !ESTADO[r.estado]?.arrastrable) {
+      p.toast('Solo se arrastran los de Prospectos. El resto avanza con el conductor o el cliente.', 'warning');
+      return;
+    }
     const cfg = ESTADO[estado];
-    if (!cfg?.aceptaDrop) return;
+    if (!cfg?.aceptaDrop) {
+      p.toast('Ahí no se puede soltar. Arrastra a Agendado o usa Cancelar.', 'warning');
+      return;
+    }
     if (cfg.dropAccion === 'agendar') setAgendarId(id);
     if (cfg.dropAccion === 'cancelar') setCancelarId(id);
   };
@@ -460,7 +466,8 @@ export function TrasladosView({ agendarPeticion }: Props) {
           ) : null}
           <ErrorState
             variant="empty"
-            message="Prueba con otra combinación o vacía la búsqueda para ver todos los registros."
+            title="Sin traslados con ese filtro"
+            message="No hay traslados que coincidan. Prueba otra combinación o vacía la búsqueda."
             actionLabel="Limpiar filtros"
             onAction={limpiarFiltros}
           />
@@ -478,7 +485,7 @@ export function TrasladosView({ agendarPeticion }: Props) {
           />
         </div>
       ) : (
-        <div className={styles.kanban} style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 6 }}>
+        <div className={styles.kanban} style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, paddingBottom: 6 }}>
           {ESTADOS.map((col) => {
             const items = filtradas.filter((r) => r.estado === col.id);
             const colapsada = colapsadas.includes(col.id);
@@ -487,7 +494,7 @@ export function TrasladosView({ agendarPeticion }: Props) {
                 <div
                   key={col.id}
                   className={styles.colCollapsed}
-                  style={{ flex: 'none', width: 44, borderRadius: 12, background: 'var(--mecanu-neutral-25)', padding: 8 }}
+                  style={{ flex: 'none', width: 44, minHeight: '100%', borderRadius: 12, background: 'var(--mecanu-neutral-25)', padding: 8 }}
                 >
                   <button
                     type="button"
@@ -508,7 +515,7 @@ export function TrasladosView({ agendarPeticion }: Props) {
             return (
               <div
                 key={col.id}
-                className={`${styles.colExpanded} ${activa ? (puedeSoltar ? styles.colDropActive : styles.colDropDenied) : ''}`}
+                className={`${styles.colExpanded} ${styles.kanbanCol} ${activa ? (puedeSoltar ? styles.colDropActive : styles.colDropDenied) : ''}`}
                 onDragOver={(e) => {
                   if (!dragId) return;
                   e.preventDefault();
@@ -518,11 +525,10 @@ export function TrasladosView({ agendarPeticion }: Props) {
                 onDragLeave={() => setDropCol((c) => (c === col.id ? null : c))}
                 onDrop={(e) => onDrop(e, col.id)}
                 style={{
-                  flex: 'none', width: 268, display: 'flex', flexDirection: 'column', minHeight: 0,
-                  borderRadius: 12, background: 'var(--mecanu-neutral-25)', padding: 8,
+                  width: 268, borderRadius: 12, background: 'var(--mecanu-neutral-25)',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 4px 8px' }}>
+                <div className={styles.kanbanColHead} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ width: 8, height: 8, borderRadius: 999, background: `var(--mecanu-${col.kind === 'brand' ? 'electric-600' : col.kind})` }} />
                   <span style={{ flex: 1, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em' }}>
                     {col.label}
@@ -538,7 +544,7 @@ export function TrasladosView({ agendarPeticion }: Props) {
                     <Icon name="chevron_left" size="sm" />
                   </button>
                 </div>
-                <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className={styles.kanbanColBody}>
                   {items.map((r) => (
                     <KanbanCard
                       key={r.id}
@@ -559,6 +565,9 @@ export function TrasladosView({ agendarPeticion }: Props) {
                   {items.length === 0 ? (
                     <div style={{ padding: '18px 10px', textAlign: 'center', fontSize: 12, color: 'var(--mecanu-neutral-300)' }}>
                       Sin traslados
+                      {activa && !puedeSoltar ? (
+                        <div style={{ marginTop: 6, color: '#9C420B' }}>No se puede soltar aquí</div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>

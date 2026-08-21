@@ -45,6 +45,8 @@ import {
   nivelDeTestigo,
   solapa,
 } from './selectors';
+import { motivoOfertaItv, nivelHallazgoItv } from '@/lib/mecanu/oferta-itv';
+import { encolarItem, escribirCola, leerCola, vaciarCola } from '@/lib/mecanu/cola-offline';
 import type {
   AppState,
   Foto,
@@ -187,7 +189,7 @@ type Arrastre = {
 
 /** Deslizar revela; tocar llama (o pasar del 30 % del ancho, que marca solo). */
 export const CALL_W = 78;
-const CALL_UMBRAL = 0.3;
+const CALL_UMBRAL = 0.55;
 
 /** El "estoy montado" no cambia nunca, así que no hay a qué suscribirse. */
 const suscribirNada = () => () => {};
@@ -281,6 +283,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
      y engorda la cola; al reconectar se envía sola. */
 
   const sincronizado = useCallback(() => {
+    escribirCola(vaciarCola(), typeof window === 'undefined' ? null : window.localStorage);
     setS((prev) => {
       const logsLocal: AppState['logsLocal'] = {};
       Object.keys(prev.logsLocal).forEach((k) => {
@@ -308,10 +311,53 @@ export function useConductor(opts: OpcionesConductor = {}) {
   const encolar = useCallback(
     (bytes = 0) => {
       if (ref.current.online) return;
-      patch((prev) => ({ queue: prev.queue + 1, bytes: prev.bytes + bytes, sync: 'offline' }));
+      const st = typeof window === 'undefined' ? null : window.localStorage;
+      const items = encolarItem(leerCola(st), 'accion');
+      escribirCola(items, st);
+      patch((prev) => ({ queue: items.length, bytes: prev.bytes + bytes, sync: 'offline' }));
     },
     [patch],
   );
+
+  const reintentarCola = useCallback(() => {
+    if (!ref.current.online) {
+      toast('Cuando vuelva la red se envían solos. Si ya hay cobertura, activa el interruptor.');
+      return;
+    }
+    if (ref.current.queue === 0) {
+      toast('No hay nada pendiente de enviar');
+      return;
+    }
+    patch({ sync: 'syncing' });
+    window.clearTimeout(timers.current.sync);
+    timers.current.sync = window.setTimeout(sincronizado, 900);
+  }, [patch, sincronizado, toast]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const items = leerCola(window.localStorage);
+      if (!items.length) return;
+      patch({
+        queue: items.length,
+        sync: ref.current.online ? ref.current.sync : 'offline',
+      });
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [patch]);
+
+  useEffect(() => {
+    const onOnline = () => {
+      if (ref.current.queue > 0) {
+        patch({ online: true, sync: 'syncing' });
+        window.clearTimeout(timers.current.sync);
+        timers.current.sync = window.setTimeout(sincronizado, 900);
+      } else {
+        patch({ online: true, sync: 'synced' });
+      }
+    };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [patch, sincronizado]);
 
   const sufijoCola = useCallback(() => (ref.current.online ? '' : ' · en cola'), []);
 
@@ -419,13 +465,13 @@ export function useConductor(opts: OpcionesConductor = {}) {
       }
       const v = Math.max(-CALL_W, Math.min(0, d.base + dx));
       patch({ dragDx: { tid, v } });
+      /* Solo abre el cajón. Llamar es el botón, no el desliz. */
       if (-dx >= d.anchoCard * CALL_UMBRAL) {
         d.disparado = true;
         patch({ callAbierto: tid, dragDx: null });
-        llamar(d.tel);
       }
     },
-    [llamar, patch],
+    [patch],
   );
 
   const callUp = useCallback(
@@ -776,10 +822,30 @@ export function useConductor(opts: OpcionesConductor = {}) {
       if ((wiz.ruedas[r.key] ?? 0) >= 2) hallazgos++;
     });
     const dias = itvDias(wiz.itv);
-    if (dias != null && dias < 60) hallazgos++;
-    /* TODO API: POST /api/traslados/{tid}/checkin (evidencia sellada, inmutable)
-       TODO API: PATCH /api/vehiculos/{id} { km } — el km vive en el VEHÍCULO.
-       TODO API: POST /api/campanas/hallazgos — ámbar, niveles 2-4 e ITV < 60 días. */
+    const motivoItv = motivoOfertaItv({ itvSinDato: wiz.itvSinDato, dias: wiz.itvSinDato ? null : dias });
+    if (motivoItv) hallazgos++;
+    /* TODO API: POST /api/v1/traslados/{tid}/checkin (evidencia sellada, inmutable)
+       TODO API: PATCH /api/v1/vehiculos/{id} { km } — el km vive en el VEHÍCULO. */
+    if (motivoItv) {
+      const key = 'itv-' + wiz.tid;
+      void fetch('/api/v1/campanas/hallazgos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': key,
+        },
+        body: JSON.stringify({
+          rutaId: j.rutaId,
+          trasladoId: wiz.tid,
+          testigo: 'itv',
+          nivel: nivelHallazgoItv(motivoItv),
+          detalle: motivoItv,
+          dias: wiz.itvSinDato ? null : dias,
+        }),
+      }).catch(() => {
+        /* Offline: el sello local ya ocurrió; P16 cubre reintentar la cola. */
+      });
+    }
     patch((prev) => ({
       checkins: {
         ...prev.checkins,
@@ -1199,6 +1265,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
       navegar,
       job,
       toggleOnline,
+      reintentarCola,
       toggleHechos,
       toggleSinFecha,
       toggleHistorial,

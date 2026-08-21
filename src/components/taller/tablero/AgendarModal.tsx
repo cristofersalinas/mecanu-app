@@ -23,6 +23,7 @@ export function AgendarModal({
   const [fechaISO, setFechaISO] = useState(() => toISO(new Date()));
   const [franja, setFranja] = useState<string>(FRANJAS[0]);
   const [conductorId, setConductorId] = useState<string>('');
+  const [motivoIgual, setMotivoIgual] = useState('');
 
   const fecha = useMemo(() => fromISO(fechaISO), [fechaISO]);
 
@@ -40,16 +41,30 @@ export function AgendarModal({
     <Dialog
       open={open}
       onClose={onClose}
-      title={`Agendar ${ruta.id}`}
-      subtitle="La ventana siempre es un rango de 1 hora. Si no la confirmas con el cliente, la card queda como propuesta."
+      title={v?.matricula ? `${v.matricula} · ${c ? nombreCorto(c.nombre) : 'Sin cliente'}` : `Agendar traslado`}
+      subtitle="Ventana de 1 hora. Si el conductor ya tiene otro viaje a esa hora, no se puede confirmar."
       width={620}
       footer={
         <>
           <Button kind="tertiary" size="compact" onClick={onClose}>Cancelar</Button>
+          {conflicto ? (
+            <Button
+              kind="tertiary"
+              size="compact"
+              disabled={motivoIgual.trim().length < 3}
+              onClick={() => {
+                agendarRuta(ruta.id, { fecha, franja, conductorId: conductorId || null });
+                onClose();
+              }}
+            >
+              Asignar igual
+            </Button>
+          ) : null}
           <Button
             kind="primary"
             size="compact"
             icon="event_available"
+            disabled={!!conflicto}
             onClick={() => {
               agendarRuta(ruta.id, { fecha, franja, conductorId: conductorId || null });
               onClose();
@@ -92,7 +107,10 @@ export function AgendarModal({
           placeholder="Sin conductor asignado"
           options={[
             { value: '', label: 'Sin conductor asignado' },
-            ...CONDUCTORES.map((d) => ({ value: d.id, label: `${nombreCorto(d.nombre)} · ${d.red}` })),
+            ...CONDUCTORES.map((d) => ({
+              value: d.id,
+              label: `${nombreCorto(d.nombre)} · ${d.red === 'Interna' ? 'Flota del taller' : 'Red Mecanu'}`,
+            })),
           ]}
           value={conductorId}
           onChange={setConductorId}
@@ -110,7 +128,16 @@ export function AgendarModal({
             <div>
               <strong>Conflicto de agenda.</strong> {nombreCorto(conductor(conflicto.conductorId)?.nombre ?? null)} ya
               tiene {conflicto.id} el {fmtDia(conflicto.fecha)} en la franja {conflicto.franja}. Hace falta 1 hora de
-              margen entre servicios.
+              margen entre servicios. Confirmar ventana queda bloqueado.
+              <div style={{ marginTop: 10 }}>
+                <Input
+                  label="Motivo si asignas igual"
+                  placeholder="Queda en el historial. Mínimo 3 caracteres."
+                  value={motivoIgual}
+                  onChange={setMotivoIgual}
+                  fullWidth
+                />
+              </div>
             </div>
           </div>
         ) : null}

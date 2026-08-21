@@ -5,12 +5,22 @@
    // TODO API: cada acción de aquí marca el punto donde iría la llamada real. */
 
 import {
-  createContext, ReactNode, useCallback, useContext, useMemo, useState,
+  createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState,
 } from 'react';
+import type { DeberTaller, TipoDeberTaller } from '@/lib/mecanu/deberes-taller';
 import {
-  CAMPANAS, Campana, CONDUCTORES, EstadoRuta, PresupuestoEstado, RUTAS_VISTA, RutaVista,
-  TALLER, Presupuesto, LineaPresupuesto, at, tagsDeRuta, TagRuta,
+  PIPELINE_TAREAS_VACIO, aplicarMovimientoTarea, contarPendientesPipeline,
+  proyectarPipelineTareas, reabrirTareaArchivada, reconciliarPipelineTareas,
+  type TareaKanban,
+} from '@/lib/mecanu/pipeline-tareas';
+import type { ColumnaTareaPipeline } from '@/lib/mecanu/types';
+import {
+  CAMPANAS, Campana, CANALES_SEED, CONDUCTORES, EstadoRuta, PresupuestoEstado, RUTAS_VISTA, RutaVista,
+  TALLER, Presupuesto, LineaPresupuesto, VEHICULOS, at, tagsDeRuta, TagRuta,
+  type CanalWa, type MensajeWa,
 } from './data';
+import { deberesDesdePanel } from './deberes';
+import { notificarOportunidadSlack } from './slackOportunidades';
 
 /* ------------------------- Navegación ------------------------- */
 
@@ -27,7 +37,7 @@ export const NAV_ITEMS: { id: NavId; label: string; icon: string }[] = [
 
 export const SUBNAV_DEFAULT: Record<NavId, string> = {
   general: 'general',
-  tablero: 'traslados',
+  tablero: 'tareas',
   contactos: 'clientes',
   tempario: 'tempario',
   conductores: 'conductores',
@@ -213,6 +223,16 @@ interface PanelStore {
   modoFicha: 'panel' | 'ficha';
   seleccionar: (s: Seleccion | null, modo?: 'panel' | 'ficha') => void;
   setModoFicha: (m: 'panel' | 'ficha') => void;
+  deberActivo: DeberTaller | null;
+  abrirDeber: (d: DeberTaller) => void;
+  limpiarDeber: () => void;
+  volverDeDeber: () => void;
+  pipelineTareas: Record<ColumnaTareaPipeline, TareaKanban[]>;
+  tareasPendientesN: number;
+  moverTareaPipeline: (id: string, hacia: ColumnaTareaPipeline) => void;
+  reabrirTareaPipeline: (id: string) => void;
+  canalesWa: Record<string, CanalWa>;
+  setMensajesWa: (campanaId: string, mensajes: MensajeWa[] | ((prev: MensajeWa[]) => MensajeWa[])) => void;
 
   notas: Record<string, Nota[]>;
   addNota: (entidadId: string, texto: string) => void;
@@ -232,7 +252,7 @@ interface PanelStore {
   marcarCampanaEnviada: (id: string) => void;
   crearRutaDesdeCampana: (
     campanaId: string,
-    opciones: { modo: 'tal_cual' | 'editar' | 'solo_total'; lineas: LineaPresupuesto[]; total: number; servicio: string; fecha: Date | null; franja: string | null },
+    opciones: { modo: 'tal_cual' | 'editar' | 'solo_total'; lineas: LineaPresupuesto[]; total: number; servicio: string; fecha: Date | null; franja: string | null; etiquetaDestino?: string },
   ) => string;
 
   condCfg: Record<string, CondCfg>;
@@ -279,6 +299,26 @@ export function usePanel(): PanelStore {
 let seq = 0;
 const nextId = (p: string) => `${p}-${Date.now().toString(36)}-${++seq}`;
 
+function snapshotOportunidad(
+  c: Campana,
+  ctx: { taller: string; sucursal: string },
+): NonNullable<Parameters<typeof notificarOportunidadSlack>[0]['oportunidad']> {
+  const v = c.vehiculoId ? VEHICULOS.find((x) => x.id === c.vehiculoId) : null;
+  const creada = c.presupuesto.creado ?? c.fecha;
+  const actualizada = c.presupuesto.actualizado ?? creada;
+  return {
+    id: c.id,
+    estado: c.estado,
+    valor: c.valor,
+    matricula: v?.matricula ?? 'Sin matrícula',
+    vehiculoLabel: v ? `${v.marca} ${v.modelo}`.trim() : (c.servicio?.nombre ?? 'Vehículo'),
+    servicioLabel: c.servicio?.nombre ?? c.falla ?? 'Servicio',
+    creadaEn: creada.toISOString(),
+    actualizadaEn: actualizada.toISOString(),
+    taller: ctx,
+  };
+}
+
 export function PanelProvider({ children }: { children: ReactNode }) {
   const [nav, setNav] = useState<NavId>('general');
   const [sub, setSub] = useState<string>('general');
@@ -290,6 +330,10 @@ export function PanelProvider({ children }: { children: ReactNode }) {
 
   const [seleccion, setSeleccion] = useState<Seleccion | null>(null);
   const [modoFicha, setModoFicha] = useState<'panel' | 'ficha'>('panel');
+  const [deberActivo, setDeberActivo] = useState<DeberTaller | null>(null);
+  const [origenDeber, setOrigenDeber] = useState<{ nav: NavId; sub: string } | null>(null);
+  const [pipelineEstado, setPipelineEstado] = useState(PIPELINE_TAREAS_VACIO);
+  const [canalesWa, setCanalesWa] = useState<Record<string, CanalWa>>(() => ({ ...CANALES_SEED }));
 
   const [notas, setNotas] = useState<Record<string, Nota[]>>({});
   const [tareas, setTareas] = useState<Record<string, Tarea[]>>({
@@ -345,6 +389,18 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const derivadosTareas = useMemo(
+    () => deberesDesdePanel(rutas, campanas, new Date(), canalesWa),
+    [rutas, campanas, canalesWa],
+  );
+  const pipelineReconciliado = reconciliarPipelineTareas(pipelineEstado, derivadosTareas, new Date());
+  if (pipelineReconciliado !== pipelineEstado) setPipelineEstado(pipelineReconciliado);
+  const pipelineTareas = useMemo(
+    () => proyectarPipelineTareas(pipelineReconciliado, derivadosTareas),
+    [pipelineReconciliado, derivadosTareas],
+  );
+  const tareasPendientesN = contarPendientesPipeline(pipelineTareas);
+
   /* -- Acciones -- */
 
   const toast = useCallback((texto: string, kind: Toast['kind'] = 'positive') => {
@@ -358,12 +414,88 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const irA = useCallback((n: NavId, s?: string) => {
     setNav(n);
     setSub(s ?? SUBNAV_DEFAULT[n]);
-  }, []);
+    if (origenDeber) {
+      setDeberActivo(null);
+      setOrigenDeber(null);
+      setSeleccion(null);
+      setModoFicha('panel');
+    }
+  }, [origenDeber]);
 
   const seleccionar = useCallback((s: Seleccion | null, modo?: 'panel' | 'ficha') => {
     setSeleccion(s);
     if (modo) setModoFicha(modo);
+    if (!s) {
+      setDeberActivo(null);
+      setOrigenDeber(null);
+    }
   }, []);
+
+  const volverDeDeber = useCallback(() => {
+    const origen = origenDeber ?? { nav: 'tablero' as const, sub: 'tareas' };
+    setDeberActivo(null);
+    setOrigenDeber(null);
+    setSeleccion(null);
+    setModoFicha('panel');
+    setNav(origen.nav);
+    setSub(origen.sub);
+  }, [origenDeber]);
+
+  const abrirDeber = useCallback((d: DeberTaller) => {
+    setOrigenDeber((o) => o ?? { nav, sub });
+    setDeberActivo(d);
+    if (d.entidadKind === 'ruta') {
+      setSeleccion({ kind: 'ruta', id: d.entidadId });
+      setModoFicha('ficha');
+      setNav('tablero');
+      setSub('tareas');
+    } else {
+      setSeleccion(null);
+      setModoFicha('panel');
+      setNav('tablero');
+      setSub('campanas');
+    }
+  }, [nav, sub]);
+
+  const limpiarDeber = useCallback(() => {
+    setDeberActivo(null);
+    setOrigenDeber(null);
+  }, []);
+
+  const moverTareaPipeline = useCallback((id: string, hacia: ColumnaTareaPipeline) => {
+    const card = (['pendiente', 'hecho', 'cancelado'] as const).flatMap((c) => pipelineTareas[c]).find((t) => t.id === id);
+    if (!card) return;
+    const r = aplicarMovimientoTarea(pipelineReconciliado, card, hacia, new Date());
+    if (!r.ok) {
+      toast(r.motivo, 'warning');
+      return;
+    }
+    if (r.estado === pipelineReconciliado) return;
+    setPipelineEstado(r.estado);
+    if (hacia === 'hecho') toast('Seguimiento archivado.');
+    if (hacia === 'cancelado') toast('Tarea cancelada.');
+  }, [pipelineTareas, pipelineReconciliado, toast]);
+
+  const reabrirTareaPipeline = useCallback((id: string) => {
+    setPipelineEstado((s) => reabrirTareaArchivada(s, id));
+    toast('Vuelve a Pendiente.');
+  }, [toast]);
+
+  const setMensajesWa = useCallback((campanaId: string, next: MensajeWa[] | ((prev: MensajeWa[]) => MensajeWa[])) => {
+    setCanalesWa((prev) => {
+      const actual = prev[campanaId] ?? { optIn: 'IN' as const, mensajes: [] };
+      const mensajes = typeof next === 'function' ? next(actual.mensajes) : next;
+      return { ...prev, [campanaId]: { ...actual, mensajes } };
+    });
+  }, []);
+
+  const marcarDeberHecho = useCallback((entidadKind: DeberTaller['entidadKind'], entidadId: string, tipos: TipoDeberTaller[]) => {
+    if (!deberActivo) return false;
+    if (deberActivo.entidadKind !== entidadKind || deberActivo.entidadId !== entidadId) return false;
+    if (!tipos.includes(deberActivo.tipo)) return false;
+    volverDeDeber();
+    return true;
+  }, [deberActivo, volverDeDeber]);
 
   const patch = useCallback((id: string, p: Partial<RutaVista>) => {
     setOverlays((o) => ({ ...o, [id]: { ...o[id], ...p } }));
@@ -381,7 +513,8 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       ventanaModo: 'fija_taller',
     });
     toast('Traslado agendado. Se ha comunicado la ventana al cliente.');
-  }, [patch, toast]);
+    marcarDeberHecho('ruta', id, ['agendar', 'agendar_vuelta']);
+  }, [patch, toast, marcarDeberHecho]);
 
   const cancelarRuta = useCallback<PanelStore['cancelarRuta']>((id, motivo, subestado) => {
     patch(id, { estado: 'cancelado', subestado, motivo, canceladaEn: new Date() });
@@ -421,7 +554,21 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       conductorId,
       subestado: r && r.estado === 'agendado' ? (conductorId ? 'asignado' : 'sin_conductor') : r?.subestado,
     });
-  }, [rutas, patch]);
+    if (conductorId) marcarDeberHecho('ruta', rutaId, ['asignar_conductor']);
+  }, [rutas, patch, marcarDeberHecho]);
+
+  const actorPanel = useCallback(() => ({
+    nombre: `${perfil.nombre} ${perfil.apellidos}`.trim(),
+    rol: perfil.cargo || 'Operador',
+  }), [perfil]);
+
+  const tallerCtx = useCallback(() => {
+    const suc = sucursales.find((s) => s.principal && s.activa) ?? sucursales.find((s) => s.activa) ?? sucursales[0];
+    return {
+      taller: empresa.nombreComercial || empresa.razonSocial,
+      sucursal: suc?.nombre ?? suc?.ubicacion ?? 'Sucursal principal',
+    };
+  }, [empresa, sucursales]);
 
   const logCampana = useCallback((id: string, texto: string) => {
     setLogsCampana((l) => ({
@@ -430,17 +577,38 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const setCampEstado = useCallback((id: string, estado: PresupuestoEstado, texto: string) => {
+  const setCampEstado = useCallback((id: string, estado: PresupuestoEstado, texto: string, desde?: PresupuestoEstado) => {
+    const prevCamp = campanas.find((c) => c.id === id);
+    const estadoAntes = desde ?? prevCamp?.estado;
     setCampOverlays((o) => {
       const base = CAMPANAS.find((c) => c.id === id);
       const prev = o[id] ?? {};
+      const ahora = new Date();
       const pres: Presupuesto | undefined = base
-        ? { ...(prev.presupuesto ?? base.presupuesto), estado }
+        ? {
+            ...(prev.presupuesto ?? base.presupuesto),
+            estado,
+            actualizado: ahora,
+          }
         : undefined;
       return { ...o, [id]: { ...prev, estado, ...(pres ? { presupuesto: pres } : {}) } };
     });
     logCampana(id, texto);
-  }, [logCampana]);
+    if (prevCamp && estadoAntes) {
+      const actualizada: Campana = {
+        ...prevCamp,
+        estado,
+        presupuesto: { ...prevCamp.presupuesto, estado, actualizado: new Date() },
+      };
+      notificarOportunidadSlack({
+        tipo: 'cambio_estado',
+        oportunidad: snapshotOportunidad(actualizada, tallerCtx()),
+        desde: estadoAntes,
+        actor: actorPanel(),
+        detalle: texto,
+      });
+    }
+  }, [campanas, logCampana, actorPanel, tallerCtx]);
 
   const avanzarCampana = useCallback((id: string) => {
     const c = campanas.find((x) => x.id === id);
@@ -450,18 +618,22 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     };
     const next = siguiente[c.estado];
     if (!next) return;
-    setCampEstado(id, next, `Campaña marcada como «${next}» por el taller`);
+    setCampEstado(id, next, `Campaña marcada como «${next}» por el taller`, c.estado);
     toast(`Campaña ${id}: ahora está en «${next}».`);
-  }, [campanas, setCampEstado, toast]);
+    marcarDeberHecho('campana', id, ['valorar_oferta', 'enviar_oferta', 'recordar_oferta', 'responder_oferta', 'crear_ruta']);
+  }, [campanas, setCampEstado, toast, marcarDeberHecho]);
 
   const marcarCampanaEnviada = useCallback((id: string) => {
-    setCampEstado(id, 'enviada', 'Recordatorio enviado al cliente por WhatsApp');
-  }, [setCampEstado]);
+    const c = campanas.find((x) => x.id === id);
+    setCampEstado(id, 'enviada', 'Recordatorio enviado al cliente por WhatsApp', c?.estado);
+    marcarDeberHecho('campana', id, ['enviar_oferta', 'recordar_oferta']);
+  }, [campanas, setCampEstado, marcarDeberHecho]);
 
   const rechazarCampana = useCallback((id: string) => {
-    setCampEstado(id, 'rechazada', 'El cliente rechazó el presupuesto');
+    const c = campanas.find((x) => x.id === id);
+    setCampEstado(id, 'rechazada', 'El cliente rechazó el presupuesto', c?.estado);
     toast('Campaña marcada como rechazada.', 'warning');
-  }, [setCampEstado, toast]);
+  }, [campanas, setCampEstado, toast]);
 
   const crearRutaDesdeCampana = useCallback<PanelStore['crearRutaDesdeCampana']>((campanaId, opciones) => {
     const c = campanas.find((x) => x.id === campanaId);
@@ -508,7 +680,7 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       paradaOrigen: null,
       paradaDestino: null,
       etiquetaOrigen: 'Casa',
-      etiquetaDestino: 'Taller',
+      etiquetaDestino: opciones.etiquetaDestino ?? 'Taller',
       direccionOrigen: null,
       direccionDestino: TALLER.direccion,
       direccion: null,
@@ -527,9 +699,22 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     setRutasNuevas((rs) => [...rs, nueva]);
     setCampOverlays((o) => ({ ...o, [campanaId]: { ...o[campanaId], rutaGeneradaId: id } }));
     logCampana(campanaId, `Ruta ${id} creada desde la campaña (${conFecha ? 'agendada' : 'sin fecha, a prospectos'})`);
-    toast(`Ruta ${id} creada en ${conFecha ? 'Agendado' : 'Prospectos'}.`);
+    if (c) {
+      notificarOportunidadSlack({
+        tipo: 'ruta_creada',
+        oportunidad: snapshotOportunidad(
+          { ...c, estado: 'aceptada', rutaGeneradaId: id, presupuesto: { ...c.presupuesto, estado: 'aceptada' } },
+          tallerCtx(),
+        ),
+        actor: actorPanel(),
+      });
+    }
+    const volvio = marcarDeberHecho('campana', campanaId, ['crear_ruta', 'recordar_oferta']);
+    toast(volvio
+      ? `Ruta creada en ${conFecha ? 'Agendado' : 'Prospectos'}.`
+      : `Ruta creada en ${conFecha ? 'Agendado' : 'Prospectos'}. Abriendo ficha.`);
     return id;
-  }, [campanas, logCampana, toast]);
+  }, [campanas, logCampana, toast, marcarDeberHecho, tallerCtx, actorPanel]);
 
   const addNota = useCallback((entidadId: string, texto: string) => {
     setNotas((n) => ({
@@ -607,11 +792,32 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   }, []);
   const cerrarInspeccion = useCallback(() => setInspeccionAbierta(null), []);
 
+  /* Una pasada al día: oportunidades estancadas → Slack #oportunidades. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const clave = `mecanu-op-nudge-${new Date().toISOString().slice(0, 10)}`;
+    try {
+      if (sessionStorage.getItem(clave)) return;
+      sessionStorage.setItem(clave, '1');
+    } catch {
+      return;
+    }
+    const ctx = tallerCtx();
+    notificarOportunidadSlack({
+      tipo: 'escanear_nudges',
+      ahora: new Date().toISOString(),
+      oportunidades: campanas.map((c) => snapshotOportunidad(c, ctx)),
+    });
+  }, [campanas, tallerCtx]);
+
   const value: PanelStore = {
     nav, sub, irA,
     rutas, rutaPorId, tagsDe,
     campanas, campanaPorId, logsCampana,
     seleccion, modoFicha, seleccionar, setModoFicha,
+    deberActivo, abrirDeber, limpiarDeber, volverDeDeber,
+    pipelineTareas, tareasPendientesN, moverTareaPipeline, reabrirTareaPipeline,
+    canalesWa, setMensajesWa,
     notas, addNota, tareas, toggleTarea, addTarea,
     agendarRuta, cancelarRuta, avanzarSubestadoEnRuta, setEstadoRuta, toggleTagManual, asignarConductor,
     avanzarCampana, rechazarCampana, marcarCampanaEnviada, crearRutaDesdeCampana,

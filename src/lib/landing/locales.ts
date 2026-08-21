@@ -42,32 +42,41 @@ export function localeFromPathname(pathname: string): Locale {
 export const LOCALE_COOKIE = "mecanu_locale";
 
 /**
- * Países donde el inglés es el idioma principal del público al que apuntamos.
- * La lista es deliberadamente explícita: el país puede tener inglés como
- * idioma oficial sin que sea la opción más natural para todo su público.
+ * Primer idioma soportado según Accept-Language (RFC 7231). Preferimos esto a
+ * la IP: refleja la preferencia del visitante (p. ej. catalán o inglés en ES)
+ * y funciona igual en local y en Vercel. Sin cabecera o sin coincidencia → es.
  */
-export const ENGLISH_COUNTRIES = ["AU", "CA", "GB", "IE", "NZ", "US"] as const;
-const ENGLISH_COUNTRY_SET = new Set<string>(ENGLISH_COUNTRIES);
+export function localeFromAcceptLanguage(header: string | null | undefined): Locale {
+  if (!header) return DEFAULT_LOCALE;
 
-/**
- * Elige idioma sin tocar el navegador. Vercel adjunta estas cabeceras en el
- * servidor; en local no están y el fallback seguro es español.
- *
- * `x-vercel-ip-country-region` es el tramo regional de ISO 3166-2: Catalunya
- * es `CT` dentro de España (`ES-CT`).
- */
-export function localeFromGeoHeaders(headers: Headers): Locale {
-  const country = headers.get("x-vercel-ip-country")?.trim().toUpperCase() ?? "";
-  const region = headers.get("x-vercel-ip-country-region")?.trim().toUpperCase() ?? "";
+  const candidatos = header
+    .split(",")
+    .map((parte) => {
+      const [tagRaw, ...params] = parte.trim().split(";");
+      const tag = tagRaw?.trim().toLowerCase() ?? "";
+      let q = 1;
+      for (const param of params) {
+        const [clave, valor] = param.trim().split("=");
+        if (clave === "q" && valor != null) {
+          const n = Number(valor);
+          if (!Number.isNaN(n)) q = n;
+        }
+      }
+      return { tag, q };
+    })
+    .filter((c) => c.tag.length > 0 && c.tag !== "*" && c.q > 0)
+    .sort((a, b) => b.q - a.q);
 
-  if (country === "ES" && (region === "CT" || region === "ES-CT")) return "ca";
-  if (country === "PT") return "pt";
-  if (ENGLISH_COUNTRY_SET.has(country)) return "en";
+  for (const { tag } of candidatos) {
+    const primario = tag.split("-")[0] ?? "";
+    if (isLocale(primario)) return primario;
+  }
+
   return DEFAULT_LOCALE;
 }
 
 /**
- * La elección manual gana a la geolocalización. Se toleran espacios, valores
+ * La elección manual gana a Accept-Language. Se toleran espacios, valores
  * URL-encoded y cookies mal formadas sin convertirlas en una redirección.
  */
 export function localeFromCookieHeader(cookieHeader: string | null | undefined): Locale | null {
@@ -92,5 +101,5 @@ export function preferredLocaleFromRequest(
   headers: Headers,
   cookieHeader: string | null | undefined,
 ): Locale {
-  return localeFromCookieHeader(cookieHeader) ?? localeFromGeoHeaders(headers);
+  return localeFromCookieHeader(cookieHeader) ?? localeFromAcceptLanguage(headers.get("accept-language"));
 }

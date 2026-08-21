@@ -16,6 +16,7 @@ import { ContactosView } from './contactos/ContactosView';
 import { TemparioView } from './tempario/TemparioView';
 import { ConductoresModule } from './conductores/ConductoresModule';
 import { ConfiguracionView } from './config/ConfiguracionView';
+import { EncuestaOnboarding } from './onboarding/OnboardingTaller';
 import { SidePanel } from './ficha/SidePanel';
 import { RecordDrawer } from './ficha/RecordDrawer';
 import { InspeccionModal } from './ficha/InspeccionModal';
@@ -31,11 +32,13 @@ const TITULOS: Record<NavId, string> = {
 
 const SUBTITULOS: Record<string, string> = {
   traslados: 'Traslados',
+  tareas: 'Tareas',
   campanas: 'Campañas',
   clientes: 'Clientes',
   conductores: 'Conductores',
   agendar: 'Agendar con Mecanu',
   perfil: 'Perfil',
+  aprender: 'Aprender',
   empresa: 'Empresa',
   sucursales: 'Sucursales',
   recepcion: 'Recepción',
@@ -49,6 +52,7 @@ function Shell() {
   const [servicioPeticion, setServicioPeticion] = useState(0);
 
   const hayMigas = p.sub !== p.nav && !!SUBTITULOS[p.sub];
+  const trailDeber = p.deberActivo;
 
   return (
     <div className={styles.root}>
@@ -106,7 +110,26 @@ function Shell() {
           }}
         >
           <div style={{ minWidth: 0 }}>
-            {hayMigas ? (
+            {trailDeber ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 2 }}>
+                <button
+                  type="button"
+                  onClick={() => p.volverDeDeber()}
+                  aria-label="Volver a Tareas"
+                  className={styles.iconBtn}
+                  style={{ width: 22, height: 22, border: '1px solid var(--mecanu-border)', borderRadius: 5 }}
+                >
+                  <Icon name="arrow_back" size="sm" />
+                </button>
+                <button type="button" className={styles.linkBtn} style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }} onClick={() => p.volverDeDeber()}>
+                  Tareas
+                </button>
+                <span aria-hidden style={{ fontSize: 11, color: 'var(--mecanu-neutral-200)' }}>/</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }}>
+                  {trailDeber.cta}
+                </span>
+              </div>
+            ) : hayMigas ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 2 }}>
                 <button
                   type="button"
@@ -126,7 +149,7 @@ function Shell() {
               <div className={styles.eyebrow}>Panel Admin · Talleres Rodríguez</div>
             )}
             <h1 style={{ margin: '5px 0 6px', fontSize: 20, lineHeight: '26px', fontWeight: 700 }}>
-              {hayMigas ? SUBTITULOS[p.sub] : TITULOS[p.nav]}
+              {trailDeber ? trailDeber.titulo : hayMigas ? SUBTITULOS[p.sub] : TITULOS[p.nav]}
             </h1>
           </div>
           <div style={{ flex: 1 }} />
@@ -165,6 +188,7 @@ function Shell() {
 
       {p.seleccion && p.modoFicha === 'ficha' ? <RecordDrawer /> : null}
       <InspeccionModal />
+      <EncuestaOnboarding onAbrirAprender={() => p.irA('config', 'aprender')} />
 
       <div style={{ position: 'fixed', right: 20, bottom: 20, zIndex: 120, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {p.toasts.map((t) => (

@@ -87,6 +87,12 @@ export type LandingCopy = {
     cta: string;
     langLabel: string;
     privacidad: string;
+    avisoLegal: string;
+    cookies: string;
+    terminos: string;
+    accesibilidad: string;
+    cumplimientoTitulo: string;
+    cumplimientoTexto: string;
   };
   errors: {
     notFound: { kicker: string; headline: string; subtext: string; cta: string };
@@ -107,6 +113,8 @@ export type LandingCopy = {
     aceptar: string;
     enviar: string;
     anterior: string;
+    privacidadLabel: string;
+    privacidadError: string;
     gracias: { heading: string; subtext: string };
     pasos: {
       nombre: { pregunta: string };
@@ -342,6 +350,12 @@ const es: LandingCopy = {
     cta: "Hablar con Mecanu →",
     langLabel: "Idioma",
     privacidad: "Privacidad",
+    avisoLegal: "Aviso legal",
+    cookies: "Cookies",
+    terminos: "Términos",
+    accesibilidad: "Accesibilidad",
+    cumplimientoTitulo: "Cumplimiento UE",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sin cookies de analítica hasta que digas que sí.",
   },
   errors: {
     notFound: {
@@ -361,7 +375,7 @@ const es: LandingCopy = {
   consent: {
     titulo: "Cookies en Mecanu",
     cuerpo:
-      "Si nos lo permites, usamos Google Analytics y Microsoft Clarity para saber qué páginas se leen y cómo se usa la web. Puedes decir que no y la web funciona igual.",
+      "Si nos lo permites, usamos Google Analytics y Microsoft Clarity para saber qué páginas se leen y cómo se usa la web. Puedes decir que no y la web funciona igual. Detalle en /cookies.",
     aceptar: "Aceptar",
     rechazar: "Rechazar",
     gestionar: "Más info",
@@ -374,6 +388,8 @@ const es: LandingCopy = {
     aceptar: "Aceptar",
     enviar: "Enviar",
     anterior: "Anterior",
+    privacidadLabel: "He leído y acepto la política de privacidad.",
+    privacidadError: "Marca la casilla de privacidad para enviar.",
     gracias: {
       heading: "Recibido.",
       subtext: "Te contactaremos en menos de 24 horas.",
@@ -656,6 +672,12 @@ const ca: LandingCopy = {
     cta: "Parlar amb Mecanu →",
     langLabel: "Idioma",
     privacidad: "Privacitat",
+    avisoLegal: "Avís legal",
+    cookies: "Galetes",
+    terminos: "Termes",
+    accesibilidad: "Accessibilitat",
+    cumplimientoTitulo: "Compliment UE",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sense galetes d'analítica fins que diguis que sí.",
   },
   errors: {
     notFound: {
@@ -675,7 +697,7 @@ const ca: LandingCopy = {
   consent: {
     titulo: "Galetes a Mecanu",
     cuerpo:
-      "Si ens ho permets, fem servir Google Analytics i Microsoft Clarity per saber quines pàgines es llegeixen i com s'usa el web. Pots dir que no i el web funciona igual.",
+      "Si ens ho permets, fem servir Google Analytics i Microsoft Clarity per saber quines pàgines es llegeixen i com s'usa el web. Pots dir que no i el web funciona igual. Detall a /cookies.",
     aceptar: "Acceptar",
     rechazar: "Rebutjar",
     gestionar: "Més info",
@@ -688,6 +710,8 @@ const ca: LandingCopy = {
     aceptar: "Acceptar",
     enviar: "Enviar",
     anterior: "Anterior",
+    privacidadLabel: "He llegit i accepto la política de privacitat.",
+    privacidadError: "Marca la casella de privacitat per enviar.",
     gracias: {
       heading: "Rebut.",
       subtext: "Et contactarem en menys de 24 hores.",
@@ -966,6 +990,12 @@ const en: LandingCopy = {
     cta: "Talk to Mecanu →",
     langLabel: "Language",
     privacidad: "Privacy",
+    avisoLegal: "Legal notice",
+    cookies: "Cookies",
+    terminos: "Terms",
+    accesibilidad: "Accessibility",
+    cumplimientoTitulo: "EU compliance",
+    cumplimientoTexto: "GDPR · ePrivacy · LSSI-CE — no analytics cookies until you say yes.",
   },
   errors: {
     notFound: {
@@ -985,7 +1015,7 @@ const en: LandingCopy = {
   consent: {
     titulo: "Cookies at Mecanu",
     cuerpo:
-      "If you let us, we use Google Analytics and Microsoft Clarity to see which pages get read and how the site is used. You can say no and the site still works.",
+      "If you let us, we use Google Analytics and Microsoft Clarity to see which pages get read and how the site is used. You can say no and the site still works. Details at /cookies.",
     aceptar: "Accept",
     rechazar: "Reject",
     gestionar: "More info",
@@ -998,6 +1028,8 @@ const en: LandingCopy = {
     aceptar: "OK",
     enviar: "Submit",
     anterior: "Back",
+    privacidadLabel: "I have read and accept the privacy policy.",
+    privacidadError: "Tick the privacy box to submit.",
     gracias: {
       heading: "Got it.",
       subtext: "We will get back to you within 24 hours.",
@@ -1276,6 +1308,12 @@ const pt: LandingCopy = {
     cta: "Falar com Mecanu →",
     langLabel: "Idioma",
     privacidad: "Privacidade",
+    avisoLegal: "Aviso legal",
+    cookies: "Cookies",
+    terminos: "Termos",
+    accesibilidad: "Acessibilidade",
+    cumplimientoTitulo: "Cumprimento UE",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sem cookies de analítica até dizeres que sim.",
   },
   errors: {
     notFound: {
@@ -1295,7 +1333,7 @@ const pt: LandingCopy = {
   consent: {
     titulo: "Cookies na Mecanu",
     cuerpo:
-      "Se nos autorizares, usamos o Google Analytics e o Microsoft Clarity para saber que páginas são lidas e como o site é usado. Podes dizer que não e o site funciona na mesma.",
+      "Se nos autorizares, usamos o Google Analytics e o Microsoft Clarity para saber que páginas são lidas e como o site é usado. Podes dizer que não e o site funciona na mesma. Detalhe em /cookies.",
     aceptar: "Aceitar",
     rechazar: "Rejeitar",
     gestionar: "Mais info",
@@ -1308,6 +1346,8 @@ const pt: LandingCopy = {
     aceptar: "Aceitar",
     enviar: "Enviar",
     anterior: "Anterior",
+    privacidadLabel: "Li e aceito a política de privacidade.",
+    privacidadError: "Marca a caixa de privacidade para enviar.",
     gracias: {
       heading: "Recebido.",
       subtext: "Entraremos em contacto contigo em menos de 24 horas.",

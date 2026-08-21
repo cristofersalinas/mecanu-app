@@ -21,7 +21,7 @@ Sentry traza al 5 % (antes 100 %). Sin DSN configurado, no sale nada.
 
 En Vercel → Project → Firewall. Solo hay 3. Prioridad:
 
-1. **Challenge (o Deny si ya duele) a POST hacia cualquier ruta.** La landing no tiene formulario; un POST masivo solo pega a señuelos o a la API, que en Vercel ni se sirve. Máximo impacto, mínimo daño colateral.
+1. **Challenge (o Deny si ya duele) a POST, excepto `/api/v1/contacto` y `/api/v1/itv-leads`.** Esos dos son los formularios públicos. Challengear todos los POST los rompe.
 2. **Deny o rate-limit a paths de señuelo** si el Attack Challenge no basta: `/wp-admin`, `/.env`, `/wp-login.php`. Un escáner que los recorre en bucle es puro gasto. Los señuelos *quieren* hits lentos de humanos; un bot a 100 req/s no aporta y sí agota cuota — bloquea el flood, no el golpe suelto.
 3. **Rate limit por IP en `/assistant`.** Es la única ruta de señuelo que ejecuta lógica de verdad. 8/min en código; la regla 3 del firewall es el tope duro.
 
@@ -49,12 +49,16 @@ Cuando se llenen las 3, deja la más antigua que ya no pegue y documenta cuáles
 
 ## Consultar quién te está sondeando
 
+Inventario completo de sensores, campos y qué hacer:
+[`docs/SLACK-SEGURIDAD.md`](./docs/SLACK-SEGURIDAD.md).
+
 Hasta que se aplique la migración `0005_security_events.sql` (no está aplicada):
 
 1. Vercel → Logs. Filtro de texto: `mecanu.security`.
-2. Cada línea es un JSON: `tipo`, `ip`, `geo`, `ruta`, `userAgent`, `ts`.
+2. Cada línea es un JSON: `tipo`, `ip`, `geo`, `ruta`, `userAgent`, `ts`, `extra`.
 3. Tipos: `honeypot_hit`, `fake_login`, `canary_used`, `assistant_prompt`, `assistant_injection`, `sondeo_sistematico`, `rate_limited`.
 4. Alertas inmediatas (si hay DSN de Sentry): `canary_used`, `assistant_injection`, `sondeo_sistematico`.
+5. Objetivo Slack: esos tres P0 a `#alertas` con el formato de `docs/SLACK-SEGURIDAD.md` §4.
 
 ## Cuota y gasto
 

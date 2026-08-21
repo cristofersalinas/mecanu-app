@@ -6,6 +6,7 @@ import {
   actividadDeRuta, cliente, ESTADO, esArrastrable, fmtDia, fmtDinero, nombreCliente1,
   RutaVista, SUBESTADO, TagRuta, TAGS_MANUALES, vehiculo, etiquetaVehiculo,
 } from '../data';
+import { ImporteIva } from '../ui/ImporteIva';
 import styles from '../panel.module.css';
 
 interface Props {
@@ -53,10 +54,12 @@ export function KanbanCard({
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         {sub ? (
           <span
+            title={sub.desc}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 999,
               background: 'var(--mecanu-neutral-25)', fontSize: 11, fontWeight: 700,
               color: 'var(--mecanu-text-secondary-light)',
+              flex: 'none', whiteSpace: 'nowrap',
             }}
           >
             <span style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--mecanu-neutral-300)' }} />
@@ -83,12 +86,12 @@ export function KanbanCard({
           <button
             type="button"
             className={styles.iconBtn}
-            style={{ width: 24, height: 24 }}
+            style={{ width: 'auto', minWidth: 24, height: 24, padding: '0 8px', color: '#A81823', fontSize: 11, fontWeight: 700 }}
             title="Cancelar traslado"
             aria-label="Cancelar traslado"
             onClick={(e) => { e.stopPropagation(); onCancelar(); }}
           >
-            <Icon name="close" size="sm" />
+            Cancelar
           </button>
         ) : null}
       </div>
@@ -137,7 +140,7 @@ export function KanbanCard({
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-          {ruta.importe ? fmtDinero(ruta.importe) : 'Sin valorar'} · {v?.matricula ?? ruta.matriculaLead ?? '—'}
+          {ruta.importe ? <ImporteIva texto={fmtDinero(ruta.importe)} /> : 'Sin valorar'} · {v?.matricula ?? ruta.matriculaLead ?? '—'}
         </span>
         <span
           title={ruta.seguro ? 'Traslado con cobertura de seguro' : 'Sin cobertura de seguro'}

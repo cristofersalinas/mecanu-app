@@ -124,12 +124,16 @@ El km vive en el VEHÍCULO, no en el traslado (HANDOFF.md §7.2).
 
 ### `POST /api/v1/campanas/hallazgos`
 Un testigo ámbar (nivel 2-4) durante el check-in genera/alimenta una campaña.
+`testigo: "itv"` crea una oferta de revisión pre-ITV (`SV-04`) si la pegatina no
+está, la ITV está vencida o vence en menos de 60 días.
 ```json
 // Request
 { "rutaId": "TR-1056", "trasladoId": "TS-1056-1", "testigo": "presion", "nivel": 3 }
+{ "rutaId": "TR-1055", "trasladoId": "TS-1055-1", "testigo": "itv", "nivel": 4,
+  "detalle": "vencida", "dias": -12 }
 // Response 200 → Campana | null
-// El mock siempre devuelve null hoy — ver PREGUNTAS-ABIERTAS.md, no hay catálogo
-// testigo→servicio de tempario resuelto en tiempo de ejecución todavía.
+// ITV: Campana real (o la oferta de ITV ya abierta de ese vehículo).
+// Resto de testigos: el mock sigue devolviendo null — ver PREGUNTAS-ABIERTAS.md #5.
 ```
 
 ### `GET /api/v1/traslados/disponibles`
@@ -160,6 +164,17 @@ El taller resuelve una solicitud.
 // estado ∈ resuelta_reagenda | resuelta_reasignada | resuelta_cancelada | descartada
 // Response 200 → Solicitud actualizada
 ```
+
+### `POST /api/v1/oportunidades/slack-evento`
+Aviso paternalista a Slack `#oportunidades` (hilo por campaña). Sin
+`SLACK_BOT_TOKEN` / `SLACK_CHANNEL_OPORTUNIDADES` responde 200 con
+`slack: "skipped"`. Tipos: `creada` | `cambio_estado` | `ruta_creada` |
+`nudge` | `escanear_nudges`. Ver `docs/SLACK.md`.
+
+### `POST /api/v1/csx/slack`
+Destacados / upsell / subuso → `#csx`. Body:
+`{ "tipo": "paquete_semanal" | "destacados" | "upsell" | "subuso" }`.
+Ver `docs/SLACK-CSX.md`.
 
 ## Lo que falta y por qué (resumen — ver PREGUNTAS-ABIERTAS.md para el detalle)
 

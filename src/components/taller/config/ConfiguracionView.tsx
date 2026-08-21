@@ -7,10 +7,12 @@ import { Icon } from '@/components/ds/Icon';
 import { Switch } from '@/components/ds/Switch';
 import { Empresa, DIAS_LABEL, Perfil, PlantillaRecepcion, Sucursal, usePanel } from '../store';
 import { Dialog, Input, SectionCard, Select } from '../ui/Primitives';
+import { TutorialesView } from '../onboarding/OnboardingTaller';
 import styles from '../panel.module.css';
 
 const SECCIONES = [
   { id: 'perfil', label: 'Perfil', icon: 'person' },
+  { id: 'aprender', label: 'Aprender', icon: 'school' },
   { id: 'empresa', label: 'Empresa', icon: 'domain' },
   { id: 'sucursales', label: 'Sucursales', icon: 'store' },
   { id: 'recepcion', label: 'Recepción', icon: 'checklist' },
@@ -51,6 +53,7 @@ export function ConfiguracionView() {
       </div>
 
       {seccion === 'perfil' ? <SeccionPerfil /> : null}
+      {seccion === 'aprender' ? <TutorialesView /> : null}
       {seccion === 'empresa' ? <SeccionEmpresa /> : null}
       {seccion === 'sucursales' ? <SeccionSucursales /> : null}
       {seccion === 'recepcion' ? <SeccionRecepcion /> : null}
@@ -64,13 +67,10 @@ function SeccionPerfil() {
   const p = usePanel();
   const [editando, setEditando] = useState(false);
   const [form, setForm] = useState<Perfil>(p.perfil);
-  const [passAbierto, setPassAbierto] = useState(false);
-  const [pass, setPass] = useState({ actual: '', nueva: '', repetir: '' });
+  const [invitarEmail, setInvitarEmail] = useState('');
+  const [invitarNombre, setInvitarNombre] = useState('');
 
   const emailError = form.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email) ? 'Email no válido' : undefined;
-  const passError = pass.nueva && pass.nueva.length < 8
-    ? 'Mínimo 8 caracteres'
-    : pass.repetir && pass.nueva !== pass.repetir ? 'Las contraseñas no coinciden' : undefined;
 
   const campos: [string, string][] = [
     ['Nombre', `${p.perfil.nombre} ${p.perfil.apellidos}`],
@@ -155,6 +155,25 @@ function SeccionPerfil() {
         </SectionCard>
       )}
 
+      <SectionCard title="Equipo" description="2 asientos incluidos: tú y un colaborador. Mismos roles salvo pagos y cancelar. La invitación se queda en bandeja hasta que Auth esté conectado.">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'end' }}>
+          <Input label="Nombre" value={invitarNombre} onChange={setInvitarNombre} fullWidth />
+          <Input label="Email" value={invitarEmail} onChange={setInvitarEmail} fullWidth />
+          <Button
+            kind="secondary"
+            size="compact"
+            disabled={!invitarNombre.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(invitarEmail)}
+            onClick={() => {
+              p.toast(`Invitación para ${invitarEmail} guardada en bandeja (aún no se envía).`);
+              setInvitarEmail('');
+              setInvitarNombre('');
+            }}
+          >
+            Invitar
+          </Button>
+        </div>
+      </SectionCard>
+
       <SectionCard title="Notificaciones" description="Avisos de traslados, presupuestos y campañas dirigidos a tu cuenta.">
         {[
           ['email', 'Avisos por email', 'Resumen diario y alertas al correo.'],
@@ -174,62 +193,28 @@ function SeccionPerfil() {
       </SectionCard>
 
       <SectionCard title="Seguridad">
+        <p style={{ margin: '0 0 12px', fontSize: 12, lineHeight: '16px', color: 'var(--mecanu-text-secondary-light)' }}>
+          El acceso con cuenta aún no está conectado. Cuando lo esté, cambiarás la contraseña y el doble paso aquí. Ahora
+          los toggles no envían nada fuera del panel.
+        </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 600 }}>Contraseña</div>
-            <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>Se recomienda cambiarla cada 6 meses.</div>
+            <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>Pendiente de Auth. No se guarda en el servidor.</div>
           </div>
-          <Button kind="secondary" size="compact" icon="lock" onClick={() => setPassAbierto(true)}>Cambiar contraseña</Button>
+          <Button kind="secondary" size="compact" icon="lock" disabled onClick={() => undefined}>Aún no conectado</Button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0' }}>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600 }}>Verificación en dos pasos</span>
-              <Badge kind={p.prefs.doblePaso ? 'positive' : 'neutral'}>{p.prefs.doblePaso ? 'Activa' : 'Inactiva'}</Badge>
+              <Badge kind="neutral">Sin Auth</Badge>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>Pide un código adicional al iniciar sesión.</div>
+            <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>Llegará con el acceso real. El interruptor de abajo es solo local.</div>
           </div>
           <Switch checked={p.prefs.doblePaso} onChange={(v) => p.setPref('doblePaso', v)} />
         </div>
       </SectionCard>
-
-      <Dialog
-        open={passAbierto}
-        onClose={() => setPassAbierto(false)}
-        title="Cambiar contraseña"
-        subtitle="Mínimo 8 caracteres. Cerrarás sesión en los demás dispositivos."
-        width={460}
-        footer={
-          <>
-            <Button kind="tertiary" size="compact" onClick={() => setPassAbierto(false)}>Cancelar</Button>
-            <Button
-              kind="primary"
-              size="compact"
-              disabled={!!passError || !pass.actual || !pass.nueva || pass.nueva !== pass.repetir}
-              onClick={() => {
-                setPassAbierto(false);
-                setPass({ actual: '', nueva: '', repetir: '' });
-                p.toast('Contraseña actualizada.');
-              }}
-            >
-              Guardar contraseña
-            </Button>
-          </>
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Input label="Contraseña actual" type="password" value={pass.actual} onChange={(v) => setPass({ ...pass, actual: v })} fullWidth />
-          <Input label="Nueva contraseña" type="password" value={pass.nueva} onChange={(v) => setPass({ ...pass, nueva: v })} fullWidth />
-          <Input
-            label="Repetir nueva contraseña"
-            type="password"
-            value={pass.repetir}
-            onChange={(v) => setPass({ ...pass, repetir: v })}
-            error={passError}
-            fullWidth
-          />
-        </div>
-      </Dialog>
     </div>
   );
 }

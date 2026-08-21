@@ -4,6 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "demo": "MECANU_DEMO=1 NEXT_PUBLIC_MECANU_DEMO=1 next dev",
+    "entorno": "node scripts/entorno.mjs",
+    "slack:bootstrap": "node scripts/slack-bootstrap.mjs",
+    "csx:semanal": "npx --yes tsx scripts/csx-semanal.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

@@ -81,14 +81,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE}/itv-a-domicilio/rechazada`, priority: 0.75, changeFrequency: "monthly" as const },
   ].map((p) => ({ ...p, lastModified: now }));
 
-  // Política de privacidad
+  // Política de privacidad y documentos legales UE
   const staticPages = [
-    {
-      url: `${SITE}/privacidad`,
-      lastModified: now,
-      changeFrequency: "yearly" as const,
-      priority: 0.3,
-    },
+    { url: `${SITE}/aviso-legal`, lastModified: now, changeFrequency: "yearly" as const, priority: 0.3 },
+    { url: `${SITE}/privacidad`, lastModified: now, changeFrequency: "yearly" as const, priority: 0.3 },
+    { url: `${SITE}/cookies`, lastModified: now, changeFrequency: "yearly" as const, priority: 0.3 },
+    { url: `${SITE}/terminos`, lastModified: now, changeFrequency: "yearly" as const, priority: 0.25 },
+    { url: `${SITE}/accesibilidad`, lastModified: now, changeFrequency: "yearly" as const, priority: 0.25 },
   ];
 
   return [

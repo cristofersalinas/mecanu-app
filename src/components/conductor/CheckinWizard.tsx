@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { Icon } from '@/components/ds/Icon';
 import { COMBUSTIBLE, ITEMS, NIVELES, RUEDAS, SLOTS, TESTIGOS, VIDEO_MAX_S } from './constants';
 import { buildJob, itvDias } from './selectors';
+import { etiquetaCheckinItv, motivoOfertaItv } from '@/lib/mecanu/oferta-itv';
 import { EvidenceGrid } from './EvidenceGrid';
 import { NivelSelector } from './NivelSelector';
 import { OversizedButton } from './OversizedButton';
@@ -46,6 +47,13 @@ export function CheckinWizard({
   const kmN = Number(wiz.km);
   const kmBajo = !!wiz.km && kmN < j.kmVehiculo;
   const dias = wiz.itvSinDato ? null : itvDias(wiz.itv);
+  const motivoItv = motivoOfertaItv({ itvSinDato: wiz.itvSinDato, dias });
+  const etiquetaItv = etiquetaCheckinItv(motivoItv, dias);
+  const tonoItv = motivoItv === 'vencida' || motivoItv === 'sin_pegatina'
+    ? { icon: 'error' as const, color: '#A81823' }
+    : motivoItv === 'por_vencer'
+      ? { icon: 'schedule' as const, color: '#9C420B' }
+      : { icon: 'verified' as const, color: '#1E7300' };
 
   const faltan1: string[] = [];
   if (nf < SLOTS.length) faltan1.push(SLOTS.length - nf + (SLOTS.length - nf === 1 ? ' foto' : ' fotos'));
@@ -415,26 +423,22 @@ export function CheckinWizard({
                   boxSizing: 'border-box',
                 }}
               />
-              {dias != null ? (
+              {etiquetaItv ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 8 }}>
                   <Icon
-                    name={dias < 0 ? 'error' : dias < 60 ? 'schedule' : 'verified'}
+                    name={tonoItv.icon}
                     size="md"
                     filled
-                    color={dias < 0 ? '#A81823' : dias < 60 ? '#9C420B' : '#1E7300'}
+                    color={tonoItv.color}
                   />
                   <span
                     style={{
                       fontSize: 13,
                       fontWeight: 700,
-                      color: dias < 0 ? '#A81823' : dias < 60 ? '#9C420B' : '#1E7300',
+                      color: tonoItv.color,
                     }}
                   >
-                    {dias < 0
-                      ? 'Vencida hace ' + Math.abs(dias) + ' días'
-                      : dias < 60
-                        ? 'Por vencer · quedan ' + dias + ' días · genera campaña'
-                        : 'Vigente · quedan ' + dias + ' días'}
+                    {etiquetaItv}
                   </span>
                 </div>
               ) : null}

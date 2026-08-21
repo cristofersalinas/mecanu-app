@@ -56,12 +56,13 @@ completamente distinta. Hay que decidir: ¿es un booleano explícito
 (agendado + sin conductor + dentro de X horas)? Afecta directamente a R8 (solape al
 tomar un disponible) y a la métrica "Disponibles" del header del conductor.
 
-### 5. `registrarHallazgoCampana` no crea una `Campana` real
-El mock devuelve `null` siempre. Falta un catálogo testigo→servicio de tempario
-resuelto en tiempo de ejecución (`CATALOGO_DETECCION` en `mecanu-data.ts` mapea
-*tipos* de oportunidad a servicios, pero los 8 testigos del check-in del conductor
-no tienen ese mapeo hoy — hay que decidir a qué servicio de tempario corresponde
-cada testigo ámbar).
+### 5. `registrarHallazgoCampana` no crea campaña para testigos ámbar (sí para ITV)
+`testigo: "itv"` (pegatina ausente, vencida o <60 días) **sí crea** una oferta
+`SV-04` (revisión pre-ITV) en el mock — ver `campanaDesdeItvCheckin` y
+`src/lib/mecanu/oferta-itv.ts`. El resto de testigos ámbar del check-in sigue
+devolviendo `null`: falta un catálogo testigo→servicio de tempario resuelto en
+tiempo de ejecución (`CATALOGO_DETECCION` mapea *tipos* de oportunidad, no los
+8 testigos del conductor).
 
 ## Casos borde del modelo sin cubrir explícitamente
 
@@ -74,9 +75,10 @@ el panel debería marcarlo en rojo." Sin resolver: ¿qué hace el backend? ¿Sol
 registra un log de anomalía, o hay un umbral que sí bloquea (ej. -1000 km)?
 
 ### 7. Testigo rojo → "no rodante": ¿cuánto puede tardar el taller en responder?
-`LOOP-ESTADO.md` hallazgo [C] número 2: "el conductor queda parado sin plazo".
-No hay un SLA ni una escalada definida. Bloquea al conductor indefinidamente si el
-taller no contesta.
+SLA cerrado en el backoffice (`SLA_NO_RODANTE_MIN = 15`): a los 15 min la solicitud
+salta como alerta crítica y el cron deja un log de escalada (no la resuelve solo).
+Sigue abierto: canal de aviso al dueño (push/WhatsApp) y qué hace el conductor si
+el taller no contesta en X horas — hoy sigue parado.
 
 ### 8. Vídeo obligatorio en el check-in: ¿siempre?
 `LOOP-ESTADO.md` [C] número 1 y `PRUEBA-MANUAL.md` lo marcan como pregunta de
@@ -158,3 +160,14 @@ que quien construya el backend no asuma que el schema ya garantiza esa invariant
 Ver nota en `MODELO-DATOS.md` tabla `campanas` — dos prefijos sin diferencia
 semántica clara en el mock (oportunidades auto-detectadas vs. creadas a mano).
 Unificar antes de que el prefijo se filtre a lógica de negocio real en algún sitio.
+
+### 20. Identidad societaria para LSSI-CE / RGPD — resuelto (2026-08-20)
+Titular publicado: **Automotive Technologies SpA**, RUT **77.620.433-1**, Las Bellotas
+199 of. 91, Providencia, Chile (marca Mecanu). Vive en
+`src/lib/landing/legal-entidad.ts` (`LEGAL_DEFAULTS`). Sigue abierto: buzón
+`privacidad@mecanu.com` y confirmación contable del giro/IVA en servicios al exterior.
+
+### 21. Facturación Chile → UE — aparcado a pedido del fundador
+Contexto guardado en `docs/FACTURACION-CHILE.md` (SpA vs persona natural, impuestos
+a alto nivel, checklist). **No implementar facturación en producto** hasta que el
+fundador vuelva con el detalle de cómo quiere cobrar.

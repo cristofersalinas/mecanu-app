@@ -1,7 +1,8 @@
 name: Production deploy watch
 
 # If Vercel fails to build/alias production, mecanu.com stays on the previous
-# deploy with no UI warning. Open a GitHub issue so it cannot go unnoticed.
+# deploy with no UI warning. Open a GitHub issue and ping Slack #alertas.
+# A successful production deploy pings #deploys (informational).
 on:
   deployment_status:
 
@@ -18,7 +19,22 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      contents: read
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Avisar en #alertas
+        uses: ./.github/actions/notify-slack
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: ${{ vars.SLACK_CHANNEL_ALERTAS }}
+          text: >-
+            Producción: el deploy falló. mecanu.com sigue en la versión anterior.
+            Entorno: ${{ github.event.deployment.environment }}
+            Commit: ${{ github.event.deployment.sha }}
+            Log: ${{ github.event.deployment_status.target_url }}
+
       - name: Open GitHub issue
         uses: actions/github-script@v7
         with:
@@ -68,3 +84,31 @@ jobs:
               body,
               labels: ['deploy-production'],
             });
+
+  notify-slack-ok:
+    name: Slack #deploys if production succeeded
+    if: >
+      github.event.deployment_status.state == 'success' &&
+      (
+        github.event.deployment.environment == 'Production' ||
+        github.event.deployment.environment == 'production' ||
+        github.event.deployment.environment == 'Production – mecanu-app'
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Avisar en #deploys
+        uses: ./.github/actions/notify-slack
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: ${{ vars.SLACK_CHANNEL_DEPLOYS }}
+          text: >-
+            Producción lista. mecanu.com apunta a este deploy.
+            Entorno: ${{ github.event.deployment.environment }}
+            Commit: ${{ github.event.deployment.sha }}
+            Log: ${{ github.event.deployment_status.target_url }}

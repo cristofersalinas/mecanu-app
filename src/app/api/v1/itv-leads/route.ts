@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { google } from "googleapis";
 import { Resend } from "resend";
+import { avisarLead } from "@/lib/slack/notify";
+import { textoLeadItv } from "@/lib/slack/leads";
 
 const schema = z.object({
   nombre: z.string().min(1),
@@ -10,6 +12,7 @@ const schema = z.object({
   fecha: z.string().optional().default(""),
   caducada: z.enum(["si", "no", "proximo"]),
   vehiculo: z.string().min(1),
+  aceptaPrivacidad: z.literal(true),
 });
 
 async function appendToSheet(data: z.infer<typeof schema>) {
@@ -78,6 +81,11 @@ export async function POST(req: Request) {
     await notify(parsed.data);
   } catch (error) {
     console.error("[itv-leads] email", error);
+  }
+  try {
+    await avisarLead(textoLeadItv(parsed.data));
+  } catch (error) {
+    console.error("[itv-leads] slack", error);
   }
   return NextResponse.json({ ok: true });
 }

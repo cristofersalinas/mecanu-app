@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Icon } from '@/components/ds/Icon';
 import { MOTIVOS, SOL_META } from './constants';
 import type { Job, SheetState, TipoSolicitud } from './types';
@@ -33,6 +34,7 @@ export function SolicitudSheet({
 }) {
   const esMenu = sheet.tipo === 'menu';
   const esAtraso = sheet.tipo === 'atraso';
+  const [confirmar, setConfirmar] = useState<string | null>(null);
 
   const titulo = esMenu
     ? 'Solicitar al taller'
@@ -50,21 +52,32 @@ export function SolicitudSheet({
         : 'Confirma si llegarás a tiempo, o pide reagendar.'
       : SOL_META[sheet.tipo as TipoSolicitud].sub;
 
-  type Opcion = { label: string; icono: string; color: string; onClick: () => void };
+  type Opcion = { id: string; label: string; icono: string; color: string; onClick: () => void };
 
   const opciones: Opcion[] = esMenu
     ? [
-        { label: 'Pedir reagendar', icono: 'event_repeat', color: 'var(--mecanu-neutral-900)', onClick: () => onElegirTipo('reagenda') },
-        { label: 'Rechazar el traslado', icono: 'assignment_return', color: 'var(--mecanu-neutral-900)', onClick: () => onElegirTipo('rechazo') },
-        { label: 'Marcar fallido en origen', icono: 'person_off', color: 'var(--mecanu-neutral-900)', onClick: () => onElegirTipo('fallido') },
-        { label: 'Proponer no rodante', icono: 'car_crash', color: '#A81823', onClick: () => onElegirTipo('no_rodante') },
+        { id: 'reagenda', label: 'Pedir reagendar', icono: 'event_repeat', color: 'var(--mecanu-neutral-900)', onClick: () => onElegirTipo('reagenda') },
+        { id: 'rechazo', label: 'Rechazar el traslado', icono: 'assignment_return', color: 'var(--mecanu-neutral-900)', onClick: () => onElegirTipo('rechazo') },
+        { id: 'fallido', label: 'Marcar fallido en origen', icono: 'person_off', color: 'var(--mecanu-neutral-900)', onClick: () => onElegirTipo('fallido') },
+        { id: 'no_rodante', label: 'Proponer no rodante', icono: 'car_crash', color: '#A81823', onClick: () => onElegirTipo('no_rodante') },
       ]
-    : (MOTIVOS[esAtraso ? 'reagenda' : (sheet.tipo as TipoSolicitud)] ?? []).map((o) => ({
-        label: o.label,
-        icono: o.icono,
-        color: 'var(--mecanu-neutral-900)',
-        onClick: () => onEnviar(esAtraso ? 'reagenda' : (sheet.tipo as TipoSolicitud), o.id),
-      }));
+    : (MOTIVOS[esAtraso ? 'reagenda' : (sheet.tipo as TipoSolicitud)] ?? []).map((o) => {
+        const tipo = esAtraso ? 'reagenda' : (sheet.tipo as TipoSolicitud);
+        const key = `${tipo}:${o.id}`;
+        return {
+          id: key,
+          label: o.label,
+          icono: o.icono,
+          color: 'var(--mecanu-neutral-900)',
+          onClick: () => {
+            if (confirmar !== key) {
+              setConfirmar(key);
+              return;
+            }
+            onEnviar(tipo, o.id);
+          },
+        };
+      });
 
   return (
     <div
@@ -181,7 +194,7 @@ export function SolicitudSheet({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
           {opciones.map((o) => (
             <button
-              key={o.label}
+              key={o.id}
               type="button"
               className={css.tap}
               onClick={o.onClick}
@@ -191,9 +204,9 @@ export function SolicitudSheet({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 11,
-                border: '1px solid var(--mecanu-border)',
+                border: '1px solid ' + (confirmar === o.id ? '#EEC9A7' : 'var(--mecanu-border)'),
                 borderRadius: 10,
-                background: 'var(--mecanu-neutral-0)',
+                background: confirmar === o.id ? '#FDF4EC' : 'var(--mecanu-neutral-0)',
                 padding: '12px 13px',
                 cursor: 'pointer',
                 font: 'inherit',
@@ -203,6 +216,11 @@ export function SolicitudSheet({
               <Icon name={o.icono} size="lg" color={o.color} style={{ flex: 'none' }} />
               <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 700, color: 'var(--mecanu-neutral-900)' }}>
                 {o.label}
+                {confirmar === o.id ? (
+                  <span style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#9C420B' }}>
+                    Pulsa otra vez para confirmar
+                  </span>
+                ) : null}
               </span>
               <Icon name="chevron_right" size="md" color="var(--mecanu-neutral-300)" style={{ flex: 'none' }} />
             </button>

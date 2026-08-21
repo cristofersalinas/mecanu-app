@@ -12,6 +12,7 @@ import {
 } from '../data';
 import { usePanel } from '../store';
 import { CardsSkeleton, SearchInput } from '../ui/Primitives';
+import { ImporteIva } from '../ui/ImporteIva';
 import { useCarga } from '../ui/useCarga';
 import { WhatsAppPanel } from './WhatsAppPanel';
 import styles from '../panel.module.css';
@@ -21,7 +22,14 @@ export function CampanasView() {
   const cargando = useCarga();
   const [busqueda, setBusqueda] = useState('');
   const [seleccionadas, setSeleccionadas] = useState<string[]>([]);
-  const [abierta, setAbierta] = useState<string | null>(null);
+  const [confirmarEnvio, setConfirmarEnvio] = useState(false);
+  const focoCampana = p.deberActivo?.entidadKind === 'campana' ? p.deberActivo.entidadId : null;
+  const [abierta, setAbierta] = useState<string | null>(focoCampana);
+  const [prevFoco, setPrevFoco] = useState(focoCampana);
+  if (focoCampana !== prevFoco) {
+    setPrevFoco(focoCampana);
+    if (focoCampana) setAbierta(focoCampana);
+  }
 
   const filtradas = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
@@ -37,9 +45,14 @@ export function CampanasView() {
     setSeleccionadas((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   const enviarMasivo = () => {
+    if (!confirmarEnvio) {
+      setConfirmarEnvio(true);
+      return;
+    }
     seleccionadas.forEach((id) => p.marcarCampanaEnviada(id));
     p.toast(`${seleccionadas.length} recordatorios enviados por WhatsApp.`);
     setSeleccionadas([]);
+    setConfirmarEnvio(false);
   };
 
   if (cargando) {
@@ -65,24 +78,24 @@ export function CampanasView() {
             onAction={() => setBusqueda('')}
           />
         ) : (
-          <div className={styles.kanban} style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 6 }}>
+          <div className={styles.kanban} style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, paddingBottom: 6 }}>
             {PRESUPUESTO_ESTADOS.map((est) => {
               const items = filtradas.filter((c) => c.estado === est.id);
               return (
                 <div
                   key={est.id}
+                  className={styles.kanbanCol}
                   style={{
-                    flex: 'none', width: 272, display: 'flex', flexDirection: 'column', minHeight: 0,
-                    borderRadius: 12, background: 'var(--mecanu-neutral-25)', padding: 8,
+                    width: 272, borderRadius: 12, background: 'var(--mecanu-neutral-25)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 4px 8px' }}>
+                  <div className={styles.kanbanColHead} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ flex: 1, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em' }}>
                       {est.label}
                     </span>
                     <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }}>{items.length}</span>
                   </div>
-                  <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className={styles.kanbanColBody}>
                     {items.map((c) => (
                       <CampanaCard
                         key={c.id}
@@ -113,10 +126,23 @@ export function CampanasView() {
             }}
           >
             <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>
-              {seleccionadas.length} {seleccionadas.length === 1 ? 'campaña seleccionada' : 'campañas seleccionadas'}
+              {confirmarEnvio
+                ? `¿Enviar ${seleccionadas.length} recordatorios ahora?`
+                : `${seleccionadas.length} ${seleccionadas.length === 1 ? 'campaña seleccionada' : 'campañas seleccionadas'}`}
             </span>
-            <Button kind="tertiary" size="compact" onClick={() => setSeleccionadas([])}>Cancelar</Button>
-            <Button kind="primary" size="compact" icon="send" onClick={enviarMasivo}>Enviar recordatorios</Button>
+            <Button
+              kind="tertiary"
+              size="compact"
+              onClick={() => {
+                setSeleccionadas([]);
+                setConfirmarEnvio(false);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button kind="primary" size="compact" icon="send" onClick={enviarMasivo}>
+              {confirmarEnvio ? 'Confirmar envío' : 'Enviar recordatorios'}
+            </Button>
           </div>
         ) : null}
 
@@ -126,7 +152,17 @@ export function CampanasView() {
         </p>
       </div>
 
-      {abierta ? <WhatsAppPanel key={abierta} campanaId={abierta} onCerrar={() => setAbierta(null)} /> : null}
+      {abierta ? (
+        <WhatsAppPanel
+          key={abierta}
+          campanaId={abierta}
+          onCerrar={() => {
+            setAbierta(null);
+            if (p.deberActivo) p.volverDeDeber();
+            else p.limpiarDeber();
+          }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -178,7 +214,7 @@ function CampanaCard({
         <span style={{ flex: 1, fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
           {campana.origenAutomatico ? 'Desde la inspección' : 'Propuesta del taller'}
         </span>
-        <span style={{ fontSize: 13, fontWeight: 700 }}>{fmtDinero(campana.presupuesto.total)}</span>
+        <ImporteIva texto={fmtDinero(campana.presupuesto.total)} />
       </div>
 
       <div style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>

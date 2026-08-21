@@ -94,10 +94,10 @@ export const ESTADOS: EstadoCfg[] = [
     edicion: 'bloqueado',
     soloConductor: true,        // los subestados solo los mueve el conductor
     subestados: [
-      { id: 'en_camino_origen', label: 'En camino al origen', desc: 'El conductor va hacia el punto de recogida' },
-      { id: 'en_origen',        label: 'En el origen',        desc: 'Conductor en el punto de recogida' },
-      { id: 'en_transito',      label: 'En tránsito',         desc: 'Vehículo en movimiento hacia el destino' },
-      { id: 'en_destino',       label: 'En el destino',       desc: 'Conductor en el punto de entrega' },
+      { id: 'en_camino_origen', label: 'En camino',  desc: 'El conductor va hacia el punto de recogida' },
+      { id: 'en_origen',        label: 'En origen',  desc: 'Conductor en el punto de recogida' },
+      { id: 'en_transito',      label: 'En tránsito', desc: 'Vehículo en movimiento hacia el destino' },
+      { id: 'en_destino',       label: 'En destino', desc: 'Conductor en el punto de entrega' },
     ],
   },
   {
@@ -108,9 +108,9 @@ export const ESTADOS: EstadoCfg[] = [
     aceptaDrop: false,
     edicion: ['clienteTieneAuto', 'tags', 'vuelta'],
     subestados: [
-      { id: 'esperando_agenda_vuelta',   label: 'Esperando agenda de vuelta', desc: 'La vuelta existe pero no tiene fecha' },
-      { id: 'oportunidad_vuelta',        label: 'Oportunidad de vuelta',      desc: 'No hay vuelta creada: upsell vivo' },
-      { id: 'pendiente_confirmar_retiro',label: 'Pendiente de confirmar retiro', desc: 'Fue solo ida; falta confirmar si el cliente ya retiró el coche' },
+      { id: 'esperando_agenda_vuelta',    label: 'Vuelta sin fecha', desc: 'La vuelta existe pero no tiene ventana' },
+      { id: 'oportunidad_vuelta',         label: 'Sin vuelta',       desc: 'No hay vuelta creada: se puede ofrecer el retorno' },
+      { id: 'pendiente_confirmar_retiro', label: 'Confirmar retiro', desc: 'Fue solo ida; falta confirmar si el cliente ya retiró el coche' },
     ],
   },
   {
@@ -121,10 +121,10 @@ export const ESTADOS: EstadoCfg[] = [
     aceptaDrop: false,
     edicion: 'bloqueado',
     subestados: [
-      { id: 'ok',                   label: 'Terminado',            desc: 'Devuelto al cliente y firmado' },
-      { id: 'retirado_por_cliente', label: 'Retirado por el cliente', desc: 'El cliente se llevó el coche sin vuelta' },
-      { id: 'con_incidencia',       label: 'Con incidencia',       desc: 'Cerrado con una incidencia registrada' },
-      { id: 'pendiente_cierre',     label: 'Pendiente de cierre',  desc: 'Falta documentación para cerrar' },
+      { id: 'ok',                   label: 'Terminado',     desc: 'Devuelto al cliente y firmado' },
+      { id: 'retirado_por_cliente', label: 'Retirado',      desc: 'El cliente se llevó el coche sin vuelta' },
+      { id: 'con_incidencia',       label: 'Con incidencia', desc: 'Cerrado con una incidencia registrada' },
+      { id: 'pendiente_cierre',     label: 'Por cerrar',    desc: 'Falta documentación para cerrar' },
     ],
   },
   {
@@ -137,10 +137,10 @@ export const ESTADOS: EstadoCfg[] = [
     exigeMotivo: true,
     edicion: 'bloqueado',
     subestados: [
-      { id: 'por_cliente',    label: 'Por el cliente',   desc: 'El cliente anuló el servicio' },
-      { id: 'por_taller',     label: 'Por el taller',    desc: 'El taller anuló el servicio' },
-      { id: 'fallido_origen', label: 'Fallido en origen',desc: 'No-show del cliente en la recogida' },
-      { id: 'fallido_ruta',   label: 'Fallido en ruta',  desc: 'El tramo no se pudo completar' },
+      { id: 'por_cliente',    label: 'Por cliente',     desc: 'El cliente anuló el servicio' },
+      { id: 'por_taller',     label: 'Por taller',      desc: 'El taller anuló el servicio' },
+      { id: 'fallido_origen', label: 'Fallido origen',  desc: 'No-show del cliente en la recogida' },
+      { id: 'fallido_ruta',   label: 'Fallido en ruta', desc: 'El tramo no se pudo completar' },
     ],
   },
 ];

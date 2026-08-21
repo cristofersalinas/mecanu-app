@@ -4,15 +4,20 @@ Este documento explica cómo está organizado el repo, qué vive dónde y por qu
 consume cada portal. Está escrito para alguien que no ha visto este código antes —
 otro modelo en Cursor, o el fundador revisando qué se hizo.
 
-## Los dos portales
+## Los tres portales
 
-Mecanu tiene dos superficies completamente independientes que comparten un mismo
+Mecanu tiene tres superficies independientes que comparten un mismo
 proyecto Next.js:
 
 | Portal | Ruta | Quién lo usa | Naturaleza |
 |---|---|---|---|
-| **Panel del taller** | `/panel` | Operador del taller, en un ordenador | Web de escritorio normal. Sin instalación, sin offline. |
+| **Panel del taller** | `/panel` | Operador del taller, en un ordenador | Web de escritorio. Kanban, fichas, campañas. |
 | **App del conductor** | `/conductor` | Conductor, en la calle con el móvil | PWA instalable, offline-first (ver "PWA" abajo). |
+| **Backoffice** | `/backoffice` | Dueño (y operación) | Cockpit: alertas, bandeja, cobertura, dinero, usuarios, cron. No sustituye el kanban. |
+
+La lógica de negocio del backoffice vive en `src/lib/mecanu/backoffice/` (reglas,
+ciclos, alertas, analítica, automatizaciones) y se cubre con tests. La UI no
+importa `mecanu-rutas.ts`: pasa por `repo`.
 
 No comparten pantallas, componentes visuales ni estado de UI. Lo único que
 comparten es la capa de datos y el design system — exactamente como en el handoff
@@ -25,6 +30,7 @@ src/
 ├── app/
 │   ├── (taller)/panel/          Ruta del panel. page.tsx monta <PanelApp />.
 │   ├── (conductor)/conductor/   Ruta del conductor. layout.tsx (metadata PWA) + page.tsx monta <ConductorApp />.
+│   ├── (backoffice)/backoffice/ Cockpit del dueño. Server Component + <BackofficeApp />.
 │   ├── api/v1/                  API routes REST que usa la app del conductor (ver CONTRATOS-API.md).
 │   ├── layout.tsx               Layout raíz. NO tiene nada de PWA — eso vive solo en (conductor)/conductor/layout.tsx.
 │   ├── page.tsx                 Landing pública — hoy un selector simple entre los dos portales (diseño real: pendiente, ver CLAUDE.md).
@@ -33,7 +39,8 @@ src/
 ├── components/
 │   ├── ds/                      Los 47 componentes del design system Mecanu (Button, Badge, DataTable, SlideToConfirm, ...). Puros, sin lógica de negocio. Barrel en index.ts.
 │   ├── taller/                  Componentes propios del panel (kanban, campañas, fichas, wizard de agendar...). Su único punto de entrada a los datos es taller/data.ts.
-│   └── conductor/                Componentes propios de la app del conductor (jornada, check-in, bottom sheets...). Su único punto de entrada a los datos es conductor/data.ts.
+│   ├── conductor/                Componentes propios de la app del conductor (jornada, check-in, bottom sheets...). Su único punto de entrada a los datos es conductor/data.ts.
+│   └── backoffice/              Cockpit del dueño. Datos solo vía `repo`.
 │
 ├── lib/mecanu/
 │   ├── types.ts                 FUENTE ÚNICA DE VERDAD de las formas de datos. Schemas Zod + tipos inferidos. Todo lo demás importa de aquí.
@@ -43,10 +50,11 @@ src/
 │   ├── mecanu-whatsapp.ts       Simulación de WhatsApp Cloud API para el panel de Campañas.
 │   ├── idempotency.ts           Store en memoria para deduplicar escrituras reintentadas (ver "Idempotencia" abajo).
 │   ├── api-helpers.ts           Wrapper compartido por las API routes: valida con Zod, aplica idempotencia, formatea errores.
-│   └── repo/
-│       ├── repo.ts              La interfaz `MecanuRepo` — el contrato real. Léelo primero.
-│       ├── repo-mock.ts         Única implementación hoy. Envuelve mecanu-rutas.ts/mecanu-whatsapp.ts con la interfaz async de repo.ts.
-│       └── index.ts             `export const repo: MecanuRepo = mockRepo`. Todo el código importa `repo` de aquí, nunca de repo-mock.ts directamente.
+│   ├── repo/                    MecanuRepo + mock. El backoffice añade snapshot, usuarios y cron.
+│   │   ├── repo.ts              La interfaz `MecanuRepo` — el contrato real. Léelo primero.
+│   │   ├── repo-mock.ts         Única implementación hoy. Envuelve mecanu-rutas.ts/mecanu-whatsapp.ts con la interfaz async de repo.ts.
+│   │   └── index.ts             `export const repo: MecanuRepo = mockRepo`. Todo el código importa `repo` de aquí, nunca de repo-mock.ts directamente.
+│   └── backoffice/              Motor del dueño: SLAs, usuarios, alertas, cobertura, analítica, cron.
 │
 └── styles/ds/                   Tokens CSS del design system (colores, tipografía, espaciado, radios, elevación, motion, iconos).
 ```

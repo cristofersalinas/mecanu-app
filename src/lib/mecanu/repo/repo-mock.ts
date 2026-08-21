@@ -15,9 +15,14 @@
 import * as M from '../mecanu-rutas';
 import * as W from '../mecanu-whatsapp';
 import type {
-  Actividad, Campana, Cliente, Conductor, Inspeccion, Log, Parada, Presupuesto,
-  Ruta, RutaVista, Servicio, Solicitud, TagRuta, Tramo, Vehiculo,
+  Actividad, AutomatizacionEjecucion, Campana, Cliente, Conductor, Inspeccion, Log, Parada, Presupuesto,
+  Ruta, RutaVista, Servicio, Solicitud, TagRuta, Tramo, UsuarioBackoffice, Vehiculo,
 } from '../types';
+import {
+  aplicarAutomatizaciones, buildSnapshot, conflictoAlAsignar, invitarUsuario, puede,
+  proponerAutomatizaciones, transicionarProceso, transicionarUsuario,
+} from '../backoffice';
+import type { MundoBackoffice } from '../backoffice';
 import type {
   AsignarConductorInput, CambiarEstadoPresupuestoInput, CambiarSubestadoTramoInput,
   CancelarRutaInput, CheckinInput, ConfirmacionInput, CrearRutaDesdeCampanaInput,
@@ -59,6 +64,11 @@ const m = M as unknown as {
   LOGS: Log[];
   PARADAS: Parada[];
   PRESUPUESTOS: Presupuesto[];
+  campanaDesdeItvCheckin: (input: {
+    rutaId: string;
+    motivo: 'sin_pegatina' | 'vencida' | 'por_vencer';
+    dias: number | null;
+  }) => Campana | null;
 };
 
 const w = W as unknown as {
@@ -89,6 +99,95 @@ function requireRuta(id: string): Ruta {
    en el prototipo original. Vive en memoria aquí porque es infraestructura nueva. -- */
 const SOLICITUDES: Solicitud[] = [];
 let solicitudSeq = 0;
+
+const USUARIOS: UsuarioBackoffice[] = [];
+const EJECUCIONES: AutomatizacionEjecucion[] = [];
+
+function sembrarBackoffice() {
+  if (USUARIOS.length > 0) return;
+  const alta = new Date();
+  USUARIOS.push(
+    {
+      id: 'u-dueno', nombre: 'Cristofer Salinas', email: 'crist@mecanu.com',
+      telefono: null, rol: 'dueno', estado: 'activo', conductorId: null,
+      invitadEn: alta, activadoEn: alta,
+    },
+    {
+      id: 'u-op', nombre: 'Rubén Ortega', email: 'ruben@talleres.es',
+      telefono: '910 220 900', rol: 'operacion', estado: 'activo', conductorId: null,
+      invitadEn: alta, activadoEn: alta,
+    },
+    ...m.CONDUCTORES.map((c) => ({
+      id: `u-${c.id}`,
+      nombre: c.nombre,
+      email: `${c.id}@conductores.mecanu.com`,
+      telefono: c.telefono,
+      rol: 'conductor' as const,
+      estado: 'activo' as const,
+      conductorId: c.id,
+      invitadEn: c.alta,
+      activadoEn: c.alta,
+    })),
+  );
+
+  const enCurso = m.TRASLADOS.find((t) => t.estado === 'en_curso') ?? m.TRASLADOS[0];
+  const hueco = m.TRASLADOS.find((t) => t.estado === 'agendado' && !t.conductorId);
+  if (enCurso) {
+    SOLICITUDES.push({
+      id: 'SOL-0001',
+      trasladoId: enCurso.id,
+      rutaId: enCurso.rutaId,
+      conductorId: enCurso.conductorId ?? 'd1',
+      tipo: 'no_rodante',
+      motivo: 'Testigo de aceite en rojo: el vehículo no debe rodar',
+      nota: 'Esperando respuesta del taller',
+      ts: new Date(Date.now() - 22 * 60000),
+      estado: 'pendiente',
+      resolucion: null,
+      resueltaEn: null,
+    });
+    solicitudSeq = 1;
+  }
+  if (hueco) {
+    SOLICITUDES.push({
+      id: 'SOL-0002',
+      trasladoId: hueco.id,
+      rutaId: hueco.rutaId,
+      conductorId: 'd1',
+      tipo: 'reagenda',
+      motivo: 'Ventana imposible: el cliente no está',
+      nota: null,
+      ts: new Date(Date.now() - 8 * 60000),
+      estado: 'pendiente',
+      resolucion: null,
+      resueltaEn: null,
+    });
+    solicitudSeq = 2;
+  }
+}
+sembrarBackoffice();
+
+function requireActor(actorId: string): UsuarioBackoffice {
+  const u = USUARIOS.find((x) => x.id === actorId);
+  if (!u) throw new Error(`Usuario ${actorId} no encontrado`);
+  if (u.estado !== 'activo') throw new Error('Tu usuario no está activo');
+  return u;
+}
+
+function mundoAhora(ahora: Date): MundoBackoffice {
+  return {
+    ahora,
+    rutas: m.RUTAS_VISTA,
+    tramos: m.TRASLADOS,
+    logs: m.LOGS,
+    campanas: m.CAMPANAS,
+    presupuestos: m.PRESUPUESTOS,
+    conductores: m.CONDUCTORES,
+    solicitudes: SOLICITUDES,
+    usuarios: USUARIOS,
+    ejecuciones: EJECUCIONES,
+  };
+}
 
 /* -- Bolsa de "disponibles": ver TODO en la propia API route — no hay campo real en
    el modelo hoy, así que exponemos los ids que ya no tienen conductor asignado y
@@ -149,6 +248,8 @@ export const mockRepo: MecanuRepo = {
 
   async asignarConductor({ trasladoId, conductorId }: AsignarConductorInput) {
     const t = requireTramo(trasladoId);
+    const check = conflictoAlAsignar(mundoAhora(new Date()), t, conductorId);
+    if (!check.ok) throw new Error(check.motivo);
     t.conductorId = conductorId;
     nuevoLog(trasladoId, 'cambio_estado', conductorId, 'conductor', { texto: `Conductor asignado: ${conductorId}` });
     return t;
@@ -184,12 +285,19 @@ export const mockRepo: MecanuRepo = {
     return v;
   },
 
-  async registrarHallazgoCampana({ rutaId, trasladoId, testigo, nivel }: HallazgoCampanaInput) {
-    nuevoLog(trasladoId, 'incidencia', 'conductor', 'conductor', { texto: `Hallazgo: ${testigo} nivel ${nivel}`, rutaId });
-    // El mock no crea una Campana real dinámicamente (no hay servicio de tempario que
-    // mapear sin un catálogo de testigo→servicio en tiempo de ejecución) — devuelve
-    // null a propósito. Ver PREGUNTAS-ABIERTAS.md.
-    return null;
+  async registrarHallazgoCampana({ rutaId, trasladoId, testigo, nivel, detalle, dias }: HallazgoCampanaInput) {
+    nuevoLog(trasladoId, 'incidencia', 'conductor', 'conductor', {
+      texto: `Hallazgo: ${testigo} nivel ${nivel}`, rutaId,
+      detalle: detalle ?? undefined,
+    });
+    if (testigo !== 'itv') {
+      // El resto de testigos ámbar sigue sin catálogo testigo→servicio. Ver PREGUNTAS-ABIERTAS.md #5.
+      return null;
+    }
+    const motivo = detalle === 'sin_pegatina' || detalle === 'vencida' || detalle === 'por_vencer'
+      ? detalle
+      : 'vencida';
+    return m.campanaDesdeItvCheckin({ rutaId, motivo, dias: dias ?? null });
   },
 
   async entregar({ trasladoId, firmaCliente }: EntregaInput) {
@@ -232,6 +340,10 @@ export const mockRepo: MecanuRepo = {
 
   async reasignarConductorTramo({ tramoId, conductorId }: ReasignarConductorInput) {
     const t = requireTramo(tramoId);
+    if (conductorId) {
+      const check = conflictoAlAsignar(mundoAhora(new Date()), t, conductorId);
+      if (!check.ok) throw new Error(check.motivo);
+    }
     t.conductorId = conductorId;
     nuevoLog(tramoId, 'cambio_estado', 'Rubén Ortega', 'manual', { texto: conductorId ? `Reasignado a ${conductorId}` : 'Conductor retirado' });
     return t;
@@ -276,6 +388,10 @@ export const mockRepo: MecanuRepo = {
     return SOLICITUDES.filter((s) => s.estado === 'pendiente');
   },
 
+  async listSolicitudes() {
+    return SOLICITUDES;
+  },
+
   async resolverSolicitud(id, resolucion, estado) {
     const s = SOLICITUDES.find((x) => x.id === id);
     if (!s) throw new Error(`Solicitud ${id} no encontrada`);
@@ -283,5 +399,41 @@ export const mockRepo: MecanuRepo = {
     s.resolucion = resolucion;
     s.resueltaEn = new Date();
     return s;
+  },
+
+  async listUsuariosBackoffice() { return USUARIOS; },
+  async getUsuarioBackoffice(id) { return USUARIOS.find((u) => u.id === id) ?? null; },
+
+  async invitarUsuarioBackoffice(actorId, input) {
+    const actor = requireActor(actorId);
+    if (!puede(actor.rol, 'gestionar_usuarios')) throw new Error('No puedes invitar usuarios');
+    return invitarUsuario(USUARIOS, input, new Date());
+  },
+
+  async transicionarUsuarioBackoffice(actorId, usuarioId, hacia) {
+    const actor = requireActor(actorId);
+    if (!puede(actor.rol, 'gestionar_usuarios')) throw new Error('No puedes cambiar usuarios');
+    return transicionarUsuario(USUARIOS, usuarioId, hacia, new Date());
+  },
+
+  async transicionarProcesoConductor(actorId, conductorId, hacia) {
+    const actor = requireActor(actorId);
+    if (!puede(actor.rol, 'cambiar_proceso_conductor')) throw new Error('No puedes cambiar el onboarding');
+    const c = m.conductor(conductorId);
+    if (!c) throw new Error(`Conductor ${conductorId} no encontrado`);
+    return transicionarProceso(c, hacia);
+  },
+
+  async getBackofficeSnapshot(actorId, ahora) {
+    const actor = requireActor(actorId);
+    if (!puede(actor.rol, 'ver_backoffice')) throw new Error('No puedes entrar al backoffice');
+    return buildSnapshot(mundoAhora(ahora ?? new Date()), actorId);
+  },
+
+  async ejecutarAutomatizacionesBackoffice(actorId, ahora) {
+    const actor = requireActor(actorId);
+    if (!puede(actor.rol, 'ejecutar_automatizaciones')) throw new Error('No puedes ejecutar automatizaciones');
+    const mundo = mundoAhora(ahora ?? new Date());
+    return aplicarAutomatizaciones(mundo, proponerAutomatizaciones(mundo));
   },
 };

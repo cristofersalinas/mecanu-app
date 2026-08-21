@@ -30,6 +30,10 @@ import {
   type PresupuestoModo, type RolTramo, type Ruta, type RutaVista, type TagRuta, type Tramo,
   type TriggerSource, type Ventana, type VentanaModo,
 } from './types';
+import {
+  evidenciaOfertaItv, fallaOfertaItv, SERVICIO_ITV_ID, UMBRAL_DIAS_ITV,
+  type MotivoOfertaItv,
+} from './oferta-itv';
 
 const DIA = 86400000;
 
@@ -1073,4 +1077,79 @@ export function campanaDesdeInspeccion(insp: Inspeccion, rutaId: string): Campan
     fotoUrl: insp.hallazgos[0] && insp.hallazgos[0].fotoUrl, estadoEnvio: 'pendiente',
     presupuestoId: p.id, presupuesto: p, estado: 'nueva', origenAutomatico: true,
   };
+}
+
+function campanaItvAbierta(vehiculoId: string | null, rutaId: string): Campana | null {
+  return CAMPANAS.find((c) => {
+    if (c.estado === 'aceptada' || c.estado === 'rechazada' || c.estado === 'caducada') return false;
+    if ((c.tipos || []).indexOf('itv') < 0) return false;
+    if (vehiculoId && c.vehiculoId === vehiculoId) return true;
+    return c.rutaOrigenId === rutaId;
+  }) || null;
+}
+
+/**
+ * Check-in: ITV no hecha, sin pegatina o a menos de 60 días → oferta SV-04.
+ * Si el vehículo ya tiene una oferta de ITV abierta, se reutiliza (no se duplica).
+ */
+export function campanaDesdeItvCheckin(input: {
+  rutaId: string;
+  motivo: MotivoOfertaItv;
+  dias: number | null;
+}): Campana | null {
+  const sv = servicio(SERVICIO_ITV_ID);
+  if (!sv) return null;
+  const r = ruta(input.rutaId);
+  const existente = campanaItvAbierta(r ? r.vehiculoId : null, input.rutaId);
+  if (existente) return existente;
+
+  const id = `CMP-ITV-${input.rutaId.replace('TR-', '')}`;
+  const diasItem = input.motivo === 'por_vencer' ? (input.dias ?? UMBRAL_DIAS_ITV) : Math.max(input.dias ?? 0, 0);
+  const item: CampanaItem = {
+    id: `${id}-1`,
+    tipo: 'itv',
+    origen: 'confirmado',
+    dias: diasItem,
+    falla: fallaOfertaItv(input.motivo),
+    registroIdx: 0,
+    datos: { estado: fallaOfertaItv(input.motivo) },
+    etiqueta: 'ITV',
+    servicio: sv,
+    valor: sv.totalIva,
+    fecha: at(9, 0, diasItem),
+  };
+  const p = crearPresupuesto(`PR-${id}`, {
+    campanaId: id, vehiculoId: r ? r.vehiculoId : null, rutaOrigenId: input.rutaId,
+    modo: 'detallado', estado: 'nueva', creado: new Date(), actualizado: new Date(),
+    lineas: [linea(sv.nombre, sv.totalIva, 'inspeccion', SERVICIO_ITV_ID)],
+  });
+  const c: Campana = {
+    id,
+    clienteId: r ? r.clienteId : null,
+    vehiculoId: r ? r.vehiculoId : null,
+    rutaOrigenId: input.rutaId,
+    rutaGeneradaId: null,
+    inspeccionId: null,
+    items: [item],
+    tipos: ['itv'],
+    etiquetas: ['ITV'],
+    falla: item.falla,
+    evidencia: evidenciaOfertaItv(input.motivo, input.dias),
+    valor: p.total,
+    servicio: sv,
+    urgente: input.motivo !== 'por_vencer',
+    severidad: input.motivo === 'por_vencer' ? 'warning' : 'alert',
+    fecha: item.fecha,
+    habito: '—',
+    motivoFecha: 'Detectado en el check-in',
+    fotoUrl: null,
+    estadoEnvio: 'pendiente',
+    presupuestoId: p.id,
+    presupuesto: p,
+    estado: 'nueva',
+    origenAutomatico: true,
+  };
+  CampanaSchema.parse(c);
+  CAMPANAS.push(c);
+  return c;
 }

@@ -196,6 +196,8 @@ export interface TabItem {
   label: string;
   badge?: number | string;
   badgeTitle?: string;
+  disabled?: boolean;
+  disabledTitle?: string;
 }
 
 export interface TabsProps {
@@ -214,8 +216,14 @@ export function Tabs({ items, activeId, onChange, style }: TabsProps) {
           type="button"
           role="tab"
           aria-selected={it.id === activeId}
-          className={`${styles.tab} ${it.id === activeId ? styles.tabActive : ''}`}
-          onClick={() => onChange?.(it.id)}
+          aria-disabled={it.disabled || undefined}
+          title={it.disabled ? (it.disabledTitle ?? 'Pronto') : undefined}
+          disabled={it.disabled}
+          className={`${styles.tab} ${it.id === activeId ? styles.tabActive : ''} ${it.disabled ? styles.tabDisabled : ''}`}
+          onClick={() => {
+            if (it.disabled) return;
+            onChange?.(it.id);
+          }}
         >
           {it.label}
           {it.badge !== undefined && it.badge !== 0 ? (

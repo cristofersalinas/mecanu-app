@@ -1,7 +1,7 @@
 # Reglas para quien continúe este proyecto
 
 Mecanu. Panel del taller (`/panel`) + app del conductor (`/conductor`, PWA
-offline-first). Backend futuro: Supabase (Postgres) + Vercel. El fundador trabaja
+offline-first) + backoffice del dueño (`/backoffice`). Backend futuro: Supabase (Postgres) + Vercel. El fundador trabaja
 solo y no es ingeniero — estas reglas existen para que nada dependa de memoria o
 criterio implícito.
 
@@ -43,14 +43,36 @@ criterio implícito.
    el servidor vía `Idempotency-Key` (`src/lib/mecanu/api-helpers.ts`), (c)
    ofrecer "reintentar la misma tarea" en la UI, nunca "empezar de cero".
 
+9. **Archivos `'use server'`: solo `export async function`.** Nada de
+   `export const`, `export function` síncrona ni clases. Next lo convierte en un
+   500 opaco (pasó con `/backoffice`). Las constantes van en otro archivo
+   (p. ej. `session.ts`). Lo verifica `src/lib/next-invariants/` en `npm test`.
+
+10. **URLs de portales: no inventar ni adivinar.** La tabla canónica está en
+    `src/lib/next-invariants/mapa-portales.ts` (`PORTALES`). Si añades un portal,
+    una fila ahí + `page.tsx` + entrada en `proxy.ts` y `robots.ts`. El test
+    comprueba que la URL, el archivo y el componente de entrada existen y que
+    los imports `@/` no apuntan al vacío.
+
+## Portales (dónde abrir qué)
+
+| URL | Quién | Archivo |
+|---|---|---|
+| `/panel` | Operador del taller | `src/app/(taller)/panel/page.tsx` → `PanelApp` |
+| `/conductor` | Conductor (PWA) | `src/app/(conductor)/conductor/page.tsx` → `ConductorApp` |
+| `/backoffice` | Dueño / operación | `src/app/(backoffice)/backoffice/page.tsx` → `BackofficeApp` |
+
+En local: `http://localhost:3000` + la URL. En Vercel están cortados (mock).
+
 ## Qué leer primero, en orden
 
 1. `CLAUDE.md` — contexto de producto y decisiones cerradas. Léelo antes que nada:
-   ahí está la mitad de las respuestas a preguntas que podrías estar a punto de
-   volver a hacer. Beneficios y propuesta de valor comercial:
-   `docs/PROPUESTA-VALOR.md` — anotar ahí un claim nuevo antes de subirlo a la
-   landing. Responsive de la landing pública: `docs/LANDING-RESPONSIVIDAD-FULL.md`
-   (snapshot **ResponsividadFull**).
+ ahí está la mitad de las respuestas a preguntas que podrías estar a punto de
+ volver a hacer. Beneficios y propuesta de valor comercial:
+ `docs/PROPUESTA-VALOR.md` — anotar ahí un claim nuevo antes de subirlo a la
+ landing. Responsive de la landing pública: `docs/LANDING-RESPONSIVIDAD-FULL.md`
+ (snapshot **ResponsividadFull**). Cumplimiento UE/ES (RGPD, cookies, LSSI):
+ `docs/CUMPLIMIENTO-UE.md`.
 2. `ARQUITECTURA.md` — qué vive dónde y por qué.
 3. `src/lib/mecanu/types.ts` — las formas de datos reales, con comentarios de qué
    es decisión de producto y qué es campo `// REVISAR`.
@@ -60,6 +82,10 @@ criterio implícito.
 6. `PREGUNTAS-ABIERTAS.md` — antes de asumir cualquier cosa que el código deja
    ambigua, comprueba si ya está anotada ahí. Si no está y tú también la
    encontraste ambigua, añádela — no la resuelvas en silencio con una suposición.
+7. `docs/SLACK.md` — avisos a Slack y trabajo con `@Cursor` desde un canal.
+   Canales: `#ordenes`, `#leads`, `#oportunidades`, `#csx`, `#alertas`, `#deploys`.
+   El bot de avisos no es Cursor. CSX/Destacados: `docs/SLACK-CSX.md`.
+   Señales taller/conductor: `docs/SLACK-SENALES.md`. Seguridad: `docs/SLACK-SEGURIDAD.md`.
 
 ## Cómo verificar que un cambio no rompe nada
 
@@ -80,8 +106,10 @@ un PR en rojo no se puede mergear, ni siquiera a mano.
 ```
 
 Si Vercel falla *después* del merge, mecanu.com se queda en el deploy anterior.
-El workflow `production-deploy-watch.yml` abre un issue `deploy-production`.
-Confirma el alias: `npx vercel inspect mecanu.com` (status Ready, commit nuevo).
+El workflow `production-deploy-watch.yml` abre un issue `deploy-production` y
+avisa en Slack `#alertas`. Un deploy OK avisa en `#deploys`. Confirma el alias:
+`npx vercel inspect mecanu.com` (status Ready, commit nuevo). Mapa Slack:
+`docs/SLACK.md`.
 
 Para verificar visualmente que el panel y el conductor siguen viéndose igual tras
 un cambio de infraestructura (no de producto): `npm run dev`, abre `/panel` y
@@ -143,5 +171,16 @@ misma vertical derecha, sin solaparse; hero en 720 / 450 / <450.
 
 ## Ramas
 
-`feature/<nombre>` → PR a `staging` → verificar en el preview de Vercel de
-`staging` → PR `staging` → `main` → producción. Detalle en `docs/BRANCHING.md`.
+`feature/<nombre>` → PR a `main` → CI verde → merge → producción.
+No hay staging permanente. Local: `npm run demo` (con Simular) o `npm run dev`.
+`npm run entorno` te dice el mundo. Detalle: `docs/BRANCHING.md` y `docs/ENTORNOS.md`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

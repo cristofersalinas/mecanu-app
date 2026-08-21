@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { google } from "googleapis";
 import { Resend } from "resend";
+import { avisarLead } from "@/lib/slack/notify";
+import { textoLeadContacto } from "@/lib/slack/leads";
 
 const schema = z.object({
   nombre: z.string().min(1),
@@ -16,6 +18,8 @@ const schema = z.object({
   volumen: z.string().min(1),
   negocio: z.string().min(1),
   canal: z.string().min(1),
+  /** RGPD: el envío exige aceptación explícita de la política. */
+  aceptaPrivacidad: z.literal(true),
 });
 
 async function appendToSheet(data: z.infer<typeof schema>) {
@@ -123,9 +127,10 @@ export async function POST(request: Request) {
 
   const data = result.data;
 
-  const [sheetsError, emailError] = await Promise.allSettled([
+  const [sheetsError, emailError, slackError] = await Promise.allSettled([
     appendToSheet(data),
     sendNotificationEmail(data),
+    avisarLead(textoLeadContacto(data)),
   ]);
 
   if (sheetsError.status === "rejected") {
@@ -133,6 +138,9 @@ export async function POST(request: Request) {
   }
   if (emailError.status === "rejected") {
     console.error("[contacto] Resend error:", emailError.reason);
+  }
+  if (slackError.status === "rejected") {
+    console.error("[contacto] Slack error:", slackError.reason);
   }
 
   return NextResponse.json({ ok: true });
