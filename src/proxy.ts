@@ -36,7 +36,10 @@ function esApiPublica(pathname: string) {
     pathname.startsWith("/api/v1/contacto/") ||
     pathname === "/api/v1/itv-leads" ||
     pathname.startsWith("/api/v1/itv-leads/") ||
-    pathname === "/api/v1/panel/snapshot"
+    pathname === "/api/v1/panel/snapshot" ||
+    pathname.startsWith("/api/v1/panel/") ||
+    pathname === "/api/v1/conductor/snapshot" ||
+    pathname.startsWith("/api/v1/conductor/")
   );
 }
 

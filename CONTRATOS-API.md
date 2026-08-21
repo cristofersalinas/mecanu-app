@@ -176,12 +176,26 @@ Destacados / upsell / subuso → `#csx`. Body:
 `{ "tipo": "paquete_semanal" | "destacados" | "upsell" | "subuso" }`.
 Ver `docs/SLACK-CSX.md`.
 
-## Lo que falta y por qué (resumen — ver PREGUNTAS-ABIERTAS.md para el detalle)
+### `GET /api/v1/panel/snapshot`
+Hidrata el panel (rutas, campañas, clientes, vehículos, conductores, servicios).
+Con Supabase configurado (sin demo) exige sesión.
 
-- No hay autenticación. Ningún endpoint verifica quién llama. En producción cada
-  ruta debe leer la sesión (Supabase Auth) y, para las del conductor, verificar que
-  el `conductorId` del payload coincide con el usuario autenticado.
-- `crearRutaDesdeCampana` (usado por el panel, hoy vía repo directamente, no una API
-  route porque el panel usa Server Actions) no está implementado en el mock.
-- No hay endpoint de creación de `Ruta` desde cero para el flujo de prospectos —
-  el panel lo hace hoy con Server Actions sobre el repo mock, sin persistencia real.
+### `POST /api/v1/panel/rutas/desde-campana`
+Crea ruta desde campaña aceptada. Body: `campanaId`, `modo`, `lineas?`,
+`tipoServicio`, `fecha` (ISO|null), `franja`. Idempotency-Key recomendado.
+
+### `POST /api/v1/panel/rutas/:id/agendar` · `/cancelar` · `/tags` · `/asignar-conductor`
+Mutaciones del panel sobre una ruta. Idempotency-Key recomendado.
+
+### `POST /api/v1/panel/campanas/:id/estado`
+`{ "estado": "valorada" | "enviada" | "aceptada" | … }` sobre el presupuesto ligado.
+
+### `GET /api/v1/conductor/snapshot?conductorId=d1`
+Turno + pool + entidades para hidratar la app del conductor.
+
+## Lo que falta y por qué (resumen — ver PREGUNTAS-ABIERTAS.md)
+
+- Auth fina en APIs del conductor (JWT debe coincidir con `conductorId`).
+- Escrituras del conductor (check-in, subestado, cola offline) aún no persisten
+  todas vía panel/repo en el mismo ciclo que el snapshot.
+- Migración UI completa: helpers síncronos de `data.ts` siguen como puente.

@@ -185,7 +185,7 @@ await sb.from('traslados').upsert({
   rol: 'ida',
   parada_origen_id: 'PD-SEED-1001-1',
   parada_destino_id: 'PD-SEED-1001-2',
-  conductor_id: null,
+  conductor_id: 'd1',
   ventana_fecha: fecha,
   ventana_inicio: '10:00',
   ventana_fin: '11:00',
@@ -197,7 +197,53 @@ await sb.from('traslados').upsert({
   reprogramaciones: 0,
 });
 
-console.log('OK seed', TALLER, '→ clientes, vehículos, conductor, servicio, ruta TR-SEED-1001');
+await sb.from('rutas').update({
+  estado: 'agendado',
+  subestado: 'asignado',
+}).eq('id', 'TR-SEED-1001');
+
+const { error: campErr } = await sb.from('campanas').upsert({
+  id: 'OP-SEED-1',
+  taller_id: TALLER,
+  cliente_id: 'c-seed-2',
+  vehiculo_id: 'v-seed-2',
+  falla: 'Pastillas de freno delanteras',
+  evidencia: 'Ruido al frenar · inspección visual',
+  urgente: false,
+  fecha: ahora,
+  origen_automatico: false,
+});
+if (campErr) throw campErr;
+
+await sb.from('presupuestos').upsert({
+  id: 'PR-SEED-OP1',
+  taller_id: TALLER,
+  campana_id: 'OP-SEED-1',
+  vehiculo_id: 'v-seed-2',
+  modo: 'detallado',
+  estado: 'aceptada',
+  iva_incluido: true,
+  total: 320,
+});
+await sb.from('presupuesto_lineas').delete().eq('presupuesto_id', 'PR-SEED-OP1');
+await sb.from('presupuesto_lineas').insert([
+  {
+    presupuesto_id: 'PR-SEED-OP1',
+    descripcion: 'Pastillas delanteras',
+    importe: 230,
+    origen: 'manual',
+    servicio_tempario_id: null,
+  },
+  {
+    presupuesto_id: 'PR-SEED-OP1',
+    descripcion: 'Traslado ida',
+    importe: 90,
+    origen: 'traslado',
+    servicio_tempario_id: null,
+  },
+]);
+
+console.log('OK seed', TALLER, '→ clientes, vehículos, conductor d1, ruta TR-SEED-1001, campaña OP-SEED-1');
 console.log('En .env.local:');
 console.log('  MECANU_USE_SUPABASE=1');
 console.log('  NEXT_PUBLIC_MECANU_USE_SUPABASE=1');

@@ -87,16 +87,20 @@ type Mod = {
   foto: (seed: string) => string;
 };
 
+import { vivo } from './vivo';
+
 const D = M as unknown as Mod;
 
-export const tramo = (id: string): Tramo | null => (D.tramo(id) as Tramo | null) ?? null;
-export const ruta = (id: string): Ruta | null => (D.ruta(id) as Ruta | null) ?? null;
+export const tramo = (id: string): Tramo | null => vivo.tramo(id) ?? ((D.tramo(id) as Tramo | null) ?? null);
+export const ruta = (id: string): Ruta | null => vivo.ruta(id) ?? ((D.ruta(id) as Ruta | null) ?? null);
 export const vehiculo = (id: string | null): Vehiculo | null =>
-  id ? ((D.vehiculo(id) as Vehiculo | null) ?? null) : null;
-export const paradasDeRuta = (rutaId: string): Parada[] => D.paradasDeRuta(rutaId) as Parada[];
+  vivo.vehiculo(id) ?? (id ? ((D.vehiculo(id) as Vehiculo | null) ?? null) : null);
+export const paradasDeRuta = (rutaId: string): Parada[] =>
+  vivo.paradasDeRuta(rutaId) ?? (D.paradasDeRuta(rutaId) as Parada[]);
 export const clientesDeVehiculo = (vehiculoId: string | null): Cliente[] =>
-  vehiculoId ? (D.clientesDeVehiculo(vehiculoId) as Cliente[]) : [];
-export const logsDeTramo = (tramoId: string): Log[] => D.logsDeTramo(tramoId) as Log[];
+  vivo.clientesDeVehiculo(vehiculoId) ?? (vehiculoId ? (D.clientesDeVehiculo(vehiculoId) as Cliente[]) : []);
+export const logsDeTramo = (tramoId: string): Log[] =>
+  vivo.logsDeTramo(tramoId) ?? (D.logsDeTramo(tramoId) as Log[]);
 export const etiquetaVehiculo = (v: Vehiculo | null): string => D.etiquetaVehiculo(v);
 export const nombreCorto = (nombre: string): string => D.nombreCorto(nombre);
 export const descripcionServicioDeRuta = (rutaId: string): string => D.descripcionServicioDeRuta(rutaId);

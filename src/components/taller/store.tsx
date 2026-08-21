@@ -22,6 +22,7 @@ import {
 import { deberesDesdePanel } from './deberes';
 import { notificarOportunidadSlack } from './slackOportunidades';
 import { reemplazarArray, revivirFechas, supabasePanelActivo } from './hidratar-panel';
+import { panelApi } from './panel-api';
 
 /* ------------------------- Navegación ------------------------- */
 
@@ -254,7 +255,7 @@ interface PanelStore {
   crearRutaDesdeCampana: (
     campanaId: string,
     opciones: { modo: 'tal_cual' | 'editar' | 'solo_total'; lineas: LineaPresupuesto[]; total: number; servicio: string; fecha: Date | null; franja: string | null; etiquetaDestino?: string },
-  ) => string;
+  ) => Promise<string>;
 
   condCfg: Record<string, CondCfg>;
   setCondCfg: (id: string, cfg: Partial<CondCfg>) => void;
@@ -543,6 +544,33 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     setOverlays((o) => ({ ...o, [id]: { ...o[id], ...p } }));
   }, []);
 
+  const refrescarSnapshot = useCallback(async () => {
+    if (!supabasePanelActivo()) return;
+    try {
+      const res = await fetch('/api/v1/panel/snapshot');
+      if (!res.ok) return;
+      const raw = await res.json();
+      const rutas = revivirFechas(raw.rutas ?? []) as RutaVista[];
+      const campanas = revivirFechas(raw.campanas ?? []) as Campana[];
+      const clientes = revivirFechas(raw.clientes ?? []) as Cliente[];
+      const vehiculos = revivirFechas(raw.vehiculos ?? []) as Vehiculo[];
+      const conductores = revivirFechas(raw.conductores ?? []) as Conductor[];
+      const servicios = revivirFechas(raw.servicios ?? []) as Servicio[];
+      reemplazarArray(CLIENTES, clientes);
+      reemplazarArray(VEHICULOS, vehiculos);
+      reemplazarArray(CONDUCTORES, conductores);
+      reemplazarArray(SERVICIOS, servicios);
+      setRutasBase(rutas);
+      setCampanasBase(campanas);
+      setRutasNuevas([]);
+      setOverlays({});
+      setCampOverlays({});
+      setFuenteDatos('supabase');
+    } catch (e) {
+      console.warn('[panel] refrescar snapshot falló', e);
+    }
+  }, []);
+
   const agendarRuta = useCallback<PanelStore['agendarRuta']>((id, datos) => {
     patch(id, {
       estado: 'agendado',
@@ -556,12 +584,29 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     });
     toast('Traslado agendado. Se ha comunicado la ventana al cliente.');
     marcarDeberHecho('ruta', id, ['agendar', 'agendar_vuelta']);
-  }, [patch, toast, marcarDeberHecho]);
+    if (fuenteDatos === 'supabase') {
+      void panelApi.agendarRuta(id, {
+        fecha: datos.fecha.toISOString(),
+        franja: datos.franja,
+        conductorId: datos.conductorId,
+      }).then(() => refrescarSnapshot()).catch((e) => {
+        toast(e instanceof Error ? e.message : 'No se pudo guardar la agenda.', 'alert');
+      });
+    }
+  }, [patch, toast, marcarDeberHecho, fuenteDatos, refrescarSnapshot]);
 
   const cancelarRuta = useCallback<PanelStore['cancelarRuta']>((id, motivo, subestado) => {
     patch(id, { estado: 'cancelado', subestado, motivo, canceladaEn: new Date() });
     toast('Traslado cancelado con motivo registrado.', 'warning');
-  }, [patch, toast]);
+    if (fuenteDatos === 'supabase') {
+      void panelApi.cancelarRuta(id, {
+        subestado,
+        motivo,
+      }).then(() => refrescarSnapshot()).catch((e) => {
+        toast(e instanceof Error ? e.message : 'No se pudo cancelar en el servidor.', 'alert');
+      });
+    }
+  }, [patch, toast, fuenteDatos, refrescarSnapshot]);
 
   const setEstadoRuta = useCallback<PanelStore['setEstadoRuta']>((id, estado, subestado) => {
     patch(id, { estado, subestado });
@@ -588,7 +633,12 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     const actuales = r.tagsManual || [];
     const next = actuales.includes(tagId) ? actuales.filter((t) => t !== tagId) : [...actuales, tagId];
     patch(rutaId, { tagsManual: next });
-  }, [rutas, patch]);
+    if (fuenteDatos === 'supabase') {
+      void panelApi.tags(rutaId, next).catch((e) => {
+        toast(e instanceof Error ? e.message : 'No se pudo guardar el tag.', 'alert');
+      });
+    }
+  }, [rutas, patch, fuenteDatos, toast]);
 
   const asignarConductor = useCallback((rutaId: string, conductorId: string | null) => {
     const r = rutas.find((x) => x.id === rutaId);
@@ -597,7 +647,12 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       subestado: r && r.estado === 'agendado' ? (conductorId ? 'asignado' : 'sin_conductor') : r?.subestado,
     });
     if (conductorId) marcarDeberHecho('ruta', rutaId, ['asignar_conductor']);
-  }, [rutas, patch, marcarDeberHecho]);
+    if (fuenteDatos === 'supabase') {
+      void panelApi.asignarConductor(rutaId, conductorId).then(() => refrescarSnapshot()).catch((e) => {
+        toast(e instanceof Error ? e.message : 'No se pudo asignar el conductor.', 'alert');
+      });
+    }
+  }, [rutas, patch, marcarDeberHecho, fuenteDatos, refrescarSnapshot, toast]);
 
   const actorPanel = useCallback(() => ({
     nombre: `${perfil.nombre} ${perfil.apellidos}`.trim(),
@@ -650,7 +705,12 @@ export function PanelProvider({ children }: { children: ReactNode }) {
         detalle: texto,
       });
     }
-  }, [campanas, logCampana, actorPanel, tallerCtx]);
+    if (fuenteDatos === 'supabase') {
+      void panelApi.estadoCampana(id, estado).catch((e) => {
+        toast(e instanceof Error ? e.message : 'No se pudo guardar el estado de la campaña.', 'alert');
+      });
+    }
+  }, [campanas, logCampana, actorPanel, tallerCtx, fuenteDatos, toast]);
 
   const avanzarCampana = useCallback((id: string) => {
     const c = campanas.find((x) => x.id === id);
@@ -677,10 +737,52 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     toast('Campaña marcada como rechazada.', 'warning');
   }, [campanas, setCampEstado, toast]);
 
-  const crearRutaDesdeCampana = useCallback<PanelStore['crearRutaDesdeCampana']>((campanaId, opciones) => {
+  const crearRutaDesdeCampana = useCallback<PanelStore['crearRutaDesdeCampana']>(async (campanaId, opciones) => {
     const c = campanas.find((x) => x.id === campanaId);
-    const id = `TR-${1100 + Math.floor(Math.random() * 800)}`;
     const conFecha = !!opciones.fecha;
+    const modoRepo = opciones.modo === 'editar' ? 'editar_lineas' as const
+      : opciones.modo === 'solo_total' ? 'solo_total' as const
+        : 'tal_cual' as const;
+
+    if (fuenteDatos === 'supabase') {
+      try {
+        const res = await panelApi.crearRutaDesdeCampana({
+          campanaId,
+          modo: modoRepo,
+          lineas: opciones.lineas.map((l) => ({
+            descripcion: l.descripcion,
+            importe: l.importe,
+            origen: l.origen,
+          })),
+          tipoServicio: opciones.servicio,
+          fecha: opciones.fecha ? opciones.fecha.toISOString() : null,
+          franja: opciones.franja,
+        });
+        await refrescarSnapshot();
+        const id = res.ruta.id;
+        logCampana(campanaId, `Ruta ${id} creada desde la campaña (${conFecha ? 'agendada' : 'sin fecha, a prospectos'})`);
+        if (c) {
+          notificarOportunidadSlack({
+            tipo: 'ruta_creada',
+            oportunidad: snapshotOportunidad(
+              { ...c, estado: 'aceptada', rutaGeneradaId: id, presupuesto: { ...c.presupuesto, estado: 'aceptada' } },
+              tallerCtx(),
+            ),
+            actor: actorPanel(),
+          });
+        }
+        const volvio = marcarDeberHecho('campana', campanaId, ['crear_ruta', 'recordar_oferta']);
+        toast(volvio
+          ? `Ruta creada en ${conFecha ? 'Agendado' : 'Prospectos'}.`
+          : `Ruta creada en ${conFecha ? 'Agendado' : 'Prospectos'}. Abriendo ficha.`);
+        return id;
+      } catch (e) {
+        toast(e instanceof Error ? e.message : 'No se pudo crear la ruta.', 'alert');
+        throw e;
+      }
+    }
+
+    const id = `TR-${1100 + Math.floor(Math.random() * 800)}`;
     const presupuesto: Presupuesto = {
       id: `PR-${id}`,
       campanaId,
@@ -756,7 +858,7 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       ? `Ruta creada en ${conFecha ? 'Agendado' : 'Prospectos'}.`
       : `Ruta creada en ${conFecha ? 'Agendado' : 'Prospectos'}. Abriendo ficha.`);
     return id;
-  }, [campanas, logCampana, toast, marcarDeberHecho, tallerCtx, actorPanel]);
+  }, [campanas, logCampana, toast, marcarDeberHecho, tallerCtx, actorPanel, fuenteDatos, refrescarSnapshot]);
 
   const addNota = useCallback((entidadId: string, texto: string) => {
     setNotas((n) => ({

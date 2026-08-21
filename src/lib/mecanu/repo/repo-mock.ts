@@ -29,7 +29,7 @@ import type {
   AsignarConductorInput, CambiarEstadoPresupuestoInput, CambiarSubestadoTramoInput,
   CancelarRutaInput, CheckinInput, ConfirmacionInput, CrearRutaDesdeCampanaInput,
   EntregaInput, HallazgoCampanaInput, IncidenciaInput, MecanuRepo,
-  ReasignarConductorInput, SolicitudInput,
+  ReasignarConductorInput, SolicitudInput, AgendarRutaInput,
 } from './repo';
 
 /* El modelo es JS sin tipos: se estrecha una sola vez, aquí — mismo patrón que
@@ -410,6 +410,36 @@ export const mockRepo: MecanuRepo = {
     const tramos = m.tramosDeRuta(rutaId);
     const ultimo = tramos[tramos.length - 1];
     if (ultimo) nuevoLog(ultimo.id, 'incidencia', 'Rubén Ortega', 'manual', { texto: 'Ruta cancelada', motivo });
+    return r;
+  },
+
+  async agendarRuta({ rutaId, fecha, franja, conductorId }: AgendarRutaInput) {
+    const r = requireRuta(rutaId);
+    const partes = franja.split(/[–—-]/).map((s) => s.trim()).filter(Boolean);
+    const inicio = partes[0] ?? '10:00';
+    const fin = partes[1] ?? '11:00';
+    r.estado = 'agendado';
+    r.subestado = conductorId ? 'asignado' : 'sin_conductor';
+    const tramos = m.tramosDeRuta(rutaId) as Tramo[];
+    const t = tramos[0];
+    if (t) {
+      t.ventana = { fecha, inicio, fin };
+      t.conductorId = conductorId;
+      t.estado = 'agendado';
+      t.ventanaModo = 'fija_taller';
+    }
+    return r;
+  },
+
+  async asignarConductorRuta(rutaId: string, conductorId: string | null) {
+    const r = requireRuta(rutaId);
+    const tramos = m.tramosDeRuta(rutaId) as Tramo[];
+    const t = tramos.find((x) => x.estado !== 'completado') ?? tramos[0];
+    if (!t) throw new Error(`Ruta ${rutaId} sin traslados`);
+    await this.reasignarConductorTramo({ tramoId: t.id, conductorId });
+    if (r.estado === 'agendado') {
+      r.subestado = conductorId ? 'asignado' : 'sin_conductor';
+    }
     return r;
   },
 

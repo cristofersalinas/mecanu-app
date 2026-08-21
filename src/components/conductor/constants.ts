@@ -35,9 +35,8 @@ export type EntradaTurno = {
 
 /**
  * TODO API: GET /api/conductores/d1/turno?dia=hoy — el reparto lo decide el taller.
- * Mock del turno de Javier Molina: 9 traslados de hoy. Las ventanas se calculan
- * relativas a la hora actual para que la jornada se lea igual a cualquier hora.
- * off = [minutos de inicio, minutos de fin] respecto a la hora en curso.
+ * Mock del turno de Javier Molina. Con NEXT_PUBLIC_MECANU_USE_SUPABASE=1 se
+ * reemplaza in-place desde /api/v1/conductor/snapshot.
  */
 export const TURNO: EntradaTurno[] = [
   { tid: 'TS-1042-1', off: [-180, -120], sub: 'completado' },
@@ -53,12 +52,16 @@ export const TURNO: EntradaTurno[] = [
 
 /**
  * TODO API: GET /api/traslados/disponibles — bolsa que el taller deja libre.
- * Uno solapa con TS-1058-1 (90-150) para poder ejercitar R8; el otro entra limpio.
  */
 export const POOL: EntradaTurno[] = [
   { tid: 'TS-1055-1', off: [100, 160], sub: 'agendado' },
   { tid: 'TS-1050-1', off: [500, 560], sub: 'agendado' },
 ];
+
+export function reemplazarTurnoYPool(turno: EntradaTurno[], pool: EntradaTurno[]): void {
+  TURNO.splice(0, TURNO.length, ...turno);
+  POOL.splice(0, POOL.length, ...pool);
+}
 
 export const SUB_META: Record<Subestado, { label: string; kind: BadgeKind; ribbon: string }> = {
   agendado: { label: 'Por iniciar', kind: 'neutral', ribbon: 'Por iniciar' },
