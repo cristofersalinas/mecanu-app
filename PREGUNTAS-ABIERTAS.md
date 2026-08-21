@@ -24,23 +24,12 @@ proxy ya deja pasar `/panel/*` auth y el panel con sesión.
 Lógica pura en `crear-ruta-desde-campana.ts`; mock y `repo-supabase` persisten
 (este último cuando `MECANU_USE_SUPABASE=1`).
 
-### 3. Los `data.ts` de los portales no pasan por `repo` todavía
-`src/components/taller/data.ts` y `src/components/conductor/data.ts` siguen
-leyendo síncronamente de `mecanu-rutas.ts`/`mecanu-whatsapp.ts` en el momento del
-import, no vía `await repo.algo()`. Es la única excepción documentada a la regla
-"todo pasa por el repo" (ver `ARQUITECTURA.md`). Migrar esto implica convertir esos
-~30 componentes de UI ya construidos a un patrón async con estados de
-carga/error — trabajo de UI real, no de infraestructura, y deliberadamente fuera
-del alcance de este bloque. Plan concreto sugerido:
-- Panel: los componentes que hoy leen constantes síncronas (`RUTAS_VISTA`,
-  `CLIENTES`...) pasan a Server Components que llaman `await repo.listX()` y pasan
-  los datos como props, o a Client Components con `useEffect`/una librería de
-  fetching (React Query, SWR) si necesitan revalidar tras una Server Action.
-- Conductor: mismo problema pero con el añadido de la cola offline — el momento de
-  leer datos "frescos" del servidor vs. servir del caché local necesita diseño
-  explícito (no es solo "añadir un loading spinner").
-- Ninguno de los dos debería tocar `mecanu-rutas.ts` directamente después de esta
-  migración — solo `repo/repo-mock.ts` (y luego `repo-supabase.ts`) lo hacen.
+### 3. Los `data.ts` de los portales — puente parcial (ago 2026)
+Con `MECANU_USE_SUPABASE=1` + `NEXT_PUBLIC_MECANU_USE_SUPABASE=1` el panel
+hidrata rutas/campañas/clientes/vehículos/conductores/servicios desde
+`GET /api/v1/panel/snapshot` (repo → Postgres). El resto de helpers síncronos
+de `data.ts` sigue en mock. Migración UI completa pendiente.
+Seed: `npm run db:seed` (incluye ruta demo `TR-SEED-1001`).
 
 ### 4. `getTrasladosDisponibles` es una aproximación, no el modelo real
 No existe un campo "disponible" en `Tramo`. El mock aproxima con "agendado y sin

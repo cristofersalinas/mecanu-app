@@ -93,5 +93,111 @@ const { error: dErr } = await sb.from('conductores').upsert({
 });
 if (dErr) throw dErr;
 
-console.log('OK seed', TALLER, '→ 2 clientes, 2 vehículos, 1 conductor (d1)');
-console.log('Activa MECANU_USE_SUPABASE=1 en .env.local para APIs/repo Postgres');
+const { error: sErr } = await sb.from('servicios').upsert({
+  id: 'SV-seed-1',
+  taller_id: TALLER,
+  nombre: 'Revisión básica',
+  categoria: 'Mantenimiento',
+  horas: 1.5,
+  mano_obra: 90,
+  materiales: 25,
+  aplica: ['Particular', 'Empresa'],
+  garantia: '3 meses',
+  notas: 'Seed demo',
+});
+if (sErr) throw sErr;
+
+const manana = new Date();
+manana.setDate(manana.getDate() + 1);
+const fecha = manana.toISOString().slice(0, 10);
+
+await sb.from('presupuestos').upsert({
+  id: 'PR-SEED-1001',
+  taller_id: TALLER,
+  vehiculo_id: 'v-seed-1',
+  modo: 'detallado',
+  estado: 'aceptada',
+  iva_incluido: true,
+  total: 205,
+});
+await sb.from('presupuesto_lineas').delete().eq('presupuesto_id', 'PR-SEED-1001');
+await sb.from('presupuesto_lineas').insert([
+  {
+    presupuesto_id: 'PR-SEED-1001',
+    descripcion: 'Revisión básica',
+    importe: 115,
+    origen: 'manual',
+    servicio_tempario_id: 'SV-seed-1',
+  },
+  {
+    presupuesto_id: 'PR-SEED-1001',
+    descripcion: 'Traslado ida',
+    importe: 90,
+    origen: 'traslado',
+    servicio_tempario_id: null,
+  },
+]);
+
+await sb.from('rutas').upsert({
+  id: 'TR-SEED-1001',
+  taller_id: TALLER,
+  vehiculo_id: 'v-seed-1',
+  cliente_id: 'c-seed-1',
+  perfil_servicio: 'estimable',
+  estado: 'agendado',
+  subestado: 'sin_conductor',
+  tags_manual: [],
+  presupuesto_id: 'PR-SEED-1001',
+  creada_en: ahora,
+});
+
+await sb.from('paradas').upsert([
+  {
+    id: 'PD-SEED-1001-1',
+    ruta_id: 'TR-SEED-1001',
+    orden: 1,
+    tipo: 'cliente',
+    subtipo: null,
+    direccion: 'Calle Mayor 1, Madrid',
+    localidad: 'Madrid',
+  },
+  {
+    id: 'PD-SEED-1001-2',
+    ruta_id: 'TR-SEED-1001',
+    orden: 2,
+    tipo: 'proveedor',
+    subtipo: 'taller',
+    direccion: 'Calle de la Princesa 12, Madrid',
+    localidad: 'Madrid',
+  },
+]);
+
+await sb.from('parada_servicios').delete().eq('parada_id', 'PD-SEED-1001-2');
+await sb.from('parada_servicios').insert({
+  parada_id: 'PD-SEED-1001-2',
+  descripcion: 'Revisión básica',
+});
+
+await sb.from('traslados').upsert({
+  id: 'TS-SEED-1001-1',
+  ruta_id: 'TR-SEED-1001',
+  orden: 1,
+  rol: 'ida',
+  parada_origen_id: 'PD-SEED-1001-1',
+  parada_destino_id: 'PD-SEED-1001-2',
+  conductor_id: null,
+  ventana_fecha: fecha,
+  ventana_inicio: '10:00',
+  ventana_fin: '11:00',
+  ventana_modo: 'fija_taller',
+  estado: 'agendado',
+  subestado: null,
+  seguro: true,
+  importe: 90,
+  reprogramaciones: 0,
+});
+
+console.log('OK seed', TALLER, '→ clientes, vehículos, conductor, servicio, ruta TR-SEED-1001');
+console.log('En .env.local:');
+console.log('  MECANU_USE_SUPABASE=1');
+console.log('  NEXT_PUBLIC_MECANU_USE_SUPABASE=1');

@@ -56,6 +56,24 @@ function Shell() {
 
   return (
     <div className={styles.root}>
+      {p.cargandoDatos ? (
+        <div style={{
+          position: 'fixed', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 200,
+          padding: '8px 14px', borderRadius: 999, background: '#111', color: '#fff',
+          fontSize: 12, fontWeight: 600, boxShadow: '0 8px 24px rgba(0,0,0,.2)',
+        }}>
+          Cargando datos del taller…
+        </div>
+      ) : null}
+      {p.fuenteDatos === 'supabase' && !p.cargandoDatos ? (
+        <div style={{
+          position: 'fixed', top: 12, right: 12, zIndex: 200,
+          padding: '6px 10px', borderRadius: 8, background: '#ecfdf5', color: '#065f46',
+          fontSize: 11, fontWeight: 700, border: '1px solid #a7f3d0',
+        }}>
+          Datos · Supabase
+        </div>
+      ) : null}
       <div
         style={{
           position: 'relative', zIndex: 5, flex: 'none', display: 'flex', flexDirection: 'column',
