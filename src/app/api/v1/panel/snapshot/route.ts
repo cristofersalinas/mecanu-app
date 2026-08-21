@@ -23,14 +23,17 @@ export async function GET() {
       }
     }
 
-    const [rutas, campanas, clientes, vehiculos, conductores, servicios] = await Promise.all([
+    const [rutas, campanas, clientes, vehiculos, conductores, servicios, canalesWa] = await Promise.all([
       repo.listRutasVista(),
       repo.listCampanas(),
       repo.listClientes(),
       repo.listVehiculos(),
       repo.listConductores(),
       repo.listServicios(),
+      repo.listCanalesWa(),
     ]);
+
+    const kapso = await import('@/lib/kapso/config').then((m) => m.leerKapsoConfig());
 
     return NextResponse.json({
       rutas: JSON.parse(JSON.stringify(rutas)),
@@ -39,6 +42,10 @@ export async function GET() {
       vehiculos: JSON.parse(JSON.stringify(vehiculos)),
       conductores: JSON.parse(JSON.stringify(conductores)),
       servicios: JSON.parse(JSON.stringify(servicios)),
+      canalesWa: JSON.parse(JSON.stringify(canalesWa)),
+      whatsapp: kapso
+        ? { configurado: true, display: kapso.wabaDisplay, nombre: kapso.wabaNombre }
+        : { configurado: false, display: null, nombre: null },
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'snapshot_error';

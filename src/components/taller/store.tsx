@@ -235,6 +235,7 @@ interface PanelStore {
   reabrirTareaPipeline: (id: string) => void;
   canalesWa: Record<string, CanalWa>;
   setMensajesWa: (campanaId: string, mensajes: MensajeWa[] | ((prev: MensajeWa[]) => MensajeWa[])) => void;
+  setCanalWa: (campanaId: string, canal: CanalWa) => void;
 
   notas: Record<string, Nota[]>;
   addNota: (entidadId: string, texto: string) => void;
@@ -338,16 +339,27 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [fuenteDatos, setFuenteDatos] = useState<'mock' | 'supabase'>('mock');
   const [cargandoDatos, setCargandoDatos] = useState(false);
 
+  const [seleccion, setSeleccion] = useState<Seleccion | null>(null);
+  const [modoFicha, setModoFicha] = useState<'panel' | 'ficha'>('panel');
+  const [deberActivo, setDeberActivo] = useState<DeberTaller | null>(null);
+  const [origenDeber, setOrigenDeber] = useState<{ nav: NavId; sub: string } | null>(null);
+  const [pipelineEstado, setPipelineEstado] = useState(PIPELINE_TAREAS_VACIO);
+  const [canalesWa, setCanalesWa] = useState<Record<string, CanalWa>>(() => ({ ...CANALES_SEED }));
+
   useEffect(() => {
-    if (!supabasePanelActivo()) return;
     let cancelado = false;
-    setCargandoDatos(true);
+    const supabase = supabasePanelActivo();
+    if (supabase) setCargandoDatos(true);
     (async () => {
       try {
         const res = await fetch('/api/v1/panel/snapshot');
         if (!res.ok) throw new Error(`snapshot ${res.status}`);
         const raw = await res.json();
         if (cancelado) return;
+        if (raw.canalesWa) {
+          setCanalesWa(revivirFechas(raw.canalesWa) as Record<string, CanalWa>);
+        }
+        if (!supabase) return;
         const rutas = revivirFechas(raw.rutas ?? []) as RutaVista[];
         const campanas = revivirFechas(raw.campanas ?? []) as Campana[];
         const clientes = revivirFechas(raw.clientes ?? []) as Cliente[];
@@ -363,20 +375,15 @@ export function PanelProvider({ children }: { children: ReactNode }) {
         setFuenteDatos('supabase');
         setCondCfgState(condCfgInicial());
       } catch (e) {
-        console.warn('[panel] no se pudo hidratar desde Supabase, sigo con mock', e);
+        if (supabase) {
+          console.warn('[panel] no se pudo hidratar desde Supabase, sigo con mock', e);
+        }
       } finally {
-        if (!cancelado) setCargandoDatos(false);
+        if (!cancelado && supabase) setCargandoDatos(false);
       }
     })();
     return () => { cancelado = true; };
   }, []);
-
-  const [seleccion, setSeleccion] = useState<Seleccion | null>(null);
-  const [modoFicha, setModoFicha] = useState<'panel' | 'ficha'>('panel');
-  const [deberActivo, setDeberActivo] = useState<DeberTaller | null>(null);
-  const [origenDeber, setOrigenDeber] = useState<{ nav: NavId; sub: string } | null>(null);
-  const [pipelineEstado, setPipelineEstado] = useState(PIPELINE_TAREAS_VACIO);
-  const [canalesWa, setCanalesWa] = useState<Record<string, CanalWa>>(() => ({ ...CANALES_SEED }));
 
   const [notas, setNotas] = useState<Record<string, Nota[]>>({});
   const [tareas, setTareas] = useState<Record<string, Tarea[]>>({
@@ -532,6 +539,10 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setCanalWa = useCallback((campanaId: string, canal: CanalWa) => {
+    setCanalesWa((prev) => ({ ...prev, [campanaId]: canal }));
+  }, []);
+
   const marcarDeberHecho = useCallback((entidadKind: DeberTaller['entidadKind'], entidadId: string, tipos: TipoDeberTaller[]) => {
     if (!deberActivo) return false;
     if (deberActivo.entidadKind !== entidadKind || deberActivo.entidadId !== entidadId) return false;
@@ -562,6 +573,7 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       reemplazarArray(SERVICIOS, servicios);
       setRutasBase(rutas);
       setCampanasBase(campanas);
+      if (raw.canalesWa) setCanalesWa(revivirFechas(raw.canalesWa) as Record<string, CanalWa>);
       setRutasNuevas([]);
       setOverlays({});
       setCampOverlays({});
@@ -961,7 +973,7 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     seleccion, modoFicha, seleccionar, setModoFicha,
     deberActivo, abrirDeber, limpiarDeber, volverDeDeber,
     pipelineTareas, tareasPendientesN, moverTareaPipeline, reabrirTareaPipeline,
-    canalesWa, setMensajesWa,
+    canalesWa, setMensajesWa, setCanalWa,
     notas, addNota, tareas, toggleTarea, addTarea,
     agendarRuta, cancelarRuta, avanzarSubestadoEnRuta, setEstadoRuta, toggleTagManual, asignarConductor,
     avanzarCampana, rechazarCampana, marcarCampanaEnviada, crearRutaDesdeCampana,

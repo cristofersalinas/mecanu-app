@@ -405,6 +405,7 @@ export interface OpcionesEnvio {
 export type ErrorWa = Error & { code?: number };
 
 export function enviar(payload: PayloadWa, opts?: OpcionesEnvio): Promise<RespuestaEnvio> {
+  /* @deprecated Simulación local. En producción el envío va por /api/v1/panel/.../whatsapp/enviar → Kapso. */
   const o = opts || {};
   return new Promise<RespuestaEnvio>((resolve, reject) => {
     setTimeout(() => {
