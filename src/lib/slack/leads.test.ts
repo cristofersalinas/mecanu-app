@@ -38,7 +38,6 @@ describe("textoLeadContacto", () => {
       paisCodigo: "ES",
       telefono: "600111222",
       objetivo: "Empezar este mes",
-      tipoTaller: "Mecánica general",
       uso: ["Traslados", "ITV"],
       ciudad: "Madrid",
       volumen: "20-40",

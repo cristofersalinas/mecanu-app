@@ -9,7 +9,6 @@ export type LeadContacto = {
   paisCodigo?: string;
   telefono: string;
   objetivo: string;
-  tipoTaller: string;
   uso: string[];
   ciudad: string;
   volumen: string;
@@ -86,7 +85,6 @@ export function textoLeadContacto(data: LeadContacto): string {
     ["Teléfono", telefono],
     ["Email", data.email],
     ["Objetivo", data.objetivo],
-    ["Tipo", data.tipoTaller],
     ["Uso", data.uso.join(", ")],
     ["Volumen", data.volumen],
     ["Cómo nos conoció", data.canal],
