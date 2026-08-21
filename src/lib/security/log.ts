@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import type { EventoSeguridad } from "./events";
+import { avisarSeguridadP0Slack } from "@/lib/slack/seguridad";
 
 /**
  * Persistencia mientras Supabase no está aplicado:
@@ -8,6 +9,7 @@ import type { EventoSeguridad } from "./events";
  *    en el log drain. No es 90 días — Hobby guarda poco; la retención real
  *    llega con la tabla `security_events` (migración escrita, no aplicada).
  * 2. Sentry, si hay DSN, para los tipos que piden alerta inmediata.
+ * 3. Slack `#alertas` solo P0 (canary / inyección / sondeo), con dedupe 15 min.
  *
  * No hay contraataque. No se llama a ningún servicio con la IP del visitante.
  */
@@ -38,6 +40,9 @@ export function registrarEvento(evento: EventoSeguridad, extra?: Record<string, 
   } catch {
     // Edge sin DSN, o SDK no disponible: el JSON de stdout ya salió.
   }
+
+  // Fire-and-forget: el proxy no espera a Slack.
+  void avisarSeguridadP0Slack(evento, extra);
 }
 
 const HONEYPOTS_POR_IP = new Map<string, Set<string>>();

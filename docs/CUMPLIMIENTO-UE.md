@@ -81,7 +81,7 @@ Footer de la landing:
 
 ## Pendiente del fundador
 
-1. Crear/monitorizar buzón `privacidad@mecanu.com` (o redirigir a cris@).
+1. ~~Crear buzón `privacidad@mecanu.com`~~ — hecho (2026-08-21). Seguir monitorizándolo.
 2. Revisar textos con asesoría si el volumen de leads o el panel real lo exige.
 3. Decidir DPO: hoy no es obligatorio por perfil; reevaluar con tratamiento a gran escala.
 4. Contabilidad Chile: confirmar giro SII de la SpA y si los servicios a talleres UE llevan IVA chileno (servicios al exterior). Cuando toque facturar: ver `docs/FACTURACION-CHILE.md` (aparcado a pedido).

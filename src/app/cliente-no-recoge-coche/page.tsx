@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SeoPage, FaqBlock } from "@/components/landing/SeoPage";
 import { BreadcrumbJsonLd, FaqJsonLd } from "@/components/landing/JsonLd";
 import type { FaqItem } from "@/lib/landing/faq";
@@ -98,7 +99,7 @@ export default function ClienteNoRecogePage() {
           <li>
             Crea el traslado. Un conductor verificado lo lleva, con fotos y seguro del trayecto —
             no un aprendiz sin cobertura. Ver{" "}
-            <a href="/blog/seguro-responsabilidad-civil-traslados">el seguro del traslado</a>.
+            <Link href="/blog/seguro-responsabilidad-civil-traslados">el seguro del traslado</Link>.
           </li>
           <li>La plaza queda libre el mismo día. Entra el siguiente trabajo.</li>
         </ol>
