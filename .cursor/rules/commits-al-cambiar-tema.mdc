@@ -1,0 +1,34 @@
+---
+description: Commits automáticos al cambiar de tema o cerrar un bloque de trabajo
+alwaysApply: true
+---
+
+# Commits al cambiar de tema
+
+Cuando el trabajo pase a **otro tema / bloque distinto** (o el usuario diga
+que algo ya está listo y se sigue con otra cosa), **crea un commit git**
+con lo acumulado del tema que se cierra — sin esperar a que lo pidan.
+
+## Cuándo commitear
+
+- Cambio claro de tema (ej. auth conductor → auth panel; landing → backend).
+- Un bloque queda usable/verificado y el siguiente es otro alcance.
+- Antes de empezar un refactor grande sobre archivos ya tocados en otro bloque.
+
+## Cuándo NO
+
+- Cambios a medias que rompen build/test.
+- Solo exploración o respuestas sin tocar código.
+- Secretos (`.env.local`, claves, tokens).
+- Si el usuario dice explícitamente que no quiere commit todavía.
+
+## Cómo
+
+Seguir el protocolo de commit del proyecto (status + diff + log; mensaje
+centrado en el *porqué*; HEREDOC; sin `--no-verify`; sin amend salvo reglas
+ya existentes; sin push salvo que lo pidan).
+
+Un commit por tema cerrado. Si hay dos temas mezclados en el working tree,
+separar en commits lógicos cuando sea razonable (`git add` selectivo).
+
+Tras el commit, seguir con el tema nuevo.

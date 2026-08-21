@@ -251,6 +251,7 @@
 }
 
 .ctaBtn,
+.loginBtn,
 .btnPrimary,
 .btnSecondary,
 .ctaButton,
@@ -263,6 +264,21 @@
   font-size: .72rem;
   line-height: 1;
   transition: background .15s, border-color .15s, color .15s, transform .15s;
+}
+
+.loginBtn {
+  min-height: 31px;
+  padding: .58rem .85rem;
+  margin-right: .35rem;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink) !important;
+  font-weight: 500;
+}
+
+.loginBtn:hover {
+  border-color: var(--ink);
+  color: var(--accent) !important;
 }
 
 .ctaBtn {

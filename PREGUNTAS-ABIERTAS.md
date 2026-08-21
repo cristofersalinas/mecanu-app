@@ -6,16 +6,23 @@ exhaustiva en vez de solo cómoda. Ordenada de más a menos urgente/bloqueante.
 
 ## Bloqueantes para un backend real
 
-### 1. No hay autenticación, roles ni permisos
-**Defaults cerrados 21 ago (plan backend):** un taller = un tenant (`taller_id`);
-conductor entra con magic link (email); interno vs red vía RLS + `app_metadata`;
-impersonación dueño desde backoffice Equipo → «Ver usuario» (mock ahora;
-cookie firmada en oleada auth). UI de login y policies finas siguen pendientes.
-Hasta entonces `/panel` y `/conductor` cortados en Vercel.
+### 1. Autenticación
+**Conductor:** magic link solo (`/entrar` → `/conductor`).
+**Panel:** email+contraseña, registro con verificación de email, recuperación,
+Google OAuth, y teléfono/SMS si Phone provider está activo en Supabase.
+Rutas: `/panel/entrar`, `/panel/registro`, `/panel/recuperar`,
+`/panel/nueva-contrasena`. Botón «Entrar» en la landing → `/panel/entrar`.
+`npm run demo` sigue sin exigir login. Con keys Supabase y sin demo, `/panel`
+exige sesión y crea taller+perfil (`ensurePerfilPanel`).
+**Backoffice:** pendiente.
+**Dashboard:** activar «Allow new users to sign up» (panel); Google provider;
+Redirect URLs con `/auth/callback`. Phone opcional (Twilio).
+Hasta RLS+login estables en prod: no `MECANU_EXPONER_APPS=1` a ciegas — el
+proxy ya deja pasar `/panel/*` auth y el panel con sesión.
 
-### 2. `crearRutaDesdeCampana` — HECHO (21 ago)
-Lógica pura en `crear-ruta-desde-campana.ts` + implementación en `repo-mock.ts`.
-Falta persistir en Postgres vía `repo-supabase.ts`.
+### 2. `crearRutaDesdeCampana` — HECHO (mock + supabase)
+Lógica pura en `crear-ruta-desde-campana.ts`; mock y `repo-supabase` persisten
+(este último cuando `MECANU_USE_SUPABASE=1`).
 
 ### 3. Los `data.ts` de los portales no pasan por `repo` todavía
 `src/components/taller/data.ts` y `src/components/conductor/data.ts` siguen

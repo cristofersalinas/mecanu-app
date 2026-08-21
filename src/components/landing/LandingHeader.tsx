@@ -72,6 +72,7 @@ export function LandingHeader({
         <div className={styles.navEnd}>
           <LanguageSwitch locale={locale} label={copy.langLabel} variant="header" />
           <LanguageSwitch locale={locale} label={copy.langLabel} variant="mobile" />
+          <a className={styles.loginBtn} href="/panel/entrar">{copy.login}</a>
           <a className={styles.ctaBtn} href={contactoPathFor(locale)}>{copy.cta}</a>
           <button
             type="button"
@@ -109,6 +110,9 @@ export function LandingHeader({
                 {producto.label}
               </a>
             ))}
+            <a className={styles.mobileLink} href="/panel/entrar" onClick={cerrar}>
+              {copy.login}
+            </a>
           </nav>
         </>
       ) : null}

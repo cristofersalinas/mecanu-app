@@ -22,6 +22,18 @@ export interface PortalCanonico {
 /** Fuente única: URL ↔ archivo ↔ componente. Añadir un portal = una fila aquí. */
 export const PORTALES: PortalCanonico[] = [
   {
+    url: '/entrar',
+    page: 'src/app/entrar/page.tsx',
+    entryImport: '@/components/auth/EntrarForm',
+    privado: false,
+  },
+  {
+    url: '/panel/entrar',
+    page: 'src/app/(taller)/panel/entrar/page.tsx',
+    entryImport: '@/components/auth/PanelLoginForm',
+    privado: false,
+  },
+  {
     url: '/panel',
     page: 'src/app/(taller)/panel/page.tsx',
     entryImport: '@/components/taller/PanelApp',
