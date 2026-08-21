@@ -3,7 +3,11 @@ import { z } from "zod";
 import { google } from "googleapis";
 import { Resend } from "resend";
 import { avisarLead } from "@/lib/slack/notify";
-import { textoLeadContacto } from "@/lib/slack/leads";
+import {
+  enlaceWhatsApp,
+  telefonoConPrefijo,
+  textoLeadContacto,
+} from "@/lib/slack/leads";
 
 const schema = z.object({
   nombre: z.string().min(1),
@@ -51,7 +55,9 @@ async function appendToSheet(data: z.infer<typeof schema>) {
           data.nombre,
           data.apellido,
           data.email,
-          data.paisCodigo ? `${data.paisCodigo} ${data.telefono}` : data.telefono,
+          data.paisCodigo
+            ? telefonoConPrefijo(data.paisCodigo, data.telefono)
+            : data.telefono,
           data.objetivo,
           data.tipoTaller,
           data.uso.join(" / "),
@@ -71,10 +77,14 @@ async function sendNotificationEmail(data: z.infer<typeof schema>) {
 
   const resend = new Resend(apiKey);
 
+  const telefono = telefonoConPrefijo(data.paisCodigo, data.telefono);
+  const wa = enlaceWhatsApp(data.paisCodigo, data.telefono);
+
   const rows = [
     ["Nombre", `${data.nombre} ${data.apellido}`],
     ["Email", data.email],
-    ["Teléfono", data.paisCodigo ? `${data.paisCodigo} ${data.telefono}` : data.telefono],
+    ["Teléfono", telefono],
+    ...(wa ? [["WhatsApp", wa] as [string, string]] : []),
     ["Objetivo", data.objetivo],
     ["Tipo de taller", data.tipoTaller],
     ["Uso previsto", data.uso.join(", ")],
