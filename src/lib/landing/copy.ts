@@ -265,7 +265,7 @@ const es: LandingCopy = {
   hiring: {
     heading: "¿Tu taller ocupado por autos listos?",
     subtext:
-      "Tu capacidad puede crecer sin ampliar la nave, despacha los autos de tus clientes al instante con una experiencia inolvidable.",
+      "Crece sin ampliar la nave: despacha al instante los coches listos y entrégalos en puerta, con una experiencia que se nota.",
     cta: "Pide apoyo a Mecanu",
     photoAlt: "Coche clásico partido en collage vintage.",
   },
@@ -590,7 +590,7 @@ const ca: LandingCopy = {
   hiring: {
     heading: "El teu taller ple de cotxes a punt?",
     subtext:
-      "La teva capacitat pot créixer sense ampliar la nau: despacha els cotxes dels clients a l'instant amb una experiència inoblidable.",
+      "Creix sense ampliar la nau: despacha a l'instant els cotxes a punt i lliura'ls a la porta, amb una experiència que es nota.",
     cta: "Demana suport a Mecanu",
     photoAlt: "Cotxe clàssic partit en collage vintage.",
   },
@@ -911,7 +911,7 @@ const en: LandingCopy = {
   hiring: {
     heading: "Shop packed with cars ready to go?",
     subtext:
-      "Grow capacity without a bigger bay—dispatch customer cars right away with an experience they remember.",
+      "Grow without a bigger bay: dispatch ready cars right away and deliver to the door—an experience customers notice.",
     cta: "Bring Mecanu in",
     photoAlt: "Classic car split in vintage collage.",
   },
@@ -1232,7 +1232,7 @@ const pt: LandingCopy = {
   hiring: {
     heading: "Oficina cheia de carros prontos?",
     subtext:
-      "A capacidade pode crescer sem alargar a oficina: despacha os carros dos clientes já, com uma experiência inesquecível.",
+      "Cresce sem alargar a oficina: despacha já os carros prontos e entrega à porta, com uma experiência que se nota.",
     cta: "Chama a Mecanu",
     photoAlt: "Carro clássico partido em collage vintage.",
   },
