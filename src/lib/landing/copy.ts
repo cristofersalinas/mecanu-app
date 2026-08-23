@@ -361,7 +361,7 @@ const es: LandingCopy = {
     terminos: "Términos",
     accesibilidad: "Accesibilidad",
     cumplimientoTitulo: "Cumplimiento UE",
-    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sin cookies de analítica hasta que digas que sí.",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
   },
   errors: {
     notFound: {
@@ -685,7 +685,7 @@ const ca: LandingCopy = {
     terminos: "Termes",
     accesibilidad: "Accessibilitat",
     cumplimientoTitulo: "Compliment UE",
-    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sense galetes d'analítica fins que diguis que sí.",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
   },
   errors: {
     notFound: {
@@ -1005,7 +1005,7 @@ const en: LandingCopy = {
     terminos: "Terms",
     accesibilidad: "Accessibility",
     cumplimientoTitulo: "EU compliance",
-    cumplimientoTexto: "GDPR · ePrivacy · LSSI-CE — no analytics cookies until you say yes.",
+    cumplimientoTexto: "GDPR · ePrivacy · LSSI-CE",
   },
   errors: {
     notFound: {
@@ -1325,7 +1325,7 @@ const pt: LandingCopy = {
     terminos: "Termos",
     accesibilidad: "Acessibilidade",
     cumplimientoTitulo: "Cumprimento UE",
-    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sem cookies de analítica até dizeres que sim.",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
   },
   errors: {
     notFound: {
