@@ -63,9 +63,11 @@ export default function PrivacidadPage() {
       <ul>
         <li>
           <strong>Navegación en la web pública.</strong> Idioma preferido (cookie técnica). Si
-          aceptas cookies de analítica: páginas vistas, dispositivo aproximado, interacciones
-          agregadas vía Google Analytics 4, Clarity, Vercel Analytics y Speed Insights. Base legal:
-          consentimiento (art. 6.1.a RGPD). Detalle en{" "}
+          aceptas cookies de analítica: páginas vistas, dispositivo aproximado (p. ej. iPhone o
+          Android), idioma del navegador e interacciones agregadas vía Google Analytics 4, Clarity,
+          Vercel Analytics y Speed Insights. Si aceptas publicidad: Google Ads y Meta (eventos{" "}
+          <code>PageView</code> / <code>Lead</code>) para medir campañas. Base legal: consentimiento
+          (art. 6.1.a RGPD), por finalidad. Detalle en{" "}
           <Link href="/cookies">política de cookies</Link>.
         </li>
         <li>
@@ -129,7 +131,7 @@ export default function PrivacidadPage() {
       <p>
         Puedes solicitar acceso, rectificación, supresión, oposición, limitación y portabilidad
         escribiendo a <a href={`mailto:${e.emailPrivacidad}`}>{e.emailPrivacidad}</a>. También
-        puedes retirar el consentimiento de cookies con el botón «Configurar cookies» o en{" "}
+        puedes retirar el consentimiento de cookies con el botón «Configurar» o en{" "}
         <Link href="/cookies">/cookies</Link>.
       </p>
       <p>

@@ -78,8 +78,9 @@ export const ENCARGADOS_TRATAMIENTO = [
     transferencias: "Cláusulas contractuales tipo (SCC) de la Comisión Europea",
   },
   {
-    nombre: "Google LLC (Tag Manager, Analytics 4, Sheets)",
-    finalidad: "Analítica web (consentimiento) y almacenamiento de leads de formularios",
+    nombre: "Google LLC (Tag Manager, Analytics 4, Ads, Sheets)",
+    finalidad:
+      "Analítica web (consentimiento de analítica), medición de campañas Ads (consentimiento de publicidad) y almacenamiento de leads de formularios",
     sede: "EE. UU.",
     transferencias: "SCC + configuración de retención en GA4",
   },
@@ -102,8 +103,9 @@ export const ENCARGADOS_TRATAMIENTO = [
     transferencias: "SCC",
   },
   {
-    nombre: "Meta Platforms (WhatsApp)",
-    finalidad: "Canal de conversación cuando el usuario abre WhatsApp con mensaje prellenado",
+    nombre: "Meta Platforms (WhatsApp y Pixel)",
+    finalidad:
+      "Canal de conversación cuando el usuario abre WhatsApp con mensaje prellenado; píxel de anuncios solo con consentimiento de publicidad",
     sede: "EE. UU. / Irlanda",
     transferencias: "Condiciones de WhatsApp Business / SCC según Meta",
   },
