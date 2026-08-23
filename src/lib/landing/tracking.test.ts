@@ -76,21 +76,7 @@ describe("eventos GA4 y Meta", () => {
       operating_system: "iOS",
       device_category: "mobile",
     });
-  });
-
-  it("page_view incluye la variante del hero A/B si hay cookie", () => {
-    const conHero = contextoPagina({
-      href: "https://mecanu.com/",
-      title: "Mecanu",
-      referrer: "",
-      language: "es",
-      ua: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-      heroAb: "volvo",
-    });
-    expect(eventoPageView(conHero)).toMatchObject({
-      hero_ab: "volvo",
-      experiment_id: "landing_hero_foto",
-    });
+    expect(eventoPageView(ctx)).not.toHaveProperty("hero_ab");
   });
 
   it("PageView y Lead usan el catálogo de Meta", () => {
