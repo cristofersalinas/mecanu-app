@@ -19,6 +19,13 @@ import {
   esPanelApp,
   esRutaAuthPanel,
 } from "@/lib/supabase/session-proxy";
+import {
+  elegirHeroAb,
+  esLandingHomePath,
+  HERO_AB_COOKIE,
+  HERO_AB_MAX_AGE_SEG,
+  parseHeroAb,
+} from "@/lib/landing/hero-ab";
 
 /**
  * 1. Fuera de local: corte fail-closed de apps mock, salvo auth pública del panel
@@ -60,6 +67,31 @@ function esAppProtegida(pathname: string) {
   );
 }
 
+function hostSinPuerto(host: string): string {
+  return host.split(":")[0].toLowerCase();
+}
+
+/** Cookie sticky 50/50 del hero A/B en homes de la landing pública. */
+function conHeroAbCookie(request: NextRequest, response: NextResponse): NextResponse {
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "";
+  const h = hostSinPuerto(host);
+  if (h === "negocio.mecanu.com" || h === "negocio.localhost") return response;
+  if (!esLandingHomePath(request.nextUrl.pathname)) return response;
+
+  const forzada = parseHeroAb(request.nextUrl.searchParams.get("hero"));
+  const actual = parseHeroAb(request.cookies.get(HERO_AB_COOKIE)?.value);
+  const valor = forzada ?? actual ?? elegirHeroAb();
+  if (forzada || !actual) {
+    response.cookies.set(HERO_AB_COOKIE, valor, {
+      maxAge: HERO_AB_MAX_AGE_SEG,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.VERCEL === "1",
+    });
+  }
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const requestHeaders = new Headers(request.headers);
@@ -82,7 +114,7 @@ export async function proxy(request: NextRequest) {
         secure: process.env.VERCEL === "1",
       });
       respuesta.headers.set("Cache-Control", "private, no-store");
-      return respuesta;
+      return conHeroAbCookie(request, respuesta);
     }
   }
 
@@ -124,8 +156,11 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (tocaSupabase) return sesionRes;
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  if (tocaSupabase) return conHeroAbCookie(request, sesionRes);
+  return conHeroAbCookie(
+    request,
+    NextResponse.next({ request: { headers: requestHeaders } }),
+  );
 }
 
 export const config = {
