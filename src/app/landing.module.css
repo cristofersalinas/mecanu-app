@@ -508,10 +508,7 @@
 }
 
 /*
- * Hero A/B — recorte por tramo de viewport.
- * Volvo: edita --hero-volvo-x/y/zoom en cada @media de abajo.
- * Calle: edita object-position y transform en cada tramo.
- * Probar: /?hero=volvo · /?hero=calle
+ * Recorte del hero (Volvo). Edita --hero-volvo-x/y/zoom por tramo de viewport.
  */
 .heroPhotoVolvo {
   object-position: var(--hero-volvo-x) var(--hero-volvo-y);
@@ -521,11 +518,6 @@
 
 /* ── >1200px (desktop ancho) ── */
 @media (min-width: 1201px) {
-  .heroPhotoCalle {
-    object-position: 65% 80%;
-    transform: scale(1);
-  }
-
   .heroPhotoVolvo {
     --hero-volvo-x: 50%;
     --hero-volvo-y: 0%;
@@ -535,11 +527,6 @@
 
 /* ── 721px–1200px (tablet / desktop compacto) ── */
 @media (min-width: 721px) and (max-width: 1200px) {
-  .heroPhotoCalle {
-    object-position: 65% 80%;
-    transform: scale(1);
-  }
-
   .heroPhotoVolvo {
     --hero-volvo-x: 50%;
     --hero-volvo-y: 0%;
@@ -549,12 +536,6 @@
 
 /* ── 421px–720px (móvil, columna) ── */
 @media (min-width: 421px) and (max-width: 720px) {
-  .heroPhotoCalle {
-    object-position: 65% 78%;
-    transform: scale(1.14);
-    transform-origin: 65% 78%;
-  }
-
   .heroPhotoVolvo {
     --hero-volvo-x: 50%;
     --hero-volvo-y: 40%;
@@ -564,12 +545,6 @@
 
 /* ── ≤420px (móvil estrecho) ── */
 @media (max-width: 420.9px) {
-  .heroPhotoCalle {
-    object-position: 65% 78%;
-    transform: scale(1.14);
-    transform-origin: 65% 78%;
-  }
-
   .heroPhotoVolvo {
     --hero-volvo-x: 50%;
     --hero-volvo-y: 40%;
