@@ -31,6 +31,8 @@ export type LandingCopy = {
     primary: string;
     secondary: string;
     photoAlt: string;
+    /** Variante A/B del hero (`hero-volvo.jpg`). */
+    photoAltVolvo: string;
   };
   logosAria: string;
   map: {
@@ -186,6 +188,7 @@ const es: LandingCopy = {
     primary: "Ver cómo funciona",
     secondary: "Hablar con nosotros",
     photoAlt: "Volvo recorriendo una calle estrecha al atardecer",
+    photoAltVolvo: "Volvo blanco visto desde arriba en una calle urbana",
   },
   logosAria: "Logos de talleres clientes de referencia",
   map: {
@@ -500,6 +503,7 @@ const ca: LandingCopy = {
     primary: "Veure com funciona",
     secondary: "Parlar amb nosaltres",
     photoAlt: "Volvo recorrent un carrer estret al capvespre",
+    photoAltVolvo: "Volvo blanc vist des de dalt en un carrer urbà",
   },
   logosAria: "Logotips de tallers clients de referència",
   map: {
@@ -814,6 +818,7 @@ const en: LandingCopy = {
     primary: "See how it works",
     secondary: "Talk to us",
     photoAlt: "Volvo on a narrow street at dusk",
+    photoAltVolvo: "White Volvo seen from above on an urban street",
   },
   logosAria: "Shop logos",
   map: {
@@ -1124,6 +1129,7 @@ const pt: LandingCopy = {
     primary: "Ver como funciona",
     secondary: "Falar connosco",
     photoAlt: "Volvo numa rua estreita ao entardecer",
+    photoAltVolvo: "Volvo branco visto de cima numa rua urbana",
   },
   logosAria: "Logótipos de oficinas",
   map: {
