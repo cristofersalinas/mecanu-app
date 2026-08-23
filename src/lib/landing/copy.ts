@@ -191,8 +191,8 @@ const es: LandingCopy = {
     headline: "Tu taller no para cuando los coches se mueven.",
     subtext:
       "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones con clientes.",
-    primary: "Ver cómo funciona",
-    secondary: "Hablar con nosotros",
+    primary: "Hablar con nosotros",
+    secondary: "Ver cómo funciona",
     photoAlt: "Volvo blanco visto desde arriba en una calle urbana",
   },
   logosAria: "Logos de talleres clientes de referencia",
@@ -515,8 +515,8 @@ const ca: LandingCopy = {
     headline: "El teu taller no s'atura quan els cotxes es mouen.",
     subtext:
       "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions amb clients.",
-    primary: "Veure com funciona",
-    secondary: "Parlar amb nosaltres",
+    primary: "Parlar amb nosaltres",
+    secondary: "Veure com funciona",
     photoAlt: "Volvo blanc vist des de dalt en un carrer urbà",
   },
   logosAria: "Logotips de tallers clients de referència",
@@ -839,8 +839,8 @@ const en: LandingCopy = {
     headline: "Your shop never stops when cars move.",
     subtext:
       "Send cars where you need them, free the shop, and look after the customer. Every run under control. No friction with customers.",
-    primary: "See how it works",
-    secondary: "Talk to us",
+    primary: "Talk to us",
+    secondary: "See how it works",
     photoAlt: "White Volvo seen from above on an urban street",
   },
   logosAria: "Shop logos",
@@ -1159,8 +1159,8 @@ const pt: LandingCopy = {
     headline: "A tua oficina não para quando os carros se movem.",
     subtext:
       "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito com clientes.",
-    primary: "Ver como funciona",
-    secondary: "Falar connosco",
+    primary: "Falar connosco",
+    secondary: "Ver como funciona",
     photoAlt: "Volvo branco visto de cima numa rua urbana",
   },
   logosAria: "Logótipos de oficinas",
