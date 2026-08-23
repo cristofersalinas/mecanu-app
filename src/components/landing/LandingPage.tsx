@@ -91,8 +91,8 @@ export async function LandingPage({ locale }: { locale: Locale }) {
             <h1 className={styles.headline}>{copy.hero.headline}</h1>
             <p className={styles.subtext}>{copy.hero.subtext}</p>
             <div className={styles.actions}>
-              <a className={styles.btnPrimary} href="#como-funciona">{copy.hero.primary}</a>
-              <a className={styles.btnSecondary} href={ctaHref}>{copy.hero.secondary}</a>
+              <a className={styles.btnPrimary} href={ctaHref}>{copy.hero.primary}</a>
+              <a className={styles.btnSecondary} href="#como-funciona">{copy.hero.secondary}</a>
             </div>
           </div>
 
