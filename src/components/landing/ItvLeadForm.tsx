@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { emitirConversionLead } from "@/lib/landing/tracking";
 import styles from "./ItvLeadForm.module.css";
 
 export type ItvLead = {
@@ -74,6 +75,8 @@ export function ItvLeadForm({ compact = false }: { compact?: boolean }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...lead, aceptaPrivacidad: true }),
       }).catch(() => null);
+
+      emitirConversionLead("itv");
 
       const url = waUrl(lead);
       if (!url) {

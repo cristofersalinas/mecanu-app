@@ -7,6 +7,7 @@ import { LanguageSwitch } from "@/components/landing/LanguageSwitch";
 import type { LandingCopy } from "@/lib/landing/copy";
 import { LOCALE_META, pathFor, type Locale } from "@/lib/landing/locales";
 import { PHONE_COUNTRIES, DEFAULT_COUNTRY, type PhoneCountry } from "@/lib/landing/phone-countries";
+import { emitirConversionLead } from "@/lib/landing/tracking";
 import styles from "./ContactForm.module.css";
 
 const SESSION_KEY = "mecanu_contacto_answers";
@@ -141,6 +142,7 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("error");
+      emitirConversionLead("contacto");
       setSubmitted(true);
     } catch {
       setError("Algo ha ido mal. Inténtalo de nuevo.");

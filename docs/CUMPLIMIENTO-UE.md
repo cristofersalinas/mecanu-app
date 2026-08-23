@@ -27,16 +27,19 @@ clientes. Las páginas públicas enlazan desde el footer: `/aviso-legal`,
 
 ### Cookies y analítica
 
-- Cookie `mecanu_consent` (versión en `src/lib/landing/consent.ts`).
-- Banner con Aceptar / Rechazar / Más info (`GoogleTag.tsx`).
+- Cookie `mecanu_consent` v2 (`src/lib/landing/consent.ts`): analítica y publicidad por separado.
+- Banner: Solo esenciales / Aceptar todas / Configurar (interruptores por finalidad).
 - `CONSENT_DEFAULT` en el layout: Consent Mode v2 todo denegado salvo `security_storage`.
-- GTM, Clarity, Vercel Analytics y Speed Insights **solo** tras `analitica: true`.
+- GTM, Clarity y Vercel Analytics **solo** tras `analitica: true`. Píxel Meta y `ad_storage` **solo** tras `publicidad: true`.
 - Analítica limitada a producción (`analiticaHabilitada()`); no corre en panel/conductor/backoffice.
 - Preferencia de idioma `mecanu_locale`: cookie de preferencia, no de tracking.
+- Eventos: `page_view` / `generate_lead` (GA4) y `PageView` / `Lead` (Meta), con dispositivo (iPhone…) e idioma.
 
 ### Datos personales en producto
 
-- Enmascarado de teléfono y dirección en listados del panel (`mecanu-data.ts`, tests RGPD).
+- Enmascarado de teléfono y dirección en listados del panel (`mecanu-data.ts`, tests RGPD) y en vistas SQL `vista_*` (`mascarar_*`, migración `0011`).
+- Disco cifrado en reposo y TLS en tránsito (Supabase). No hay cifrado de columna: rompería consultas y búsqueda. DNI/teléfono reales viven en `clientes`; las vistas BI y los listados muestran la máscara.
+- Auditoría de cambios en PII y dinero: tabla `auditoria` (quién, cuándo, antes/después). El timeline de un viaje sigue en `logs`.
 - Formularios `/contacto` e ITV: checkbox de aceptación de privacidad + validación en API (`aceptaPrivacidad: true`). Aviso interno a Slack `#leads` además de Sheet y email.
 - Registro de seguridad (IP/geo hosting, honeypots): base art. 6.1.f, retención 90 días — declarado en privacidad.
 - CSP, HSTS, rate limit API — ver `SEGURIDAD-AUDITORIA.md`.
@@ -104,8 +107,9 @@ npm run build
 
 Checklist rápido:
 
-- [ ] Sin consentimiento → Network sin gtm.js / clarity
-- [ ] Rechazar → misma web usable
+- [ ] Sin consentimiento → Network sin gtm.js / clarity / fbevents
+- [ ] Rechazar (solo esenciales) → misma web usable
+- [ ] Configurar → analítica sí, publicidad no → GA4 sí, Meta no
 - [ ] Formulario contacto sin checkbox → 422
 - [ ] Footer muestra franja de cumplimiento y cinco enlaces legales
 - [ ] `/aviso-legal` muestra RUT 77.620.433-1 y Automotive Technologies SpA
