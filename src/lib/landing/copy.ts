@@ -263,8 +263,9 @@ const es: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "¿Pico de trabajo?",
-    subtext: "Tu capacidad puede crecer sin ampliar la nave.",
+    heading: "¿Tu taller ocupado por autos listos?",
+    subtext:
+      "Tu capacidad puede crecer sin ampliar la nave, despacha los autos de tus clientes al instante con una experiencia inolvidable.",
     cta: "Pide apoyo a Mecanu",
     photoAlt: "Coche clásico partido en collage vintage.",
   },
@@ -587,8 +588,9 @@ const ca: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "Pic de feina?",
-    subtext: "La teva capacitat pot créixer sense ampliar la nau.",
+    heading: "El teu taller ple de cotxes a punt?",
+    subtext:
+      "La teva capacitat pot créixer sense ampliar la nau: despacha els cotxes dels clients a l'instant amb una experiència inoblidable.",
     cta: "Demana suport a Mecanu",
     photoAlt: "Cotxe clàssic partit en collage vintage.",
   },
@@ -907,8 +909,9 @@ const en: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "Workload spike?",
-    subtext: "Grow capacity without a bigger shop.",
+    heading: "Shop packed with cars ready to go?",
+    subtext:
+      "Grow capacity without a bigger bay—dispatch customer cars right away with an experience they remember.",
     cta: "Bring Mecanu in",
     photoAlt: "Classic car split in vintage collage.",
   },
@@ -1227,8 +1230,9 @@ const pt: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "Pico de trabalho?",
-    subtext: "Aumenta a capacidade sem alargar a oficina.",
+    heading: "Oficina cheia de carros prontos?",
+    subtext:
+      "A capacidade pode crescer sem alargar a oficina: despacha os carros dos clientes já, com uma experiência inesquecível.",
     cta: "Chama a Mecanu",
     photoAlt: "Carro clássico partido em collage vintage.",
   },
