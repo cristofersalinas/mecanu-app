@@ -145,15 +145,28 @@ export async function LandingPage({ locale }: { locale: Locale }) {
           </div>
         </section>
 
-        <section className={styles.hiringCta} id="flota">
-          <div className={styles.ctaSection}>
-            <div className={styles.ctaText}>
-              <h2 className={styles.ctaHeading}>{copy.hiring.heading}</h2>
-              <p className={styles.ctaSubtext}>{copy.hiring.subtext}</p>
+        <section className={styles.ctaGrid} id="contacto">
+          <div className={styles.ctaLeft}>
+            <p className={styles.eyebrow}>{copy.close.eyebrow}</p>
+            <h2 className={styles.heading}>{copy.close.heading}</h2>
+            <p className={styles.subtext}>{copy.close.subtext}</p>
+            <div className={styles.actions}>
+              <a className={styles.btnPrimary} href={ctaHref}>{copy.close.primary}</a>
+              <a className={styles.btnSecondary} href="#como-funciona">{copy.close.secondary}</a>
             </div>
-            <div className={styles.ctaButtonWrapper}>
-              <a className={styles.ctaButton} href={ctaHref}>{copy.hiring.cta}</a>
-            </div>
+          </div>
+          <div className={styles.ctaRight}>
+            <p className={styles.featuresLabel}>{copy.close.featuresLabel}</p>
+            <ul className={styles.featureList}>
+              {copy.close.beneficios.map((beneficio) => (
+                <li className={styles.featureItem} key={beneficio.texto}>
+                  <span className={styles.featureIcon} aria-hidden="true">
+                    <Icon name={beneficio.icono} size="sm" />
+                  </span>
+                  <span>{beneficio.texto}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
@@ -189,28 +202,15 @@ export async function LandingPage({ locale }: { locale: Locale }) {
           })}
         </section>
 
-        <section className={styles.ctaGrid} id="contacto">
-          <div className={styles.ctaLeft}>
-            <p className={styles.eyebrow}>{copy.close.eyebrow}</p>
-            <h2 className={styles.heading}>{copy.close.heading}</h2>
-            <p className={styles.subtext}>{copy.close.subtext}</p>
-            <div className={styles.actions}>
-              <a className={styles.btnPrimary} href={ctaHref}>{copy.close.primary}</a>
-              <a className={styles.btnSecondary} href="#como-funciona">{copy.close.secondary}</a>
+        <section className={styles.hiringCta} id="flota">
+          <div className={styles.ctaSection}>
+            <div className={styles.ctaText}>
+              <h2 className={styles.ctaHeading}>{copy.hiring.heading}</h2>
+              <p className={styles.ctaSubtext}>{copy.hiring.subtext}</p>
             </div>
-          </div>
-          <div className={styles.ctaRight}>
-            <p className={styles.featuresLabel}>{copy.close.featuresLabel}</p>
-            <ul className={styles.featureList}>
-              {copy.close.beneficios.map((beneficio) => (
-                <li className={styles.featureItem} key={beneficio.texto}>
-                  <span className={styles.featureIcon} aria-hidden="true">
-                    <Icon name={beneficio.icono} size="sm" />
-                  </span>
-                  <span>{beneficio.texto}</span>
-                </li>
-              ))}
-            </ul>
+            <div className={styles.ctaButtonWrapper}>
+              <a className={styles.ctaButton} href={ctaHref}>{copy.hiring.cta}</a>
+            </div>
           </div>
         </section>
 
