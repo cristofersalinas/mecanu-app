@@ -6,6 +6,10 @@
  * Nada se pide a la red hasta un sí explícito (ver GoogleTag).
  * Vercel Analytics y Speed Insights se montan en el mismo gate: no son
  * GTM, pero sí miden visitas y Core Web Vitals.
+ *
+ * El dataLayer recibe `device` (iPhone…), `operating_system`, `device_category`
+ * e `language` antes de cargar GTM. En el contenedor: variables Data Layer
+ * con esos nombres → parámetros de evento GA4.
  */
 export const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? "GTM-T8TJGTJQ";
 
@@ -14,6 +18,13 @@ export const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID ?? "G-MRS0P42Z2L";
 
 /** Proyecto de Microsoft Clarity. Se carga aparte, no vía GTM, para no duplicarlo. */
 export const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID ?? "y4kpmlt67l";
+
+/**
+ * Pixel de Meta (Facebook/Instagram). Vacío = no se inyecta el script;
+ * GTM puede disparar el mismo pixel si el contenedor lo tiene.
+ * Solo se carga con consentimiento de publicidad.
+ */
+export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "";
 
 export function analiticaHabilitada(): boolean {
   if (process.env.NEXT_PUBLIC_ANALYTICS_DEBUG === "1") return true;
@@ -37,6 +48,8 @@ gtag('consent', 'default', {
   security_storage: 'granted',
   wait_for_update: 500
 });
+gtag('set', 'ads_data_redaction', true);
+gtag('set', 'url_passthrough', true);
 `;
 
 /** Snippet oficial de GTM, con el id interpolado. */

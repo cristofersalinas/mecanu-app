@@ -10,12 +10,14 @@ describe("contentSecurityPolicy", () => {
     expect(dev).not.toMatch(/localhost:\d+/);
   });
 
-  it("deja pasar GTM, GA4, Clarity y Vercel Analytics", () => {
+  it("deja pasar GTM, GA4, Clarity, Vercel Analytics y píxeles de ads", () => {
     for (const origen of [
       "https://www.googletagmanager.com",
       "https://www.google-analytics.com",
       "https://www.clarity.ms",
       "https://va.vercel-scripts.com",
+      "https://connect.facebook.net",
+      "https://www.googleadservices.com",
     ]) {
       expect(prod).toContain(origen);
     }

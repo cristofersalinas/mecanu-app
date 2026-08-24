@@ -1,11 +1,31 @@
 /**
- * Preferencia de analítica. GTM (y con él GA4) no carga hasta que esto es true.
- * Cualquier valor raro se lee como "hay que preguntar", nunca como concedido.
+ * Preferencias de cookies opcionales. Las esenciales (idioma, seguridad,
+ * esta misma cookie) no se preguntan: la web no funciona sin ellas.
+ *
+ * v2 separa analítica (páginas, dispositivo) de publicidad (Google Ads / Meta).
+ * Un valor raro o una versión vieja se lee como "hay que preguntar", nunca
+ * como concedido.
  */
 export const CONSENT_COOKIE = "mecanu_consent";
-export const CONSENT_VERSION = 1;
+export const CONSENT_VERSION = 2;
 
-export type Consent = { analitica: boolean; version: number };
+export type Consent = {
+  version: number;
+  analitica: boolean;
+  publicidad: boolean;
+};
+
+export function consentDenegar(): Consent {
+  return { version: CONSENT_VERSION, analitica: false, publicidad: false };
+}
+
+export function consentTodas(): Consent {
+  return { version: CONSENT_VERSION, analitica: true, publicidad: true };
+}
+
+export function consentPersonalizado(analitica: boolean, publicidad: boolean): Consent {
+  return { version: CONSENT_VERSION, analitica, publicidad };
+}
 
 export function parseConsent(raw: string | null | undefined): Consent | null {
   if (!raw) return null;
@@ -13,14 +33,19 @@ export function parseConsent(raw: string | null | undefined): Consent | null {
     const dato = JSON.parse(raw) as Partial<Consent>;
     if (dato.version !== CONSENT_VERSION) return null;
     if (typeof dato.analitica !== "boolean") return null;
-    return { analitica: dato.analitica, version: CONSENT_VERSION };
+    if (typeof dato.publicidad !== "boolean") return null;
+    return {
+      version: CONSENT_VERSION,
+      analitica: dato.analitica,
+      publicidad: dato.publicidad,
+    };
   } catch {
     return null;
   }
 }
 
-export function consentCookieHeader(analitica: boolean): string {
-  const valor = encodeURIComponent(JSON.stringify({ analitica, version: CONSENT_VERSION }));
+export function consentCookieHeader(consent: Consent): string {
+  const valor = encodeURIComponent(JSON.stringify(consent));
   const secure =
     typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
   return `${CONSENT_COOKIE}=${valor}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
@@ -38,6 +63,14 @@ export function readConsentFromCookieString(cookieString: string | null | undefi
     }
   }
   return null;
+}
+
+export function hayAnalitica(consent: Consent | null | undefined): boolean {
+  return consent?.analitica === true;
+}
+
+export function hayPublicidad(consent: Consent | null | undefined): boolean {
+  return consent?.publicidad === true;
 }
 
 const oyentes = new Set<() => void>();

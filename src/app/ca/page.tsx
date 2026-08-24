@@ -10,6 +10,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function CatalanHome() {
-  return <LandingPage locale="ca" />;
+export default async function CatalanHome({
+  searchParams,
+}: {
+  searchParams: Promise<{ hero?: string }>;
+}) {
+  const { hero } = await searchParams;
+  return <LandingPage locale="ca" heroForce={hero} />;
 }

@@ -1,6 +1,7 @@
 import { Inter_Tight } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Icon } from "@/components/ds/Icon";
 import { Logo } from "@/components/ds/Logo";
 import { LanguageSwitch } from "@/components/landing/LanguageSwitch";
@@ -10,6 +11,11 @@ import { JsonLd } from "@/components/landing/JsonLd";
 import { getPost } from "@/lib/blog/data";
 import { copyFor } from "@/lib/landing/copy";
 import { FAQ_LANDING } from "@/lib/landing/faq";
+import {
+  HERO_AB_COOKIE,
+  HERO_AB_FOTOS,
+  resolverHeroAb,
+} from "@/lib/landing/hero-ab";
 import { type Locale, pathFor, contactoPathFor } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
 
@@ -63,9 +69,20 @@ const RESOURCE_POSTS = [
 ] as const;
 
 
-export function LandingPage({ locale }: { locale: Locale }) {
+export async function LandingPage({
+  locale,
+  heroForce,
+}: {
+  locale: Locale;
+  /** Query `?hero=calle|volvo` para forzar variante al afinar el recorte. */
+  heroForce?: string;
+}) {
   const copy = copyFor(locale);
   const ctaHref = contactoPathFor(locale);
+  const jar = await cookies();
+  const heroVariant = resolverHeroAb(jar.get(HERO_AB_COOKIE)?.value, heroForce);
+  const heroFoto = HERO_AB_FOTOS[heroVariant];
+  const heroAlt = copy.hero[heroFoto.altKey];
 
   return (
     <main className={`${styles.page} ${interTight.variable}`}>
@@ -91,13 +108,13 @@ export function LandingPage({ locale }: { locale: Locale }) {
 
           <div className={styles.heroVisual}>
             <Image
-              className={`${styles.heroPhoto} ${styles.heroPhotoCalle}`}
-              src="/landing/hero-calle.jpg"
-              alt={copy.hero.photoAlt}
-              width={900}
-              height={600}
+              className={`${styles.heroPhoto} ${styles[heroFoto.styleKey]}`}
+              src={heroFoto.src}
+              alt={heroAlt}
+              width={heroFoto.width}
+              height={heroFoto.height}
               priority
-              quality={85}
+              unoptimized
             />
           </div>
         </section>
