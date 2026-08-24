@@ -17,14 +17,16 @@ function requireDate(v: string | null | undefined, fallback = new Date()): Date 
 }
 
 export function mapCliente(row: Record<string, unknown>): Cliente {
+  const ciclo = row.ciclo_vida == null ? null : String(row.ciclo_vida);
   return {
     id: String(row.id),
     nombre: String(row.nombre),
-    tipo: row.tipo === 'Empresa' ? 'Empresa' : 'Particular',
+    tipo: 'Particular',
     telefono: String(row.telefono ?? ''),
     email: String(row.email ?? ''),
     direccion: String(row.direccion ?? ''),
     desde: requireDate(row.desde as string),
+    cicloVida: ciclo as Cliente['cicloVida'],
   };
 }
 
@@ -208,7 +210,10 @@ export function mapPresupuesto(
 export function mapCampana(
   row: Record<string, unknown>,
   presupuesto: Presupuesto,
+  items: Campana['items'] = [],
 ): Campana {
+  const tipos = [...new Set(items.map((i) => i.tipo))];
+  const etiquetas = items.map((i) => i.etiqueta);
   return {
     id: String(row.id),
     clienteId: row.cliente_id == null ? null : String(row.cliente_id),
@@ -216,17 +221,17 @@ export function mapCampana(
     rutaOrigenId: row.ruta_origen_id == null ? null : String(row.ruta_origen_id),
     rutaGeneradaId: row.ruta_generada_id == null ? null : String(row.ruta_generada_id),
     inspeccionId: row.inspeccion_id == null ? null : String(row.inspeccion_id),
-    items: [],
-    tipos: [],
-    etiquetas: [],
+    items,
+    tipos,
+    etiquetas,
     falla: String(row.falla),
     evidencia: String(row.evidencia),
     valor: presupuesto.total,
-    servicio: null,
+    servicio: items[0]?.servicio ?? null,
     urgente: Boolean(row.urgente),
     severidad: Boolean(row.urgente) ? 'alta' : 'media',
     fecha: requireDate(row.fecha as string),
-    habito: '',
+    habito: items.length ? '' : '',
     motivoFecha: '',
     fotoUrl: row.foto_url == null ? null : String(row.foto_url),
     estadoEnvio: 'pendiente',
@@ -234,6 +239,27 @@ export function mapCampana(
     presupuesto,
     estado: presupuesto.estado,
     origenAutomatico: Boolean(row.origen_automatico),
+  };
+}
+
+export function mapCampanaItem(
+  row: Record<string, unknown>,
+  servicios: Map<string, ReturnType<typeof mapServicio>>,
+): import('../types').CampanaItem {
+  const datos = (row.datos as Record<string, unknown>) ?? {};
+  const sid = row.servicio_id == null ? null : String(row.servicio_id);
+  return {
+    id: String(row.id),
+    tipo: String(row.tipo),
+    origen: row.origen as import('../types').CampanaItem['origen'],
+    dias: Number(row.dias),
+    falla: String(row.falla),
+    registroIdx: Number(row.registro_idx ?? 0),
+    datos: datos as import('../types').CampanaItem['datos'],
+    etiqueta: String(datos.etiqueta ?? row.tipo),
+    servicio: sid && servicios.has(sid) ? servicios.get(sid)! : null,
+    valor: Number(row.valor ?? 0),
+    fecha: datos.fecha ? new Date(String(datos.fecha)) : new Date(),
   };
 }
 

@@ -96,7 +96,7 @@ export function construirResumen(sel: Seleccion, rutas: RutaVista[]): ResumenFic
     return {
       kindLabel: 'Cliente',
       titulo: nombreCorto(c.nombre),
-      subtitulo: `${c.tipo} · cliente desde ${fmtDia(c.desde)}`,
+      subtitulo: `Cliente desde ${fmtDia(c.desde)}`,
       badges: [
         { kind: 'neutral', text: `${suyas.length} traslados` },
         { kind: 'brand', text: `${vehiculos.length} vehículos` },

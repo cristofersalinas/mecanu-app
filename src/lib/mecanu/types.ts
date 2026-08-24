@@ -86,14 +86,51 @@ export type ViaCierreTarea = z.infer<typeof ViaCierreTareaSchema>;
    Entidades base
    ============================================================== */
 
+export const OrigenContactoSchema = z.enum([
+  'manual',
+  'whatsapp_sync',
+  'whatsapp_mensaje',
+  'excel',
+  'gsheets',
+  'api',
+  'campana',
+  'lead',
+]);
+export type OrigenContacto = z.infer<typeof OrigenContactoSchema>;
+
 export const ClienteSchema = z.object({
   id: z.string(),
   nombre: z.string(),
-  tipo: z.enum(['Particular', 'Empresa']),
+  tipo: z.literal('Particular'),
   telefono: z.string(),
   email: z.string(),
   direccion: z.string(),
   desde: FechaSchema,
+  /**
+   * Ciclo de vida comercial (también etiqueta en WhatsApp).
+   * Reglas: `cliente-ciclo-vida.ts`. Puede venir null hasta recalcular.
+   */
+  cicloVida: z
+    .enum([
+      'prospecto',
+      'registrado',
+      'nuevo',
+      'recompra',
+      'fidelizado',
+      'en_riesgo',
+      'perdido',
+    ])
+    .nullable()
+    .optional(),
+  /** Canal de alta. No se pisa al reimportar. */
+  origen: OrigenContactoSchema.optional(),
+  origenDetalle: z.string().nullable().optional(),
+  origenEn: FechaSchema.nullable().optional(),
+  /** Último canal que tocó el contacto. */
+  origenUltimo: OrigenContactoSchema.nullable().optional(),
+  origenUltimoEn: FechaSchema.nullable().optional(),
+  /** Solo dígitos; clave de deduplicación. */
+  telefonoDigitos: z.string().nullable().optional(),
 });
 export type Cliente = z.infer<typeof ClienteSchema>;
 

@@ -5,7 +5,7 @@
    // TODO API: cada acción de aquí marca el punto donde iría la llamada real. */
 
 import {
-  createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState,
+  createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import type { DeberTaller, TipoDeberTaller } from '@/lib/mecanu/deberes-taller';
 import {
@@ -23,6 +23,7 @@ import { deberesDesdePanel } from './deberes';
 import { notificarOportunidadSlack } from './slackOportunidades';
 import { reemplazarArray, revivirFechas, supabasePanelActivo } from './hidratar-panel';
 import { panelApi } from './panel-api';
+import { sincronizarUrlPanel, ubicacionDesdeUrl, urlsPanelActivas } from './panel-url';
 
 /* ------------------------- Navegación ------------------------- */
 
@@ -328,8 +329,9 @@ function snapshotOportunidad(
 }
 
 export function PanelProvider({ children }: { children: ReactNode }) {
-  const [nav, setNav] = useState<NavId>('general');
-  const [sub, setSub] = useState<string>('general');
+  const inicialUrl = typeof window !== 'undefined' ? ubicacionDesdeUrl() : null;
+  const [nav, setNav] = useState<NavId>(() => (inicialUrl?.nav as NavId) ?? 'general');
+  const [sub, setSub] = useState<string>(() => inicialUrl?.sub ?? SUBNAV_DEFAULT.general);
 
   const [overlays, setOverlays] = useState<Record<string, Partial<RutaVista>>>({});
   const [rutasBase, setRutasBase] = useState<RutaVista[]>(() => [...RUTAS_VISTA]);
@@ -410,6 +412,27 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [plantillas, setPlantillas] = useState<PlantillaRecepcion[]>(PLANTILLAS_INICIALES);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [inspeccionAbierta, setInspeccionAbierta] = useState<{ rutaId: string; inspeccionId: string } | null>(null);
+
+  const omitirSyncUrl = useRef(false);
+
+  useEffect(() => {
+    if (!urlsPanelActivas()) return;
+    const onPop = () => {
+      const u = ubicacionDesdeUrl();
+      if (!u) return;
+      omitirSyncUrl.current = true;
+      setNav(u.nav as NavId);
+      setSub(u.sub);
+      omitirSyncUrl.current = false;
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  useEffect(() => {
+    if (!urlsPanelActivas() || omitirSyncUrl.current) return;
+    sincronizarUrlPanel({ nav, sub });
+  }, [nav, sub]);
 
   /* -- Derivados -- */
 

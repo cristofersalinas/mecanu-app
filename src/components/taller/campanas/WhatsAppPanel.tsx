@@ -20,6 +20,10 @@ import { CrearRutaModal } from './CrearRutaModal';
 import {
   intencionRespuestaCliente, modoContactoOferta, renderSeguimiento, sugerirRespuesta, ultimaEntradaCliente,
 } from '@/lib/mecanu/seguimiento-oferta';
+import {
+  marcarUsadaSesion,
+  sugerenciasRapidas,
+} from '@/lib/mecanu/whatsapp-respuestas-rapidas';
 import styles from '../panel.module.css';
 
 let waSeq = 0;
@@ -31,6 +35,8 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
   const canal = p.canalesWa[campanaId] ?? { optIn: 'IN' as const, mensajes: [] };
   const mensajes = canal.mensajes;
   const modoInicial = modoContactoOferta({ estadoCampana: campana?.estado ?? '', mensajes });
+  const contacto = campana ? cliente(campana.clienteId) : null;
+  const veh = campana ? vehiculo(campana.vehiculoId) : null;
 
   // El padre monta este panel con `key={campanaId}` (ver CampanasView.tsx): al cambiar
   // de campaña, React desmonta y vuelve a montar el componente entero en vez de mutar
@@ -414,10 +420,37 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
       ) : (
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--mecanu-neutral-25)' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 700 }}>{ventana.etiqueta}</div>
-              <div style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>{ventana.detalle}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>
+                {contacto?.nombre ?? 'Cliente'}
+                {veh ? (
+                  <span style={{ fontWeight: 500, color: 'var(--mecanu-text-secondary-light)' }}>
+                    {' · '}
+                    {veh.marca} {veh.modelo}
+                  </span>
+                ) : null}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>
+                {contacto ? fmtTel(contacto.telefono) : 'Sin teléfono'} · {ventana.etiqueta}
+              </div>
             </div>
+            {contacto?.telefono ? (
+              <Button
+                kind="secondary"
+                size="compact"
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem('mecanu.wa.focusTel', contacto.telefono);
+                  } catch {
+                    /* */
+                  }
+                  onCerrar();
+                  p.irA('whatsapp');
+                }}
+              >
+                Chat personal
+              </Button>
+            ) : null}
             {esModoDemo() ? (
               <button type="button" className={styles.linkBtn} onClick={simularRespuesta}>Simular respuesta</button>
             ) : null}
@@ -470,22 +503,52 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
             })}
             {mensajes.length === 0 ? (
               <div style={{ margin: 'auto', textAlign: 'center', fontSize: 12, color: 'var(--mecanu-neutral-300)' }}>
-                Todavía no hay conversación. El primer contacto se hace con el recordatorio de la inspección.
+                Chat de {contacto?.nombre ?? 'este cliente'}. Todavía no hay hilo: el primer contacto es el recordatorio.
               </div>
             ) : null}
           </div>
 
           {ventana.abierta && optIn === 'IN' ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, borderTop: '1px solid var(--mecanu-border-subtle)' }}>
-              <Input
-                placeholder="Escribe un mensaje"
-                value={input}
-                onChange={setInput}
-                onKeyDown={(e) => { if (e.key === 'Enter') void enviarTexto(); }}
-                fullWidth
-              />
-              <Button kind="primary" size="compact" icon="send" onClick={() => void enviarTexto()} />
-            </div>
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '8px 12px 0' }}>
+                {sugerenciasRapidas(
+                  {
+                    impulsoTraslado: true,
+                    tienePresupuestoPendiente: campana?.estado === 'enviada' || campana?.estado === 'valorada',
+                    postventa: campana?.estado === 'aceptada',
+                  },
+                  4,
+                ).map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className={styles.linkBtn}
+                    style={{
+                      border: '1px solid var(--mecanu-border-subtle)',
+                      borderRadius: 999,
+                      padding: '4px 10px',
+                      fontSize: 11,
+                    }}
+                    onClick={() => {
+                      marcarUsadaSesion(r.id);
+                      setInput(r.texto);
+                    }}
+                  >
+                    {r.etiqueta}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, borderTop: '1px solid var(--mecanu-border-subtle)' }}>
+                <Input
+                  placeholder={`Mensaje a ${contacto?.nombre ?? 'cliente'}…`}
+                  value={input}
+                  onChange={setInput}
+                  onKeyDown={(e) => { if (e.key === 'Enter') void enviarTexto(); }}
+                  fullWidth
+                />
+                <Button kind="primary" size="compact" icon="send" onClick={() => void enviarTexto()} />
+              </div>
+            </>
           ) : (
             <div style={{ padding: 12, borderTop: '1px solid var(--mecanu-border-subtle)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>

@@ -48,8 +48,8 @@ const clientes = [
     telefono: '600111222', email: 'ana@ejemplo.com', direccion: 'Calle Mayor 1, Madrid', desde: ahora,
   },
   {
-    id: 'c-seed-2', taller_id: TALLER, nombre: 'Autoflot SL', tipo: 'Empresa',
-    telefono: '910000111', email: 'flota@ejemplo.com', direccion: 'Polígono Norte 8, Madrid', desde: ahora,
+    id: 'c-seed-2', taller_id: TALLER, nombre: 'Luis Ortega', tipo: 'Particular',
+    telefono: '910000111', email: 'luis@ejemplo.com', direccion: 'Calle Norte 8, Madrid', desde: ahora,
   },
 ];
 const { error: cErr } = await sb.from('clientes').upsert(clientes);
@@ -70,7 +70,7 @@ if (vErr) throw vErr;
 
 await sb.from('vehiculo_clientes').upsert([
   { vehiculo_id: 'v-seed-1', cliente_id: 'c-seed-1', relacion: 'Titular', principal: true },
-  { vehiculo_id: 'v-seed-2', cliente_id: 'c-seed-2', relacion: 'Empresa', principal: true },
+  { vehiculo_id: 'v-seed-2', cliente_id: 'c-seed-2', relacion: 'Titular', principal: true },
 ]);
 
 const { error: dErr } = await sb.from('conductores').upsert({
@@ -101,7 +101,7 @@ const { error: sErr } = await sb.from('servicios').upsert({
   horas: 1.5,
   mano_obra: 90,
   materiales: 25,
-  aplica: ['Particular', 'Empresa'],
+  aplica: ['Turismo', 'SUV'],
   garantia: '3 meses',
   notas: 'Seed demo',
 });
