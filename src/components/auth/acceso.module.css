@@ -1,0 +1,137 @@
+.alt {
+  margin: 2px 0 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #737373;
+}
+
+.altBtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  color: var(--mecanu-electric-600, #419468);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.altBtn:hover {
+  color: var(--mecanu-emerald-800, #0e3a2f);
+}
+
+.altBtn:focus-visible {
+  outline: 2px solid var(--mecanu-brand-primary-light, #419468);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.phone {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  overflow: hidden;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.phone:focus-within {
+  border-color: #a3a3a3;
+  box-shadow: 0 0 0 2px rgba(23, 23, 23, 0.12);
+}
+
+.phoneErr {
+  border-color: #e82b37;
+}
+
+.phoneErr:focus-within {
+  border-color: #e82b37;
+  box-shadow: 0 0 0 2px rgba(232, 43, 55, 0.15);
+}
+
+.phone:has(:disabled) {
+  background: #f7f7f7;
+  opacity: 0.7;
+}
+
+.prefix {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #161718;
+  background: #f7f7f7;
+  border-right: 1px solid #eee;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.phoneInput {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #737373;
+}
+
+.fieldErr {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #b91c1c;
+}
+
+.otp {
+  letter-spacing: 0.35em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  font-size: 1.15rem;
+}
+
+.rules {
+  margin: 0;
+  padding: 10px 12px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: 12px;
+  background: #f7f7f7;
+}
+
+.rule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #737373;
+}
+
+.ruleOk {
+  color: #0e3a2f;
+}
+
+.aviso {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #525252;
+}

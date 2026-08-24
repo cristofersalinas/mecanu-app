@@ -35,6 +35,8 @@ export async function actualizarSesionSupabase(request: NextRequest) {
   return { response, user };
 }
 
+import { esRutaPanelBonita } from '@/lib/mecanu/panel-rutas';
+
 export const PANEL_AUTH_PUBLICAS = [
   '/panel/entrar',
   '/panel/registro',
@@ -49,14 +51,16 @@ export function esRutaAuthPanel(pathname: string): boolean {
 }
 
 export function esPanelApp(pathname: string): boolean {
+  if (esRutaPanelBonita(pathname)) return true;
   if (pathname !== '/panel' && !pathname.startsWith('/panel/')) return false;
   return !esRutaAuthPanel(pathname);
 }
 
-/** Destinos permitidos tras /auth/callback */
+/** Destinos permitidos tras /auth/callback — solo paths internos conocidos. */
 export function nextAuthPermitido(nextRaw: string | null): string {
-  const next = nextRaw && nextRaw.startsWith('/') ? nextRaw : '/panel';
+  const next = nextRaw && nextRaw.startsWith('/') && !nextRaw.startsWith('//') ? nextRaw : '/panel';
   if (next === '/conductor' || next.startsWith('/conductor/')) return next;
   if (next === '/panel' || next.startsWith('/panel/')) return next;
+  if (esRutaPanelBonita(next)) return next;
   return '/panel';
 }

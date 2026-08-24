@@ -8,10 +8,7 @@ export const metadata = {
 
 export default function PanelNuevaContrasenaPage() {
   return (
-    <AuthShell
-      title="Nueva contraseña"
-      subtitle="Elige una contraseña nueva. Después entras al panel automáticamente."
-    >
+    <AuthShell>
       <PanelNuevaContrasenaForm />
     </AuthShell>
   );

@@ -9,10 +9,9 @@ export const metadata = {
 export default async function EntrarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const sp = await searchParams;
-  const next = sp.next && sp.next.startsWith('/conductor') ? sp.next : undefined;
   const error = sp.error ? decodeURIComponent(sp.error) : undefined;
 
   return (
@@ -20,10 +19,10 @@ export default async function EntrarPage({
       <div className={styles.card}>
         <h1 className={styles.brand}>Mecanu</h1>
         <p className={styles.sub}>
-          App del conductor. Te mandamos un enlace al correo: sin contraseña.
+          App del conductor. El enlace de acceso solo se envía por correo.
         </p>
         {error ? <p className={styles.err}>{error}</p> : null}
-        <EntrarForm nextPath={next} />
+        <EntrarForm />
       </div>
     </main>
   );

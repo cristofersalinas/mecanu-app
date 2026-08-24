@@ -8,10 +8,7 @@ export const metadata = {
 
 export default function PanelRecuperarPage() {
   return (
-    <AuthShell
-      title="Recuperar contraseña"
-      subtitle="Te mandamos un enlace seguro al correo de la cuenta. No pedimos la contraseña antigua."
-    >
+    <AuthShell>
       <PanelRecuperarForm />
     </AuthShell>
   );

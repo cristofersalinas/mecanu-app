@@ -8,10 +8,7 @@ export const metadata = {
 
 export default function PanelEntrarPage() {
   return (
-    <AuthShell
-      title="Entra al panel"
-      subtitle="Email y contraseña, teléfono o Google. Solo para el equipo del taller."
-    >
+    <AuthShell>
       <PanelLoginForm />
     </AuthShell>
   );

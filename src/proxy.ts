@@ -19,6 +19,24 @@ import {
   esPanelApp,
   esRutaAuthPanel,
 } from "@/lib/supabase/session-proxy";
+import {
+  esHostNegocio,
+  esHostPublicoMarketing,
+  origenNegocio,
+  pathInternoAuthDesdeBonito,
+} from "@/lib/mecanu/host-negocio";
+import {
+  esRutaAuthBonita,
+  esRutaPanelBonita,
+  pathBonitoDesdeUbicacionInterna,
+} from "@/lib/mecanu/panel-rutas";
+import {
+  elegirHeroAb,
+  esLandingHomePath,
+  HERO_AB_COOKIE,
+  HERO_AB_MAX_AGE_SEG,
+  parseHeroAb,
+} from "@/lib/landing/hero-ab";
 
 /**
  * 1. Fuera de local: corte fail-closed de apps mock, salvo auth pública del panel
@@ -43,11 +61,42 @@ function esApiPublica(pathname: string) {
   );
 }
 
+function aplicarCookies(desde: NextResponse, hacia: NextResponse): NextResponse {
+  desde.cookies.getAll().forEach((c) => {
+    hacia.cookies.set(c.name, c.value);
+  });
+  return hacia;
+}
+
+/** Cookie sticky 50/50 del hero A/B en homes de la landing pública. */
+function conHeroAbCookie(
+  request: NextRequest,
+  response: NextResponse,
+  host: string,
+): NextResponse {
+  if (esHostNegocio(host) || !esLandingHomePath(request.nextUrl.pathname)) {
+    return response;
+  }
+  const forzada = parseHeroAb(request.nextUrl.searchParams.get("hero"));
+  const actual = parseHeroAb(request.cookies.get(HERO_AB_COOKIE)?.value);
+  const valor = forzada ?? actual ?? elegirHeroAb();
+  if (forzada || !actual) {
+    response.cookies.set(HERO_AB_COOKIE, valor, {
+      maxAge: HERO_AB_MAX_AGE_SEG,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.VERCEL === "1",
+    });
+  }
+  return response;
+}
+
 function esAppProtegida(pathname: string) {
   if (esApiPublica(pathname)) return false;
   if (esRutaAuthPanel(pathname)) return false;
   if (pathname === "/auth" || pathname.startsWith("/auth/")) return false;
   if (pathname === "/entrar" || pathname.startsWith("/entrar/")) return false;
+  if (esRutaPanelBonita(pathname)) return true;
   return (
     pathname === "/panel" ||
     pathname.startsWith("/panel/") ||
@@ -62,6 +111,7 @@ function esAppProtegida(pathname: string) {
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "";
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-mecanu-pathname", pathname);
   requestHeaders.set("x-mecanu-locale", localeFromPathname(pathname));
@@ -71,7 +121,7 @@ export async function proxy(request: NextRequest) {
 
   if (pathname === "/") {
     const locale = preferredLocaleFromRequest(request.headers, request.headers.get("cookie"));
-    if (locale !== "es") {
+    if (locale !== "es" && !esHostNegocio(host)) {
       const destino = new URL(pathFor(locale), request.url);
       destino.search = request.nextUrl.search;
       const respuesta = NextResponse.redirect(destino);
@@ -82,22 +132,105 @@ export async function proxy(request: NextRequest) {
         secure: process.env.VERCEL === "1",
       });
       respuesta.headers.set("Cache-Control", "private, no-store");
-      return respuesta;
+      return conHeroAbCookie(request, respuesta, host);
     }
   }
 
   const tocaSupabase =
+    esHostNegocio(host) ||
     pathname.startsWith("/panel") ||
     pathname.startsWith("/auth") ||
-    pathname.startsWith("/entrar");
+    pathname.startsWith("/entrar") ||
+    esRutaAuthBonita(pathname) ||
+    esRutaPanelBonita(pathname);
   const { response: sesionRes, user } = tocaSupabase
     ? await actualizarSesionSupabase(request)
     : { response: NextResponse.next({ request: { headers: requestHeaders } }), user: null };
 
+  if (esHostPublicoMarketing(host)) {
+    if (
+      pathname === "/panel" ||
+      pathname.startsWith("/panel/") ||
+      pathInternoAuthDesdeBonito(pathname) ||
+      esRutaPanelBonita(pathname)
+    ) {
+      const dest = new URL(origenNegocio());
+      dest.pathname = pathBonitoDesdeUbicacionInterna(
+        pathInternoAuthDesdeBonito(pathname) ?? pathname,
+      );
+      dest.search = request.nextUrl.search;
+      return NextResponse.redirect(dest, 308);
+    }
+  }
+
+  if (esHostNegocio(host)) {
+    const internoAuth = pathInternoAuthDesdeBonito(pathname);
+
+    if (pathname === "/panel" || pathname === "/panel/") {
+      const dest = request.nextUrl.clone();
+      dest.pathname = user ? "/general" : "/";
+      return NextResponse.redirect(dest);
+    }
+
+    if (pathname.startsWith("/panel/") && !esRutaAuthPanel(pathname)) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = pathBonitoDesdeUbicacionInterna(pathname);
+      dest.search = request.nextUrl.search;
+      return NextResponse.redirect(dest);
+    }
+
+    if (pathname === "/" || pathname === "") {
+      if (user) {
+        const dest = request.nextUrl.clone();
+        dest.pathname = "/general";
+        dest.search = request.nextUrl.search;
+        return NextResponse.redirect(dest);
+      }
+      const u = request.nextUrl.clone();
+      u.pathname = "/panel/entrar";
+      return aplicarCookies(sesionRes, NextResponse.rewrite(u));
+    }
+
+    if (internoAuth) {
+      const u = request.nextUrl.clone();
+      u.pathname = internoAuth;
+      return aplicarCookies(sesionRes, NextResponse.rewrite(u));
+    }
+
+    if (esRutaPanelBonita(pathname)) {
+      if (!user) {
+        const dest = request.nextUrl.clone();
+        dest.pathname = "/";
+        dest.search = "";
+        return NextResponse.redirect(dest);
+      }
+      const u = request.nextUrl.clone();
+      u.pathname = "/panel";
+      return aplicarCookies(sesionRes, NextResponse.rewrite(u));
+    }
+
+    if (!user && esPanelApp(pathname)) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = "/";
+      dest.search = "";
+      return NextResponse.redirect(dest);
+    }
+
+    if (user && pathname === "/panel/entrar") {
+      const dest = request.nextUrl.clone();
+      dest.pathname = "/general";
+      return NextResponse.redirect(dest);
+    }
+  }
+
   if (soloLanding && esPanelApp(pathname)) {
     if (user) {
-      // Panel autenticado: dejar pasar aunque el mock aún no esté apagado.
       return sesionRes;
+    }
+    if (esHostNegocio(host)) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = "/";
+      return NextResponse.redirect(dest);
     }
     return NextResponse.redirect(new URL("/panel/entrar", request.url));
   }
@@ -124,8 +257,12 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (tocaSupabase) return sesionRes;
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  if (tocaSupabase) return conHeroAbCookie(request, sesionRes, host);
+  return conHeroAbCookie(
+    request,
+    NextResponse.next({ request: { headers: requestHeaders } }),
+    host,
+  );
 }
 
 export const config = {
@@ -143,6 +280,21 @@ export const config = {
     "/entrar/:path*",
     "/auth",
     "/auth/:path*",
+    "/registro",
+    "/recuperar",
+    "/nueva-contrasena",
+    "/general",
+    "/tablero",
+    "/tablero/:path*",
+    "/contactos",
+    "/contactos/:path*",
+    "/tempario",
+    "/tempario/:path*",
+    "/conductores",
+    "/conductores/:path*",
+    "/whatsapp",
+    "/config",
+    "/config/:path*",
     "/conductor",
     "/conductor/:path*",
     "/backoffice",
