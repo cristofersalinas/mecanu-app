@@ -2,33 +2,29 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ds/Button';
-import { Dialog } from '../ui/Primitives';
+import styles from './whatsapp.module.css';
 
-type EstadoWhatsapp = {
-  conectado: boolean;
-  sandboxListo: boolean;
-  setupUrl: string | null;
-  numeros: { sandbox: boolean; displayPhoneNumber: string | null; kind: string }[];
+type Sesion = {
+  id: string;
+  etiqueta: string;
+  estado: 'pendiente' | 'activa' | 'desconectada';
+  ultimaActividad: string;
+  qrDataUrl?: string | null;
+  pairingCode?: string | null;
+  errorPuente?: string | null;
 };
 
-function abrirPopupCentrada(url: string) {
-  const w = 520;
-  const h = 740;
-  const left = Math.round(window.screenX + (window.outerWidth - w) / 2);
-  const top = Math.round(window.screenY + (window.outerHeight - h) / 2);
-  window.open(
-    url,
-    'mecanu-whatsapp-setup',
-    `popup=yes,width=${w},height=${h},left=${left},top=${top}`,
-  );
+function labelEstado(e: Sesion['estado']): string {
+  if (e === 'activa') return 'Activa';
+  if (e === 'pendiente') return 'Pendiente de vincular';
+  return 'Desconectada';
 }
 
 export function SeccionWhatsApp() {
-  const [estado, setEstado] = useState<EstadoWhatsapp | null>(null);
+  const [sesiones, setSesiones] = useState<Sesion[]>([]);
+  const [bridgeUp, setBridgeUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [modal, setModal] = useState(false);
-  const [setupUrl, setSetupUrl] = useState<string | null>(null);
-  const [cargandoLink, setCargandoLink] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const recargar = useCallback(() => {
     fetch('/api/v1/panel/whatsapp', { cache: 'no-store' })
@@ -39,12 +35,8 @@ export function SeccionWhatsApp() {
           return;
         }
         setError(null);
-        setEstado({
-          conectado: !!data.conectado,
-          sandboxListo: !!data.sandboxListo,
-          setupUrl: typeof data.setupUrl === 'string' ? data.setupUrl : null,
-          numeros: Array.isArray(data.numeros) ? data.numeros : [],
-        });
+        setBridgeUp(data.bridgeUp === true);
+        setSesiones(Array.isArray(data.sesiones) ? data.sesiones : []);
       })
       .catch(() => setError('Sin red. Reintenta cuando vuelva.'));
   }, []);
@@ -53,34 +45,73 @@ export function SeccionWhatsApp() {
     recargar();
   }, [recargar]);
 
-  async function conectar() {
-    setCargandoLink(true);
+  const hayPendiente = sesiones.some((s) => s.estado === 'pendiente');
+
+  useEffect(() => {
+    if (!hayPendiente) return;
+    const t = window.setInterval(recargar, 2000);
+    return () => window.clearInterval(t);
+  }, [hayPendiente, recargar]);
+
+  const activas = sesiones.filter((s) => s.estado === 'pendiente' || s.estado === 'activa').length;
+
+  async function nuevaSesion() {
+    setBusy(true);
     setError(null);
     try {
-      const res = await fetch('/api/v1/panel/whatsapp/setup', { method: 'POST' });
+      const res = await fetch('/api/v1/panel/whatsapp/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
       const data = await res.json().catch(() => ({}));
-      const url = typeof data.setupUrl === 'string' ? data.setupUrl : estado?.setupUrl ?? null;
-      if (!url) {
-        setError(typeof data.error === 'string' ? data.error : 'No hay link de conexión.');
+      if (!res.ok) {
+        setError(typeof data.error === 'string' ? data.error : 'No se pudo crear la sesión.');
         return;
       }
-      setSetupUrl(url);
-      setModal(true);
+      recargar();
     } catch {
       setError('Sin red. Reintenta cuando vuelva.');
     } finally {
-      setCargandoLink(false);
+      setBusy(false);
     }
   }
 
-  const business = estado?.numeros.find((n) => !n.sandbox);
+  async function desconectar(sesionId: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/v1/panel/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'desconectar', sesionId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(typeof data.error === 'string' ? data.error : 'No se pudo desconectar.');
+        return;
+      }
+      recargar();
+    } catch {
+      setError('Sin red. Reintenta cuando vuelva.');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div style={{ maxWidth: 640 }}>
       <p style={{ margin: '0 0 16px', fontSize: 13, lineHeight: '18px', color: 'var(--mecanu-text-secondary-light)' }}>
-        Conecta el WhatsApp Business del taller. El móvil sigue funcionando (convivencia).
-        El login de Facebook puede abrirse en una ventana; no sales al panel de Kapso.
+        WhatsApp personal del taller, embebido: el QR y los chats viven en Mecanu. Máximo 5
+        sesiones. El puente corre en local (`npm run wa:bridge`).
       </p>
+
+      {!bridgeUp ? (
+        <p style={{ margin: '0 0 16px', fontSize: 13, lineHeight: '18px' }}>
+          El puente no está en marcha. En otra terminal:{' '}
+          <code className={styles.cmd}>npm run wa:bridge</code>
+        </p>
+      ) : null}
 
       <section
         style={{
@@ -90,20 +121,84 @@ export function SeccionWhatsApp() {
           marginBottom: 12,
         }}
       >
-        <h3 style={{ margin: '0 0 6px', fontSize: 14, fontWeight: 700 }}>WhatsApp Business</h3>
-        <p style={{ margin: '0 0 14px', fontSize: 13, lineHeight: '18px', color: 'var(--mecanu-text-secondary-light)' }}>
-          {estado?.conectado
-            ? `Conectado${business?.displayPhoneNumber ? `: ${business.displayPhoneNumber}` : ''}.`
-            : 'Pendiente. Usa la app WhatsApp Business, no el WhatsApp personal.'}
-        </p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Button kind="primary" size="compact" onClick={() => void conectar()} disabled={cargandoLink}>
-            {estado?.conectado ? 'Reconectar' : 'Conectar WhatsApp Business'}
-          </Button>
-          <Button kind="secondary" size="compact" onClick={recargar}>
-            Actualizar estado
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 14 }}>
+          <div>
+            <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 700 }}>Sesiones</h3>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--mecanu-text-secondary-light)' }}>
+              {activas} de 5 en uso (pendientes o activas).
+            </p>
+          </div>
+          <Button kind="primary" size="compact" onClick={() => void nuevaSesion()} disabled={busy || activas >= 5}>
+            Nueva sesión
           </Button>
         </div>
+
+        {sesiones.length === 0 ? (
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--mecanu-text-secondary-light)' }}>
+            Aún no hay sesiones. Crea una y escanea el QR que sale aquí.
+          </p>
+        ) : (
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {sesiones.map((s) => (
+              <li
+                key={s.id}
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 8,
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  padding: '10px 12px',
+                  border: '1px solid var(--mecanu-border)',
+                  borderRadius: 8,
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{s.etiqueta}</div>
+                  <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)', marginTop: 2 }}>
+                    <span
+                      className={`${styles.badge} ${
+                        s.estado === 'activa' ? styles.badgeOk : s.estado === 'pendiente' ? styles.badgeWarn : styles.badge
+                      }`}
+                    >
+                      {labelEstado(s.estado)}
+                    </span>
+                  </div>
+                  {s.estado === 'pendiente' && s.qrDataUrl ? (
+                    <div className={styles.qrWrap} style={{ marginTop: 12 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        className={styles.qr}
+                        src={s.qrDataUrl}
+                        alt={`QR de ${s.etiqueta}`}
+                        width={200}
+                        height={200}
+                      />
+                    </div>
+                  ) : null}
+                  {s.estado === 'pendiente' && s.pairingCode ? (
+                    <p style={{ margin: '8px 0 0', fontSize: 18, fontWeight: 700, letterSpacing: '0.08em' }}>
+                      Código: {s.pairingCode}
+                    </p>
+                  ) : null}
+                  {s.estado === 'pendiente' && !s.qrDataUrl && !s.pairingCode ? (
+                    <p style={{ margin: '8px 0 0', fontSize: 12 }}>Generando el QR…</p>
+                  ) : null}
+                  {s.errorPuente ? (
+                    <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--mecanu-alert)' }}>{s.errorPuente}</p>
+                  ) : null}
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {s.estado !== 'desconectada' ? (
+                    <Button kind="secondary" size="compact" onClick={() => void desconectar(s.id)} disabled={busy}>
+                      Desconectar
+                    </Button>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section
@@ -113,58 +208,15 @@ export function SeccionWhatsApp() {
           borderRadius: 12,
         }}
       >
-        <h3 style={{ margin: '0 0 6px', fontSize: 14, fontWeight: 700 }}>Bandeja de prueba</h3>
+        <h3 style={{ margin: '0 0 6px', fontSize: 14, fontWeight: 700 }}>Bandeja</h3>
         <p style={{ margin: 0, fontSize: 13, lineHeight: '18px', color: 'var(--mecanu-text-secondary-light)' }}>
-          {estado?.sandboxListo
-            ? 'Lista en el menú WhatsApp. Es el sandbox, no el número del taller.'
-            : 'Aún no hay embed configurado en el servidor.'}
+          Los chats están en el menú lateral WhatsApp. No se abre web.whatsapp.com.
         </p>
       </section>
 
       {error ? (
         <p style={{ margin: '12px 0 0', fontSize: 13, color: 'var(--mecanu-alert)' }}>{error}</p>
       ) : null}
-
-      <Dialog
-        open={modal && !!setupUrl}
-        onClose={() => {
-          setModal(false);
-          recargar();
-        }}
-        title="Conectar WhatsApp Business"
-        subtitle="Si el login de Facebook no carga aquí dentro, ábrelo en ventana."
-        width={720}
-        footer={
-          <>
-            <Button
-              kind="secondary"
-              size="compact"
-              onClick={() => {
-                if (setupUrl) abrirPopupCentrada(setupUrl);
-              }}
-            >
-              Abrir en ventana
-            </Button>
-            <Button kind="primary" size="compact" onClick={() => { setModal(false); recargar(); }}>
-              Listo
-            </Button>
-          </>
-        }
-      >
-        {setupUrl ? (
-          <iframe
-            title="Conectar WhatsApp Business"
-            src={setupUrl}
-            style={{
-              width: '100%',
-              height: 560,
-              border: '1px solid var(--mecanu-border)',
-              borderRadius: 8,
-              background: 'var(--mecanu-neutral-0)',
-            }}
-          />
-        ) : null}
-      </Dialog>
     </div>
   );
 }

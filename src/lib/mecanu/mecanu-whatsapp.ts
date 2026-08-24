@@ -468,34 +468,78 @@ const msg = (dir: MensajeWa['dir'], texto: string | null, min: number, extra?: P
     id: wamid(), dir, tipo: 'text', texto, ts: hace(min), estado: dir === 'out' ? 'read' : null,
   }, extra || {});
 
-/** clave = id de oportunidad. optIn: 'IN' | 'OUT' (respondió BAJA) */
+/** clave = id de oportunidad/campaña. optIn: 'IN' | 'OUT' (respondió BAJA) */
 export const CANALES_SEED: Record<string, CanalWa> = {
+  /* Sin mensajes · pendiente de primer contacto */
   'OP-3001': { optIn: 'IN', mensajes: [] },
+
+  /* Recordatorio leído + pregunta del cliente */
   'OP-3002': { optIn: 'IN', mensajes: [
     msg('out', null, 190, { tipo: 'recordatorio', estado: 'read' }),
     msg('in', 'Buenas, ¿cuánto tardaría el pulido de faros? El coche lo necesito por la tarde.', 44),
   ] },
+
+  /* Entregado pero aún no leído */
   'OP-3003': { optIn: 'IN', mensajes: [
     msg('out', null, 1620, { tipo: 'recordatorio', estado: 'delivered' }),
   ] },
+
+  /* Cliente acepta (SÍ) y pide cambio de dirección */
   'OP-3004': { optIn: 'IN', mensajes: [
     msg('out', null, 96, { tipo: 'recordatorio', estado: 'read' }),
     msg('in', 'SÍ', 12),
     msg('in', '¿Podéis recogerlo en la oficina en vez de en casa?', 11),
   ] },
+
+  /* Fallo de entrega WhatsApp (número inválido / sin WhatsApp) */
   'OP-3005': { optIn: 'IN', mensajes: [
     msg('out', null, 25, { tipo: 'recordatorio', estado: 'failed', error: 131026 }),
   ] },
+
+  /* Opt-out: el cliente se dio de baja */
   'OP-3006': { optIn: 'OUT', mensajes: [
     msg('out', null, 4300, { tipo: 'recordatorio', estado: 'read' }),
     msg('in', 'BAJA', 4260),
     { id: wamid(), dir: 'sistema', tipo: 'sistema', texto: 'El cliente se dio de baja de los avisos (BAJA).', ts: hace(4260) },
   ] },
+
+  /* Hilo comercial: interés parcial + respuesta del taller */
   'OP-3007': { optIn: 'IN', mensajes: [
     msg('out', null, 300, { tipo: 'recordatorio', estado: 'read' }),
     msg('in', 'Me interesa la batería, lo de las escobillas lo dejo para más adelante.', 128),
     msg('out', 'Perfecto, te preparo el presupuesto solo con la batería y te paso el enlace para agendar.', 120, { estado: 'read' }),
   ] },
+
+  /* Campaña aceptada · enlace de agenda enviado */
+  'CMP-3008': { optIn: 'IN', mensajes: [
+    msg('out', null, 2880, { tipo: 'recordatorio', estado: 'read' }),
+    msg('in', 'SÍ', 2800),
+    msg('out', 'Genial. Aquí tienes el enlace para elegir día y franja: https://mecanu.com/a/demo', 2790, { tipo: 'seguimiento', estado: 'read' }),
+  ] },
+
+  /* Solo total · mensaje pendiente de confirmar entrega */
+  'CMP-3009': { optIn: 'IN', mensajes: [
+    msg('out', null, 8, { tipo: 'recordatorio', estado: 'sent' }),
+  ] },
+
+  /* Nueva · sin contacto aún */
+  'CMP-3010': { optIn: 'IN', mensajes: [] },
+
+  /* Aceptada con seguimiento de cita */
+  'CMP-3011': { optIn: 'IN', mensajes: [
+    msg('out', null, 900, { tipo: 'recordatorio', estado: 'read' }),
+    msg('in', 'De acuerdo, mándame el enlace para agendar.', 860),
+    msg('out', 'Listo, te lo acabo de mandar. Si no te llega en un minuto avísame.', 850, { estado: 'delivered' }),
+  ] },
+
+  /* Caducada · último intento leído sin respuesta */
+  'CMP-3012': { optIn: 'IN', mensajes: [
+    msg('out', null, 21600, { tipo: 'recordatorio', estado: 'read' }),
+    msg('out', 'Hola, te escribo por si todavía te interesa el presupuesto de pastillas. Caduca en dos días.', 7200, { tipo: 'seguimiento', estado: 'read' }),
+  ] },
+
+  /* Valorada · canal vacío a la espera de enviar */
+  'CMP-3013': { optIn: 'IN', mensajes: [] },
 };
 
 /** Respuestas simuladas del cliente (en producción llegan por webhook). */
