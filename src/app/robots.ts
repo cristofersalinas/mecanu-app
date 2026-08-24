@@ -15,6 +15,16 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mecanu.com";
 const PRIVADO = [
   "/panel",
   "/panel/",
+  "/general",
+  "/tablero",
+  "/contactos",
+  "/tempario",
+  "/conductores",
+  "/whatsapp",
+  "/config",
+  "/registro",
+  "/recuperar",
+  "/nueva-contrasena",
   "/conductor",
   "/conductor/",
   "/backoffice",
@@ -25,6 +35,7 @@ const PRIVADO = [
   "/_next/",
   "/assistant",
   "/internal/",
+  "/s/",
 ];
 
 const RASTREADORES_IA = [

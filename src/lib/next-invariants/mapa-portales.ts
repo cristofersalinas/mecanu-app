@@ -51,6 +51,12 @@ export const PORTALES: PortalCanonico[] = [
     entryImport: '@/components/backoffice/BackofficeApp',
     privado: true,
   },
+  {
+    url: '/s',
+    page: 'src/app/s/[token]/page.tsx',
+    entryImport: '@/components/seguimiento/SeguimientoRutaView',
+    privado: false,
+  },
 ];
 
 export function resolverAlias(spec: string): string | null {
