@@ -7,6 +7,7 @@
   --sg-sand: #f3f7f6;
   --sg-warn: #b45309;
   --sg-card: #ffffff;
+  --sg-dash: #0b2e2b;
   position: relative;
   min-height: 100dvh;
   color: var(--sg-ink);
@@ -21,18 +22,7 @@
   background:
     radial-gradient(90% 60% at 0% 0%, #9ee4d8 0%, transparent 55%),
     radial-gradient(70% 50% at 100% 10%, #c5d4f5 0%, transparent 50%),
-    radial-gradient(80% 40% at 50% 100%, #ffe8c8 0%, transparent 45%),
-    linear-gradient(180deg, #eef6f4 0%, #f7faf9 40%, #eef2f6 100%);
-  animation: bgShift 18s ease-in-out infinite alternate;
-}
-
-@keyframes bgShift {
-  from {
-    filter: hue-rotate(0deg) saturate(1);
-  }
-  to {
-    filter: hue-rotate(12deg) saturate(1.08);
-  }
+    linear-gradient(180deg, #e8f2f0 0%, #f4f7f6 45%, #eef1f4 100%);
 }
 
 .shell {
@@ -40,28 +30,24 @@
   z-index: 1;
   width: min(480px, 100%);
   margin: 0 auto;
-  padding: 22px 16px 56px;
+  padding: 20px 14px 48px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .layout {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .colMain,
 .colSide {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   min-width: 0;
-}
-
-.heroMetaExtra {
-  display: none;
 }
 
 .top {
@@ -73,7 +59,7 @@
 
 .brand {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -0.04em;
 }
@@ -86,7 +72,7 @@
 
 .live {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--sg-teal-deep);
   background: rgb(15 118 110 / 10%);
@@ -108,284 +94,284 @@
   line-height: 1.45;
 }
 
-.hero {
+/* —— Cuadro de instrumentos —— */
+.dash {
   position: relative;
   overflow: hidden;
-  border-radius: 22px;
-  padding: 20px 18px 18px;
-  color: #f4fffd;
-  background: linear-gradient(145deg, #0a4f4a 0%, #0f766e 48%, #126b8a 100%);
+  border-radius: 20px;
+  padding: 18px 16px 16px;
+  color: #e8fffa;
+  background:
+    linear-gradient(160deg, #072422 0%, #0b3d38 42%, #0e5a6b 100%);
   box-shadow:
-    0 20px 40px rgb(10 79 74 / 28%),
-    inset 0 1px 0 rgb(255 255 255 / 18%);
+    0 18px 36px rgb(7 36 34 / 35%),
+    inset 0 1px 0 rgb(255 255 255 / 12%);
 }
 
-.heroGlow {
+.dashGlow {
   position: absolute;
-  width: 180px;
-  height: 180px;
-  right: -40px;
-  top: -50px;
+  width: 160px;
+  height: 160px;
+  right: -36px;
+  top: -48px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgb(255 255 255 / 28%), transparent 70%);
-  animation: glowPulse 4s ease-in-out infinite;
+  background: radial-gradient(circle, rgb(94 234 212 / 35%), transparent 70%);
+  pointer-events: none;
 }
 
-@keyframes glowPulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
-}
-
-.kicker {
+.dashMain {
   position: relative;
-  margin: 0 0 6px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.75;
+  z-index: 1;
 }
 
-.heroEstado {
-  position: relative;
+.dashTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dashId {
   margin: 0;
-  font-size: 2rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.dashSeguro {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgb(167 243 208 / 18%);
+  color: #a7f3d0;
+}
+
+.dashSeguro[data-ok='0'] {
+  background: rgb(253 186 116 / 18%);
+  color: #fdba74;
+}
+
+.dashEstado {
+  margin: 0;
+  font-size: 1.85rem;
   line-height: 1.05;
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
-.heroSub {
-  position: relative;
-  margin: 6px 0 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  opacity: 0.9;
-}
-
-.heroMsg {
-  position: relative;
-  margin: 10px 0 0;
+.dashLectura {
+  margin: 8px 0 0;
   font-size: 0.9rem;
   line-height: 1.4;
-  opacity: 0.92;
+  opacity: 0.9;
+  max-width: 36ch;
 }
 
-.progressWrap {
-  position: relative;
-  margin-top: 18px;
+.gauge {
+  margin-top: 16px;
 }
 
-.progressTrack {
+.gaugeTrack {
   position: relative;
-  height: 8px;
+  height: 6px;
   border-radius: 999px;
-  background: rgb(255 255 255 / 22%);
-  overflow: visible;
+  background: rgb(255 255 255 / 16%);
 }
 
-.progressFill {
+.gaugeFill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #a7f3d0, #fff);
-  transition: width 0.6s ease;
+  background: linear-gradient(90deg, #5eead4, #fff);
+  transition: width 0.55s ease;
 }
 
-.progressCar {
+.gaugeNeedle {
   position: absolute;
-  top: -10px;
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
+  top: -7px;
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
   background: #fff;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 25%);
-  transition: left 0.6s ease;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 28%);
+  transition: left 0.55s ease;
 }
 
-.progressCar::after {
+.gaugeNeedle::after {
   content: '';
   position: absolute;
-  inset: 7px;
-  border-radius: 4px;
+  inset: 5px;
+  border-radius: 3px;
   background: var(--sg-teal);
 }
 
-.progressSteps {
+.gaugeSteps {
   list-style: none;
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
 }
 
-.progressSteps li {
-  font-size: 0.62rem;
+.gaugeSteps li {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.4;
+}
+
+.gsDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 55%);
+}
+
+.gsLabel {
+  font-size: 0.58rem;
   font-weight: 700;
   text-align: center;
-  opacity: 0.55;
+  line-height: 1.15;
 }
 
-.psHecho,
-.psActual {
+.gsHecho,
+.gsActual {
   opacity: 1 !important;
 }
 
-.psActual {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.gsHecho .gsDot {
+  background: #a7f3d0;
 }
 
-.heroMeta {
+.gsActual .gsDot {
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 35%);
+}
+
+.dashGauges {
   position: relative;
-  margin-top: 16px;
+  z-index: 1;
+  margin: 14px 0 0;
+  padding: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
-.heroMeta div {
-  background: rgb(255 255 255 / 12%);
-  border: 1px solid rgb(255 255 255 / 16%);
+.dashGauges > div {
+  margin: 0;
+  background: rgb(0 0 0 / 22%);
+  border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 12px;
-  padding: 8px;
+  padding: 8px 9px;
 }
 
-.heroMeta span {
-  display: block;
-  font-size: 0.65rem;
+.dashGauges dt {
+  margin: 0;
+  font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  opacity: 0.7;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
 }
 
-.heroMeta strong {
-  display: block;
-  margin-top: 3px;
-  font-size: 0.78rem;
+.dashGauges dd {
+  margin: 3px 0 0;
+  font-size: 0.76rem;
   line-height: 1.25;
   font-weight: 700;
 }
 
 .sectionTitle {
-  margin: 0 0 12px;
-  font-size: 0.78rem;
+  margin: 0;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--sg-muted);
 }
 
-.routeCard,
+/* —— Recorrido (mapa + tramos sin repetir direcciones) —— */
+.trip,
 .timelineCard,
-.checkCard,
+.vehicle,
 .presCard {
   background: var(--sg-card);
   border: 1px solid var(--sg-line);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 8px 24px rgb(12 26 25 / 5%);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 6px 20px rgb(12 26 25 / 5%);
 }
 
-.routeVisual {
+.tripHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.tripServicio {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--sg-teal-deep);
+  text-align: right;
+  line-height: 1.25;
+}
+
+.tripMap {
   display: grid;
   gap: 0;
-  margin-bottom: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--sg-sand);
+  border: 1px solid var(--sg-line);
 }
 
-.routeStop {
+.tripStop {
   display: flex;
   gap: 12px;
   align-items: flex-start;
 }
 
-.routeStopBody {
-  min-width: 0;
-  flex: 1;
-}
-
-.routeLabel {
-  margin: 0;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--sg-muted);
-}
-
-.routeTipo {
-  margin: 2px 0 0;
-  font-size: 0.95rem;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.routeLocalidad {
-  margin: 4px 0 0;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--sg-teal);
-  line-height: 1.3;
-}
-
-.routeDireccion {
-  margin: 6px 0 0;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  color: var(--sg-ink);
-}
-
-.routeDireccionFaltante {
-  margin: 6px 0 0;
-  font-size: 0.82rem;
-  line-height: 1.4;
-  color: var(--sg-warn);
-  font-weight: 600;
-}
-
-.routeValue {
-  margin: 2px 0 0;
-  font-size: 0.95rem;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.routeDot {
-  width: 14px;
-  height: 14px;
+.tripDot {
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
   margin-top: 4px;
   flex-shrink: 0;
-  border: 3px solid #fff;
+  border: 2px solid #fff;
+}
+
+.dotA {
+  background: var(--sg-teal);
   box-shadow: 0 0 0 2px var(--sg-teal);
 }
 
-.dotOrigen {
-  background: var(--sg-teal);
-}
-
-.dotDestino {
+.dotB {
   background: #126b8a;
   box-shadow: 0 0 0 2px #126b8a;
 }
 
-.routeLine {
+.tripRail {
   position: relative;
   width: 2px;
-  height: 28px;
-  margin: 2px 0 2px 6px;
+  height: 18px;
+  margin: 2px 0 2px 5px;
   background: linear-gradient(180deg, var(--sg-teal), #126b8a);
 }
 
-.routePulse {
+.tripPulse {
   position: absolute;
   left: -4px;
   top: 0;
@@ -394,107 +380,99 @@
   border-radius: 50%;
   background: #fff;
   border: 2px solid var(--sg-teal);
-  animation: ride 2.4s ease-in-out infinite;
+  animation: rideY 2.2s ease-in-out infinite;
 }
 
-@keyframes ride {
+@keyframes rideY {
   from {
     top: 0;
     opacity: 1;
   }
   to {
-    top: 18px;
+    top: 10px;
     opacity: 0.35;
   }
 }
 
-.tramoList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-
-.tramo,
-.tramoActivo {
-  border-radius: 14px;
-  padding: 12px;
-  border: 1px solid var(--sg-line);
-  background: var(--sg-sand);
-}
-
-.tramoActivo {
-  border-color: rgb(15 118 110 / 35%);
-  background: linear-gradient(180deg, #e7f7f4, #f3faf8);
-  box-shadow: inset 0 0 0 1px rgb(15 118 110 / 12%);
-}
-
-.tramoHead {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 0.78rem;
-}
-
-.tramoHead span {
-  color: var(--sg-muted);
-  text-align: right;
-}
-
-.tramoPath {
-  margin: 6px 0 0;
-  font-size: 0.88rem;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.tramoDirs {
-  margin: 8px 0 0;
-  display: grid;
-  gap: 6px;
-}
-
-.tramoDirs dt {
+.tripRol {
   margin: 0;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--sg-muted);
 }
 
-.tramoDirs dd {
-  margin: 2px 0 0;
-  font-size: 0.84rem;
+.tripDir {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
   line-height: 1.4;
-  color: var(--sg-ink);
 }
 
-.tramoVentana {
+.tripDirMiss {
   margin: 4px 0 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--sg-warn);
+}
+
+.legList {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.leg,
+.legOn {
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--sg-line);
+  background: #fff;
+}
+
+.legOn {
+  border-color: rgb(15 118 110 / 35%);
+  background: linear-gradient(180deg, #e7f7f4, #f5fbf9);
+}
+
+.legMain {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 0.8rem;
+}
+
+.legMain span {
+  color: var(--sg-muted);
+  text-align: right;
+}
+
+.legVentana {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
   color: var(--sg-muted);
 }
 
-.tramoTimes {
-  margin-top: 8px;
-  display: grid;
-  gap: 4px;
-  font-size: 0.78rem;
+.legTimes {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 0.74rem;
 }
 
 .faltante {
   font-style: normal;
   color: var(--sg-warn);
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.hint {
-  margin: 10px 0 0;
-  font-size: 0.78rem;
-  line-height: 1.4;
-  color: var(--sg-muted);
+/* —— Timeline —— */
+.timelineCard .sectionTitle {
+  margin-bottom: 10px;
 }
 
 .timeline {
@@ -507,69 +485,52 @@
 
 .tlItem {
   display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 10px;
-  padding: 10px 0;
-  border-left: 2px solid transparent;
-  position: relative;
+  grid-template-columns: 36px 1fr;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--sg-line);
 }
 
-.tlItem + .tlItem {
-  border-top: 1px dashed var(--sg-line);
+.tlItem:last-child {
+  border-bottom: none;
 }
 
 .tlIcon {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
   display: grid;
   place-items: center;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  background: #e8f0ef;
-  color: var(--sg-teal-deep);
+  background: var(--sg-sand);
+  color: var(--sg-muted);
 }
 
 .tlHecho .tlIcon {
-  background: #d1fae5;
+  background: #ccfbf1;
+  color: var(--sg-teal-deep);
 }
 
 .tlActual .tlIcon {
   background: var(--sg-teal);
   color: #fff;
-  box-shadow: 0 0 0 4px rgb(15 118 110 / 18%);
-  animation: pingSoft 1.8s ease-in-out infinite;
-}
-
-@keyframes pingSoft {
-  0%,
-  100% {
-    box-shadow: 0 0 0 4px rgb(15 118 110 / 18%);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgb(15 118 110 / 8%);
-  }
-}
-
-.tlPend .tlIcon {
-  background: #f3f4f6;
-  color: #9ca3af;
 }
 
 .tlPend {
-  opacity: 0.85;
+  opacity: 0.72;
 }
 
 .tlTime {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--sg-muted);
 }
 
 .tlTitle {
   margin: 2px 0 0;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 700;
   line-height: 1.3;
 }
@@ -581,185 +542,161 @@
   color: var(--sg-muted);
 }
 
-.emptyCheck {
-  text-align: center;
-  padding: 18px 10px;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #f8fafc, #eef2f6);
-  border: 1px dashed #cbd5e1;
+/* —— Panel vehículo —— */
+.vehicle .sectionTitle {
+  margin-bottom: 12px;
 }
 
-.emptyIcon {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 10px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  font-size: 1.4rem;
-  background: #fff;
-  border: 1px solid var(--sg-line);
-  color: var(--sg-muted);
+.emptyCheck {
+  padding: 8px 2px;
 }
 
 .emptyTitle {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 800;
 }
 
 .emptyText {
-  margin: 8px 0 0;
-  font-size: 0.85rem;
+  margin: 6px 0 0;
+  font-size: 0.84rem;
   line-height: 1.45;
   color: var(--sg-muted);
 }
 
-.checkHead {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.checkTipo {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
-}
-
-.checkFecha,
-.checkInspector {
-  margin: 2px 0 0;
-  font-size: 0.78rem;
-  color: var(--sg-muted);
-}
-
-.checkStats {
+.instrStrip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
-.checkStats div {
+.instr {
   background: var(--sg-sand);
+  border: 1px solid var(--sg-line);
   border-radius: 12px;
   padding: 10px 8px;
+  text-align: center;
 }
 
-.checkStats span {
+.instr span {
   display: block;
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--sg-muted);
 }
 
-.checkStats strong {
+.instr strong {
   display: block;
-  margin-top: 3px;
-  font-size: 0.88rem;
+  margin-top: 4px;
+  font-size: 0.95rem;
+  font-weight: 800;
 }
 
 .fuelBar {
-  margin-top: 10px;
-  height: 8px;
+  margin-top: 8px;
+  height: 4px;
   border-radius: 999px;
-  background: #e5e7eb;
+  background: rgb(15 118 110 / 15%);
   overflow: hidden;
 }
 
 .fuelFill {
   height: 100%;
-  background: linear-gradient(90deg, #f59e0b, #10b981);
   border-radius: inherit;
+  background: linear-gradient(90deg, #0f766e, #5eead4);
+}
+
+.checkMeta {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  color: var(--sg-muted);
 }
 
 .firmas {
+  margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 6px;
 }
 
 .firmaOk,
 .firmaNo {
   font-size: 0.72rem;
   font-weight: 700;
-  padding: 5px 9px;
+  padding: 4px 8px;
   border-radius: 999px;
 }
 
 .firmaOk {
-  background: #d1fae5;
-  color: #065f46;
+  background: #ccfbf1;
+  color: var(--sg-teal-deep);
 }
 
 .firmaNo {
   background: #fff7ed;
-  color: #9a3412;
+  color: var(--sg-warn);
 }
 
-.subTitle {
-  margin: 0 0 8px;
+.hint {
+  margin: 10px 0 0;
   font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.mediaBlock {
-  margin-top: 14px;
+  color: var(--sg-muted);
 }
 
 .danoList,
 .hallList {
   list-style: none;
-  margin: 0;
+  margin: 12px 0 0;
   padding: 0;
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .danoList li {
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 56px 1fr;
   gap: 10px;
   align-items: start;
 }
 
 .danoFoto,
 .danoFotoPh {
-  width: 72px;
+  width: 56px;
   height: 56px;
   border-radius: 10px;
   object-fit: cover;
-  background: #e5e7eb;
 }
 
 .danoFotoPh {
   display: grid;
   place-items: center;
-  font-size: 0.65rem;
-  color: var(--sg-muted);
+  font-size: 0.62rem;
   font-weight: 700;
+  color: var(--sg-muted);
+  background: var(--sg-sand);
+  border: 1px dashed var(--sg-line);
 }
 
 .danoList strong,
 .hallList strong {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
 }
 
 .danoList p,
 .hallList p {
-  margin: 3px 0 0;
-  font-size: 0.78rem;
+  margin: 2px 0 0;
+  font-size: 0.8rem;
   color: var(--sg-muted);
   line-height: 1.35;
 }
 
 .hallList li {
-  padding: 10px;
-  border-radius: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
   background: var(--sg-sand);
+  border: 1px solid var(--sg-line);
 }
 
 .sev {
@@ -767,20 +704,25 @@
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--sg-teal-deep);
+  color: var(--sg-warn);
+}
+
+/* —— Presupuesto —— */
+.presCard .sectionTitle {
+  margin-bottom: 10px;
 }
 
 .badgeTraslado {
   display: inline-block;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #1e3a8a;
-  background: #dbeafe;
-  padding: 4px 8px;
+  color: #0e7490;
+  background: #ecfeff;
   border-radius: 999px;
+  padding: 4px 8px;
 }
 
 .presLines {
@@ -788,33 +730,34 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .presLines li {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px;
-  border-radius: 12px;
+  align-items: baseline;
+  padding: 8px 10px;
+  border-radius: 10px;
   background: var(--sg-sand);
 }
 
 .presLines strong {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   line-height: 1.3;
 }
 
 .presLines span {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--sg-muted);
 }
 
 .presLines em {
   font-style: normal;
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   white-space: nowrap;
 }
 
@@ -823,69 +766,57 @@
 }
 
 .presTotal {
-  margin-top: 12px;
+  margin-top: 10px;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--sg-line);
 }
 
 .presTotal span {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--sg-muted);
 }
 
 .presTotal strong {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
-.ok {
-  color: #a7f3d0;
-}
-
-.warn {
-  color: #fdba74;
-}
-
 .foot {
-  margin: 4px 2px 0;
+  margin: 2px 2px 0;
   font-size: 0.78rem;
   line-height: 1.45;
   color: var(--sg-muted);
 }
 
 @media (max-width: 380px) {
-  .heroEstado {
-    font-size: 1.65rem;
+  .dashEstado {
+    font-size: 1.55rem;
   }
-  .heroMeta,
-  .checkStats {
+  .dashGauges,
+  .instrStrip {
     grid-template-columns: 1fr;
   }
-  .progressSteps {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .progressSteps li:nth-child(n + 4) {
+  .gsLabel {
     display: none;
   }
 }
 
-/* Escritorio: dos columnas, shell ancho, lateral sticky */
 @media (min-width: 900px) {
   .shell {
     width: min(1080px, 100%);
-    padding: 28px 24px 64px;
-    gap: 18px;
+    padding: 28px 24px 56px;
+    gap: 16px;
   }
 
   .layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.85fr);
-    gap: 18px;
+    grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.8fr);
+    gap: 16px;
     align-items: start;
   }
 
@@ -894,28 +825,19 @@
     top: 20px;
   }
 
-  .hero {
+  .dash {
     display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(220px, 0.7fr);
-    gap: 16px;
-    align-items: stretch;
-    padding: 22px 20px;
+    grid-template-columns: minmax(0, 1.5fr) minmax(220px, 0.7fr);
+    gap: 14px;
+    padding: 20px;
   }
 
-  .heroGlow {
+  .dashGlow {
     grid-column: 1 / -1;
     grid-row: 1 / -1;
-    pointer-events: none;
   }
 
-  .heroMain {
-    position: relative;
-    z-index: 1;
-  }
-
-  .heroMeta {
-    position: relative;
-    z-index: 1;
+  .dashGauges {
     margin-top: 0;
     display: flex;
     flex-direction: column;
@@ -923,54 +845,44 @@
     gap: 8px;
   }
 
-  .heroMetaExtra {
-    display: block;
-  }
-
-  .routeVisual {
+  .tripMap {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
     gap: 0;
   }
 
-  .routeStop {
-    flex: 0 1 auto;
+  .tripStop {
+    flex: 1 1 0;
     min-width: 0;
   }
 
-  .routeLine {
+  .tripRail {
     width: auto;
-    flex: 1 1 auto;
-    min-width: 48px;
+    flex: 0 0 56px;
     height: 3px;
-    margin: 0 12px;
+    margin: auto 10px;
     background: linear-gradient(90deg, var(--sg-teal), #126b8a);
   }
 
-  .routePulse {
+  .tripPulse {
     top: 50%;
     left: 0;
     transform: translateY(-50%);
-    animation: sgPulseX 2.4s ease-in-out infinite;
+    animation: rideX 2.2s ease-in-out infinite;
   }
 
   .timeline {
-    max-height: min(52vh, 520px);
+    max-height: min(48vh, 480px);
     overflow-y: auto;
-    padding-right: 4px;
   }
 
-  .brand {
-    font-size: 1.35rem;
-  }
-
-  .heroEstado {
-    font-size: 2.15rem;
+  .dashEstado {
+    font-size: 2.05rem;
   }
 }
 
-@keyframes sgPulseX {
+@keyframes rideX {
   0% {
     left: 0;
     opacity: 0.35;

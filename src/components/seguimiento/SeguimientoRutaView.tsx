@@ -19,177 +19,140 @@ function iconoEvento(tipo: string): string {
   }
 }
 
-function HeroBlock({ data }: { data: SeguimientoPublico }) {
-  return (
-    <section className={styles.hero} aria-label="Estado actual">
-      <div className={styles.heroGlow} aria-hidden />
-      <div className={styles.heroMain}>
-        <p className={styles.kicker}>{data.rutaId}</p>
-        <h1 className={styles.heroEstado}>{data.estadoLabel}</h1>
-        <p className={styles.heroSub}>{data.subestadoLabel}</p>
-        <p className={styles.heroMsg}>{data.mensaje}</p>
+/** Una sola línea de estado: evita repetir subestado + mensaje. */
+function estadoLectura(data: SeguimientoPublico): string {
+  const msg = data.mensaje.trim();
+  const sub = data.subestadoLabel.trim();
+  if (!msg) return sub;
+  if (!sub) return msg;
+  if (msg.toLowerCase().includes(sub.toLowerCase())) return msg;
+  return `${sub}. ${msg}`;
+}
 
-        <div className={styles.progressWrap} aria-label={`Progreso ${data.progresoPct} %`}>
-          <div className={styles.progressTrack}>
-            <div className={styles.progressFill} style={{ width: `${data.progresoPct}%` }} />
+function DashCluster({ data }: { data: SeguimientoPublico }) {
+  const lectura = estadoLectura(data);
+  return (
+    <section className={styles.dash} aria-label="Estado del traslado">
+      <div className={styles.dashGlow} aria-hidden />
+      <div className={styles.dashMain}>
+        <div className={styles.dashTop}>
+          <p className={styles.dashId}>{data.rutaId}</p>
+          <p className={styles.dashSeguro} data-ok={data.seguro ? '1' : '0'}>
+            {data.seguro ? 'Seguro ON' : 'Sin seguro'}
+          </p>
+        </div>
+        <h1 className={styles.dashEstado}>{data.estadoLabel}</h1>
+        <p className={styles.dashLectura}>{lectura}</p>
+
+        <div className={styles.gauge} aria-label={`Progreso ${data.progresoPct} %`}>
+          <div className={styles.gaugeTrack}>
+            <div className={styles.gaugeFill} style={{ width: `${data.progresoPct}%` }} />
             <span
-              className={styles.progressCar}
-              style={{ left: `clamp(0%, calc(${data.progresoPct}% - 14px), calc(100% - 28px))` }}
+              className={styles.gaugeNeedle}
+              style={{ left: `clamp(0%, calc(${data.progresoPct}% - 10px), calc(100% - 20px))` }}
               aria-hidden
             />
           </div>
-          <ol className={styles.progressSteps}>
+          <ol className={styles.gaugeSteps}>
             {data.pasos.map((p) => (
               <li
                 key={p.id}
                 className={
                   p.estado === 'hecho'
-                    ? styles.psHecho
+                    ? styles.gsHecho
                     : p.estado === 'actual'
-                      ? styles.psActual
-                      : styles.psPend
+                      ? styles.gsActual
+                      : styles.gsPend
                 }
+                title={p.label}
               >
-                {p.label}
+                <span className={styles.gsDot} />
+                <span className={styles.gsLabel}>{p.label}</span>
               </li>
             ))}
           </ol>
         </div>
       </div>
 
-      <div className={styles.heroMeta}>
+      <dl className={styles.dashGauges}>
         <div>
-          <span>Vehículo</span>
-          <strong>{data.vehiculoLabel}</strong>
-        </div>
-        <div>
-          <span>Conductor</span>
-          <strong>{data.conductorLabel ?? 'Pendiente'}</strong>
+          <dt>Vehículo</dt>
+          <dd>{data.vehiculoLabel}</dd>
         </div>
         <div>
-          <span>Seguro</span>
-          <strong className={data.seguro ? styles.ok : styles.warn}>
-            {data.seguro ? 'Incluido' : 'Sin cobertura'}
-          </strong>
+          <dt>Conductor</dt>
+          <dd>{data.conductorLabel ?? 'Pendiente'}</dd>
         </div>
-        <div className={styles.heroMetaExtra}>
-          <span>Ventana</span>
-          <strong>{data.ventanaLabel}</strong>
+        <div>
+          <dt>Ventana</dt>
+          <dd>{data.ventanaLabel}</dd>
         </div>
-        <div className={styles.heroMetaExtra}>
-          <span>Servicio</span>
-          <strong>{data.servicio}</strong>
-        </div>
-      </div>
+      </dl>
     </section>
   );
 }
 
-function ParadaDetalle({
-  rol,
-  etiqueta,
-  corto,
-  direccion,
-}: {
-  rol: 'Origen' | 'Destino';
-  etiqueta: string | null;
-  corto: string | null;
-  direccion: string | null;
-}) {
-  const titulo = etiqueta ?? (rol === 'Origen' ? 'Recogida' : 'Entrega');
+function TripMap({ data }: { data: SeguimientoPublico }) {
   return (
-    <div className={styles.routeStop}>
-      <span className={`${styles.routeDot} ${rol === 'Origen' ? styles.dotOrigen : styles.dotDestino}`} />
-      <div className={styles.routeStopBody}>
-        <p className={styles.routeLabel}>{rol}</p>
-        <p className={styles.routeTipo}>{titulo}</p>
-        {corto ? <p className={styles.routeLocalidad}>{corto}</p> : null}
-        {direccion ? (
-          <p className={styles.routeDireccion}>{direccion}</p>
-        ) : (
-          <p className={styles.routeDireccionFaltante}>Dirección pendiente de confirmar</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function RutaBlock({
-  data,
-  tramoActivoLabel,
-}: {
-  data: SeguimientoPublico;
-  tramoActivoLabel: string | null;
-}) {
-  return (
-    <section className={styles.routeCard} aria-label="Ruta del traslado">
-      <h2 className={styles.sectionTitle}>Ruta</h2>
-      <div className={styles.routeVisual}>
-        <ParadaDetalle
-          rol="Origen"
-          etiqueta={data.etiquetaOrigen}
-          corto={data.origenCorto}
-          direccion={data.direccionOrigen}
-        />
-        <div className={styles.routeLine}>
-          <span className={styles.routePulse} aria-hidden />
-        </div>
-        <ParadaDetalle
-          rol="Destino"
-          etiqueta={data.etiquetaDestino}
-          corto={data.destinoCorto}
-          direccion={data.direccionDestino}
-        />
+    <section className={styles.trip} aria-label="Recorrido">
+      <div className={styles.tripHead}>
+        <h2 className={styles.sectionTitle}>Recorrido</h2>
+        <p className={styles.tripServicio}>{data.servicio}</p>
       </div>
 
-      <ul className={styles.tramoList}>
-        {data.tramos.map((t) => (
-          <li key={t.id} className={t.activo ? styles.tramoActivo : styles.tramo}>
-            <div className={styles.tramoHead}>
-              <strong>{t.rolLabel}</strong>
-              <span>
-                {t.estadoLabel}
-                {t.subestadoLabel ? ` · ${t.subestadoLabel}` : ''}
-              </span>
-            </div>
-            <p className={styles.tramoPath}>
-              {t.origenLabel} → {t.destinoLabel}
-            </p>
-            {(t.origenDireccion || t.destinoDireccion) && (
-              <dl className={styles.tramoDirs}>
-                {t.origenDireccion ? (
-                  <>
-                    <dt>{t.origenEtiqueta ?? 'Origen'}</dt>
-                    <dd>{t.origenDireccion}</dd>
-                  </>
-                ) : null}
-                {t.destinoDireccion ? (
-                  <>
-                    <dt>{t.destinoEtiqueta ?? 'Destino'}</dt>
-                    <dd>{t.destinoDireccion}</dd>
-                  </>
-                ) : null}
-              </dl>
+      <div className={styles.tripMap}>
+        <div className={styles.tripStop}>
+          <span className={`${styles.tripDot} ${styles.dotA}`} aria-hidden />
+          <div>
+            <p className={styles.tripRol}>Origen · {data.etiquetaOrigen ?? 'Recogida'}</p>
+            {data.direccionOrigen ? (
+              <p className={styles.tripDir}>{data.direccionOrigen}</p>
+            ) : (
+              <p className={styles.tripDirMiss}>Dirección pendiente</p>
             )}
-            <p className={styles.tramoVentana}>{t.ventanaLabel}</p>
-            <div className={styles.tramoTimes}>
-              <span>
-                Salida real:{' '}
-                {t.salidaRealLabel ?? <em className={styles.faltante}>Aún no registrada</em>}
-              </span>
-              <span>
-                Llegada real:{' '}
-                {t.llegadaRealLabel ?? <em className={styles.faltante}>Aún no registrada</em>}
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
-      {tramoActivoLabel ? (
-        <p className={styles.hint}>
-          Tramo activo: <strong>{tramoActivoLabel}</strong>. Las horas reales aparecen cuando el
-          conductor marca salida o llegada.
-        </p>
+          </div>
+        </div>
+        <div className={styles.tripRail} aria-hidden>
+          <span className={styles.tripPulse} />
+        </div>
+        <div className={styles.tripStop}>
+          <span className={`${styles.tripDot} ${styles.dotB}`} aria-hidden />
+          <div>
+            <p className={styles.tripRol}>Destino · {data.etiquetaDestino ?? 'Entrega'}</p>
+            {data.direccionDestino ? (
+              <p className={styles.tripDir}>{data.direccionDestino}</p>
+            ) : (
+              <p className={styles.tripDirMiss}>Dirección pendiente</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {data.tramos.length > 0 ? (
+        <ul className={styles.legList}>
+          {data.tramos.map((t) => (
+            <li key={t.id} className={t.activo ? styles.legOn : styles.leg}>
+              <div className={styles.legMain}>
+                <strong>{t.rolLabel}</strong>
+                <span>
+                  {t.estadoLabel}
+                  {t.subestadoLabel && t.activo ? ` · ${t.subestadoLabel}` : ''}
+                </span>
+              </div>
+              <p className={styles.legVentana}>{t.ventanaLabel}</p>
+              <div className={styles.legTimes}>
+                <span>
+                  Salida{' '}
+                  {t.salidaRealLabel ?? <em className={styles.faltante}>—</em>}
+                </span>
+                <span>
+                  Llegada{' '}
+                  {t.llegadaRealLabel ?? <em className={styles.faltante}>—</em>}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
       ) : null}
     </section>
   );
@@ -197,8 +160,8 @@ function RutaBlock({
 
 function TimelineBlock({ data }: { data: SeguimientoPublico }) {
   return (
-    <section className={styles.timelineCard} aria-label="Historial del traslado">
-      <h2 className={styles.sectionTitle}>Seguimiento</h2>
+    <section className={styles.timelineCard} aria-label="Actividad">
+      <h2 className={styles.sectionTitle}>Actividad</h2>
       <ol className={styles.timeline}>
         {data.timeline.map((e) => (
           <li
@@ -217,7 +180,9 @@ function TimelineBlock({ data }: { data: SeguimientoPublico }) {
             <div className={styles.tlBody}>
               <p className={styles.tlTime}>{e.horaLabel}</p>
               <p className={styles.tlTitle}>{e.titulo}</p>
-              {e.detalle ? <p className={styles.tlDet}>{e.detalle}</p> : null}
+              {e.detalle && e.estado !== 'hecho' ? (
+                <p className={styles.tlDet}>{e.detalle}</p>
+              ) : null}
             </div>
           </li>
         ))}
@@ -226,103 +191,84 @@ function TimelineBlock({ data }: { data: SeguimientoPublico }) {
   );
 }
 
-function CheckinBlock({ data }: { data: SeguimientoPublico }) {
+function VehiclePanel({ data }: { data: SeguimientoPublico }) {
+  const c = data.checkin;
   return (
-    <section className={styles.checkCard} aria-label="Check-in del vehículo">
-      <h2 className={styles.sectionTitle}>Estado del vehículo</h2>
-      {!data.checkin.disponible ? (
+    <section className={styles.vehicle} aria-label="Panel del vehículo">
+      <h2 className={styles.sectionTitle}>Panel del vehículo</h2>
+      {!c.disponible ? (
         <div className={styles.emptyCheck}>
-          <div className={styles.emptyIcon} aria-hidden>
-            ··
-          </div>
           <p className={styles.emptyTitle}>Check-in pendiente</p>
           <p className={styles.emptyText}>
-            {data.checkin.pendienteMensaje ??
-              'Cuando el conductor registre el check-in, verás km, combustible, daños y fotos aquí.'}
+            {c.pendienteMensaje ??
+              'Cuando el conductor registre el check-in verás km, combustible y daños aquí.'}
           </p>
         </div>
       ) : (
         <>
-          <div className={styles.checkHead}>
-            <div>
-              <p className={styles.checkTipo}>{data.checkin.tipoLabel}</p>
-              <p className={styles.checkFecha}>{data.checkin.fechaLabel}</p>
-            </div>
-            <p className={styles.checkInspector}>
-              Por {data.checkin.inspectorNombre ?? 'conductor'}
-            </p>
-          </div>
-          <div className={styles.checkStats}>
-            <div>
+          <div className={styles.instrStrip}>
+            <div className={styles.instr}>
               <span>Km</span>
-              <strong>{data.checkin.km?.toLocaleString('es-ES') ?? '—'}</strong>
+              <strong>{c.km?.toLocaleString('es-ES') ?? '—'}</strong>
             </div>
-            <div>
+            <div className={styles.instr}>
               <span>Combustible</span>
-              <strong>
-                {data.checkin.combustible ?? '—'}
-                {data.checkin.combustiblePct != null ? ` (${data.checkin.combustiblePct} %)` : ''}
-              </strong>
+              <strong>{c.combustible ?? '—'}</strong>
+              {c.combustiblePct != null ? (
+                <div className={styles.fuelBar} aria-hidden>
+                  <div className={styles.fuelFill} style={{ width: `${c.combustiblePct}%` }} />
+                </div>
+              ) : null}
             </div>
-            <div>
+            <div className={styles.instr}>
               <span>Limpieza</span>
-              <strong>{data.checkin.limpieza ?? '—'}</strong>
+              <strong>{c.limpieza ?? '—'}</strong>
             </div>
           </div>
-          {data.checkin.combustiblePct != null ? (
-            <div className={styles.fuelBar} aria-hidden>
-              <div
-                className={styles.fuelFill}
-                style={{ width: `${data.checkin.combustiblePct}%` }}
-              />
-            </div>
-          ) : null}
+          <p className={styles.checkMeta}>
+            {c.tipoLabel} · {c.fechaLabel}
+            {c.inspectorNombre ? ` · ${c.inspectorNombre}` : ''}
+          </p>
           <div className={styles.firmas}>
-            <span className={data.checkin.firmaConductor ? styles.firmaOk : styles.firmaNo}>
-              Firma conductor {data.checkin.firmaConductor ? 'OK' : 'pendiente'}
+            <span className={c.firmaConductor ? styles.firmaOk : styles.firmaNo}>
+              Conductor {c.firmaConductor ? 'firmó' : 'pendiente'}
             </span>
-            <span className={data.checkin.firmaCliente ? styles.firmaOk : styles.firmaNo}>
-              Firma cliente {data.checkin.firmaCliente ? 'OK' : 'no requerida / pendiente'}
+            <span className={c.firmaCliente ? styles.firmaOk : styles.firmaNo}>
+              Cliente {c.firmaCliente ? 'firmó' : '—'}
             </span>
           </div>
-          {data.checkin.danos.length ? (
-            <div className={styles.mediaBlock}>
-              <h3 className={styles.subTitle}>Daños anotados</h3>
-              <ul className={styles.danoList}>
-                {data.checkin.danos.map((d, i) => (
-                  <li key={`${d.zona}-${i}`}>
-                    {d.fotoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={d.fotoUrl} alt="" className={styles.danoFoto} />
-                    ) : (
-                      <div className={styles.danoFotoPh}>Sin foto</div>
-                    )}
-                    <div>
-                      <strong>
-                        {d.zona} · {d.tipo}
-                      </strong>
-                      <p>{d.descripcion}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {c.danos.length ? (
+            <ul className={styles.danoList}>
+              {c.danos.map((d, i) => (
+                <li key={`${d.zona}-${i}`}>
+                  {d.fotoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={d.fotoUrl} alt="" className={styles.danoFoto} />
+                  ) : (
+                    <div className={styles.danoFotoPh}>Sin foto</div>
+                  )}
+                  <div>
+                    <strong>
+                      {d.zona} · {d.tipo}
+                    </strong>
+                    <p>{d.descripcion}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           ) : (
-            <p className={styles.hint}>Sin daños nuevos anotados en este check-in.</p>
+            <p className={styles.hint}>Sin daños anotados.</p>
           )}
-          {data.checkin.hallazgos.length ? (
-            <div className={styles.mediaBlock}>
-              <h3 className={styles.subTitle}>Hallazgos</h3>
-              <ul className={styles.hallList}>
-                {data.checkin.hallazgos.map((h, i) => (
-                  <li key={`${h.item}-${i}`}>
-                    <strong>{h.item}</strong>
-                    <span className={styles.sev}>{h.severidad}</span>
-                    <p>{h.metrica}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {c.hallazgos.length ? (
+            <ul className={styles.hallList}>
+              {c.hallazgos.map((h, i) => (
+                <li key={`${h.item}-${i}`}>
+                  <strong>{h.item}</strong>
+                  <span className={styles.sev}>{h.severidad}</span>
+                  <p>{h.metrica}</p>
+                </li>
+              ))}
+            </ul>
           ) : null}
         </>
       )}
@@ -338,8 +284,8 @@ function PresupuestoBlock({ data }: { data: SeguimientoPublico }) {
         <div className={styles.emptyCheck}>
           <p className={styles.emptyTitle}>Sin presupuesto en Mecanu</p>
           <p className={styles.emptyText}>
-            A veces el taller valora la reparación fuera de la plataforma. En ese caso aquí solo
-            verías los traslados, o este bloque vacío.
+            Si el taller valoró la reparación fuera de la plataforma, este bloque puede quedar vacío
+            o mostrar solo traslados.
           </p>
         </div>
       ) : (
@@ -365,7 +311,6 @@ function PresupuestoBlock({ data }: { data: SeguimientoPublico }) {
             <span>Total {data.presupuesto.ivaIncluido ? '(IVA incl.)' : ''}</span>
             <strong>{data.presupuesto.totalLabel}</strong>
           </div>
-          <p className={styles.hint}>{data.presupuesto.nota}</p>
         </>
       )}
     </section>
@@ -389,8 +334,6 @@ export function SeguimientoRutaView({ data }: { data: SeguimientoPublico | null 
     );
   }
 
-  const tramoActivo = data.tramos.find((t) => t.activo) ?? data.tramos[0];
-
   return (
     <main className={styles.page}>
       <div className={styles.bg} aria-hidden />
@@ -403,25 +346,20 @@ export function SeguimientoRutaView({ data }: { data: SeguimientoPublico | null 
           <p className={styles.live}>{data.actualizadoLabel}</p>
         </header>
 
-        {/*
-          Móvil: una columna (orden actual).
-          Escritorio (≥900px): rejilla principal + lateral sticky.
-        */}
         <div className={styles.layout}>
           <div className={styles.colMain}>
-            <HeroBlock data={data} />
-            <RutaBlock data={data} tramoActivoLabel={tramoActivo?.rolLabel ?? null} />
+            <DashCluster data={data} />
+            <TripMap data={data} />
             <TimelineBlock data={data} />
           </div>
           <aside className={styles.colSide}>
-            <CheckinBlock data={data} />
+            <VehiclePanel data={data} />
             <PresupuestoBlock data={data} />
           </aside>
         </div>
 
         <p className={styles.foot}>
-          Servicio: {data.servicio}. Ventana: {data.ventanaLabel}. Si necesitas cambiar la hora o
-          tienes una incidencia, responde al WhatsApp del taller.
+          ¿Cambiar la hora o reportar una incidencia? Responde al WhatsApp del taller.
         </p>
       </div>
     </main>
