@@ -3,6 +3,8 @@
  * `npm run entorno` — te dice en qué mundo estás y qué comando usar.
  * No hay staging que actualizar. La demo es `npm run demo` en tu Mac.
  */
+import { PUERTO_DEMO, PUERTO_DEV } from './dev-puertos.mjs';
+
 const env = process.env;
 const vercelEnv = env.VERCEL_ENV ?? env.NEXT_PUBLIC_VERCEL_ENV;
 const enVercel = env.VERCEL === '1' || !!vercelEnv;
@@ -18,8 +20,9 @@ const lineas = [
   '  Mecanu · un solo mapa (no hay staging que mantener)',
   '  --------------------------------------------------',
   '',
-  '  npm run demo     tu Mac + botones Simular + cinta amarilla',
-  '  npm run dev      tu Mac, mismas apps, sin Simular',
+  `  npm run dev      localhost:${PUERTO_DEV}  con login, sin Simular`,
+  `  npm run demo     localhost:${PUERTO_DEMO}  sin login, con Simular`,
+  '  npm run stop     libera 3000 y 3001',
   '  mecanu.com       producción: solo la landing',
   '',
   `  Ahora mismo:  mundo=${mundo}  demo=${demo ? 'sí' : 'no'}  vercel=${enVercel ? 'sí' : 'no'}`,
@@ -27,14 +30,15 @@ const lineas = [
 ];
 
 if (mundo === 'local' && !demo) {
-  lineas.push('  Para ver Simular: cierra esto y arranca `npm run demo`.');
+  lineas.push(`  Panel con login: http://localhost:${PUERTO_DEV}/panel/entrar`);
+  lineas.push(`  Para ver Simular: npm run demo → http://localhost:${PUERTO_DEMO}`);
   lineas.push('');
 }
 if (demo) {
   lineas.push('  Estás en demo local. Eso no se publica a mecanu.com.');
-  lineas.push('  Panel    http://localhost:3000/panel');
-  lineas.push('  Conductor http://localhost:3000/conductor');
-  lineas.push('  Backoffice http://localhost:3000/backoffice');
+  lineas.push(`  Panel     http://localhost:${PUERTO_DEMO}/panel`);
+  lineas.push(`  Conductor http://localhost:${PUERTO_DEMO}/conductor`);
+  lineas.push(`  Backoffice http://localhost:${PUERTO_DEMO}/backoffice`);
   lineas.push('');
 }
 

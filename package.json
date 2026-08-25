@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "demo": "MECANU_DEMO=1 NEXT_PUBLIC_MECANU_DEMO=1 next dev",
+    "dev": "node scripts/dev-puertos.mjs dev",
+    "demo": "node scripts/dev-puertos.mjs demo",
+    "stop": "node scripts/dev-puertos.mjs stop",
     "entorno": "node scripts/entorno.mjs",
     "slack:bootstrap": "node scripts/slack-bootstrap.mjs",
     "csx:semanal": "npx --yes tsx scripts/csx-semanal.ts",
@@ -20,6 +21,7 @@
     "db:invitar": "node scripts/invitar-usuario.mjs",
     "db:seed": "node scripts/seed-demo-taller.mjs",
     "db:seed:full": "npx tsx scripts/seed-mock-full.ts",
+    "db:seed:avance": "node scripts/seed-escenario-avance.mjs",
     "db:bootstrap": "node scripts/bootstrap-demo-taller.mjs",
     "wa:bridge": "node --experimental-strip-types scripts/whatsapp-sesion-bridge.ts"
   },

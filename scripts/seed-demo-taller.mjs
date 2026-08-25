@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ventanaComprometidaParaPrueba } from './ventana-demo.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TALLER = 'taller-rodriguez';
@@ -34,6 +35,7 @@ if (!url || !service) {
 const sb = createClient(url, service, { auth: { persistSession: false } });
 
 const ahora = new Date().toISOString();
+const { fecha, inicio, fin } = ventanaComprometidaParaPrueba();
 
 const { error: tErr } = await sb.from('talleres').upsert({
   id: TALLER,
@@ -107,10 +109,6 @@ const { error: sErr } = await sb.from('servicios').upsert({
 });
 if (sErr) throw sErr;
 
-const manana = new Date();
-manana.setDate(manana.getDate() + 1);
-const fecha = manana.toISOString().slice(0, 10);
-
 await sb.from('presupuestos').upsert({
   id: 'PR-SEED-1001',
   taller_id: TALLER,
@@ -160,6 +158,8 @@ await sb.from('paradas').upsert([
     subtipo: null,
     direccion: 'Calle Mayor 1, Madrid',
     localidad: 'Madrid',
+    lat: 40.4168,
+    lng: -3.7038,
   },
   {
     id: 'PD-SEED-1001-2',
@@ -169,6 +169,8 @@ await sb.from('paradas').upsert([
     subtipo: 'taller',
     direccion: 'Calle de la Princesa 12, Madrid',
     localidad: 'Madrid',
+    lat: 40.4240,
+    lng: -3.7175,
   },
 ]);
 
@@ -187,8 +189,8 @@ await sb.from('traslados').upsert({
   parada_destino_id: 'PD-SEED-1001-2',
   conductor_id: 'd1',
   ventana_fecha: fecha,
-  ventana_inicio: '10:00',
-  ventana_fin: '11:00',
+  ventana_inicio: inicio,
+  ventana_fin: fin,
   ventana_modo: 'fija_taller',
   estado: 'agendado',
   subestado: null,
@@ -244,6 +246,7 @@ await sb.from('presupuesto_lineas').insert([
 ]);
 
 console.log('OK seed', TALLER, '→ clientes, vehículos, conductor d1, ruta TR-SEED-1001, campaña OP-SEED-1');
+console.log(`Ventana TR-SEED-1001: ${fecha} ${inicio}–${fin} (recalculada en cada seed)`);
 console.log('En .env.local:');
 console.log('  MECANU_USE_SUPABASE=1');
 console.log('  NEXT_PUBLIC_MECANU_USE_SUPABASE=1');

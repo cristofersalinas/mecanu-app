@@ -5,6 +5,9 @@
  *   npm run db:seed:full
  *
  * Requiere .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ *
+ * Los traslados `agendado` cuya franja mock ya pasó se reescriben a ventanas
+ * futuras (≈20 min + escalonado) para que el conductor no muestre «Atrasado».
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { readFileSync } from 'node:fs';
@@ -17,6 +20,7 @@ import {
   CAMPANAS, LOGS, PARADAS, PRESUPUESTOS, RUTAS, TRASLADOS, inspeccionesDeRuta,
 } from '../src/lib/mecanu/mecanu-rutas';
 import type { CampanaItem, Inspeccion, Log, Parada, Presupuesto, Ruta, Tramo } from '../src/lib/mecanu/types';
+import { ventanaComprometidaParaPrueba } from './ventana-demo.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TALLER_ID = 'taller-rodriguez';
@@ -31,12 +35,46 @@ function loadEnv() {
   } catch { /* */ }
 }
 
+/** Fecha civil local (no UTC): evita que un seed a las 23:00 en ES escriba el día de mañana. */
 function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function isoTs(d: Date | null | undefined): string | null {
   return d ? d.toISOString() : null;
+}
+
+function hhmmAFecha(base: Date, hhmm: string): Date {
+  const [h, m] = hhmm.split(':').map(Number);
+  const out = new Date(base.getFullYear(), base.getMonth(), base.getDate(), h || 0, m || 0, 0, 0);
+  return out;
+}
+
+/** Slots futuros escalonados para traslados agendados cuya franja mock ya pasó. */
+let slotAgendadoFuturo = 0;
+
+function ventanaAgendadaFresca(t: Tramo): { fecha: string; inicio: string; fin: string } | null {
+  if (!t.ventana?.inicio || !t.ventana?.fin) return null;
+  if (t.estado !== 'agendado') {
+    return {
+      fecha: isoDate(t.ventana.fecha),
+      inicio: t.ventana.inicio,
+      fin: t.ventana.fin,
+    };
+  }
+  const ini = hhmmAFecha(t.ventana.fecha, t.ventana.inicio);
+  if (ini.getTime() >= Date.now()) {
+    return {
+      fecha: isoDate(t.ventana.fecha),
+      inicio: t.ventana.inicio,
+      fin: t.ventana.fin,
+    };
+  }
+  /* Margen 20 min + 70 min por cada agendado ya reubicado (sin solapes R5). */
+  const ancla = new Date(Date.now() + slotAgendadoFuturo * 70 * 60_000);
+  slotAgendadoFuturo += 1;
+  return ventanaComprometidaParaPrueba(ancla, { margenMin: 20 });
 }
 
 async function upsertBatch(
@@ -111,6 +149,7 @@ async function wipeTaller(sb: SupabaseClient) {
 }
 
 function tramoRow(t: Tramo) {
+  const win = t.ventana ? ventanaAgendadaFresca(t) : null;
   return {
     id: t.id,
     ruta_id: t.rutaId,
@@ -119,9 +158,9 @@ function tramoRow(t: Tramo) {
     parada_origen_id: t.paradaOrigenId,
     parada_destino_id: t.paradaDestinoId,
     conductor_id: t.conductorId,
-    ventana_fecha: t.ventana ? isoDate(t.ventana.fecha) : null,
-    ventana_inicio: t.ventana?.inicio ?? null,
-    ventana_fin: t.ventana?.fin ?? null,
+    ventana_fecha: win?.fecha ?? null,
+    ventana_inicio: win?.inicio ?? null,
+    ventana_fin: win?.fin ?? null,
     propuesta_fecha: t.ventanaPropuesta ? isoDate(t.ventanaPropuesta.fecha) : null,
     propuesta_inicio: t.ventanaPropuesta?.inicio ?? null,
     propuesta_fin: t.ventanaPropuesta?.fin ?? null,
@@ -132,6 +171,10 @@ function tramoRow(t: Tramo) {
     seguro: t.seguro,
     importe: t.importe,
     reprogramaciones: t.reprogramaciones,
+    pos_lat: t.posLat ?? null,
+    pos_lng: t.posLng ?? null,
+    pos_precision_m: t.posPrecisionM ?? null,
+    pos_actualizada_en: isoTs(t.posActualizadaEn ?? null),
   };
 }
 
@@ -394,6 +437,8 @@ async function main() {
     direccion: p.direccion,
     localidad: p.localidad,
     sublocalidad: p.sublocalidad,
+    lat: p.lat ?? null,
+    lng: p.lng ?? null,
     llegada_real: isoTs(p.llegadaReal),
     salida_real: isoTs(p.salidaReal),
   })));
