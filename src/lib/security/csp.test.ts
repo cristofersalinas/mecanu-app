@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contentSecurityPolicy } from "./csp";
+import { contentSecurityPolicy, permissionsPolicyPortal } from "./csp";
 
 describe("contentSecurityPolicy", () => {
   const prod = contentSecurityPolicy({ desarrollo: false });
@@ -23,9 +23,9 @@ describe("contentSecurityPolicy", () => {
     }
   });
 
-  it("deja pasar el mapa de la landing", () => {
-    expect(prod).toContain("basemaps.cartocdn.com");
-    expect(prod).toContain("demotiles.maplibre.org");
+  it("deja pasar el websocket Realtime de Supabase", () => {
+    expect(prod).toContain("https://*.supabase.co");
+    expect(prod).toContain("wss://*.supabase.co");
   });
 
   it("no permite embeber la página en un iframe ajeno", () => {
@@ -41,5 +41,21 @@ describe("contentSecurityPolicy", () => {
   it("unsafe-eval solo en desarrollo", () => {
     expect(dev).toContain("unsafe-eval");
     expect(prod).not.toContain("unsafe-eval");
+  });
+});
+
+describe("permissionsPolicyPortal", () => {
+  it("permite geolocation, cámara y micrófono en conductor", () => {
+    const p = permissionsPolicyPortal("conductor");
+    expect(p).toContain("geolocation=(self)");
+    expect(p).toContain("camera=(self)");
+    expect(p).toContain("microphone=(self)");
+  });
+
+  it("deniega geolocation, cámara y micrófono fuera de conductor", () => {
+    const p = permissionsPolicyPortal("default");
+    expect(p).toContain("geolocation=()");
+    expect(p).toContain("camera=()");
+    expect(p).toContain("microphone=()");
   });
 });

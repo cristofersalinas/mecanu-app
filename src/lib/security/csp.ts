@@ -6,8 +6,8 @@
  * bloquea el día que aterrice el banner, el consentimiento no sirve de nada:
  * el script ni llega a ejecutarse.
  *
- * Ningún `localhost:puerto`. `'self'` cubre el origen actual, sea el puerto
- * que sea: un 3000 hardcodeado rompe el dev cuando Next salta a 3001.
+ * Ningún `localhost:puerto`. `'self'` cubre el origen actual: `npm run dev`
+ * en 3000 y `npm run demo` en 3001. Un puerto hardcodeado rompe el otro modo.
  *
  * `'unsafe-inline'` en script es un compromiso con Next (bootstrap) y con GTM
  * (el snippet). Un nonce sería más estricto y se puede añadir después; hoy
@@ -46,6 +46,9 @@ const MAPA = [
 
 const SENTRY = "https://*.ingest.sentry.io https://*.ingest.de.sentry.io";
 
+/** Auth, REST y websocket Realtime del proyecto Supabase. */
+const SUPABASE = "https://*.supabase.co wss://*.supabase.co";
+
 const FUENTES = "https://fonts.googleapis.com https://fonts.gstatic.com";
 
 /** Bandeja Inbox Embed + setup de WhatsApp Business (Kapso). No afloja frame-ancestors. */
@@ -61,7 +64,7 @@ export function contentSecurityPolicy(opts: { desarrollo: boolean }): string {
     `style-src 'self' 'unsafe-inline' ${FUENTES}`,
     `font-src 'self' data: ${FUENTES}`,
     `img-src 'self' data: blob: ${ANALYTICA} ${PUBLICIDAD} ${MAPA}`,
-    `connect-src 'self' ${ANALYTICA} ${PUBLICIDAD} ${MAPA} ${SENTRY}`,
+    `connect-src 'self' ${ANALYTICA} ${PUBLICIDAD} ${MAPA} ${SENTRY} ${SUPABASE}`,
     "worker-src 'self' blob:",
     `frame-src https://www.googletagmanager.com https://www.facebook.com ${KAPSO_FRAMES}`,
     "frame-ancestors 'none'",
@@ -72,16 +75,26 @@ export function contentSecurityPolicy(opts: { desarrollo: boolean }): string {
   ].join("; ");
 }
 
+/**
+ * Permissions-Policy por portal.
+ * En `/conductor` hace falta GPS, cámara (fotos) y micrófono (vídeo del
+ * check-in y nota de voz). En el resto se deniega: landing/panel no deben
+ * pedir esos sensores.
+ */
+export function permissionsPolicyPortal(portal: "conductor" | "default"): string {
+  if (portal === "conductor") {
+    return "camera=(self), microphone=(self), geolocation=(self), payment=(), usb=()";
+  }
+  return "camera=(), microphone=(), geolocation=(), payment=(), usb=()";
+}
+
+/** Cabeceras de seguridad sin Permissions-Policy (se aplica por path en next.config). */
 export function cabecerasDeSeguridad(opts: { desarrollo: boolean }): { key: string; value: string }[] {
   return [
     { key: "Content-Security-Policy", value: contentSecurityPolicy(opts) },
     { key: "X-Frame-Options", value: "DENY" },
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-    {
-      key: "Permissions-Policy",
-      value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
-    },
     {
       key: "Strict-Transport-Security",
       value: "max-age=63072000; includeSubDomains; preload",

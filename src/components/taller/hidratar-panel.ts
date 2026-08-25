@@ -29,3 +29,6 @@ export function supabasePanelActivo(): boolean {
     || process.env.MECANU_USE_SUPABASE === '1'
   );
 }
+
+/** El snapshot no puede cachearse: si lo hace, el kanban no se mueve hasta recargar. */
+export const FETCH_SNAPSHOT: RequestInit = { cache: 'no-store' };
