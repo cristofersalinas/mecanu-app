@@ -57,7 +57,8 @@ function esApiPublica(pathname: string) {
     pathname === "/api/v1/panel/snapshot" ||
     pathname.startsWith("/api/v1/panel/") ||
     pathname === "/api/v1/conductor/snapshot" ||
-    pathname.startsWith("/api/v1/conductor/")
+    pathname.startsWith("/api/v1/conductor/") ||
+    pathname.startsWith("/api/v1/s/")
   );
 }
 
@@ -66,6 +67,18 @@ function aplicarCookies(desde: NextResponse, hacia: NextResponse): NextResponse 
     hacia.cookies.set(c.name, c.value);
   });
   return hacia;
+}
+
+/** Rewrite interno conservando `x-mecanu-pathname` (path bonito → `/panel`). */
+function rewriteConPathname(
+  url: URL,
+  requestHeaders: Headers,
+  sesionRes: NextResponse,
+): NextResponse {
+  return aplicarCookies(
+    sesionRes,
+    NextResponse.rewrite(url, { request: { headers: requestHeaders } }),
+  );
 }
 
 /** Cookie sticky 50/50 del hero A/B en homes de la landing pública. */
@@ -188,13 +201,13 @@ export async function proxy(request: NextRequest) {
       }
       const u = request.nextUrl.clone();
       u.pathname = "/panel/entrar";
-      return aplicarCookies(sesionRes, NextResponse.rewrite(u));
+      return rewriteConPathname(u, requestHeaders, sesionRes);
     }
 
     if (internoAuth) {
       const u = request.nextUrl.clone();
       u.pathname = internoAuth;
-      return aplicarCookies(sesionRes, NextResponse.rewrite(u));
+      return rewriteConPathname(u, requestHeaders, sesionRes);
     }
 
     if (esRutaPanelBonita(pathname)) {
@@ -206,7 +219,7 @@ export async function proxy(request: NextRequest) {
       }
       const u = request.nextUrl.clone();
       u.pathname = "/panel";
-      return aplicarCookies(sesionRes, NextResponse.rewrite(u));
+      return rewriteConPathname(u, requestHeaders, sesionRes);
     }
 
     if (!user && esPanelApp(pathname)) {
@@ -243,17 +256,25 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname === "/api" || pathname.startsWith("/api/")) {
-    const ip = ipDeRequest(request.headers);
-    const regla = metodoEsEscritura(request.method) ? REGLA_API_ESCRITURA : REGLA_API_LECTURA;
-    const limite = comprobarRateLimit(`api:${ip}`, Date.now(), regla);
-    if (!limite.permitido) {
-      return NextResponse.json(
-        { error: { code: "rate_limited", message: "Demasiadas peticiones. Espera un momento." } },
-        {
-          status: 429,
-          headers: { "Retry-After": String(limite.retryAfterSeg) },
-        },
-      );
+    /* En demo local el poll del panel + GPS + clicks del conductor
+       saturan el cupo de escritura y el móvil encola «falsos» fallos. */
+    const demoLocal =
+      process.env.MECANU_DEMO === "1" || process.env.NEXT_PUBLIC_MECANU_DEMO === "1";
+    const esGps =
+      pathname.includes("/traslados/") && pathname.endsWith("/gps");
+    if (!demoLocal && !esGps) {
+      const ip = ipDeRequest(request.headers);
+      const regla = metodoEsEscritura(request.method) ? REGLA_API_ESCRITURA : REGLA_API_LECTURA;
+      const limite = comprobarRateLimit(`api:${ip}`, Date.now(), regla);
+      if (!limite.permitido) {
+        return NextResponse.json(
+          { error: { code: "rate_limited", message: "Demasiadas peticiones. Espera un momento." } },
+          {
+            status: 429,
+            headers: { "Retry-After": String(limite.retryAfterSeg) },
+          },
+        );
+      }
     }
   }
 

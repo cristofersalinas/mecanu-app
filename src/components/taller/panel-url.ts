@@ -1,37 +1,65 @@
 'use client';
 
-import { esHostNegocio } from '@/lib/mecanu/host-negocio';
 import {
-  parsePathBonitoPanel,
-  pathBonitoPanel,
-  type PanelNavId,
-  type PanelUbicacion,
-  SUBNAV_DEFAULT,
-} from '@/lib/mecanu/panel-rutas';
-import type { NavId } from './store';
+  leerEstadoUrl,
+  panelSoportaUrlEstado,
+  urlCompletaEstado,
+  type PanelUrlEstado,
+} from '@/lib/mecanu/panel-url-estado';
+import type { PanelUbicacion } from '@/lib/mecanu/panel-rutas';
+import type { NavId, Seleccion } from './store';
+
+export { leerEstadoUrl, panelSoportaUrlEstado, type PanelUrlEstado };
 
 export function urlsPanelActivas(): boolean {
   if (typeof window === 'undefined') return false;
-  return esHostNegocio(window.location.host);
+  return panelSoportaUrlEstado({ pathname: window.location.pathname });
+}
+
+function locActual() {
+  return {
+    pathname: window.location.pathname,
+    search: window.location.search,
+    host: window.location.host,
+  };
 }
 
 export function ubicacionDesdeUrl(): PanelUbicacion | null {
   if (!urlsPanelActivas()) return null;
-  return parsePathBonitoPanel(window.location.pathname);
+  const e = leerEstadoUrl(locActual());
+  return { nav: e.nav, sub: e.sub };
 }
 
-/** Solo sincroniza nav/sub. La ficha abierta vive en memoria, no en la URL. */
-export function sincronizarUrlPanel(input: {
-  nav: NavId;
-  sub: string;
-}, opts?: { replace?: boolean }): void {
+export function estadoCompletoDesdeUrl(): PanelUrlEstado | null {
+  if (!urlsPanelActivas()) return null;
+  return leerEstadoUrl(locActual());
+}
+
+/** Sincroniza módulo, subsección, ficha abierta y filtros con la barra de direcciones. */
+export function sincronizarEstadoUrlPanel(
+  input: {
+    nav: NavId;
+    sub: string;
+    seleccion: Seleccion | null;
+    modoFicha: 'panel' | 'ficha';
+    filtros: Record<string, string>;
+  },
+  opts?: { replace?: boolean },
+): void {
   if (!urlsPanelActivas()) return;
-  const path = pathBonitoPanel({
-    nav: input.nav as PanelNavId,
+
+  const estado: PanelUrlEstado = {
+    nav: input.nav as PanelUrlEstado['nav'],
     sub: input.sub,
-  });
-  const url = path + window.location.search + window.location.hash;
-  if (window.location.pathname + window.location.search + window.location.hash === url) return;
+    seleccion: input.seleccion,
+    modoFicha: input.modoFicha,
+    filtros: input.filtros,
+  };
+
+  const url = urlCompletaEstado(estado, locActual()) + window.location.hash;
+  const actual = window.location.pathname + window.location.search + window.location.hash;
+  if (actual === url) return;
+
   if (opts?.replace) {
     window.history.replaceState(null, '', url);
   } else {
@@ -39,8 +67,16 @@ export function sincronizarUrlPanel(input: {
   }
 }
 
+/** @deprecated Usar sincronizarEstadoUrlPanel */
+export function sincronizarUrlPanel(input: { nav: NavId; sub: string }, opts?: { replace?: boolean }): void {
+  sincronizarEstadoUrlPanel(
+    { ...input, seleccion: null, modoFicha: 'panel', filtros: {} },
+    opts,
+  );
+}
+
 export function subInicialDesdeUrl(nav: NavId, fallback: string): string {
   const u = ubicacionDesdeUrl();
   if (!u || u.nav !== nav) return fallback;
-  return u.sub || SUBNAV_DEFAULT[nav as PanelNavId] || fallback;
+  return u.sub || fallback;
 }

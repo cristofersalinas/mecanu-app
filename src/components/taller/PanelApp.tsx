@@ -9,6 +9,7 @@ import { Toast } from '@/components/ds/Toast';
 import { NAV_ITEMS, NavId, PanelProvider, usePanel } from './store';
 import { SidebarNav } from './ui/Primitives';
 import styles from './panel.module.css';
+import type { PanelUrlEstado } from './panel-url';
 
 import { GeneralDashboard } from './general/GeneralDashboard';
 import { TableroView } from './tablero/TableroView';
@@ -47,6 +48,24 @@ const SUBTITULOS: Record<string, string> = {
   whatsapp: 'WhatsApp',
 };
 
+/** Subsección alcanzable por pestaña o vista raíz del módulo: sin flecha atrás en cabecera. */
+const SUBS_DIRECTOS_MODULO: Partial<Record<NavId, readonly string[]>> = {
+  tablero: ['tareas', 'traslados', 'campanas'],
+  config: ['perfil', 'aprender', 'empresa', 'sucursales', 'recepcion', 'whatsapp'],
+  contactos: ['clientes'],
+  conductores: ['conductores'],
+};
+
+function subDirectoDelModulo(nav: NavId, sub: string): boolean {
+  return SUBS_DIRECTOS_MODULO[nav]?.includes(sub) ?? false;
+}
+
+function migasMuestranFlecha(nav: NavId, sub: string): boolean {
+  if (subDirectoDelModulo(nav, sub)) return false;
+  if (nav === 'conductores' && sub === 'agendar') return false;
+  return true;
+}
+
 function Shell() {
   const p = usePanel();
   const [minimizado, setMinimizado] = useState(false);
@@ -76,6 +95,7 @@ function Shell() {
   }, [p]);
 
   const hayMigas = p.sub !== p.nav && !!SUBTITULOS[p.sub];
+  const migasConFlecha = hayMigas && migasMuestranFlecha(p.nav, p.sub);
   const trailDeber = p.deberActivo;
 
   return (
@@ -87,15 +107,6 @@ function Shell() {
           fontSize: 12, fontWeight: 600, boxShadow: '0 8px 24px rgba(0,0,0,.2)',
         }}>
           Cargando datos del taller…
-        </div>
-      ) : null}
-      {p.fuenteDatos === 'supabase' && !p.cargandoDatos ? (
-        <div style={{
-          position: 'fixed', top: 12, right: 12, zIndex: 200,
-          padding: '6px 10px', borderRadius: 8, background: '#ecfdf5', color: '#065f46',
-          fontSize: 11, fontWeight: 700, border: '1px solid #a7f3d0',
-        }}>
-          Datos · Supabase
         </div>
       ) : null}
       <div
@@ -173,18 +184,26 @@ function Shell() {
               </div>
             ) : hayMigas ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 2 }}>
-                <button
-                  type="button"
-                  onClick={() => p.irA(p.nav)}
-                  aria-label="Volver atrás"
-                  className={styles.iconBtn}
-                  style={{ width: 22, height: 22, border: '1px solid var(--mecanu-border)', borderRadius: 5 }}
-                >
-                  <Icon name="arrow_back" size="sm" />
-                </button>
-                <button type="button" className={styles.linkBtn} style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }} onClick={() => p.irA(p.nav)}>
-                  {TITULOS[p.nav]}
-                </button>
+                {migasConFlecha ? (
+                  <button
+                    type="button"
+                    onClick={() => p.irA(p.nav)}
+                    aria-label="Volver atrás"
+                    className={styles.iconBtn}
+                    style={{ width: 22, height: 22, border: '1px solid var(--mecanu-border)', borderRadius: 5 }}
+                  >
+                    <Icon name="arrow_back" size="sm" />
+                  </button>
+                ) : null}
+                {migasConFlecha ? (
+                  <button type="button" className={styles.linkBtn} style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }} onClick={() => p.irA(p.nav)}>
+                    {TITULOS[p.nav]}
+                  </button>
+                ) : (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }}>
+                    {TITULOS[p.nav]}
+                  </span>
+                )}
                 <span aria-hidden style={{ fontSize: 11, color: 'var(--mecanu-neutral-200)' }}>/</span>
               </div>
             ) : (
@@ -242,9 +261,9 @@ function Shell() {
   );
 }
 
-export function PanelApp() {
+export function PanelApp({ inicial }: { inicial?: PanelUrlEstado | null }) {
   return (
-    <PanelProvider>
+    <PanelProvider inicial={inicial}>
       <Shell />
     </PanelProvider>
   );
