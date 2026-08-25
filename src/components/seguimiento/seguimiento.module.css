@@ -230,10 +230,20 @@
 }
 
 .gsDot {
-  width: 7px;
-  height: 7px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: rgb(255 255 255 / 55%);
+  background: rgb(255 255 255 / 22%);
+  border: 2px solid rgb(255 255 255 / 35%);
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  color: transparent;
+}
+
+.gsDot svg {
+  width: 10px;
+  height: 10px;
 }
 
 .gsLabel {
@@ -248,13 +258,25 @@
   opacity: 1 !important;
 }
 
-.gsHecho .gsDot {
-  background: #a7f3d0;
+.gsHecho .gsDot,
+.gsActual .gsDot {
+  background: #14b8a6;
+  border-color: #5eead4;
+  color: #fff;
+}
+
+.gsActual .gsLabel {
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .gsActual .gsDot {
-  background: #fff;
-  box-shadow: 0 0 0 3px rgb(255 255 255 / 35%);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 28%);
+}
+
+.gsPend .gsLabel {
+  opacity: 0.75;
 }
 
 .dashGauges {
