@@ -26,6 +26,12 @@ sesiones. Sin Kapso.
 
 ## A · Esta rama / trabajo local (código)
 
+### GPS conductor + mapa seguimiento
+- [x] Permissions-Policy en `/conductor` + gate GPS obligatorio
+- [x] Migración `0015_gps_ubicaciones` (aplicar en mecanu-dev pendiente ops)
+- [x] POST `/api/v1/traslados/:id/gps` + GET `/api/v1/s/:token/ubicacion`
+- [x] MapLibre en `/s/{token}` (mapa + progreso; actividad debajo)
+
 ### Auth / URLs negocio (local, sin commit limpio)
 - [ ] Commit aparte de login/registro (globo, card blanca, quitar «Entrar» de la landing, rutas `negocio.mecanu.com`) — hecho en local, mezclado con otros cambios
 - [ ] Commit aparte del resto (clientes Particular, seed full, panel URLs sin IDs, etc.) o PRs partidos
@@ -36,6 +42,7 @@ sesiones. Sin Kapso.
 - [ ] Commit del fix
 
 ### UX / producto en código
+- [ ] Panel en vivo: kanban se actualiza con Realtime en `public.rutas` (`0016`/`0017` + `usePanelKanbanRealtime`) y poll de respaldo 2,5 s. **Ops:** aplicar `0016` y `0017` en mecanu-dev.
 - [ ] Deshacer acciones (hoy solo toast corto en conductor)
 - [ ] Hallazgo de check-in → crear campaña en Postgres (`registrarHallazgoCampana` aún devuelve `null`)
 - [ ] WhatsApp de campañas: unificar `CANALES_SEED` con `whatsapp_conversaciones` (bandeja personal ya existe)

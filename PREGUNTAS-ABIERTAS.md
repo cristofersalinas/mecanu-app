@@ -131,6 +131,13 @@ Kapso Inbox (PR #30) queda aparcado: era Business/Cloud API, otro camino.
 
 Push al conductor: sigue sin simular ni implementar.
 
+### 16b. Panel: kanban en vivo cuando el conductor mueve el estado
+Hecho en código: Realtime sobre `public.rutas` (migraciones `0016`/`0017`) +
+`usePanelKanbanRealtime` (debounce 400 ms → `GET /api/v1/panel/snapshot` sin
+cache). Poll de 2,5 s de respaldo si el websocket no entrega el WAL. **Ops:**
+aplicar `0016` y `0017` en mecanu-dev. No usar `filter: taller_id=eq.…` con
+replica identity default (el `old` del UPDATE no trae `taller_id`).
+
 ## Ambigüedades menores de tipo/forma
 
 ### 17. Config del pipeline (`ESTADOS`, `TAGS_*`, `PRESUPUESTO_ESTADOS`) no tiene Zod

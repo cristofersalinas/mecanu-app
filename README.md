@@ -2,23 +2,17 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Tres comandos de desarrollo. Cada modo tiene puerto fijo; si está ocupado, el arranque falla (no salta a otro).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev     # http://localhost:3000  modo normal, con login
+npm run demo    # http://localhost:3001  modo demo, sin login, con Simular
+npm run stop    # mata lo que escuche en 3000 y 3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Puedes tener `dev` y `demo` a la vez: no compiten por el puerto. Si uno se niega a arrancar, `npm run stop` limpia los dos y vuelves a lanzar el que quieras.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Detalle de mundos (local vs mecanu.com, sin staging): [`docs/ENTORNOS.md`](docs/ENTORNOS.md).
 
 ## Learn More
 
