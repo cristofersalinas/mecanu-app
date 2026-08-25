@@ -1,24 +1,6 @@
 import type { SeguimientoPublico } from '@/lib/mecanu/seguimiento-ruta';
 import styles from './seguimiento.module.css';
 
-function iconoEvento(tipo: string): string {
-  switch (tipo) {
-    case 'checkin':
-    case 'checkout':
-      return 'CI';
-    case 'gps':
-      return 'GP';
-    case 'comunicacion':
-      return 'WA';
-    case 'incidencia':
-      return '!';
-    case 'previsto':
-      return '·';
-    default:
-      return '•';
-  }
-}
-
 /** Una sola línea de estado: evita repetir subestado + mensaje. */
 function estadoLectura(data: SeguimientoPublico): string {
   const msg = data.mensaje.trim();
@@ -27,6 +9,21 @@ function estadoLectura(data: SeguimientoPublico): string {
   if (!sub) return msg;
   if (msg.toLowerCase().includes(sub.toLowerCase())) return msg;
   return `${sub}. ${msg}`;
+}
+
+function CheckMark() {
+  return (
+    <svg className={styles.tlCheck} viewBox="0 0 16 16" aria-hidden>
+      <path
+        d="M3.2 8.2 6.4 11.4 12.8 4.6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function DashCluster({ data }: { data: SeguimientoPublico }) {
@@ -66,7 +63,20 @@ function DashCluster({ data }: { data: SeguimientoPublico }) {
                 }
                 title={p.label}
               >
-                <span className={styles.gsDot} />
+                <span className={styles.gsDot}>
+                  {p.estado === 'hecho' || p.estado === 'actual' ? (
+                    <svg viewBox="0 0 16 16" aria-hidden>
+                      <path
+                        d="M3.2 8.2 6.4 11.4 12.8 4.6"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : null}
+                </span>
                 <span className={styles.gsLabel}>{p.label}</span>
               </li>
             ))}
@@ -159,33 +169,56 @@ function TripMap({ data }: { data: SeguimientoPublico }) {
 }
 
 function TimelineBlock({ data }: { data: SeguimientoPublico }) {
+  const events = data.timeline;
+  const latest =
+    events.find((e) => e.estado === 'actual') ??
+    [...events].reverse().find((e) => e.estado === 'hecho') ??
+    events[0] ??
+    null;
+
   return (
     <section className={styles.timelineCard} aria-label="Actividad">
       <h2 className={styles.sectionTitle}>Actividad</h2>
+
+      {latest ? (
+        <div className={styles.tlLatest}>
+          <p className={styles.tlLatestKicker}>Última actualización</p>
+          <p className={styles.tlLatestTitle}>{latest.titulo}</p>
+          <p className={styles.tlLatestMeta}>
+            {latest.horaLabel}
+            {latest.detalle ? ` · ${latest.detalle}` : ''}
+          </p>
+        </div>
+      ) : null}
+
       <ol className={styles.timeline}>
-        {data.timeline.map((e) => (
-          <li
-            key={e.id}
-            className={`${styles.tlItem} ${
-              e.estado === 'hecho'
-                ? styles.tlHecho
-                : e.estado === 'actual'
-                  ? styles.tlActual
-                  : styles.tlPend
-            }`}
-          >
-            <span className={styles.tlIcon} aria-hidden>
-              {iconoEvento(e.tipo)}
-            </span>
-            <div className={styles.tlBody}>
-              <p className={styles.tlTime}>{e.horaLabel}</p>
-              <p className={styles.tlTitle}>{e.titulo}</p>
-              {e.detalle && e.estado !== 'hecho' ? (
-                <p className={styles.tlDet}>{e.detalle}</p>
-              ) : null}
-            </div>
-          </li>
-        ))}
+        {events.map((e, i) => {
+          const isLast = i === events.length - 1;
+          const cls =
+            e.estado === 'hecho'
+              ? styles.tlHecho
+              : e.estado === 'actual'
+                ? styles.tlActual
+                : styles.tlPend;
+          return (
+            <li key={e.id} className={`${styles.tlItem} ${cls}`}>
+              <div className={styles.tlRail} aria-hidden>
+                <span className={styles.tlNode}>
+                  {e.estado === 'hecho' || e.estado === 'actual' ? <CheckMark /> : null}
+                </span>
+                {!isLast ? <span className={styles.tlLine} /> : null}
+              </div>
+              <div className={styles.tlBody}>
+                <p className={styles.tlTitle}>{e.titulo}</p>
+                <p className={styles.tlMeta}>
+                  {[e.detalle, e.horaLabel !== 'Pendiente' ? e.horaLabel : null]
+                    .filter(Boolean)
+                    .join(' · ') || (e.estado === 'pendiente' ? 'Pendiente' : null)}
+                </p>
+              </div>
+            </li>
+          );
+        })}
       </ol>
     </section>
   );
