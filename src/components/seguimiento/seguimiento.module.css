@@ -28,7 +28,7 @@
 .shell {
   position: relative;
   z-index: 1;
-  width: min(480px, 100%);
+  width: min(720px, 100%);
   margin: 0 auto;
   padding: 20px 14px 48px;
   display: flex;
@@ -322,7 +322,7 @@
   color: var(--sg-muted);
 }
 
-/* —— Recorrido (mapa + tramos sin repetir direcciones) —— */
+/* —— Recorrido (solo origen → destino) —— */
 .trip,
 .timelineCard,
 .vehicle,
@@ -439,93 +439,16 @@
   color: var(--sg-warn);
 }
 
-.legList {
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-}
-
-.leg,
-.legOn {
-  border-radius: 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--sg-line);
-  background: #fff;
-}
-
-.legOn {
-  border-color: rgb(15 118 110 / 35%);
-  background: linear-gradient(180deg, #e7f7f4, #f5fbf9);
-}
-
-.legMain {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 0.8rem;
-}
-
-.legMain span {
-  color: var(--sg-muted);
-  text-align: right;
-}
-
-.legVentana {
-  margin: 4px 0 0;
+.tripMeta {
+  margin: 10px 2px 0;
   font-size: 0.78rem;
-  color: var(--sg-muted);
-}
-
-.legTimes {
-  margin-top: 6px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  font-size: 0.74rem;
-}
-
-.faltante {
-  font-style: normal;
-  color: var(--sg-warn);
-  font-weight: 700;
-}
-
-/* —— Timeline (estilo seguimiento paquete) —— */
-.timelineCard .sectionTitle {
-  margin-bottom: 12px;
-}
-
-.tlLatest {
-  margin: 0 0 16px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #e8f7f3;
-  border-left: 4px solid var(--sg-teal);
-}
-
-.tlLatestKicker {
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color: var(--sg-teal-deep);
-}
-
-.tlLatestTitle {
-  margin: 4px 0 0;
-  font-size: 1.05rem;
-  font-weight: 800;
-  line-height: 1.25;
-  color: var(--sg-ink);
-}
-
-.tlLatestMeta {
-  margin: 6px 0 0;
-  font-size: 0.82rem;
   line-height: 1.4;
   color: var(--sg-muted);
+}
+
+/* —— Historial (solo hechos) —— */
+.timelineCard .sectionTitle {
+  margin-bottom: 12px;
 }
 
 .timeline {
@@ -636,9 +559,22 @@
   color: var(--sg-muted);
 }
 
-/* —— Panel vehículo —— */
+/* —— Estado del coche (check-in / daños / hallazgos) —— */
 .vehicle .sectionTitle {
   margin-bottom: 12px;
+}
+
+.blockKicker {
+  margin: 14px 0 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sg-muted);
+}
+
+.blockKicker:first-of-type {
+  margin-top: 0;
 }
 
 .emptyCheck {
@@ -989,4 +925,263 @@
     left: 0;
     opacity: 0.35;
   }
+}
+
+/* —— Mapa vivo + progreso —— */
+
+.mapBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--sg-card);
+  border: 1px solid var(--sg-line);
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 10px 28px -18px rgb(12 26 25 / 35%);
+}
+
+.mapRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+@media (min-width: 720px) {
+  .mapRow {
+    grid-template-columns: minmax(0, 1.55fr) minmax(160px, 0.7fr);
+  }
+}
+
+.mapWrap {
+  position: relative;
+  min-height: 260px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #e8eef0;
+}
+
+.mapCanvas {
+  width: 100%;
+  height: 280px;
+}
+
+.mapCallout {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+  padding: 8px 12px;
+  background: #fff;
+  border-radius: 999px;
+  box-shadow: 0 6px 20px -8px rgb(0 0 0 / 35%);
+}
+
+.mapCalloutDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0d9488;
+  flex: none;
+  box-shadow: 0 0 0 4px rgb(13 148 136 / 22%);
+}
+
+.mapCalloutText {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--sg-ink);
+  line-height: 1.25;
+}
+
+.mapLegend {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 10px;
+  list-style: none;
+  background: rgb(255 255 255 / 94%);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px -10px rgb(0 0 0 / 35%);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--sg-ink);
+}
+
+.mapLegend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.2;
+}
+
+.legOrigen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #334155;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  flex: none;
+}
+
+.legDestino {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #dc2626;
+  flex: none;
+}
+
+.legVolante {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0d9488;
+  color: #fff;
+  flex: none;
+}
+
+.mapEmpty {
+  position: absolute;
+  inset: auto 12px 12px;
+  z-index: 2;
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--sg-muted);
+  background: rgb(255 255 255 / 92%);
+  border-radius: 10px;
+}
+
+.pasosResumen {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 2px;
+}
+
+.pasosTitle {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sg-muted);
+}
+
+.pasosList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pasosList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 0;
+  position: relative;
+}
+
+.pasosList li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 22px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--sg-line);
+}
+
+.pasoDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: none;
+  margin-top: 3px;
+  border: 2px solid var(--sg-line);
+  background: #fff;
+  z-index: 1;
+}
+
+.pasoHecho .pasoDot {
+  background: var(--sg-teal);
+  border-color: var(--sg-teal);
+}
+
+.pasoActual .pasoDot {
+  background: #fff;
+  border-color: var(--sg-teal);
+  box-shadow: 0 0 0 3px rgb(15 118 110 / 22%);
+}
+
+.pasoLabel {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--sg-muted);
+  line-height: 1.3;
+}
+
+.pasoHecho .pasoLabel {
+  color: var(--sg-ink);
+}
+
+.pasoActual .pasoLabel {
+  color: var(--sg-teal-deep);
+  font-weight: 800;
+}
+
+.dirStrip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 4px 2px 0;
+}
+
+.actividadCard {
+  background: var(--sg-card);
+  border: 1px solid var(--sg-line);
+  border-radius: 18px;
+  padding: 18px 16px 14px;
+  box-shadow: 0 12px 32px -16px rgb(12 26 25 / 40%);
+}
+
+.actividadTitle {
+  margin: 0 0 14px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--sg-ink);
+}
+
+.actividadCard .tlTitle {
+  font-size: 1.02rem;
+  font-weight: 750;
+}
+
+.actividadCard .tlMeta {
+  font-size: 0.86rem;
 }

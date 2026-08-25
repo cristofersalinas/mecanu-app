@@ -1,8 +1,9 @@
 /**
  * Vista pública de seguimiento de ruta (`/s/{token}`).
- * Timeline tipo envío + presupuesto + check-in (o aviso si aún no hay).
+ * Hero de estado + recorrido A→B + historial de hechos + check-in/presupuesto.
  */
 import { ESTADO, ESTADOS_TRAMO, ORIGEN_LINEA, ROLES_TRAMO, subestadoMeta } from './mecanu-pipeline';
+import { construirUbicacionSeguimiento } from './ubicacion-seguimiento';
 import type {
   Actividad,
   Conductor,
@@ -108,6 +109,14 @@ export interface SeguimientoPublico {
   presupuesto: PresupuestoPublico | null;
   checkin: CheckinPublico;
   actualizadoLabel: string;
+  /** Snapshot inicial para el mapa (el cliente hace poll después). */
+  ubicacion: {
+    visible: boolean;
+    callout: string;
+    conductor: { lat: number; lng: number; actualizadoEn: string } | null;
+    origen: { lat: number; lng: number; label: string } | null;
+    destino: { lat: number; lng: number; label: string } | null;
+  } | null;
 }
 
 /** Nombre parcial para no exponer apellidos completos en enlace público. */
@@ -199,11 +208,27 @@ export function mensajeSeguimiento(estadoId: string, subestado: string): string 
   if (estadoId === 'completado') return 'Traslado terminado. Gracias por confiar en el taller.';
   if (estadoId === 'en_taller') return 'Tu coche está en el taller. Te avisaremos cuando salga de vuelta.';
   if (estadoId === 'en_ruta') {
-    const sub = subestadoMeta(estadoId, subestado)?.label;
-    return sub ? `En ruta: ${sub.toLowerCase()}.` : 'El conductor está en ruta con tu vehículo.';
+    switch (subestado) {
+      case 'en_camino_origen':
+        return 'En camino a recogerte.';
+      case 'en_origen':
+        return 'Recogiendo el vehículo.';
+      case 'en_transito':
+        return 'En camino al destino.';
+      case 'en_destino':
+        return 'En el punto de entrega.';
+      default:
+        return 'El conductor está en ruta con tu vehículo.';
+    }
   }
   if (estadoId === 'agendado') return 'Todo listo: ventana y conductor confirmados. Te avisamos si cambia algo.';
   return 'Estamos organizando tu traslado.';
+}
+
+/** Título del hero: lo más concreto (subestado en ruta), sin repetir el pipeline. */
+export function tituloEstadoPublico(estadoId: string, estadoLabel: string, subestadoLabel: string): string {
+  if (estadoId === 'en_ruta' && subestadoLabel.trim()) return subestadoLabel.trim();
+  return estadoLabel;
 }
 
 function etiquetaParadaPublica(p: Parada | null | undefined): string {
@@ -272,6 +297,10 @@ function tipoEventoDeActividad(a: Actividad): EventoTimelinePublico['tipo'] {
   return 'estado';
 }
 
+/**
+ * Solo hechos reales. Lo previsto (llegada, vuelta, check-in) ya lo cubren
+ * el hero, el recorrido y el bloque del coche — no se repite aquí.
+ */
 export function timelineDesdeActividad(
   actividad: Actividad[],
   tramos: Tramo[],
@@ -306,56 +335,12 @@ export function timelineDesdeActividad(
     }
   }
 
-  const previstos: EventoTimelinePublico[] = [];
   const ida = tramos.find((t) => t.rol === 'ida');
-  const vuelta = tramos.find((t) => t.rol === 'vuelta');
-
-  if (ida && ida.estado !== 'completado' && ida.estado !== 'cancelado') {
-    if (!checkin || checkin.tipo !== 'check-in') {
-      previstos.push({
-        id: 'prev-checkin',
-        ts: null,
-        horaLabel: 'Pendiente',
-        titulo: 'Check-in en la recogida',
-        detalle:
-          'Aún no hay registro. Cuando el conductor recoja el vehículo verás km, combustible, fotos y firma aquí.',
-        estado: 'pendiente',
-        tipo: 'previsto',
-      });
-    }
-    if (ida.estado === 'en_curso' || ida.estado === 'agendado') {
-      previstos.push({
-        id: 'prev-llegada-taller',
-        ts: null,
-        horaLabel: ida.ventana ? `Previsto · ${ida.ventana.fin}` : 'Pendiente',
-        titulo: 'Llegada al taller',
-        detalle: 'Te avisamos al entregar el coche en el taller.',
-        estado: ida.estado === 'en_curso' ? 'actual' : 'pendiente',
-        tipo: 'previsto',
-      });
-    }
+  if (hechos.length && ida?.estado === 'en_curso') {
+    hechos[hechos.length - 1]!.estado = 'actual';
   }
 
-  if (vuelta && vuelta.estado !== 'completado' && vuelta.estado !== 'cancelado') {
-    previstos.push({
-      id: 'prev-vuelta',
-      ts: null,
-      horaLabel: vuelta.ventana
-        ? `${fmtFecha(vuelta.ventana.fecha)} · ${vuelta.ventana.inicio} – ${vuelta.ventana.fin}`
-        : 'Pendiente de agendar',
-      titulo: 'Vuelta a domicilio',
-      detalle: 'Entrega del vehículo en tu dirección cuando el taller termine.',
-      estado: 'pendiente',
-      tipo: 'previsto',
-    });
-  }
-
-  if (hechos.length && !previstos.some((p) => p.estado === 'actual')) {
-    const last = hechos[hechos.length - 1]!;
-    if (ida?.estado === 'en_curso') last.estado = 'actual';
-  }
-
-  return [...hechos, ...previstos];
+  return hechos;
 }
 
 export function presupuestoPublico(pres: Presupuesto | null | undefined): PresupuestoPublico | null {
@@ -468,6 +453,31 @@ export function construirSeguimientoPublico(opts: {
 
   const ultAct = actividad[0]?.fecha ?? chkInsp?.fecha ?? ruta.creadaEn;
 
+  const tramoActivo =
+    tramos.find((x) => x.id === ruta.tramoActivoId) ??
+    tramos.find((x) => x.estado === 'en_curso') ??
+    tramos[0] ??
+    null;
+  const origen =
+    (tramoActivo?.paradaOrigenId
+      ? paradas.find((p) => p.id === tramoActivo.paradaOrigenId)
+      : null) ??
+    ruta.paradaOrigen ??
+    null;
+  const destino =
+    (tramoActivo?.paradaDestinoId
+      ? paradas.find((p) => p.id === tramoActivo.paradaDestinoId)
+      : null) ??
+    ruta.paradaDestino ??
+    null;
+  const ubicacionFull = construirUbicacionSeguimiento({
+    token,
+    ruta,
+    tramo: tramoActivo,
+    origen,
+    destino,
+  });
+
   return {
     token,
     rutaId: ruta.id,
@@ -495,6 +505,13 @@ export function construirSeguimientoPublico(opts: {
     presupuesto: presupuestoPublico(opts.presupuesto ?? ruta.presupuesto),
     checkin,
     actualizadoLabel: ultAct ? `Actualizado ${fmtFechaHora(ultAct)}` : 'Sin eventos registrados aún',
+    ubicacion: {
+      visible: ubicacionFull.visible,
+      callout: ubicacionFull.callout,
+      conductor: ubicacionFull.conductor,
+      origen: ubicacionFull.origen,
+      destino: ubicacionFull.destino,
+    },
   };
 }
 

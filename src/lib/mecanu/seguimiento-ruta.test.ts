@@ -3,25 +3,66 @@ import {
   checkinPublico,
   construirSeguimientoPublico,
   direccionCorta,
+  mensajeSeguimiento,
   nombreConductorPublico,
   pasosSeguimiento,
   presupuestoPublico,
   progresoPorcentaje,
   rutaPorLinkToken,
+  timelineDesdeActividad,
+  tituloEstadoPublico,
   tramosPublicos,
   ventanaPublica,
 } from './seguimiento-ruta';
-import type { Inspeccion, Presupuesto, RutaVista } from './types';
+import type { Actividad, Inspeccion, Presupuesto, RutaVista, Tramo } from './types';
 
 describe('seguimiento-ruta', () => {
+  it('título público usa subestado en ruta sin repetir «En ruta»', () => {
+    expect(tituloEstadoPublico('en_ruta', 'En ruta', 'En tránsito')).toBe('En tránsito');
+    expect(tituloEstadoPublico('agendado', 'Agendado', 'Confirmado')).toBe('Agendado');
+    expect(mensajeSeguimiento('en_ruta', 'en_transito')).toMatch(/destino/i);
+    expect(mensajeSeguimiento('en_ruta', 'en_transito')).not.toMatch(/^En ruta:/i);
+  });
+
+  it('historial solo incluye hechos, no previstos duplicados', () => {
+    const tramos = [
+      {
+        id: 'TS-1',
+        rol: 'ida',
+        estado: 'en_curso',
+        ventana: { fecha: new Date('2026-08-24'), inicio: '09:00', fin: '10:00' },
+      },
+      {
+        id: 'TS-2',
+        rol: 'vuelta',
+        estado: 'agendado',
+        ventana: null,
+      },
+    ] as unknown as Tramo[];
+    const actividad = [
+      {
+        id: 'LG-1',
+        fecha: new Date('2026-08-23T09:02:00'),
+        label: 'Salida registrada',
+        detalle: 'Desde domicilio',
+        tipo: 'estado',
+      },
+    ] as unknown as Actividad[];
+    const tl = timelineDesdeActividad(actividad, tramos, null);
+    expect(tl).toHaveLength(1);
+    expect(tl[0]?.titulo).toBe('Salida registrada');
+    expect(tl[0]?.estado).toBe('actual');
+    expect(tl.every((e) => e.tipo !== 'previsto')).toBe(true);
+  });
+
   it('acorta el nombre del conductor', () => {
     expect(nombreConductorPublico('Javier Molina Serrano')).toBe('Javier M.');
     expect(nombreConductorPublico(null)).toBeNull();
   });
 
   it('acorta la dirección a localidad', () => {
-    expect(direccionCorta('Av. Providencia 2120, Providencia, Santiago')).toBe(
-      'Providencia, Santiago',
+    expect(direccionCorta('Carrer de Provença 210, 2ºA, 08036 Barcelona')).toBe(
+      '2ºA, 08036 Barcelona',
     );
   });
 
@@ -110,7 +151,7 @@ describe('seguimiento-ruta', () => {
       franjaPropuesta: null,
       seguro: true,
       conductorId: 'd1',
-      direccionOrigen: 'Av. Providencia 2120, Providencia, Santiago',
+      direccionOrigen: 'Carrer de Provença 210, 2ºA, 08036 Barcelona',
       direccionDestino: 'Carrer de Numància 105, Nau 3, 08029 Barcelona',
       etiquetaOrigen: 'Casa',
       etiquetaDestino: 'Taller',
@@ -160,12 +201,14 @@ describe('seguimiento-ruta', () => {
     expect(pub?.vehiculoLabel).toContain('Yaris');
     expect(pub?.conductorLabel).toBe('Javier M.');
     expect(pub?.estadoLabel).toBe('En ruta');
-    expect(pub?.direccionOrigen).toBe('Av. Providencia 2120, Providencia, Santiago');
+    expect(pub?.direccionOrigen).toBe('Carrer de Provença 210, 2ºA, 08036 Barcelona');
     expect(pub?.direccionDestino).toBe('Carrer de Numància 105, Nau 3, 08029 Barcelona');
     expect(pub?.etiquetaOrigen).toBe('Casa');
     expect(pub?.etiquetaDestino).toBe('Taller');
     expect(pub?.checkin.disponible).toBe(false);
     expect(pub?.checkin.pendienteMensaje).toBeTruthy();
+    expect(pub?.ubicacion?.callout).toMatch(/camino|destino|ruta/i);
+    expect(pub?.ubicacion?.visible).toBe(true);
   });
 
   it('expone direcciones completas en tramos públicos', () => {
@@ -196,8 +239,8 @@ describe('seguimiento-ruta', () => {
           tipo: 'cliente',
           subtipo: null,
           etiqueta: 'Casa',
-          direccion: 'Av. Providencia 2120, Providencia, Santiago',
-          localidad: 'Santiago',
+          direccion: 'Carrer de Provença 210, 2ºA, 08036 Barcelona',
+          localidad: 'Barcelona',
           servicios: [],
           salidaReal: new Date('2026-08-24T09:18:00'),
           llegadaReal: null,
@@ -218,7 +261,7 @@ describe('seguimiento-ruta', () => {
       ] as unknown as import('./types').Parada[],
       'TS-1071-1',
     );
-    expect(tramos[0]?.origenDireccion).toContain('Providencia');
+    expect(tramos[0]?.origenDireccion).toContain('Provença');
     expect(tramos[0]?.destinoDireccion).toContain('Numància');
   });
 });

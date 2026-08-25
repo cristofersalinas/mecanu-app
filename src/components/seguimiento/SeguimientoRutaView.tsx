@@ -1,14 +1,18 @@
-import type { SeguimientoPublico } from '@/lib/mecanu/seguimiento-ruta';
+import {
+  tituloEstadoPublico,
+  type SeguimientoPublico,
+} from '@/lib/mecanu/seguimiento-ruta';
+import type { UbicacionSeguimientoPublico } from '@/lib/mecanu/repo/repo';
+import { PasosResumen, SeguimientoLiveBlock } from './SeguimientoLiveBlock';
 import styles from './seguimiento.module.css';
 
-/** Una sola línea de estado: evita repetir subestado + mensaje. */
-function estadoLectura(data: SeguimientoPublico): string {
+/** Subtítulo: solo si aporta algo distinto del título. */
+function detalleEstado(data: SeguimientoPublico, titulo: string): string | null {
   const msg = data.mensaje.trim();
-  const sub = data.subestadoLabel.trim();
-  if (!msg) return sub;
-  if (!sub) return msg;
-  if (msg.toLowerCase().includes(sub.toLowerCase())) return msg;
-  return `${sub}. ${msg}`;
+  if (!msg) return null;
+  if (msg.toLowerCase().includes(titulo.toLowerCase())) return null;
+  if (titulo.toLowerCase().includes(msg.replace(/\.$/, '').toLowerCase())) return null;
+  return msg;
 }
 
 function CheckMark() {
@@ -27,7 +31,9 @@ function CheckMark() {
 }
 
 function DashCluster({ data }: { data: SeguimientoPublico }) {
-  const lectura = estadoLectura(data);
+  const titulo = tituloEstadoPublico(data.estadoId, data.estadoLabel, data.subestadoLabel);
+  const detalle = detalleEstado(data, titulo);
+
   return (
     <section className={styles.dash} aria-label="Estado del traslado">
       <div className={styles.dashGlow} aria-hidden />
@@ -38,8 +44,8 @@ function DashCluster({ data }: { data: SeguimientoPublico }) {
             {data.seguro ? 'Seguro ON' : 'Sin seguro'}
           </p>
         </div>
-        <h1 className={styles.dashEstado}>{data.estadoLabel}</h1>
-        <p className={styles.dashLectura}>{lectura}</p>
+        <h1 className={styles.dashEstado}>{titulo}</h1>
+        {detalle ? <p className={styles.dashLectura}>{detalle}</p> : null}
 
         <div className={styles.gauge} aria-label={`Progreso ${data.progresoPct} %`}>
           <div className={styles.gaugeTrack}>
@@ -102,124 +108,70 @@ function DashCluster({ data }: { data: SeguimientoPublico }) {
   );
 }
 
-function TripMap({ data }: { data: SeguimientoPublico }) {
+/** Direcciones compactas bajo el mapa (no sustituye al mapa real). */
+function DireccionesStrip({ data }: { data: SeguimientoPublico }) {
   return (
-    <section className={styles.trip} aria-label="Recorrido">
-      <div className={styles.tripHead}>
-        <h2 className={styles.sectionTitle}>Recorrido</h2>
-        <p className={styles.tripServicio}>{data.servicio}</p>
+    <div className={styles.dirStrip} aria-label="Origen y destino">
+      <div>
+        <p className={styles.tripRol}>Origen · {data.etiquetaOrigen ?? 'Recogida'}</p>
+        {data.direccionOrigen ? (
+          <p className={styles.tripDir}>{data.direccionOrigen}</p>
+        ) : (
+          <p className={styles.tripDirMiss}>Dirección pendiente</p>
+        )}
       </div>
-
-      <div className={styles.tripMap}>
-        <div className={styles.tripStop}>
-          <span className={`${styles.tripDot} ${styles.dotA}`} aria-hidden />
-          <div>
-            <p className={styles.tripRol}>Origen · {data.etiquetaOrigen ?? 'Recogida'}</p>
-            {data.direccionOrigen ? (
-              <p className={styles.tripDir}>{data.direccionOrigen}</p>
-            ) : (
-              <p className={styles.tripDirMiss}>Dirección pendiente</p>
-            )}
-          </div>
-        </div>
-        <div className={styles.tripRail} aria-hidden>
-          <span className={styles.tripPulse} />
-        </div>
-        <div className={styles.tripStop}>
-          <span className={`${styles.tripDot} ${styles.dotB}`} aria-hidden />
-          <div>
-            <p className={styles.tripRol}>Destino · {data.etiquetaDestino ?? 'Entrega'}</p>
-            {data.direccionDestino ? (
-              <p className={styles.tripDir}>{data.direccionDestino}</p>
-            ) : (
-              <p className={styles.tripDirMiss}>Dirección pendiente</p>
-            )}
-          </div>
-        </div>
+      <div>
+        <p className={styles.tripRol}>Destino · {data.etiquetaDestino ?? 'Entrega'}</p>
+        {data.direccionDestino ? (
+          <p className={styles.tripDir}>{data.direccionDestino}</p>
+        ) : (
+          <p className={styles.tripDirMiss}>Dirección pendiente</p>
+        )}
       </div>
-
-      {data.tramos.length > 0 ? (
-        <ul className={styles.legList}>
-          {data.tramos.map((t) => (
-            <li key={t.id} className={t.activo ? styles.legOn : styles.leg}>
-              <div className={styles.legMain}>
-                <strong>{t.rolLabel}</strong>
-                <span>
-                  {t.estadoLabel}
-                  {t.subestadoLabel && t.activo ? ` · ${t.subestadoLabel}` : ''}
-                </span>
-              </div>
-              <p className={styles.legVentana}>{t.ventanaLabel}</p>
-              <div className={styles.legTimes}>
-                <span>
-                  Salida{' '}
-                  {t.salidaRealLabel ?? <em className={styles.faltante}>—</em>}
-                </span>
-                <span>
-                  Llegada{' '}
-                  {t.llegadaRealLabel ?? <em className={styles.faltante}>—</em>}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </section>
+    </div>
   );
 }
 
 function TimelineBlock({ data }: { data: SeguimientoPublico }) {
   const events = data.timeline;
-  const latest =
-    events.find((e) => e.estado === 'actual') ??
-    [...events].reverse().find((e) => e.estado === 'hecho') ??
-    events[0] ??
-    null;
 
   return (
-    <section className={styles.timelineCard} aria-label="Actividad">
-      <h2 className={styles.sectionTitle}>Actividad</h2>
+    <section className={styles.actividadCard} aria-label="Actividad">
+      <h2 className={styles.actividadTitle}>Actividad</h2>
 
-      {latest ? (
-        <div className={styles.tlLatest}>
-          <p className={styles.tlLatestKicker}>Última actualización</p>
-          <p className={styles.tlLatestTitle}>{latest.titulo}</p>
-          <p className={styles.tlLatestMeta}>
-            {latest.horaLabel}
-            {latest.detalle ? ` · ${latest.detalle}` : ''}
-          </p>
-        </div>
-      ) : null}
-
-      <ol className={styles.timeline}>
-        {events.map((e, i) => {
-          const isLast = i === events.length - 1;
-          const cls =
-            e.estado === 'hecho'
-              ? styles.tlHecho
-              : e.estado === 'actual'
-                ? styles.tlActual
-                : styles.tlPend;
-          return (
-            <li key={e.id} className={`${styles.tlItem} ${cls}`}>
-              <div className={styles.tlRail} aria-hidden>
-                <span className={styles.tlNode}>
-                  {e.estado === 'hecho' || e.estado === 'actual' ? <CheckMark /> : null}
-                </span>
-                {!isLast ? <span className={styles.tlLine} /> : null}
-              </div>
-              <div className={styles.tlBody}>
-                <p className={styles.tlTitle}>{e.titulo}</p>
-                <p className={styles.tlMeta}>
-                  {[e.detalle, e.horaLabel !== 'Pendiente' ? e.horaLabel : null]
-                    .filter(Boolean)
-                    .join(' · ') || (e.estado === 'pendiente' ? 'Pendiente' : null)}
-                </p>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+      {events.length === 0 ? (
+        <p className={styles.emptyText}>Aún no hay movimientos registrados en este traslado.</p>
+      ) : (
+        <ol className={styles.timeline}>
+          {[...events].reverse().map((e, i, arr) => {
+            const isLast = i === arr.length - 1;
+            const cls =
+              e.estado === 'hecho'
+                ? styles.tlHecho
+                : e.estado === 'actual'
+                  ? styles.tlActual
+                  : styles.tlPend;
+            return (
+              <li key={e.id} className={`${styles.tlItem} ${cls}`}>
+                <div className={styles.tlRail} aria-hidden>
+                  <span className={styles.tlNode}>
+                    {e.estado === 'hecho' || e.estado === 'actual' ? <CheckMark /> : null}
+                  </span>
+                  {!isLast ? <span className={styles.tlLine} /> : null}
+                </div>
+                <div className={styles.tlBody}>
+                  <p className={styles.tlTitle}>{e.titulo}</p>
+                  <p className={styles.tlMeta}>
+                    {[e.detalle, e.horaLabel !== 'Pendiente' ? e.horaLabel : null]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </section>
   );
 }
@@ -227,8 +179,8 @@ function TimelineBlock({ data }: { data: SeguimientoPublico }) {
 function VehiclePanel({ data }: { data: SeguimientoPublico }) {
   const c = data.checkin;
   return (
-    <section className={styles.vehicle} aria-label="Panel del vehículo">
-      <h2 className={styles.sectionTitle}>Panel del vehículo</h2>
+    <section className={styles.vehicle} aria-label="Estado del coche">
+      <h2 className={styles.sectionTitle}>Estado del coche</h2>
       {!c.disponible ? (
         <div className={styles.emptyCheck}>
           <p className={styles.emptyTitle}>Check-in pendiente</p>
@@ -239,6 +191,7 @@ function VehiclePanel({ data }: { data: SeguimientoPublico }) {
         </div>
       ) : (
         <>
+          <p className={styles.blockKicker}>Al recoger</p>
           <div className={styles.instrStrip}>
             <div className={styles.instr}>
               <span>Km</span>
@@ -270,6 +223,8 @@ function VehiclePanel({ data }: { data: SeguimientoPublico }) {
               Cliente {c.firmaCliente ? 'firmó' : '—'}
             </span>
           </div>
+
+          <p className={styles.blockKicker}>Daños</p>
           {c.danos.length ? (
             <ul className={styles.danoList}>
               {c.danos.map((d, i) => (
@@ -292,16 +247,20 @@ function VehiclePanel({ data }: { data: SeguimientoPublico }) {
           ) : (
             <p className={styles.hint}>Sin daños anotados.</p>
           )}
-          {c.hallazgos.length ? (
-            <ul className={styles.hallList}>
-              {c.hallazgos.map((h, i) => (
-                <li key={`${h.item}-${i}`}>
-                  <strong>{h.item}</strong>
-                  <span className={styles.sev}>{h.severidad}</span>
-                  <p>{h.metrica}</p>
-                </li>
-              ))}
-            </ul>
+
+          {c.hallazgos.length > 0 ? (
+            <>
+              <p className={styles.blockKicker}>Hallazgos</p>
+              <ul className={styles.hallList}>
+                {c.hallazgos.map((h, i) => (
+                  <li key={`${h.item}-${i}`}>
+                    <strong>{h.item}</strong>
+                    <span className={styles.sev}>{h.severidad}</span>
+                    <p>{h.metrica}</p>
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : null}
         </>
       )}
@@ -367,6 +326,20 @@ export function SeguimientoRutaView({ data }: { data: SeguimientoPublico | null 
     );
   }
 
+  const ubicacionInicial: UbicacionSeguimientoPublico | null = data.ubicacion
+    ? {
+        token: data.token,
+        rutaId: data.rutaId,
+        estadoId: data.estadoId,
+        subestado: data.subestadoLabel,
+        callout: data.ubicacion.callout,
+        visible: data.ubicacion.visible,
+        conductor: data.ubicacion.conductor,
+        origen: data.ubicacion.origen,
+        destino: data.ubicacion.destino,
+      }
+    : null;
+
   return (
     <main className={styles.page}>
       <div className={styles.bg} aria-hidden />
@@ -382,7 +355,20 @@ export function SeguimientoRutaView({ data }: { data: SeguimientoPublico | null 
         <div className={styles.layout}>
           <div className={styles.colMain}>
             <DashCluster data={data} />
-            <TripMap data={data} />
+
+            <section className={styles.mapBlock} aria-label="Seguimiento en mapa">
+              <div className={styles.mapRow}>
+                <SeguimientoLiveBlock
+                  token={data.token}
+                  initial={ubicacionInicial}
+                  calloutFallback={data.ubicacion?.callout ?? data.mensaje}
+                />
+                <PasosResumen pasos={data.pasos} />
+              </div>
+              <DireccionesStrip data={data} />
+              <p className={styles.tripServicio}>{data.servicio}</p>
+            </section>
+
             <TimelineBlock data={data} />
           </div>
           <aside className={styles.colSide}>
