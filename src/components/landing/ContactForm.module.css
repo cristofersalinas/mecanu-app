@@ -206,7 +206,7 @@
 
 .selectWrap::after {
   content: "expand_more";
-  font-family: "Material Symbols Rounded", sans-serif;
+  font-family: "Material Symbols Rounded", "Mecanu Icon Fallback";
   position: absolute;
   right: 8px;
   top: 50%;

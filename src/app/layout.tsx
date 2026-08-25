@@ -54,7 +54,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* eslint-disable-next-line @next/next/no-page-custom-font -- falso positivo en App Router; el <link> vive en el layout raíz por diseño */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block"
         />
         {analiticaHabilitada() ? (
           <Script id="ga-consent-default" strategy="beforeInteractive">
