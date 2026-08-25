@@ -4,7 +4,9 @@ import { DragEvent } from 'react';
 import { Badge } from '@/components/ds/Badge';
 import { Icon } from '@/components/ds/Icon';
 import { URGENCIA_ETIQUETA } from '@/lib/mecanu/deberes-taller';
-import { TIPO_TAREA_META, type TareaKanban } from '@/lib/mecanu/pipeline-tareas';
+import { etiquetaMotivoTarea, TIPO_TAREA_META, type TareaKanban } from '@/lib/mecanu/pipeline-tareas';
+import { usePanel } from '../store';
+import { contextoTareaCard } from './tarea-card-copy';
 import styles from '../panel.module.css';
 
 interface Props {
@@ -20,9 +22,16 @@ interface Props {
 export function TareaCard({
   tarea, enCurso, arrastrando, onDragStart, onDragEnd, onClick, onReabrir,
 }: Props) {
+  const p = usePanel();
   const meta = TIPO_TAREA_META[tarea.deber.tipo];
-  const hecha = tarea.columna === 'hecho' || tarea.columna === 'cancelado';
+  const esPendiente = tarea.columna === 'pendiente';
+  const esCancelada = tarea.columna === 'cancelado';
+  const puedeReabrir = Boolean(onReabrir);
   const detalle = tarea.deber.detalle.trim();
+  const { nombreCliente, lineaVehiculo } = contextoTareaCard(tarea.deber, {
+    rutaPorId: p.rutaPorId,
+    campanaPorId: p.campanaPorId,
+  });
 
   return (
     <div
@@ -31,7 +40,7 @@ export function TareaCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={onClick}
-      style={{ cursor: tarea.arrastrable ? 'grab' : 'pointer', opacity: hecha ? 0.78 : 1 }}
+      style={{ cursor: tarea.arrastrable ? 'grab' : 'pointer' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span
@@ -44,18 +53,21 @@ export function TareaCard({
           <Icon name={meta.icono} size="sm" />
           {meta.corto}
         </span>
-        {!hecha ? (
+        {esPendiente ? (
           <Badge kind={URGENCIA_ETIQUETA[tarea.deber.urgencia].kind} dot>
             {URGENCIA_ETIQUETA[tarea.deber.urgencia].label}
           </Badge>
         ) : null}
+        {!esPendiente && !esCancelada ? (
+          <Badge kind="positive" dot={false}>Hecho</Badge>
+        ) : null}
         <span style={{ flex: 1 }} />
-        {hecha && onReabrir ? (
+        {puedeReabrir ? (
           <button
             type="button"
             className={styles.iconBtn}
             style={{ width: 'auto', minWidth: 24, height: 24, padding: '0 8px', fontSize: 11, fontWeight: 700 }}
-            onClick={(e) => { e.stopPropagation(); onReabrir(); }}
+            onClick={(e) => { e.stopPropagation(); onReabrir!(); }}
           >
             Reabrir
           </button>
@@ -64,12 +76,72 @@ export function TareaCard({
         )}
       </div>
 
-      <div style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {tarea.deber.titulo}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        <Icon name="person" size="sm" color="var(--mecanu-text-secondary-light)" />
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {nombreCliente}
+        </span>
       </div>
-      {detalle ? (
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        <Icon name="directions_car" size="sm" color="var(--mecanu-text-secondary-light)" />
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {lineaVehiculo}
+        </span>
+      </div>
+
+      {detalle && !esCancelada ? (
         <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {detalle}
+        </div>
+      ) : null}
+
+      {esCancelada && tarea.cancelacion ? (
+        <div
+          style={{
+            marginTop: 2,
+            padding: '8px 9px',
+            borderRadius: 8,
+            background: 'var(--mecanu-neutral-25)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            minWidth: 0,
+          }}
+        >
+          <Badge kind="alert" dot={false}>
+            {etiquetaMotivoTarea(tarea.cancelacion.categoria)}
+          </Badge>
+          <div
+            style={{
+              fontSize: 12,
+              lineHeight: '16px',
+              color: 'var(--mecanu-text-secondary-light)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+            }}
+          >
+            {tarea.cancelacion.detalle}
+          </div>
         </div>
       ) : null}
     </div>
