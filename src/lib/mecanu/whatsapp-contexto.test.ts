@@ -13,7 +13,7 @@ const clienteBase: Cliente = {
   tipo: 'Particular',
   telefono: '+56 9 4508 8077',
   email: '',
-  direccion: 'Av. Providencia 2120, Providencia, Santiago',
+  direccion: 'Carrer de Provença 210, 2ºA, 08036 Barcelona',
   desde: new Date('2026-01-01'),
 };
 

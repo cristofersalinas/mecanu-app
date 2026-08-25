@@ -106,6 +106,8 @@ export function mapParada(
     direccion: row.direccion == null ? null : String(row.direccion),
     localidad: row.localidad == null ? null : String(row.localidad),
     sublocalidad: row.sublocalidad == null ? null : String(row.sublocalidad),
+    lat: row.lat == null ? null : Number(row.lat),
+    lng: row.lng == null ? null : Number(row.lng),
     servicios,
     llegadaReal: asDate(row.llegada_real as string),
     salidaReal: asDate(row.salida_real as string),
@@ -147,6 +149,10 @@ export function mapTramo(row: Record<string, unknown>): Tramo {
     importe: Number(row.importe ?? 0),
     reprogramaciones: Number(row.reprogramaciones ?? 0),
     comunicaAlCliente: true,
+    posLat: row.pos_lat == null ? null : Number(row.pos_lat),
+    posLng: row.pos_lng == null ? null : Number(row.pos_lng),
+    posPrecisionM: row.pos_precision_m == null ? null : Number(row.pos_precision_m),
+    posActualizadaEn: asDate(row.pos_actualizada_en as string),
   };
 }
 

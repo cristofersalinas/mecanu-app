@@ -219,9 +219,12 @@ export const ParadaSchema = z.object({
   subtipo: ParadaSubtipoSchema.nullable(),
   etiqueta: z.string(),
   direccion: z.string().nullable(),
-  /** derivado de `direccion` vía geocoder — nunca se persiste como dato propio */
+  /** derivado de `direccion` vía geocoder — texto de zona; las coords van en lat/lng */
   localidad: z.string().nullable(),
   sublocalidad: z.string().nullable(),
+  /** WGS84; null si aún no se geocodificó */
+  lat: z.number().nullable().optional(),
+  lng: z.number().nullable().optional(),
   servicios: z.array(ParadaServicioSchema),
   llegadaReal: FechaSchema.nullable(),
   salidaReal: FechaSchema.nullable(),
@@ -257,6 +260,11 @@ export const TramoSchema = z.object({
   importe: z.number().nonnegative(),
   reprogramaciones: z.number().int().nonnegative(),
   comunicaAlCliente: z.boolean(),
+  /** Última posición GPS del conductor en este tramo (null si aún no hay ping). */
+  posLat: z.number().nullable().optional(),
+  posLng: z.number().nullable().optional(),
+  posPrecisionM: z.number().nullable().optional(),
+  posActualizadaEn: FechaSchema.nullable().optional(),
 });
 export type Tramo = z.infer<typeof TramoSchema>;
 

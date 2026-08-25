@@ -55,14 +55,14 @@
 
 .kanban {
   scrollbar-width: thin;
-  scrollbar-color: rgba(22, 23, 24, .18) transparent;
+  scrollbar-color: rgba(26, 26, 28, .12) transparent;
   overflow: auto;
   align-items: flex-start;
 }
 .kanban::-webkit-scrollbar { width: 8px; height: 8px; }
 .kanban::-webkit-scrollbar-track { background: transparent; }
-.kanban::-webkit-scrollbar-thumb { background: rgba(22, 23, 24, .12); border-radius: 999px; }
-.kanban:hover::-webkit-scrollbar-thumb { background: rgba(22, 23, 24, .22); }
+.kanban::-webkit-scrollbar-thumb { background: rgba(26, 26, 28, .08); border-radius: 999px; }
+.kanban:hover::-webkit-scrollbar-thumb { background: rgba(26, 26, 28, .14); }
 
 .kanbanCol {
   --kanban-col-bg: var(--mecanu-neutral-25);
@@ -83,9 +83,6 @@
   padding: 8px 8px 6px;
   background: var(--kanban-col-bg);
   border-radius: 12px 12px 0 0;
-  box-shadow:
-    0 1px 0 var(--kanban-col-bg),
-    0 10px 10px -8px rgba(22, 23, 24, .14);
 }
 .kanbanColBody {
   position: relative;
@@ -116,6 +113,49 @@
 .cardEnCurso {
   border-color: var(--mecanu-electric-600);
   box-shadow: 0 0 0 2px var(--mecanu-electric-100);
+}
+
+.cardPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--mecanu-neutral-0);
+  white-space: nowrap;
+}
+
+.fichaHeaderRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 8px;
+}
+
+.fichaHeaderActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.cardCancelBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--mecanu-neutral-400);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.cardCancelBtn:hover {
+  color: #A81823;
 }
 .colDropActive {
   --kanban-col-bg: var(--mecanu-electric-100);

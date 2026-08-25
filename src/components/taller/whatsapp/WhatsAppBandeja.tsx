@@ -10,6 +10,7 @@ import {
   sugerenciasRapidas,
   type RespuestaRapida,
 } from '@/lib/mecanu/whatsapp-respuestas-rapidas';
+import { usePanelUrlFiltros } from '../usePanelUrlFiltros';
 import { WhatsAppContactoSidebar } from './WhatsAppContactoSidebar';
 import styles from './whatsapp.module.css';
 
@@ -66,6 +67,7 @@ export function WhatsAppBandeja({
   conversacionInicialId?: string | null;
   impulsoTraslado?: boolean;
 } = {}) {
+  const { filtros, setFiltro } = usePanelUrlFiltros();
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bridgeUp, setBridgeUp] = useState(false);
@@ -75,7 +77,8 @@ export function WhatsAppBandeja({
   const [selId, setSelId] = useState<string | null>(conversacionInicialId);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [texto, setTexto] = useState('');
-  const [busqueda, setBusqueda] = useState('');
+  const busqueda = filtros.q ?? '';
+  const setBusqueda = (v: string) => setFiltro('q', v || undefined);
   const busquedaDeferred = useDeferredValue(busqueda);
   const [enviando, setEnviando] = useState(false);
   const [busy, setBusy] = useState(false);

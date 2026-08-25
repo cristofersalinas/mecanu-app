@@ -151,12 +151,12 @@ describe('El traslado es un ítem más del tempario del taller, no un concepto a
 });
 
 describe('Volumen de datos sembrados coincide con lo documentado en CLAUDE.md', () => {
-  it('15 clientes (todos particulares, incl. demo WA Chile)', () => {
-    expect(CLIENTES).toHaveLength(15);
+  it('clientes particulares, incl. demo WA', () => {
+    expect(CLIENTES).toHaveLength(23);
     expect(CLIENTES.every((c) => c.tipo === 'Particular')).toBe(true);
     expect(CLIENTES.some((c) => c.id === 'c15' && c.telefono.includes('4508'))).toBe(true);
   });
-  it('19 vehículos', () => expect(VEHICULOS).toHaveLength(19));
+  it('30 vehículos (uno por card, salvo pares de campaña)', () => expect(VEHICULOS).toHaveLength(30));
   it('8 conductores cubren onboarding (docs / supervisión / activo)', () => {
     expect(CONDUCTORES).toHaveLength(8);
     const procesos = new Set(CONDUCTORES.map((d) => d.proceso));

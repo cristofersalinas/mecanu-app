@@ -89,6 +89,9 @@ const BARRIOS_BCN: Record<string, string> = {
   '08022': 'El Putxet', '08023': 'La Salut', '08034': 'Pedralbes',
   '08028': 'Les Corts', '08029': 'Les Corts', '08038': 'La Marina',
   '08007': 'Eixample', '08008': 'Eixample', '08036': 'Eixample',
+  '08009': 'Fort Pienc', '08010': 'Eixample', '08012': 'Gràcia',
+  '08013': 'Sagrada Família', '08014': 'Sants', '08024': 'Gràcia',
+  '08025': 'Camp de l\'Arpa',
 };
 
 /** Sublocalidad (barrio) + localidad (ciudad) a partir de una dirección. Lo desconocido queda en null. */
@@ -127,7 +130,15 @@ export const CLIENTES: Cliente[] = [
   { id: 'c13', nombre: 'Pablo Herrera Nieto', tipo: 'Particular', telefono: '655 400 444', email: 'pherrera@correo.es', direccion: 'Carrer de Ganduxer 88, 08021 Barcelona', desde: at(9, 0, -50) },
   { id: 'c14', nombre: 'Sofía Marín Delgado', tipo: 'Particular', telefono: '655 500 555', email: 'smarin@correo.es', direccion: 'Carrer Major de Sarrià 78, 08017 Barcelona', desde: at(9, 0, -3) },
   /* Demo WhatsApp personal: número real del fundador para probar la bandeja 1:1. */
-  { id: 'c15', nombre: 'Cristofer', tipo: 'Particular', telefono: '+56 9 4508 8077', email: '', direccion: 'Av. Providencia 2120, Providencia, Santiago', desde: at(9, 0, -5), cicloVida: 'nuevo' },
+  { id: 'c15', nombre: 'Cristofer', tipo: 'Particular', telefono: '+56 9 4508 8077', email: '', direccion: 'Carrer de Provença 210, 2ºA, 08036 Barcelona', desde: at(9, 0, -5), cicloVida: 'nuevo' },
+  { id: 'c16', nombre: 'Andreu Solé Ribas', tipo: 'Particular', telefono: '655 610 111', email: 'asole@correo.es', direccion: 'Carrer de Verdi 112, 3ºB, 08012 Barcelona', desde: at(9, 0, -22) },
+  { id: 'c17', nombre: 'Marta Quílez Aranda', tipo: 'Particular', telefono: '655 620 222', email: 'mquilez@correo.es', direccion: 'Carrer de Sicília 208, 4ºA, 08013 Barcelona', desde: at(9, 0, -18) },
+  { id: 'c18', nombre: 'Íñigo Larrañaga Paz', tipo: 'Particular', telefono: '655 630 333', email: 'ilarranaga@correo.es', direccion: 'Carrer de la Diputació 321, 2ºC, 08009 Barcelona', desde: at(9, 0, -40) },
+  { id: 'c19', nombre: 'Raquel Pujol Serra', tipo: 'Particular', telefono: '655 640 444', email: 'rpujol@correo.es', direccion: 'Travessera de Gràcia 340, 1ºD, 08025 Barcelona', desde: at(9, 0, -11) },
+  { id: 'c20', nombre: 'Héctor Blanco Riera', tipo: 'Particular', telefono: '655 650 555', email: 'hblanco@correo.es', direccion: 'Carrer d\'Enric Granados 78, 5ºA, 08008 Barcelona', desde: at(9, 0, -8) },
+  { id: 'c21', nombre: 'Ainhoa Cano Valls', tipo: 'Particular', telefono: '655 660 666', email: 'acano@correo.es', direccion: 'Carrer de l\'Or 14, 2ºA, 08024 Barcelona', desde: at(9, 0, -16) },
+  { id: 'c22', nombre: 'Gerard Muñoz Alcaraz', tipo: 'Particular', telefono: '655 670 777', email: 'gmunoz@correo.es', direccion: 'Carrer de Sants 45, 3ºB, 08014 Barcelona', desde: at(9, 0, -9) },
+  { id: 'c23', nombre: 'Núria Beltrán Cos', tipo: 'Particular', telefono: '655 680 888', email: 'nbeltran@correo.es', direccion: 'Passeig de Sant Joan 88, 4ºC, 08010 Barcelona', desde: at(9, 0, -7) },
 ];
 
 /* Muchos-a-muchos: un vehículo tiene varios usuarios y un cliente puede figurar en varios vehículos. */
@@ -170,10 +181,32 @@ export const VEHICULOS: Vehiculo[] = [
     usuarios: [ { clienteId: 'c12', relacion: 'Titular', principal: true }, { clienteId: 'c11', relacion: 'Conductor autorizado', principal: false } ] },
   { id: 'v19', marca: 'Toyota', modelo: 'Yaris', anio: 2021, matricula: 'RK 4508', km: 38400, color: 'Blanco',
     usuarios: [ { clienteId: 'c15', relacion: 'Titular', principal: true } ] },
+  { id: 'v20', marca: 'Fiat', modelo: 'Panda', anio: 2019, matricula: '3471 WXC', km: 53800, color: 'Verde',
+    usuarios: [ { clienteId: 'c8', relacion: 'Titular', principal: true } ] },
+  { id: 'v21', marca: 'Honda', modelo: 'Civic', anio: 2018, matricula: '5820 HLM', km: 91200, color: 'Gris',
+    usuarios: [ { clienteId: 'c16', relacion: 'Titular', principal: true } ] },
+  { id: 'v22', marca: 'Honda', modelo: 'Jazz', anio: 2021, matricula: '9104 VBG', km: 27400, color: 'Azul',
+    usuarios: [ { clienteId: 'c17', relacion: 'Titular', principal: true } ] },
+  { id: 'v23', marca: 'Suzuki', modelo: 'Swift', anio: 2020, matricula: '2765 CJK', km: 46100, color: 'Rojo',
+    usuarios: [ { clienteId: 'c18', relacion: 'Titular', principal: true } ] },
+  { id: 'v24', marca: 'Mini', modelo: 'Cooper', anio: 2019, matricula: '8033 QRS', km: 67300, color: 'Negro',
+    usuarios: [ { clienteId: 'c19', relacion: 'Titular', principal: true } ] },
+  { id: 'v25', marca: 'Alfa Romeo', modelo: 'Giulia', anio: 2022, matricula: '1648 TNM', km: 22100, color: 'Rojo',
+    usuarios: [ { clienteId: 'c20', relacion: 'Titular', principal: true } ] },
+  { id: 'v26', marca: 'Seat', modelo: 'Ateca', anio: 2020, matricula: '7391 FHP', km: 54800, color: 'Gris',
+    usuarios: [ { clienteId: 'c6', relacion: 'Titular', principal: true } ] },
+  { id: 'v27', marca: 'Hyundai', modelo: 'Tucson', anio: 2021, matricula: '4216 KLD', km: 38900, color: 'Blanco',
+    usuarios: [ { clienteId: 'c9', relacion: 'Titular', principal: true } ] },
+  { id: 'v28', marca: 'Lexus', modelo: 'CT', anio: 2018, matricula: '6580 MJN', km: 88400, color: 'Azul oscuro',
+    usuarios: [ { clienteId: 'c21', relacion: 'Titular', principal: true } ] },
+  { id: 'v29', marca: 'Jeep', modelo: 'Renegade', anio: 2020, matricula: '1957 PWT', km: 51200, color: 'Naranja',
+    usuarios: [ { clienteId: 'c22', relacion: 'Titular', principal: true } ] },
+  { id: 'v30', marca: 'Fiat', modelo: 'Tipo', anio: 2019, matricula: '8642 BXR', km: 62900, color: 'Blanco',
+    usuarios: [ { clienteId: 'c23', relacion: 'Titular', principal: true } ] },
 ];
 
 export const CONDUCTORES: Conductor[] = [
-  { id: 'd1', nombre: 'Javier Molina Serrano', telefono: '611 223 344', red: 'Interna', furgoneta: 'Fiat Ducato · 4521 FMD',
+  { id: 'd1', nombre: 'Javier Molina Serrano', telefono: '611 223 344', red: 'Interna', furgoneta: 'Fiat Ducato · 8831 FMD',
     proceso: 'activo', supervisados: 3, requeridos: 3, alta: at(9, 0, -420), calificacion: 4.9, valoraciones: 186,
     docs: { dni: true, carnet: true, iban: true, seguro: true },
     incidencias: [{ fecha: at(11, 0, -30), tipo: 'Retraso', gravedad: 'Bajo', detalle: 'Llegó 15 min tarde a una recogida por tráfico en la M-30.' }] },
@@ -483,6 +516,7 @@ export const DIRECCIONES_POOL: string[] = [
   'Via Augusta 128, 08006 Barcelona',
   'Passeig de Gràcia 43, 08007 Barcelona',
   'Carrer de Mallorca 401, 08013 Barcelona',
+  'Carrer de Provença 210, 2ºA, 08036 Barcelona',
   'Carrer de Provença 210, 08036 Barcelona',
   'Avinguda Diagonal 640, 08017 Barcelona',
   'Carrer de Balmes 145, 08008 Barcelona',

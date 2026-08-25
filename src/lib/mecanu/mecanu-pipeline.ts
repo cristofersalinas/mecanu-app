@@ -123,7 +123,7 @@ export const ESTADOS: EstadoCfg[] = [
     subestados: [
       { id: 'ok',                   label: 'Terminado',     desc: 'Devuelto al cliente y firmado' },
       { id: 'retirado_por_cliente', label: 'Retirado',      desc: 'El cliente se llevó el coche sin vuelta' },
-      { id: 'con_incidencia',       label: 'Con incidencia', desc: 'Cerrado con una incidencia registrada' },
+      { id: 'con_incidencia',       label: 'Incidente',       desc: 'Cerrado con una incidencia registrada' },
       { id: 'pendiente_cierre',     label: 'Por cerrar',    desc: 'Falta documentación para cerrar' },
     ],
   },
@@ -317,10 +317,10 @@ export const TAGS_DERIVADOS: TagDerivadoCfg[] = [
          estrechamiento al entrar en el callback de `some`. */
       && c.tramos.some((t) => t.orden < c.vuelta!.orden && t.estado === 'completado') },
 
-  { id: 'oportunidad_vuelta', label: 'Oportunidad de vuelta', color: 'var(--mecanu-electric-600)',
+  { id: 'oportunidad_vuelta', label: 'Ofrecer despacho', color: 'var(--mecanu-electric-600)',
     calc: (c) => c.ruta.estado === 'en_taller' && !c.vuelta },
 
-  { id: 'larga_custodia', label: 'Larga custodia', color: 'var(--mecanu-warning)',
+  { id: 'larga_custodia', label: '+7 días detenido', color: 'var(--mecanu-warning)',
     calc: (c) => c.ruta.estado === 'en_taller' && !!c.paradaActual && c.paradaActual.tipo === 'proveedor'
       && !!c.paradaActual.llegadaReal && !c.paradaActual.salidaReal
       && (c.ahora - c.paradaActual.llegadaReal.getTime()) > 7 * DIA },
@@ -329,7 +329,7 @@ export const TAGS_DERIVADOS: TagDerivadoCfg[] = [
     calc: (c) => !!c.activo && c.activo.ventanaModo === 'fija_taller' && c.activo.clienteConfirmo !== true
       && c.ruta.estado === 'agendado' },
 
-  { id: 'inestable', label: 'Inestable', color: 'var(--mecanu-alert)',
+  { id: 'inestable', label: '+2 reagendamientos', color: 'var(--mecanu-alert)',
     calc: (c) => c.tramos.some((t) => (t.reprogramaciones || 0) >= 2) },
 
   { id: 'doc_pendiente', label: 'Documentación pendiente', color: 'var(--mecanu-warning)',
@@ -349,14 +349,14 @@ export interface TagManualCfg {
 export const TAGS_MANUALES: TagManualCfg[] = [
   { id: 'urgente',         label: 'Urgente',         color: '#E82B37', emoji: '', preset: true },
   { id: 'vip',             label: 'VIP',             color: '#7C4DFF', emoji: '', preset: true },
-  { id: 'no_rodante',      label: 'No rodante',      color: '#161718', emoji: '', preset: true },
+  { id: 'no_rodante',      label: 'No operativo',      color: '#1A1A1C', emoji: '', preset: true },
   { id: 'cobro_pendiente', label: 'Cobro pendiente', color: '#EC6513', emoji: '', preset: true },
   { id: 'tg-att',          label: 'Atención',        color: '#EC6513', emoji: '⚠️' },
   { id: 'tg-flota',        label: 'Flota',           color: '#419468', emoji: '🚚' },
   { id: 'tg-garantia',     label: 'Garantía',        color: '#7C4DFF', emoji: '🛡️' },
 ];
 
-export const PALETA_TAGS: string[] = ['#E82B37', '#EC6513', '#419468', '#2D71D7', '#7C4DFF', '#161718'];
+export const PALETA_TAGS: string[] = ['#E82B37', '#EC6513', '#419468', '#2D71D7', '#7C4DFF', '#1A1A1C'];
 
 /* --------------------------------------------------------------
    6 · PRESUPUESTOS (viven en Campañas · fuente única de verdad)

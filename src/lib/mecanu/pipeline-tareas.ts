@@ -46,10 +46,30 @@ export const TIPO_TAREA_META: Record<TipoDeberTaller, { corto: string; icono: st
   responder_oferta: { corto: 'Responder', icono: 'reply' },
 };
 
+/** Misma familia de motivos que cancelar traslado; aquí «no la hago» sin tocar la ruta. */
+export const MOTIVO_TAREA_OPCIONES = [
+  { value: 'por_cliente', label: 'Por el cliente' },
+  { value: 'por_taller', label: 'Por el taller' },
+  { value: 'ya_resuelto', label: 'Ya resuelto / duplicada' },
+  { value: 'otro', label: 'Otro' },
+] as const;
+
+export type MotivoTareaCategoria = (typeof MOTIVO_TAREA_OPCIONES)[number]['value'];
+
+export interface CancelacionTarea {
+  categoria: MotivoTareaCategoria;
+  detalle: string;
+}
+
+export function etiquetaMotivoTarea(categoria: string): string {
+  return MOTIVO_TAREA_OPCIONES.find((o) => o.value === categoria)?.label ?? categoria;
+}
+
 export interface EstadoPipelineTareas {
   historico: Record<string, DeberTaller>;
   archivadas: Record<string, number>;
   canceladas: Record<string, number>;
+  cancelaciones: Record<string, CancelacionTarea>;
   cierres: Record<string, { en: number; via: ViaCierreTarea }>;
 }
 
@@ -57,6 +77,7 @@ export const PIPELINE_TAREAS_VACIO: EstadoPipelineTareas = {
   historico: {},
   archivadas: {},
   canceladas: {},
+  cancelaciones: {},
   cierres: {},
 };
 
@@ -66,6 +87,7 @@ export interface TareaKanban {
   columna: ColumnaTareaPipeline;
   via?: ViaCierreTarea;
   cerradoEn?: Date;
+  cancelacion?: CancelacionTarea;
   arrastrable: boolean;
 }
 
@@ -143,6 +165,7 @@ export function reconciliarPipelineTareas(
 
   const cierres: EstadoPipelineTareas['cierres'] = { ...estado.cierres };
   const canceladas: Record<string, number> = { ...estado.canceladas };
+  const cancelaciones: Record<string, CancelacionTarea> = { ...(estado.cancelaciones ?? {}) };
   const ts = ahora.getTime();
   const corte = ts - HECHO_VENTANA_MS;
 
@@ -165,6 +188,7 @@ export function reconciliarPipelineTareas(
   for (const id of Object.keys(canceladas)) {
     if (!derivadosIds.has(id)) {
       delete canceladas[id];
+      delete cancelaciones[id];
       delete historico[id];
     }
   }
@@ -174,11 +198,12 @@ export function reconciliarPipelineTareas(
     && mismosNums(estado.archivadas, estado.archivadas)
     && mismosNums(canceladas, estado.canceladas)
     && mismosCierres(cierres, estado.cierres)
+    && JSON.stringify(cancelaciones) === JSON.stringify(estado.cancelaciones ?? {})
   ) {
     return estado;
   }
 
-  return { historico, archivadas: estado.archivadas, canceladas, cierres };
+  return { historico, archivadas: estado.archivadas, canceladas, cancelaciones, cierres };
 }
 
 export function aplicarMovimientoTarea(
@@ -186,12 +211,15 @@ export function aplicarMovimientoTarea(
   card: TareaKanban,
   hacia: ColumnaTareaPipeline,
   ahora: Date,
+  opts?: { cancelacion?: CancelacionTarea },
 ): { ok: true; estado: EstadoPipelineTareas } | { ok: false; motivo: string } {
   const check = puedeMoverTarea({ tipo: card.deber.tipo, desde: card.columna, hacia });
   if (!check.ok) return check;
   if (card.columna === hacia) return { ok: true, estado };
 
   if (hacia === 'hecho') {
+    const cancelaciones = { ...(estado.cancelaciones ?? {}) };
+    delete cancelaciones[card.id];
     return {
       ok: true,
       estado: {
@@ -199,16 +227,29 @@ export function aplicarMovimientoTarea(
         archivadas: { ...estado.archivadas, [card.id]: ahora.getTime() },
         cierres: { ...estado.cierres, [card.id]: { en: ahora.getTime(), via: 'archivada' } },
         canceladas: Object.fromEntries(Object.entries(estado.canceladas).filter(([k]) => k !== card.id)),
+        cancelaciones,
       },
     };
   }
 
   if (hacia === 'cancelado') {
+    const cat = opts?.cancelacion?.categoria;
+    const detalle = opts?.cancelacion?.detalle?.trim() ?? '';
+    if (!cat) {
+      return { ok: false, motivo: 'Cancelar exige un motivo.' };
+    }
+    if (detalle.length < 5) {
+      return { ok: false, motivo: 'Añade al menos 5 caracteres en el detalle del motivo.' };
+    }
     return {
       ok: true,
       estado: {
         ...estado,
         canceladas: { ...estado.canceladas, [card.id]: ahora.getTime() },
+        cancelaciones: {
+          ...estado.cancelaciones,
+          [card.id]: { categoria: cat, detalle },
+        },
         archivadas: Object.fromEntries(Object.entries(estado.archivadas).filter(([k]) => k !== card.id)),
       },
     };
@@ -226,9 +267,11 @@ export function reabrirTareaArchivada(
   delete archivadas[id];
   const canceladas = { ...estado.canceladas };
   delete canceladas[id];
+  const cancelaciones = { ...(estado.cancelaciones ?? {}) };
+  delete cancelaciones[id];
   const cierres = { ...estado.cierres };
   if (cierres[id]?.via === 'archivada') delete cierres[id];
-  return { ...estado, archivadas, canceladas, cierres };
+  return { ...estado, archivadas, canceladas, cancelaciones, cierres };
 }
 
 export function proyectarPipelineTareas(
@@ -289,6 +332,7 @@ export function proyectarPipelineTareas(
       columna: 'cancelado',
       via: 'cancelada',
       cerradoEn: new Date(en),
+      cancelacion: estado.cancelaciones[id],
       arrastrable: false,
     });
   }

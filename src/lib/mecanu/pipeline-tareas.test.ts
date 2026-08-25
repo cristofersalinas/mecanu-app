@@ -144,10 +144,15 @@ describe('proyectar y reconciliar', () => {
     expect(cols.pendiente[0]?.id).toBe(d.id);
   });
 
-  it('cancelar saca la tarea del pipeline abierto y se puede reabrir', () => {
+  it('cancelar exige motivo y lo guarda en la tarjeta', () => {
     const d = deber({ id: 'a', tipo: 'agendar', urgencia: 'hoy' });
     let estado = reconciliarPipelineTareas(PIPELINE_TAREAS_VACIO, [d], ahora);
-    const mov = aplicarMovimientoTarea(estado, cardDe(d, 'pendiente'), 'cancelado', ahora);
+    const sinMotivo = aplicarMovimientoTarea(estado, cardDe(d, 'pendiente'), 'cancelado', ahora);
+    expect(sinMotivo.ok).toBe(false);
+
+    const mov = aplicarMovimientoTarea(estado, cardDe(d, 'pendiente'), 'cancelado', ahora, {
+      cancelacion: { categoria: 'por_taller', detalle: 'No toca hoy en taller' },
+    });
     expect(mov.ok).toBe(true);
     if (!mov.ok) return;
     estado = reconciliarPipelineTareas(mov.estado, [d], ahora);
@@ -155,6 +160,10 @@ describe('proyectar y reconciliar', () => {
     expect(cols.pendiente).toEqual([]);
     expect(cols.cancelado[0]?.id).toBe('a');
     expect(cols.cancelado[0]?.via).toBe('cancelada');
+    expect(cols.cancelado[0]?.cancelacion).toEqual({
+      categoria: 'por_taller',
+      detalle: 'No toca hoy en taller',
+    });
     expect(contarPendientesPipeline(cols)).toBe(0);
 
     estado = reabrirTareaArchivada(estado, d.id);

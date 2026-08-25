@@ -23,12 +23,18 @@ import type {
   CancelarRutaInput, CheckinInput, ConfirmacionInput, CrearRutaDesdeCampanaInput,
   EntregaInput, HallazgoCampanaInput, IncidenciaInput, MecanuRepo,
   ReasignarConductorInput, SolicitudInput, AgendarRutaInput,
+  GpsPingInput,
 } from './repo';
 import {
   construirVista, mapCampana, mapCampanaItem, mapCliente, mapConductor, mapLog, mapParada, mapPerfilAUsuario,
   mapPresupuesto, mapRuta, mapServicio, mapSolicitud, mapTramo, mapVehiculo,
 } from './mappers-supabase';
 import { tagsDeRutaConDatos } from '../mecanu-rutas';
+import { construirUbicacionSeguimiento } from '../ubicacion-seguimiento';
+import { rutaPorLinkToken } from '../seguimiento-ruta';
+import { geocodificarDireccion } from '../geocode';
+import { gpsPosicionEsquemaAusente } from '../gps-conductor';
+import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '../transicion-en-ruta';
 
 const TALLER_DEFAULT = 'taller-rodriguez';
 
@@ -112,7 +118,10 @@ async function insertLog(
   triggerSource: Log['triggerSource'],
   payload: Log['payload'],
 ): Promise<void> {
-  const id = `LG-${Date.now().toString(36)}`;
+  const id =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? `LG-${crypto.randomUUID()}`
+      : `LG-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   const { error } = await sb().from('logs').insert({
     id,
     traslado_id: trasladoId,
@@ -122,7 +131,8 @@ async function insertLog(
     trigger_source: triggerSource,
     payload: payload ?? {},
   });
-  throwPg(error, 'log');
+  /* El log no debe tumbar un cambio de estado ya persistido: el panel lee rutas. */
+  if (error) console.warn('[repo] log no escrito', error.message);
 }
 
 function mundoDesde(
@@ -500,10 +510,19 @@ export const supabaseRepo: MecanuRepo = {
 
   async cambiarSubestadoTramo({ trasladoId, a, triggerSource }: CambiarSubestadoTramoInput) {
     const t = await requireTramo(trasladoId);
+    const efecto = efectoAvanceSubestadoEnRuta(a);
     const patch: Record<string, unknown> = { subestado: a };
-    if (a === 'en_destino') patch.estado = 'en_curso';
-    const { error } = await sb().from('traslados').update(patch).eq('id', trasladoId);
-    throwPg(error, 'subestado');
+    if (efecto) patch.estado = efecto.tramo.estado;
+    const tramoUpdate = sb().from('traslados').update(patch).eq('id', trasladoId);
+    const rutaUpdate = efecto
+      ? sb().from('rutas').update({
+          estado: efecto.ruta.estado,
+          subestado: efecto.ruta.subestado,
+        }).eq('id', t.rutaId)
+      : Promise.resolve({ error: null });
+    const [tramoRes, rutaRes] = await Promise.all([tramoUpdate, rutaUpdate]);
+    throwPg(tramoRes.error, 'subestado');
+    throwPg(rutaRes.error, 'ruta en_ruta');
     await insertLog(
       trasladoId,
       'cambio_estado',
@@ -560,12 +579,18 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async entregar({ trasladoId, firmaCliente }: EntregaInput) {
-    const { error } = await sb()
-      .from('traslados')
-      .update({ estado: 'completado', subestado: null })
-      .eq('id', trasladoId);
-    throwPg(error, 'entrega');
-    await insertLog(trasladoId, 'evidencia', 'conductor', 'conductor', {
+    const t = await requireTramo(trasladoId);
+    const efecto = efectoEntregaRuta(t.rol);
+    const [tramoRes, rutaRes] = await Promise.all([
+      sb().from('traslados').update({ estado: 'completado', subestado: null }).eq('id', trasladoId),
+      sb().from('rutas').update({
+        estado: efecto.estado,
+        subestado: efecto.subestado,
+      }).eq('id', t.rutaId),
+    ]);
+    throwPg(tramoRes.error, 'entrega');
+    throwPg(rutaRes.error, 'ruta tras entrega');
+    await insertLog(trasladoId, 'evidencia', t.conductorId ?? 'conductor', 'conductor', {
       texto: firmaCliente ? 'Entrega con firma' : 'Entrega en taller',
       tipoEvidencia: 'entrega',
     });
@@ -607,6 +632,71 @@ export const supabaseRepo: MecanuRepo = {
     await insertLog(trasladoId, 'incidencia', 'conductor', 'conductor', {
       texto: detalle ?? 'Incidencia',
     });
+  },
+
+  async registrarGpsTramo(input: GpsPingInput) {
+    const t = await requireTramo(input.trasladoId);
+    const ts = input.ts ? new Date(input.ts) : new Date();
+    const { error } = await sb()
+      .from('traslados')
+      .update({
+        pos_lat: input.lat,
+        pos_lng: input.lng,
+        pos_precision_m: input.accuracy ?? null,
+        pos_actualizada_en: ts.toISOString(),
+      })
+      .eq('id', input.trasladoId);
+    if (error && !gpsPosicionEsquemaAusente(error.message)) throwPg(error, 'gps pos');
+    const { error: eTrail } = await sb().from('traslado_ubicaciones').insert({
+      traslado_id: t.id,
+      conductor_id: t.conductorId,
+      ruta_id: t.rutaId,
+      lat: input.lat,
+      lng: input.lng,
+      precision_m: input.accuracy ?? null,
+      heading: input.heading ?? null,
+      speed_mps: input.speed ?? null,
+      ts: ts.toISOString(),
+      fuente: input.fuente ?? 'conductor',
+    });
+    if (eTrail && !gpsPosicionEsquemaAusente(eTrail.message)) throwPg(eTrail, 'gps trail');
+    /* Sin log por ping: el trail (`traslado_ubicaciones`) ya es la fuente.
+       Un LG-* por cada 20 s chocaba la PK y tumba el POST → cola hinchada. */
+    return requireTramo(input.trasladoId);
+  },
+
+  async getUbicacionSeguimientoPublico(token: string) {
+    const vistas = await this.listRutasVista();
+    const ruta = rutaPorLinkToken(vistas, token);
+    if (!ruta) return null;
+    const tramos = await this.listTramosDeRuta(ruta.id);
+    const tramo =
+      tramos.find((x) => x.id === ruta.tramoActivoId) ??
+      tramos.find((x) => x.estado === 'en_curso') ??
+      tramos[0] ??
+      null;
+    const paradas = await this.listParadasDeRuta(ruta.id);
+    let origen = tramo?.paradaOrigenId
+      ? paradas.find((p) => p.id === tramo.paradaOrigenId) ?? null
+      : ruta.paradaOrigen;
+    let destino = tramo?.paradaDestinoId
+      ? paradas.find((p) => p.id === tramo.paradaDestinoId) ?? null
+      : ruta.paradaDestino;
+
+    // Geocode on the fly if coords missing (persiste para siguientes lecturas).
+    for (const p of [origen, destino]) {
+      if (!p || (p.lat != null && p.lng != null) || !p.direccion) continue;
+      const coords = await geocodificarDireccion(p.direccion);
+      if (!coords) continue;
+      p.lat = coords.lat;
+      p.lng = coords.lng;
+      await sb()
+        .from('paradas')
+        .update({ lat: coords.lat, lng: coords.lng })
+        .eq('id', p.id);
+    }
+
+    return construirUbicacionSeguimiento({ token, ruta, tramo, origen, destino });
   },
 
   async reasignarConductorTramo({ tramoId, conductorId }: ReasignarConductorInput) {
@@ -707,6 +797,8 @@ export const supabaseRepo: MecanuRepo = {
         direccion: p.direccion,
         localidad: p.localidad,
         sublocalidad: p.sublocalidad,
+        lat: p.lat ?? null,
+        lng: p.lng ?? null,
       });
       throwPg(ep, 'parada');
       for (const s of p.servicios) {

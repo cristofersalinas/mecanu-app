@@ -8,6 +8,7 @@ import {
   nombreCorto, vehiculosDeCliente,
 } from '../data';
 import { usePanel } from '../store';
+import { usePanelUrlFiltros } from '../usePanelUrlFiltros';
 import { SearchInput, TableSkeleton } from '../ui/Primitives';
 import { useCarga } from '../ui/useCarga';
 import styles from '../panel.module.css';
@@ -16,8 +17,10 @@ type Fila = Record<string, unknown>;
 
 export function ContactosView() {
   const p = usePanel();
+  const { filtros, setFiltro } = usePanelUrlFiltros();
   const cargando = useCarga();
-  const [busqueda, setBusqueda] = useState('');
+  const busqueda = filtros.q ?? '';
+  const setBusqueda = (v: string) => setFiltro('q', v || undefined);
 
   const clientes = useMemo(() => {
     const q = busqueda.trim().toLowerCase();

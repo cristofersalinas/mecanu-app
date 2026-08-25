@@ -30,7 +30,14 @@ import type {
   CancelarRutaInput, CheckinInput, ConfirmacionInput, CrearRutaDesdeCampanaInput,
   EntregaInput, HallazgoCampanaInput, IncidenciaInput, MecanuRepo,
   ReasignarConductorInput, SolicitudInput, AgendarRutaInput,
+  GpsPingInput,
 } from './repo';
+import { construirUbicacionSeguimiento } from '../ubicacion-seguimiento';
+import { rutaPorLinkToken } from '../seguimiento-ruta';
+import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '../transicion-en-ruta';
+
+/** Trail en memoria (mock): no se rehidrata entre procesos. */
+const TRAIL_MOCK: { trasladoId: string; lat: number; lng: number; ts: string }[] = [];
 
 /* El modelo es JS sin tipos: se estrecha una sola vez, aquí — mismo patrón que
    `src/components/taller/data.ts` / `src/components/conductor/data.ts`. */
@@ -95,6 +102,14 @@ function requireRuta(id: string): Ruta {
   const r = m.ruta(id);
   if (!r) throw new Error(`Ruta ${id} no encontrada`);
   return r;
+}
+
+function refrescarVista(rutaId: string) {
+  const vista = m.rutaVista(rutaId);
+  if (!vista) return;
+  const i = m.RUTAS_VISTA.findIndex((v) => v.id === rutaId);
+  if (i >= 0) m.RUTAS_VISTA[i] = vista;
+  else m.RUTAS_VISTA.push(vista);
 }
 
 /* -- Solicitudes del conductor: HANDOFF.md §7.3, entidad decidida pero no construida
@@ -260,8 +275,15 @@ export const mockRepo: MecanuRepo = {
 
   async cambiarSubestadoTramo({ trasladoId, a, triggerSource }: CambiarSubestadoTramoInput) {
     const t = requireTramo(trasladoId);
+    const efecto = efectoAvanceSubestadoEnRuta(a);
     t.subestado = a;
-    if (a === 'en_destino') t.estado = 'en_curso';
+    if (efecto) t.estado = efecto.tramo.estado;
+    if (efecto) {
+      const r = requireRuta(t.rutaId);
+      r.estado = efecto.ruta.estado;
+      r.subestado = efecto.ruta.subestado;
+      refrescarVista(r.id);
+    }
     nuevoLog(trasladoId, 'cambio_estado', triggerSource === 'conductor' ? (t.conductorId ?? 'conductor') : 'Sistema', triggerSource, { a, texto: `Subestado → ${a}` });
     return t;
   },
@@ -306,6 +328,12 @@ export const mockRepo: MecanuRepo = {
   async entregar({ trasladoId, firmaCliente }: EntregaInput) {
     const t = requireTramo(trasladoId);
     t.estado = 'completado';
+    t.subestado = null;
+    const efecto = efectoEntregaRuta(t.rol);
+    const r = requireRuta(t.rutaId);
+    r.estado = efecto.estado;
+    r.subestado = efecto.subestado;
+    refrescarVista(r.id);
     nuevoLog(trasladoId, 'evidencia', t.conductorId ?? 'conductor', 'conductor', {
       texto: firmaCliente ? 'Entrega con firma del cliente' : 'Entrega en taller', tipoEvidencia: 'check-out',
     });
@@ -339,6 +367,45 @@ export const mockRepo: MecanuRepo = {
     const t = requireTramo(trasladoId);
     t.estado = 'cancelado'; // "congela" el tramo — decisión de mock: cancelado bloquea avance
     nuevoLog(trasladoId, 'incidencia', t.conductorId ?? 'conductor', 'conductor', { texto: 'Siniestro reportado', detalle: detalle ?? undefined });
+  },
+
+  async registrarGpsTramo(input: GpsPingInput) {
+    const t = requireTramo(input.trasladoId);
+    const ts = input.ts ? new Date(input.ts) : new Date();
+    t.posLat = input.lat;
+    t.posLng = input.lng;
+    t.posPrecisionM = input.accuracy ?? null;
+    t.posActualizadaEn = ts;
+    TRAIL_MOCK.push({
+      trasladoId: t.id,
+      lat: input.lat,
+      lng: input.lng,
+      ts: ts.toISOString(),
+    });
+    nuevoLog(t.id, 'gps', t.conductorId ?? 'conductor', input.fuente === 'api' ? 'api' : 'conductor', {
+      texto: `Posición ${input.lat.toFixed(5)}, ${input.lng.toFixed(5)}`,
+    });
+    return t;
+  },
+
+  async getUbicacionSeguimientoPublico(token: string) {
+    const vistas = m.RUTAS_VISTA as RutaVista[];
+    const ruta = rutaPorLinkToken(vistas, token);
+    if (!ruta) return null;
+    const tramos = m.tramosDeRuta(ruta.id);
+    const tramo =
+      tramos.find((x) => x.id === ruta.tramoActivoId) ??
+      tramos.find((x) => x.estado === 'en_curso') ??
+      tramos[0] ??
+      null;
+    const paradas = m.paradasDeRuta(ruta.id);
+    const origen = tramo?.paradaOrigenId
+      ? paradas.find((p) => p.id === tramo.paradaOrigenId) ?? null
+      : ruta.paradaOrigen;
+    const destino = tramo?.paradaDestinoId
+      ? paradas.find((p) => p.id === tramo.paradaDestinoId) ?? null
+      : ruta.paradaDestino;
+    return construirUbicacionSeguimiento({ token, ruta, tramo, origen, destino });
   },
 
   async reasignarConductorTramo({ tramoId, conductorId }: ReasignarConductorInput) {

@@ -1,16 +1,85 @@
 .marco {
+  --demo-cinta-h: 44px;
   min-height: 100%;
+  min-height: 100dvh;
+}
+
+/* Altura reservada para que nada quede bajo la cinta fija. */
+.contenido {
+  padding-top: var(--demo-cinta-h);
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 .barra {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 200;
-  padding: 8px 14px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: #3d2a00;
-  background: #f5c518;
+  left: 0;
+  right: 0;
+  z-index: 2147483000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: var(--demo-cinta-h);
+  padding: 6px 12px;
+  box-sizing: border-box;
+  pointer-events: none;
+  user-select: none;
+  color: #1a1200;
   text-align: center;
+  /* Cinta de obra: amarillo + franjas negras — imposible de confundir. */
+  background-color: #f5c518;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    #f5c518 0 14px,
+    #1a1200 14px 22px
+  );
+  box-shadow:
+    0 2px 0 #1a1200,
+    0 8px 24px rgb(0 0 0 / 35%);
+}
+
+.texto {
+  display: inline-block;
+  padding: 2px 12px;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: #1a1200;
+  background: #f5c518;
+  border: 2px solid #1a1200;
+  border-radius: 4px;
+}
+
+.sub {
+  display: block;
+  max-width: 100%;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: #f5c518;
+  text-shadow: 0 1px 0 #1a1200;
+  background: #1a1200;
+  border-radius: 2px;
+}
+
+@media (max-width: 480px) {
+  .marco {
+    --demo-cinta-h: 52px;
+  }
+
+  .texto {
+    font-size: 13px;
+    letter-spacing: 0.06em;
+  }
+
+  .sub {
+    font-size: 9px;
+  }
 }

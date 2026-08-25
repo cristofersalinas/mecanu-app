@@ -146,6 +146,31 @@ export interface AgendarRutaInput {
   conductorId: string | null;
 }
 
+export interface GpsPingInput {
+  trasladoId: string;
+  lat: number;
+  lng: number;
+  accuracy?: number | null;
+  heading?: number | null;
+  speed?: number | null;
+  /** ISO del dispositivo; si falta, usa now del servidor */
+  ts?: string | null;
+  fuente?: 'conductor' | 'api' | 'cron';
+}
+
+/** Payload público mínimo para el mapa de `/s/{token}`. */
+export interface UbicacionSeguimientoPublico {
+  token: string;
+  rutaId: string;
+  estadoId: string;
+  subestado: string;
+  callout: string;
+  visible: boolean;
+  conductor: { lat: number; lng: number; actualizadoEn: string } | null;
+  origen: { lat: number; lng: number; label: string } | null;
+  destino: { lat: number; lng: number; label: string } | null;
+}
+
 /* ==============================================================
    La interfaz
    ============================================================== */
@@ -204,6 +229,10 @@ export interface MecanuRepo {
   registrarConfirmacion(input: ConfirmacionInput): Promise<void>;
   crearSolicitud(input: SolicitudInput): Promise<Solicitud>;
   registrarIncidencia(input: IncidenciaInput): Promise<void>;
+  /** Ping GPS del conductor: actualiza pos del tramo + trail append-only. */
+  registrarGpsTramo(input: GpsPingInput): Promise<Tramo>;
+  /** Lectura pública por link_token (sin PII). */
+  getUbicacionSeguimientoPublico(token: string): Promise<UbicacionSeguimientoPublico | null>;
 
   /* ---------- Escrituras: panel del taller ---------- */
   reasignarConductorTramo(input: ReasignarConductorInput): Promise<Tramo>;

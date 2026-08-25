@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
-import { cabecerasDeSeguridad } from "./src/lib/security/csp";
+import {
+  cabecerasDeSeguridad,
+  permissionsPolicyPortal,
+} from "./src/lib/security/csp";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -12,8 +15,25 @@ const nextConfig: NextConfig = {
       key: "Cache-Control",
       value: "public, max-age=31536000, immutable",
     };
+    const permDeny = {
+      key: "Permissions-Policy",
+      value: permissionsPolicyPortal("default"),
+    };
+    const permConductor = {
+      key: "Permissions-Policy",
+      value: permissionsPolicyPortal("conductor"),
+    };
+    // Permissions-Policy se aplica por path sin solaparse: si /conductor
+    // recibiera también geolocation=() / microphone=(), el navegador lo denegaría (AND).
     return [
       { source: "/:path*", headers: seguridad },
+      { source: "/", headers: [permDeny] },
+      {
+        source: "/((?!conductor(?:/|$)).*)",
+        headers: [permDeny],
+      },
+      { source: "/conductor", headers: [permConductor] },
+      { source: "/conductor/:path*", headers: [permConductor] },
       { source: "/landing/:path*", headers: [cacheInmutable] },
       { source: "/icons/:path*", headers: [cacheInmutable] },
       { source: "/maplibre/:path*", headers: [cacheInmutable] },

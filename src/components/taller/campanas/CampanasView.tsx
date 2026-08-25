@@ -6,11 +6,13 @@ import { Button } from '@/components/ds/Button';
 import { Checkbox } from '@/components/ds/Checkbox';
 import { ErrorState } from '@/components/ds/ErrorState';
 import { Icon } from '@/components/ds/Icon';
+import { MetricsCard } from '@/components/ds/MetricsCard';
 import {
-  Campana, PRESUPUESTO_ESTADOS, PRESUPUESTO_META, cliente, etiquetaVehiculo, fmtDia, fmtDinero,
+  Campana, PRESUPUESTO_ESTADOS, PRESUPUESTO_META, PRESUPUESTO_PENDIENTES, cliente, etiquetaVehiculo, fmtDia, fmtDinero,
   nombreCorto, vehiculo,
 } from '../data';
 import { usePanel } from '../store';
+import { usePanelUrlFiltros } from '../usePanelUrlFiltros';
 import { CardsSkeleton, SearchInput } from '../ui/Primitives';
 import { ImporteIva } from '../ui/ImporteIva';
 import { useCarga } from '../ui/useCarga';
@@ -19,8 +21,10 @@ import styles from '../panel.module.css';
 
 export function CampanasView() {
   const p = usePanel();
+  const { filtros, setFiltro } = usePanelUrlFiltros();
   const cargando = useCarga();
-  const [busqueda, setBusqueda] = useState('');
+  const busqueda = filtros.q ?? '';
+  const setBusqueda = (v: string) => setFiltro('q', v || undefined);
   const [seleccionadas, setSeleccionadas] = useState<string[]>([]);
   const [confirmarEnvio, setConfirmarEnvio] = useState(false);
   const focoCampana = p.deberActivo?.entidadKind === 'campana' ? p.deberActivo.entidadId : null;
@@ -40,6 +44,31 @@ export function CampanasView() {
       return [c.id, c.falla, v?.matricula, cl?.nombre].filter(Boolean).join(' ').toLowerCase().includes(q);
     });
   }, [p.campanas, busqueda]);
+
+  const kpis = useMemo(() => {
+    const pendientes = p.campanas.filter((c) => PRESUPUESTO_PENDIENTES.includes(c.estado));
+    const enviadas = p.campanas.filter((c) => c.estado === 'enviada');
+    const activas = p.campanas.filter((c) => c.estado === 'nueva' || c.estado === 'valorada' || c.estado === 'enviada');
+    const aceptadas = p.campanas.filter((c) => c.estado === 'aceptada');
+    const montoActivo = activas.reduce((a, c) => a + (c.presupuesto.total ?? 0), 0);
+    const montoAceptado = aceptadas.reduce((a, c) => a + (c.presupuesto.total ?? 0), 0);
+    return [
+      { id: 'pendientes', label: 'Pendientes', value: String(pendientes.length) },
+      { id: 'enviadas', label: 'Enviadas', value: String(enviadas.length) },
+      {
+        id: 'monto-activo',
+        label: 'Monto activo',
+        value: fmtDinero(montoActivo, true),
+        iva: true,
+      },
+      {
+        id: 'monto-aceptado',
+        label: 'Monto aceptado',
+        value: fmtDinero(montoAceptado, true),
+        iva: true,
+      },
+    ];
+  }, [p.campanas]);
 
   const toggleSel = (id: string) =>
     setSeleccionadas((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -62,11 +91,21 @@ export function CampanasView() {
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, minWidth: 0 }}>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="mcn-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
+          {kpis.map((k) => (
+            <MetricsCard
+              key={k.id}
+              value={'iva' in k && k.iva ? <ImporteIva texto={k.value} /> : k.value}
+              label={k.label}
+            />
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <SearchInput placeholder="Buscar campaña, matrícula o cliente" value={busqueda} onChange={setBusqueda} />
           <div style={{ flex: 1 }} />
           <span style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-            {filtradas.length} campañas · {p.campanas.filter((c) => c.estado === 'nueva' || c.estado === 'valorada').length} pendientes del taller
+            {filtradas.length} de {p.campanas.length} campañas
           </span>
         </div>
 

@@ -12,6 +12,7 @@ import {
   nombreCorto, toISO, vehiculo,
 } from '../data';
 import { usePanel } from '../store';
+import { usePanelUrlFiltros } from '../usePanelUrlFiltros';
 import { SearchInput, TableSkeleton, CardsSkeleton } from '../ui/Primitives';
 import { useCarga, useAhora } from '../ui/useCarga';
 import { COLUMNAS, COLUMNAS_INICIALES, ColumnaDef } from './columnas';
@@ -32,17 +33,34 @@ const mismoDia = (a: Date, b: Date) =>
 
 export function TrasladosView({ agendarPeticion }: Props) {
   const p = usePanel();
+  const { filtros, setFiltro, limpiar: limpiarFiltrosUrl } = usePanelUrlFiltros();
   const cargando = useCarga();
   const ahora = useAhora();
 
-  const [vista, setVista] = useState<Vista>('kanban');
-  const [busqueda, setBusqueda] = useState('');
-  const [estadosFiltro, setEstadosFiltro] = useState<EstadoRuta[]>([]);
-  const [conductorFiltro, setConductorFiltro] = useState('');
-  const [seguroFiltro, setSeguroFiltro] = useState('');
-  const [filtroFecha, setFiltroFecha] = useState<FiltroFecha>('todas');
-  const [fechaDesde, setFechaDesde] = useState('');
-  const [fechaHasta, setFechaHasta] = useState('');
+  const busqueda = filtros.q ?? '';
+  const setBusqueda = useCallback((v: string) => setFiltro('q', v || undefined), [setFiltro]);
+  const vista = ((filtros.vista ?? 'kanban') as Vista);
+  const setVista = useCallback((v: Vista) => setFiltro('vista', v === 'kanban' ? undefined : v), [setFiltro]);
+  const estadosFiltro = useMemo((): EstadoRuta[] => {
+    const raw = filtros.estado;
+    if (!raw) return [];
+    return raw.split(',').filter((x): x is EstadoRuta => x in ESTADO);
+  }, [filtros.estado]);
+  const setEstadosFiltro = useCallback((updater: EstadoRuta[] | ((s: EstadoRuta[]) => EstadoRuta[])) => {
+    const prev = (filtros.estado ?? '').split(',').filter((x): x is EstadoRuta => x in ESTADO);
+    const next = typeof updater === 'function' ? updater(prev) : updater;
+    setFiltro('estado', next.length ? next.join(',') : undefined);
+  }, [filtros.estado, setFiltro]);
+  const conductorFiltro = filtros.conductor ?? '';
+  const setConductorFiltro = useCallback((v: string) => setFiltro('conductor', v || undefined), [setFiltro]);
+  const seguroFiltro = filtros.seguro ?? '';
+  const setSeguroFiltro = useCallback((v: string) => setFiltro('seguro', v || undefined), [setFiltro]);
+  const filtroFecha = ((filtros.fecha ?? 'todas') as FiltroFecha);
+  const setFiltroFecha = useCallback((v: FiltroFecha) => setFiltro('fecha', v === 'todas' ? undefined : v), [setFiltro]);
+  const fechaDesde = filtros.desde ?? '';
+  const setFechaDesde = useCallback((v: string) => setFiltro('desde', v || undefined), [setFiltro]);
+  const fechaHasta = filtros.hasta ?? '';
+  const setFechaHasta = useCallback((v: string) => setFiltro('hasta', v || undefined), [setFiltro]);
   const [panelFiltros, setPanelFiltros] = useState(false);
 
   const [colapsadas, setColapsadas] = useState<EstadoRuta[]>([]);
@@ -164,16 +182,10 @@ export function TrasladosView({ agendarPeticion }: Props) {
   }), [p.rutas]);
 
   const limpiarFiltros = useCallback(() => {
-    setBusqueda('');
-    setEstadosFiltro([]);
-    setConductorFiltro('');
-    setSeguroFiltro('');
-    setFiltroFecha('todas');
-    setFechaDesde('');
-    setFechaHasta('');
+    limpiarFiltrosUrl();
     setFiltrosCol({});
     setOrden(null);
-  }, []);
+  }, [limpiarFiltrosUrl]);
 
   const filtrosActivos = (estadosFiltro.length ? 1 : 0) + (conductorFiltro ? 1 : 0)
     + (seguroFiltro ? 1 : 0) + (filtroFecha !== 'todas' ? 1 : 0) + Object.keys(filtrosCol).length;
@@ -357,46 +369,19 @@ export function TrasladosView({ agendarPeticion }: Props) {
           ) : null}
         </div>
 
-        {colapsadas.length ? (
-          <button type="button" className={styles.ghostBtn} onClick={() => setColapsadas([])}>
-            <Icon name="unfold_more" size="sm" />Expandir todas
-          </button>
-        ) : null}
-
-        <div style={{ flex: 1 }} />
-
-        <span style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-          {filtradas.length} de {p.rutas.length} traslados
-        </span>
-
-        <div style={{ display: 'flex', border: '1px solid var(--mecanu-border)', borderRadius: 8, overflow: 'hidden' }}>
-          <button
-            type="button"
-            className={styles.iconBtn}
-            style={{ borderRadius: 0, background: vista === 'lista' ? 'var(--mecanu-neutral-25)' : undefined }}
-            onClick={() => setVista('lista')}
-            aria-label="Vista de lista"
-            title="Vista de lista"
-          >
-            <Icon name="view_list" size="sm" />
-          </button>
-          <button
-            type="button"
-            className={styles.iconBtn}
-            style={{ borderRadius: 0, background: vista === 'kanban' ? 'var(--mecanu-neutral-25)' : undefined }}
-            onClick={() => setVista('kanban')}
-            aria-label="Vista de tablero"
-            title="Vista de tablero"
-          >
-            <Icon name="grid_view" size="sm" />
-          </button>
-        </div>
-
         {vista === 'lista' ? (
           <div style={{ position: 'relative' }}>
-            <Button kind="tertiary" size="compact" icon="tune" onClick={() => setPanelColumnas((v) => !v)}>Columnas</Button>
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={() => setPanelColumnas((v) => !v)}
+              aria-label="Columnas"
+              title="Columnas"
+            >
+              <Icon name="tune" size="sm" />
+            </button>
             {panelColumnas ? (
-              <div className={styles.selectMenu} style={{ right: 0, left: 'auto', width: 250, padding: 10 }}>
+              <div className={styles.selectMenu} style={{ width: 250, padding: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <span className={styles.eyebrow} style={{ flex: 1 }}>Personalizar tabla</span>
                   <button type="button" className={styles.linkBtn} onClick={() => setVisibles(COLUMNAS_INICIALES)}>Restablecer</button>
@@ -452,6 +437,49 @@ export function TrasladosView({ agendarPeticion }: Props) {
             ) : null}
           </div>
         ) : null}
+
+        {colapsadas.length ? (
+          <button type="button" className={styles.ghostBtn} onClick={() => setColapsadas([])}>
+            <Icon name="unfold_more" size="sm" />Expandir todas
+          </button>
+        ) : null}
+
+        <div style={{ flex: 1 }} />
+
+        <span style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
+          {filtradas.length} de {p.rutas.length} traslados
+        </span>
+
+        <div style={{ display: 'flex', border: '1px solid var(--mecanu-border)', borderRadius: 8, overflow: 'hidden', background: 'var(--mecanu-neutral-25)' }}>
+          <button
+            type="button"
+            className={styles.iconBtn}
+            style={{
+              borderRadius: 0,
+              background: vista === 'lista' ? 'var(--mecanu-neutral-0)' : 'transparent',
+              boxShadow: vista === 'lista' ? '0 1px 3px rgba(22,23,24,.12)' : 'none',
+            }}
+            onClick={() => setVista('lista')}
+            aria-label="Vista de lista"
+            title="Vista de lista"
+          >
+            <Icon name="view_list" size="sm" />
+          </button>
+          <button
+            type="button"
+            className={styles.iconBtn}
+            style={{
+              borderRadius: 0,
+              background: vista === 'kanban' ? 'var(--mecanu-neutral-0)' : 'transparent',
+              boxShadow: vista === 'kanban' ? '0 1px 3px rgba(22,23,24,.12)' : 'none',
+            }}
+            onClick={() => setVista('kanban')}
+            aria-label="Vista de tablero"
+            title="Vista de tablero"
+          >
+            <Icon name="grid_view" size="sm" />
+          </button>
+        </div>
       </div>
 
       {cargando ? (

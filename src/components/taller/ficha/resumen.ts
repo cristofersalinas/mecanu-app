@@ -8,6 +8,7 @@ import {
   cliente, conductor, contactosDeVehiculo, etiquetaVehiculo, fmtDia, fmtDinero, fmtHoras,
   maskDireccion, nombreCorto, vehiculo, vehiculosDeCliente,
 } from '../data';
+import { etiquetaEnRutaKanban } from '@/lib/mecanu/etiqueta-en-ruta';
 import { Seleccion } from '../store';
 
 export interface BadgeFicha {
@@ -48,13 +49,15 @@ export function construirResumen(sel: Seleccion, rutas: RutaVista[]): ResumenFic
     const c = cliente(r.clienteId);
     const est = ESTADO[r.estado];
     const sub = SUBESTADO[`${r.estado}.${r.subestado}`];
+    const viva = etiquetaEnRutaKanban(r.estado, r.subestado, conductor(r.conductorId)?.nombre);
+    const textoSub = viva ?? sub?.label;
     return {
       kindLabel: 'Traslado',
       titulo: r.id,
       subtitulo: `${etiquetaVehiculo(v)} · ${v?.matricula ?? r.matriculaLead ?? 'Sin matrícula'}`,
       badges: [
         { kind: est?.kind ?? 'neutral', text: est?.label ?? r.estado },
-        ...(sub ? [{ kind: 'neutral' as const, text: sub.label }] : []),
+        ...(textoSub ? [{ kind: 'neutral' as const, text: textoSub }] : []),
         { kind: r.seguro ? 'positive' : 'neutral', icon: 'shield', text: r.seguro ? 'Con cobertura' : 'Sin cobertura' },
       ],
       props: [

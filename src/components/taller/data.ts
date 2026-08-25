@@ -5,6 +5,9 @@
 
 import * as M from '@/lib/mecanu/mecanu-rutas';
 import * as W from '@/lib/mecanu/mecanu-whatsapp';
+import type { EstadoRuta } from '@/lib/mecanu/types';
+
+export type { EstadoRuta };
 
 /* ------------------------- Entidades ------------------------- */
 
@@ -138,8 +141,6 @@ export interface Presupuesto {
   actualizado: Date | null;
   total: number;
 }
-
-export type EstadoRuta = 'prospectos' | 'agendado' | 'en_ruta' | 'en_taller' | 'completado' | 'cancelado';
 
 export interface Ruta {
   id: string;
