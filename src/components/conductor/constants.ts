@@ -9,6 +9,28 @@ import type { BadgeKind, MotivoTipo, Subestado, TipoSolicitud } from './types';
 export const MI_ID = 'd1';
 export const MI_NOMBRE = 'Javier Molina';
 
+/** Último conductorId usado en demo (localStorage). */
+export const CONDUCTOR_ID_STORAGE_KEY = 'mecanu.conductor.id.v1';
+
+export function recordarConductorId(id: string): void {
+  if (typeof window === 'undefined' || !id.trim()) return;
+  try {
+    window.localStorage.setItem(CONDUCTOR_ID_STORAGE_KEY, id.trim());
+  } catch {
+    /* ignore */
+  }
+}
+
+export function conductorIdRecordado(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const v = window.localStorage.getItem(CONDUCTOR_ID_STORAGE_KEY);
+    return v?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 /** Margen entre traslados: desplazamiento + evidencias. Con él se calcula el riesgo (R5). */
 export const MARGEN_MIN = 35;
 
@@ -26,7 +48,12 @@ export const TELEFONO_MECANU = '910 220 900';
 
 export type EntradaTurno = {
   tid: string;
-  off: [number, number] | null;
+  /**
+   * null = sin ventana (R2).
+   * [inicio, fin] en minutos respecto del ancla = mock.
+   * Ausente = usar `tramo.ventana` del snapshot Supabase (fecha real).
+   */
+  off?: [number, number] | null;
   sub: Subestado;
   seguro?: boolean;
   inspeccionHecha?: boolean;

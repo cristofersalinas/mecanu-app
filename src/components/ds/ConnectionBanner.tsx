@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { Icon } from './Icon';
 import styles from './ConnectionBanner.module.css';
 
-export type ConnectionStatus = 'offline' | 'syncing' | 'synced';
+export type ConnectionStatus = 'offline' | 'syncing' | 'synced' | 'pending';
 
 export interface ConnectionBannerProps {
   status?: ConnectionStatus;
@@ -16,6 +16,12 @@ const STATUS_MAP: Record<ConnectionStatus, { bg: string; fg: string; icon: strin
     fg: '#9C420B',
     icon: 'wifi_off',
     text: (n) => (n ? `${n} cambio(s) en cola — se enviarán al recuperar señal` : 'Sin conexión — tus cambios se guardan y se enviarán solos'),
+  },
+  pending: {
+    bg: '#FDEBDD',
+    fg: '#9C420B',
+    icon: 'cloud_upload',
+    text: (n) => `${n || 1} cambio(s) pendientes de reenviar — toca Reintentar`,
   },
   syncing: {
     bg: 'var(--mecanu-electric-100)',

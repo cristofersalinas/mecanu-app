@@ -20,11 +20,10 @@ import {
 } from './selectors';
 import { OversizedButton } from './OversizedButton';
 import { SR_ONLY } from './JobCard';
+import { PASOS_STEPPER_EN_RUTA } from '@/lib/mecanu/etiqueta-en-ruta';
 import type { AccionesConductor } from './useConductor';
 import type { AppState } from './types';
 import css from './conductor.module.css';
-
-const PASOS = ['Recogida', 'Tránsito', 'En taller', 'Devolución'];
 
 /**
  * Ficha del traslado. Concentra casi todas las reglas:
@@ -194,7 +193,7 @@ export function TrasladoScreen({
             marginBottom: 10,
           }}
         >
-          <StatusTimeline steps={PASOS} current={pasoTimeline(j)} />
+          <StatusTimeline steps={[...PASOS_STEPPER_EN_RUTA]} current={pasoTimeline(j)} />
         </div>
 
         <div style={{ background: 'var(--mecanu-neutral-25)', borderRadius: 12, padding: 12, marginBottom: 10 }}>

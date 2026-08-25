@@ -60,7 +60,9 @@ export function CameraCapture({ cam, acciones }: { cam: CamState; acciones: Acci
           </div>
           <div style={{ fontSize: 13, lineHeight: '19px', color: 'var(--mecanu-neutral-200)', maxWidth: 270 }}>
             {cam.error === 'permiso'
-              ? 'El check-in solo admite fotos hechas aquí, nunca de la galería. Da permiso a la cámara para continuar.'
+              ? esVideo
+                ? 'El vídeo usa cámara y, si puedes, micrófono. Da permiso en el navegador para continuar.'
+                : 'El check-in solo admite fotos hechas aquí, nunca de la galería. Da permiso a la cámara para continuar.'
               : 'Este dispositivo no expone ninguna cámara. Avisa al taller si no puedes hacer el check-in.'}
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>

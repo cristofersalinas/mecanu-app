@@ -7,7 +7,8 @@ const BodySchema = z.object({
   triggerSource: z.enum(['manual', 'conductor', 'api', 'cron']).default('conductor'),
 });
 
-/** POST /api/v1/traslados/:id/subestado — avance de EN_RUTA. R7: solo lo dispara el conductor. */
+/** POST /api/v1/traslados/:id/subestado — avance de EN_RUTA (R7: lo dispara el conductor).
+ *  También promociona `ruta.estado` a `en_ruta` (y copia el subestado) si `a` es un peldaño. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return withIdempotency(request, BodySchema, ({ a, triggerSource }) =>

@@ -34,6 +34,9 @@ import {
   TESTIGOS,
   TURNO,
   VIDEO_MAX_S,
+  EN_RUTA,
+  recordarConductorId,
+  conductorIdRecordado,
   reemplazarTurnoYPool,
   type EntradaTurno,
 } from './constants';
@@ -49,7 +52,28 @@ import {
   solapa,
 } from './selectors';
 import { motivoOfertaItv, nivelHallazgoItv } from '@/lib/mecanu/oferta-itv';
-import { encolarItem, escribirCola, leerCola, vaciarCola } from '@/lib/mecanu/cola-offline';
+import { escribirCola, leerCola, vaciarCola } from '@/lib/mecanu/cola-offline';
+import { nuevaClaveIdempotencia } from '@/lib/mecanu/idempotency';
+import {
+  combustiblePct,
+  tipoSolicitudApi,
+  urlEvidenciaPublicable,
+} from '@/lib/mecanu/etiqueta-en-ruta';
+import {
+  postConCola,
+  flushColaPendiente,
+  escrituraOk,
+  type ResultadoEscritura,
+} from './escritura-api';
+import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '@/lib/mecanu/transicion-en-ruta';
+import {
+  debeEnviarPing,
+  geolocationDisponible,
+  GPS_WATCH_OPTIONS,
+  mensajeErrorGps,
+  puntoDesdePosition,
+  type GpsPunto,
+} from '@/lib/mecanu/gps-conductor';
 import type {
   AppState,
   Foto,
@@ -171,12 +195,18 @@ const ESTADO_INICIAL: AppState = {
   flash: null,
   voz: null,
   gps: null,
+  gpsPermiso: 'pendiente',
+  gpsError: null,
 };
 
 export type OpcionesConductor = {
   politica?: Politica;
   redExterna?: boolean;
   sinConexion?: boolean;
+  /** Si viene en la URL, el snapshot hidrata ese conductor en lugar de d1. */
+  conductorId?: string;
+  /** Tras hidratar, abre este traslado en detalle. */
+  trasladoId?: string;
 };
 
 type Arrastre = {
@@ -194,11 +224,35 @@ type Arrastre = {
 export const CALL_W = 78;
 const CALL_UMBRAL = 0.55;
 
+const CONSTRAINTS_VIDEO = {
+  facingMode: { ideal: 'environment' as const },
+  width: { ideal: FOTO_LADO },
+};
+
+/** Safari de Mac no graba WebM; Chrome sí. Sin mimeType el constructor a veces tira. */
+function mimeGrabacionVideo(): string | undefined {
+  if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') {
+    return undefined;
+  }
+  return ['video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'].find((t) =>
+    MediaRecorder.isTypeSupported(t),
+  );
+}
+
 /** El "estoy montado" no cambia nunca, así que no hay a qué suscribirse. */
 const suscribirNada = () => () => {};
 
 export function useConductor(opts: OpcionesConductor = {}) {
   const { politica = 'horario', redExterna = false, sinConexion = false } = opts;
+  const trasladoInicial = opts.trasladoId?.trim() || '';
+  const conductorId =
+    opts.conductorId?.trim()
+    || (typeof window !== 'undefined' ? conductorIdRecordado() : null)
+    || MI_ID;
+
+  useEffect(() => {
+    if (conductorId) recordarConductorId(conductorId);
+  }, [conductorId]);
 
   const [s, setS] = useState<AppState>(() => estadoInicial(sinConexion));
 
@@ -229,7 +283,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
     setHidrandoSupabase(true);
     (async () => {
       try {
-        const res = await fetch(`/api/v1/conductor/snapshot?conductorId=${encodeURIComponent(MI_ID)}`);
+        const res = await fetch(`/api/v1/conductor/snapshot?conductorId=${encodeURIComponent(conductorId)}`);
         if (!res.ok) throw new Error(`snapshot ${res.status}`);
         const raw = await res.json();
         if (cancelado) return;
@@ -260,7 +314,14 @@ export function useConductor(opts: OpcionesConductor = {}) {
         TURNO.forEach((e) => {
           jobOv[e.tid] = { sub: e.sub, done: e.sub === 'completado' };
         });
-        patch({ jobOv, checkins: {}, inspecciones: {}, solicitudes: {} });
+        const abrir = trasladoInicial && TURNO.some((e) => e.tid === trasladoInicial);
+        patch({
+          jobOv,
+          checkins: {},
+          inspecciones: {},
+          solicitudes: {},
+          ...(abrir ? { vista: 'detalle' as const, sel: trasladoInicial } : {}),
+        });
       } catch (e) {
         console.warn('[conductor] hidratar Supabase falló, sigo con mock', e);
       } finally {
@@ -268,7 +329,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
       }
     })();
     return () => { cancelado = true; };
-  }, [montado, patch]);
+  }, [montado, patch, conductorId, trasladoInicial]);
 
   const timers = useRef<{ toast?: number; flash?: number; sync?: number; rec?: number; voz?: number }>({});
   const media = useRef<{
@@ -321,6 +382,32 @@ export function useConductor(opts: OpcionesConductor = {}) {
     [patch],
   );
 
+  const marcarCola = useCallback((n: number) => {
+    if (!ref.current.online) {
+      patch({ queue: n, sync: 'offline' });
+      return;
+    }
+    patch({ queue: n, sync: 'synced' });
+  }, [patch]);
+
+  const ackTaller = useCallback(
+    (
+      r: ResultadoEscritura,
+      falloCola = 'Sin red o el servidor falló. Queda en cola; reintenta.',
+    ) => {
+      if (r.tipo === 'ok') {
+        toast('El taller ya lo ve');
+        return;
+      }
+      if (r.tipo === 'error') {
+        toast(r.mensaje || 'El taller rechazó el cambio. No queda en cola.');
+        return;
+      }
+      toast(falloCola);
+    },
+    [toast],
+  );
+
   const flash = useCallback(
     (tid: string) => {
       window.clearTimeout(timers.current.flash);
@@ -352,32 +439,27 @@ export function useConductor(opts: OpcionesConductor = {}) {
       patch({ online: false, sync: 'offline' });
       return;
     }
-    const q = st.queue;
-    patch({ online: true, sync: q > 0 ? 'syncing' : 'synced' });
-    if (q > 0) {
-      window.clearTimeout(timers.current.sync);
-      timers.current.sync = window.setTimeout(sincronizado, 1700);
+    patch({ online: true, sync: st.queue > 0 ? 'syncing' : 'synced' });
+    if (st.queue > 0) {
+      void flushColaPendiente().then((quedan) => {
+        if (quedan === 0) sincronizado();
+        else patch({ queue: quedan, sync: 'synced' });
+      });
     }
   }, [patch, sincronizado]);
 
+  /** Solo marca bytes locales (fotos/vídeo). No mete basura en la cola. */
   const encolar = useCallback(
     (bytes = 0) => {
-      if (ref.current.online) return;
-      const st = typeof window === 'undefined' ? null : window.localStorage;
-      const items = encolarItem(leerCola(st), 'accion');
-      escribirCola(items, st);
-      void (async () => {
-        const { escribirColaAsync } = await import('@/lib/mecanu/cola-offline');
-        await escribirColaAsync(items, st);
-      })();
-      patch((prev) => ({ queue: items.length, bytes: prev.bytes + bytes, sync: 'offline' }));
+      if (ref.current.online || !bytes) return;
+      patch((prev) => ({ bytes: prev.bytes + bytes, sync: 'offline' }));
     },
     [patch],
   );
 
   const reintentarCola = useCallback(() => {
     if (!ref.current.online) {
-      toast('Cuando vuelva la red se envían solos. Si ya hay cobertura, activa el interruptor.');
+      toast('Estás en «Simular sin conexión». Pulsa Reconectar abajo y luego reintenta.');
       return;
     }
     if (ref.current.queue === 0) {
@@ -385,17 +467,38 @@ export function useConductor(opts: OpcionesConductor = {}) {
       return;
     }
     patch({ sync: 'syncing' });
-    window.clearTimeout(timers.current.sync);
-    timers.current.sync = window.setTimeout(sincronizado, 900);
+    void flushColaPendiente().then((quedan) => {
+      if (quedan === 0) {
+        sincronizado();
+        return;
+      }
+      patch({ queue: quedan, sync: 'synced' });
+      toast(`${quedan} cambio(s) siguen sin llegar. Prueba otra vez.`);
+    });
   }, [patch, sincronizado, toast]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
       const items = leerCola(window.localStorage);
-      if (!items.length) return;
-      patch({
-        queue: items.length,
-        sync: ref.current.online ? ref.current.sync : 'offline',
+      if (!items.length) {
+        patch({
+          queue: 0,
+          sync: ref.current.online ? 'synced' : 'offline',
+        });
+        return;
+      }
+      if (!ref.current.online) {
+        patch({ queue: items.length, sync: 'offline' });
+        return;
+      }
+      /* Con red y cola residual: reenvía sin fingir offline. */
+      patch({ queue: items.length, sync: 'syncing' });
+      void flushColaPendiente().then((quedan) => {
+        if (quedan === 0) {
+          patch({ queue: 0, sync: 'synced' });
+          return;
+        }
+        patch({ queue: quedan, sync: 'synced' });
       });
     }, 0);
     return () => window.clearTimeout(t);
@@ -405,8 +508,10 @@ export function useConductor(opts: OpcionesConductor = {}) {
     const onOnline = () => {
       if (ref.current.queue > 0) {
         patch({ online: true, sync: 'syncing' });
-        window.clearTimeout(timers.current.sync);
-        timers.current.sync = window.setTimeout(sincronizado, 900);
+        void flushColaPendiente().then((quedan) => {
+          if (quedan === 0) sincronizado();
+          else patch({ queue: quedan, sync: 'synced' });
+        });
       } else {
         patch({ online: true, sync: 'synced' });
       }
@@ -414,8 +519,6 @@ export function useConductor(opts: OpcionesConductor = {}) {
     window.addEventListener('online', onOnline);
     return () => window.removeEventListener('online', onOnline);
   }, [patch, sincronizado]);
-
-  const sufijoCola = useCallback(() => (ref.current.online ? '' : ' · en cola'), []);
 
   const log = useCallback(
     (tid: string, tipo: TipoLog, texto: string) => {
@@ -435,7 +538,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
     return {
       ts,
       tid,
-      conductorId: MI_ID,
+      conductorId,
       gps: g ? g.lat.toFixed(5) + ', ' + g.lon.toFixed(5) : null,
       linea:
         D.fmtHora(ts) +
@@ -446,16 +549,192 @@ export function useConductor(opts: OpcionesConductor = {}) {
         ' · ' +
         MI_NOMBRE,
     };
-  }, []);
+  }, [conductorId]);
+
+  const ultimoPingRef = useRef<GpsPunto | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+
+  /**
+   * GPS es telemetría: gana el último punto. Nunca va a la cola offline
+   * (un ping cada 20 s la hinchaba a decenas de «cambios» inútiles).
+   */
+  const enviarGpsPing = useCallback(
+    async (tid: string, punto: GpsPunto) => {
+      if (!ref.current.online) return;
+      const key = `gps-${tid}-${punto.ts}`;
+      const body = {
+        lat: punto.lat,
+        lng: punto.lng,
+        accuracy: punto.accuracy,
+        heading: punto.heading,
+        speed: punto.speed,
+        ts: punto.ts,
+      };
+      try {
+        const res = await fetch(`/api/v1/traslados/${encodeURIComponent(tid)}/gps`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': key,
+          },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) return;
+        ultimoPingRef.current = punto;
+      } catch {
+        /* Sin cola: el siguiente ping lo intenta de nuevo. */
+      }
+    },
+    [],
+  );
+
+  const enviarSubestado = useCallback(
+    async (tid: string, a: Subestado, triggerSource: 'conductor' | 'manual' = 'conductor') => {
+      if (!EN_RUTA.includes(a)) {
+        return {
+          tipo: 'error',
+          mensaje: 'Subestado no válido para EN RUTA.',
+        } satisfies ResultadoEscritura;
+      }
+      const j = buildJob(tid, ref.current);
+      const efecto = efectoAvanceSubestadoEnRuta(a);
+      const panelPatch =
+        j && efecto
+          ? [{ id: j.rutaId, estado: efecto.ruta.estado, subestado: efecto.ruta.subestado }]
+          : undefined;
+      return postConCola({
+        url: `/api/v1/traslados/${encodeURIComponent(tid)}/subestado`,
+        prefijoClave: `subestado-${tid}-${a}`,
+        body: { a, triggerSource },
+        online: ref.current.online,
+        tipoCola: 'subestado',
+        onCola: marcarCola,
+        panelPatch,
+      });
+    },
+    [marcarCola],
+  );
+
+  const enviarEntrega = useCallback(
+    async (tid: string, fotos: Record<string, Foto>, firmaCliente: string | null) => {
+      const payload = {
+        fotos: Object.entries(fotos).flatMap(([slot, f]) => {
+          const url = urlEvidenciaPublicable(f.src);
+          return url ? [{ slot, url }] : [];
+        }),
+        firmaCliente,
+      };
+      const j = buildJob(tid, ref.current);
+      const efecto = j ? efectoEntregaRuta(j.rolTipo) : null;
+      const panelPatch =
+        j && efecto
+          ? [{ id: j.rutaId, estado: efecto.estado, subestado: efecto.subestado }]
+          : undefined;
+      return postConCola({
+        url: `/api/v1/traslados/${encodeURIComponent(tid)}/entrega`,
+        prefijoClave: `entrega-${tid}`,
+        body: payload,
+        online: ref.current.online,
+        tipoCola: 'entrega',
+        onCola: marcarCola,
+        panelPatch,
+      });
+    },
+    [marcarCola],
+  );
+
+  const aplicarFixGps = useCallback(
+    (pos: GeolocationPosition) => {
+      const punto = puntoDesdePosition(pos);
+      patch({
+        gps: { lat: punto.lat, lon: punto.lng },
+        gpsPermiso: 'concedido',
+        gpsError: null,
+      });
+      const tid = activoId(ref.current);
+      if (!tid) return;
+      const j = buildJob(tid, ref.current);
+      if (!j || j.congelado || j.sub === 'completado') return;
+      const enRuta = ['en_camino_origen', 'en_origen', 'en_transito', 'en_destino'].includes(j.sub);
+      if (!enRuta) return;
+      if (!debeEnviarPing(ultimoPingRef.current, punto)) return;
+      void enviarGpsPing(tid, punto);
+    },
+    [enviarGpsPing, patch],
+  );
 
   const pedirGps = useCallback(() => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+    if (!geolocationDisponible()) {
+      patch({
+        gps: null,
+        gpsPermiso: 'no_soportado',
+        gpsError: mensajeErrorGps(null),
+      });
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
-      (p) => patch({ gps: { lat: p.coords.latitude, lon: p.coords.longitude } }),
-      () => patch({ gps: null }),
-      { timeout: 4000 },
+      (p) => aplicarFixGps(p),
+      (err) => {
+        /* Si ya hubo un fix, no tumbamos la sesión por un timeout puntual. */
+        if (ref.current.gps) return;
+        if (err.code !== 1 && ref.current.gpsPermiso === 'concedido') {
+          patch({ gpsError: mensajeErrorGps(err.code) });
+          return;
+        }
+        patch({
+          gps: null,
+          gpsPermiso: err.code === 1 ? 'denegado' : 'pendiente',
+          gpsError: mensajeErrorGps(err.code),
+        });
+      },
+      GPS_WATCH_OPTIONS,
     );
-  }, [patch]);
+  }, [aplicarFixGps, patch]);
+
+  const activarGps = useCallback(() => {
+    patch({ gpsPermiso: 'pendiente', gpsError: null });
+    pedirGps();
+  }, [patch, pedirGps]);
+
+  /* Gate + watch continuo mientras la app está montada. */
+  useEffect(() => {
+    if (!geolocationDisponible()) {
+      patch({
+        gpsPermiso: 'no_soportado',
+        gpsError: mensajeErrorGps(null),
+      });
+      return;
+    }
+    /* Si el navegador ya tiene el permiso, no fingimos que hay que «activarlo». */
+    if (typeof navigator.permissions?.query === 'function') {
+      void navigator.permissions
+        .query({ name: 'geolocation' as PermissionName })
+        .then((status) => {
+          if (status.state === 'granted' && !ref.current.gps) {
+            patch({ gpsPermiso: 'concedido', gpsError: null });
+          }
+        })
+        .catch(() => {});
+    }
+    pedirGps();
+    const id = navigator.geolocation.watchPosition(
+      (p) => aplicarFixGps(p),
+      (err) => {
+        if (ref.current.gps) return;
+        if (ref.current.gpsPermiso === 'concedido') return;
+        patch({
+          gpsPermiso: err.code === 1 ? 'denegado' : 'pendiente',
+          gpsError: mensajeErrorGps(err.code),
+        });
+      },
+      GPS_WATCH_OPTIONS,
+    );
+    watchIdRef.current = id;
+    return () => {
+      navigator.geolocation.clearWatch(id);
+      watchIdRef.current = null;
+    };
+  }, [aplicarFixGps, patch, pedirGps]);
 
   /* --------- navegación --------- */
 
@@ -551,14 +830,19 @@ export function useConductor(opts: OpcionesConductor = {}) {
 
   const tomarYa = useCallback(
     (tid: string) => {
-      // TODO API: POST /api/traslados/{tid}/asignar { conductorId }
       patch((prev) => ({ tomados: prev.tomados.concat([tid]), dialogo: null }));
       log(tid, 'cambio_estado', 'Traslado tomado de la bolsa por el conductor');
-      encolar();
       flash(tid);
-      toast('Traslado añadido a tu jornada' + sufijoCola());
+      void postConCola({
+        url: `/api/v1/traslados/${encodeURIComponent(tid)}/asignar`,
+        prefijoClave: `asignar-${tid}`,
+        body: { conductorId },
+        online: ref.current.online,
+        tipoCola: 'asignar',
+        onCola: marcarCola,
+      }).then((r) => ackTaller(r, 'Tomado en el móvil. Queda en cola para el taller.'));
     },
-    [encolar, flash, log, patch, sufijoCola, toast],
+    [ackTaller, conductorId, flash, log, marcarCola, patch],
   );
 
   const tomar = useCallback(
@@ -620,11 +904,12 @@ export function useConductor(opts: OpcionesConductor = {}) {
       patch((prev) => ({ cam: prev.cam ? { ...prev.cam, error: 'nodisp' } : null }));
       return;
     }
-    navigator.mediaDevices
-      .getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: FOTO_LADO } },
-        audio: cam.modo === 'video',
-      })
+    const pedir = (audio: boolean) =>
+      navigator.mediaDevices.getUserMedia({ video: CONSTRAINTS_VIDEO, audio });
+    /* El vídeo pide micrófono. Si el usuario lo niega (o no hay mic en el
+       portátil), seguimos con imagen sola: el check-in no puede quedarse ciego. */
+    const intento = cam.modo === 'video' ? pedir(true).catch(() => pedir(false)) : pedir(false);
+    intento
       .then((stream) => {
         media.current.stream = stream;
         const v = media.current.video;
@@ -745,14 +1030,17 @@ export function useConductor(opts: OpcionesConductor = {}) {
       return;
     }
     try {
-      const mr = new MediaRecorder(media.current.stream);
+      const mime = mimeGrabacionVideo();
+      const mr = mime
+        ? new MediaRecorder(media.current.stream, { mimeType: mime })
+        : new MediaRecorder(media.current.stream);
       media.current.rec = mr;
       media.current.chunks = [];
       mr.ondataavailable = (ev) => {
         if (ev.data?.size) media.current.chunks.push(ev.data);
       };
       mr.onstop = () => {
-        const blob = new Blob(media.current.chunks, { type: 'video/webm' });
+        const blob = new Blob(media.current.chunks, { type: mime ?? 'video/webm' });
         const seg = ref.current.cam?.seg ?? 0;
         w({
           video: {
@@ -880,10 +1168,40 @@ export function useConductor(opts: OpcionesConductor = {}) {
     const dias = itvDias(wiz.itv);
     const motivoItv = motivoOfertaItv({ itvSinDato: wiz.itvSinDato, dias: wiz.itvSinDato ? null : dias });
     if (motivoItv) hallazgos++;
-    /* TODO API: POST /api/v1/traslados/{tid}/checkin (evidencia sellada, inmutable)
-       TODO API: PATCH /api/v1/vehiculos/{id} { km } — el km vive en el VEHÍCULO. */
+    const fotos = [
+      ...Object.entries(wiz.fotos).flatMap(([slot, f]) => {
+        const url = urlEvidenciaPublicable(f.src) ?? (f.src.startsWith('data:') ? f.src : null);
+        return url ? [{ slot, url }] : [];
+      }),
+      ...wiz.extras.flatMap((f, i) => {
+        const url = urlEvidenciaPublicable(f.src) ?? (f.src.startsWith('data:') ? f.src : null);
+        return url ? [{ slot: `extra-${i}`, url }] : [];
+      }),
+    ];
+    if (fotos.length < 4) {
+      toast('Las fotos no se pueden enviar (formato local). Vuelve a capturarlas o usa Simular foto.');
+      return;
+    }
+    const testigos: Record<string, boolean> = {};
+    for (const t of TESTIGOS) testigos[t.key] = wiz.testigos.includes(t.key);
+    const bodyCheckin = {
+      km: Number(wiz.km) || 0,
+      combustible: wiz.combustible ?? 'Sin dato',
+      combustiblePct: combustiblePct(wiz.combustible),
+      limpieza: 'Sin dato',
+      fotos,
+      videoUrl: urlEvidenciaPublicable(wiz.video?.url),
+      testigos,
+      itemsInspeccion: wiz.items,
+      ruedas: wiz.ruedas,
+      nota: wiz.nota.trim() ? wiz.nota : null,
+      notaVozUrl: urlEvidenciaPublicable(wiz.voz?.url),
+      firmaConductor: null,
+    };
+    const tid = wiz.tid;
+    const vehiculoId = j.vehiculoId;
     if (motivoItv) {
-      const key = 'itv-' + wiz.tid;
+      const key = nuevaClaveIdempotencia('itv-' + tid);
       void fetch('/api/v1/campanas/hallazgos', {
         method: 'POST',
         headers: {
@@ -892,7 +1210,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
         },
         body: JSON.stringify({
           rutaId: j.rutaId,
-          trasladoId: wiz.tid,
+          trasladoId: tid,
           testigo: 'itv',
           nivel: nivelHallazgoItv(motivoItv),
           detalle: motivoItv,
@@ -902,6 +1220,49 @@ export function useConductor(opts: OpcionesConductor = {}) {
         /* Offline: el sello local ya ocurrió; P16 cubre reintentar la cola. */
       });
     }
+    void (async () => {
+      const escrituras = [
+        postConCola({
+          url: `/api/v1/traslados/${encodeURIComponent(tid)}/checkin`,
+          prefijoClave: `checkin-${tid}`,
+          body: bodyCheckin,
+          online: ref.current.online,
+          tipoCola: 'checkin',
+          onCola: marcarCola,
+        }),
+      ];
+      if (vehiculoId) {
+        escrituras.push(
+          postConCola({
+            url: `/api/v1/vehiculos/${encodeURIComponent(vehiculoId)}`,
+            metodo: 'PATCH',
+            prefijoClave: `km-${vehiculoId}`,
+            body: { km: Number(wiz.km) || 0 },
+            online: ref.current.online,
+            tipoCola: 'km',
+            onCola: marcarCola,
+          }),
+        );
+      }
+      const rs = await Promise.all(escrituras);
+      if (!rojos.length) {
+        const sub = await enviarSubestado(tid, 'en_transito');
+        const todosOk = rs.every(escrituraOk) && escrituraOk(sub);
+        if (todosOk) ackTaller({ tipo: 'ok' });
+        else {
+          const err = [...rs, sub].find((x) => x.tipo === 'error');
+          if (err && err.tipo === 'error') ackTaller(err);
+          else if (rs.some((x) => x.tipo === 'cola') || sub.tipo === 'cola') {
+            ackTaller({ tipo: 'cola' }, 'Check-in en el móvil. Queda en cola; reintenta.');
+          } else ackTaller({ tipo: 'cola' });
+        }
+      } else if (rs.some((x) => x.tipo === 'cola')) {
+        toast('Check-in sellado. El taller lo recibirá al reenviar la cola.');
+      } else if (rs.some((x) => x.tipo === 'error')) {
+        const err = rs.find((x) => x.tipo === 'error');
+        if (err) ackTaller(err);
+      }
+    })();
     patch((prev) => ({
       checkins: {
         ...prev.checkins,
@@ -951,7 +1312,6 @@ export function useConductor(opts: OpcionesConductor = {}) {
         hallazgos + (hallazgos === 1 ? ' hallazgo enviado' : ' hallazgos enviados') + ' a Campañas',
       );
     }
-    encolar();
     if (rojos.length) {
       log(
         wiz.tid,
@@ -964,9 +1324,8 @@ export function useConductor(opts: OpcionesConductor = {}) {
     } else {
       setSub(wiz.tid, 'en_transito');
       flash(wiz.tid);
-      toast('Check-in sellado · en tránsito' + sufijoCola());
     }
-  }, [encolar, flash, log, patch, setSub, sufijoCola, toast]);
+  }, [ackTaller, enviarSubestado, flash, log, marcarCola, patch, setSub, toast]);
 
   const wizSiguiente = useCallback(() => {
     const wiz = ref.current.wiz;
@@ -1045,7 +1404,14 @@ export function useConductor(opts: OpcionesConductor = {}) {
     const pideFirma = ent.tipo === 'devolucion';
     /* R4: sin las fotos (y sin la firma en devolución) esto no se cierra. */
     if (nf < ENT_SLOTS.length || (pideFirma && !ent.firma)) return;
-    // TODO API: POST /api/traslados/{tid}/entrega { fotos, firma } → completa el traslado
+    void enviarEntrega(ent.tid, ent.fotos, pideFirma ? 'firmado' : null).then((r) =>
+      ackTaller(
+        r,
+        pideFirma
+          ? 'Entrega firmada en el móvil. Queda en cola.'
+          : 'Entregado en el móvil. Queda en cola.',
+      ),
+    );
     patch((prev) => ({
       ent: null,
       jobOv: { ...prev.jobOv, [ent.tid]: { ...prev.jobOv[ent.tid], sub: 'completado', done: true } },
@@ -1055,10 +1421,8 @@ export function useConductor(opts: OpcionesConductor = {}) {
       'cambio_estado',
       pideFirma ? 'Vehículo devuelto y firmado por el cliente' : 'Vehículo entregado en el taller',
     );
-    encolar();
     flash(ent.tid);
-    toast('Traslado completado' + sufijoCola());
-  }, [encolar, flash, log, patch, sufijoCola, toast]);
+  }, [ackTaller, enviarEntrega, flash, log, patch]);
 
   const setFirma = useCallback((firma: boolean) => e({ firma }), [e]);
 
@@ -1084,10 +1448,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
       const a = accionDe(j);
       if (!a) return;
       if (a.kind === 'sub') {
-        // TODO API: POST /api/traslados/{tid}/subestado { a, triggerSource:'conductor' }
-        const prev = j.sub;
         setSub(tid, a.to as Subestado);
-        encolar();
         flash(tid);
         const msg =
           (
@@ -1098,10 +1459,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
             } as Record<string, string>
           )[a.to] ?? 'Estado actualizado';
         log(tid, 'cambio_estado', msg);
-        toast(msg + sufijoCola(), () => {
-          setSub(tid, prev);
-          patch({ toast: null });
-        });
+        void enviarSubestado(tid, a.to as Subestado).then((r) => ackTaller(r));
       } else if (a.kind === 'wiz') {
         pedirGps();
         patch({
@@ -1130,7 +1488,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
         patch({ ent: { tid, tipo: a.to as 'entrega' | 'devolucion', fotos: {}, firma: false } });
       }
     },
-    [encolar, flash, log, patch, pedirGps, setSub, sufijoCola, toast],
+    [ackTaller, enviarSubestado, flash, log, patch, pedirGps, setSub, toast],
   );
 
   const deshacer = useCallback(() => {
@@ -1157,11 +1515,25 @@ export function useConductor(opts: OpcionesConductor = {}) {
       if (i < 0) return;
       const siguiente = i === orden.length - 1 ? 'completado' : orden[i + 1]!;
       setSub(tid, siguiente, siguiente === 'completado' ? { done: true } : undefined);
+      if (EN_RUTA.includes(siguiente)) void enviarSubestado(tid, siguiente, 'manual');
+      if (siguiente === 'completado') {
+        const pix =
+          'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        const s = sello(tid);
+        void enviarEntrega(
+          tid,
+          {
+            estado: { src: pix, bytes: 32, sello: s },
+            entorno: { src: pix, bytes: 32, sello: s },
+          },
+          null,
+        );
+      }
       log(tid, 'cambio_estado', 'Simulado: ' + siguiente.replace(/_/g, ' '));
       flash(tid);
       toast('Simulado · ' + siguiente.replace(/_/g, ' '));
     },
-    [flash, log, setSub, toast],
+    [enviarEntrega, enviarSubestado, flash, log, sello, setSub, toast],
   );
 
   /* --------- R6 · solicitudes al taller --------- */
@@ -1178,14 +1550,19 @@ export function useConductor(opts: OpcionesConductor = {}) {
   const confirmarLlegada = useCallback(
     (tid: string) => {
       const nota = (ref.current.atrasoNota || '').trim();
-      // TODO API: POST /api/traslados/{tid}/confirmaciones { tipo:'llegada_a_tiempo', nota }
       log(tid, 'nota', 'Confirma que llega a la hora' + (nota ? ' · "' + nota + '"' : ''));
-      encolar();
       flash(tid);
       patch({ sheet: null, atrasoNota: '' });
-      toast('Confirmación enviada al taller' + sufijoCola());
+      void postConCola({
+        url: `/api/v1/traslados/${encodeURIComponent(tid)}/confirmaciones`,
+        prefijoClave: `confirmacion-${tid}`,
+        body: { tipo: 'llegada_a_tiempo', nota: nota || null, origen: 'conductor' },
+        online: ref.current.online,
+        tipoCola: 'confirmacion',
+        onCola: marcarCola,
+      }).then((r) => ackTaller(r));
     },
-    [encolar, flash, log, patch, sufijoCola, toast],
+    [ackTaller, flash, log, marcarCola, patch],
   );
 
   const enviarSol = useCallback(
@@ -1193,9 +1570,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
       const sheet = ref.current.sheet;
       if (!sheet) return;
       const tid = sheet.tid;
-      /* TODO API: POST /api/traslados/{tid}/solicitudes
-         { tipo, trasladoId, rutaId, conductorId, motivo, ventanaActual, evidenciaIds, origen:'conductor' }
-         R6: esto solo crea una petición. Ni cambia la fecha ni el estado. */
+      const j = buildJob(tid, ref.current);
       const m = (MOTIVOS[tipo] ?? []).find((x) => x.id === motivoId);
       patch((prev) => ({
         solicitudes: {
@@ -1210,11 +1585,26 @@ export function useConductor(opts: OpcionesConductor = {}) {
         sheet: null,
       }));
       log(tid, 'nota', SOL_META[tipo].titulo + ' · ' + (m?.label ?? 'Sin motivo'));
-      encolar();
       flash(tid);
-      toast('Solicitud enviada al taller' + sufijoCola());
+      void postConCola({
+        url: `/api/v1/traslados/${encodeURIComponent(tid)}/solicitudes`,
+        prefijoClave: `solicitud-${tid}-${tipo}`,
+        body: {
+          rutaId: j?.rutaId ?? '',
+          conductorId,
+          tipo: tipoSolicitudApi(tipo),
+          motivo: m?.label ?? 'Sin motivo',
+          nota: null,
+          ventanaActual: j?.win ? `${j.win.inicio}–${j.win.fin}` : null,
+          conflictoCon: null,
+          evidenciaIds: [],
+        },
+        online: ref.current.online,
+        tipoCola: 'solicitud',
+        onCola: marcarCola,
+      }).then((r) => ackTaller(r));
     },
-    [encolar, flash, log, patch, sufijoCola, toast],
+    [ackTaller, conductorId, flash, log, marcarCola, patch],
   );
 
   /** Mock: en producción la respuesta del taller llega por push. */
@@ -1255,15 +1645,20 @@ export function useConductor(opts: OpcionesConductor = {}) {
 
   const reportar = useCallback(
     (tid: string) => {
-      // TODO API: POST /api/traslados/{tid}/incidencias { tipo:'siniestro', origen:'conductor' }
       patch((prev) => ({
         incidentes: { ...prev.incidentes, [tid]: { ts: new Date(), tipo: 'siniestro' } },
       }));
       log(tid, 'incidencia', 'Siniestro reportado por el conductor · viaje congelado');
-      encolar();
-      toast('Siniestro reportado · Mecanu ya lo está viendo');
+      void postConCola({
+        url: '/api/v1/incidencias',
+        prefijoClave: `incidencia-${tid}`,
+        body: { trasladoId: tid, tipo: 'siniestro', detalle: null },
+        online: ref.current.online,
+        tipoCola: 'incidencia',
+        onCola: marcarCola,
+      }).then((r) => ackTaller(r, 'Siniestro anotado. Queda en cola.'));
     },
-    [encolar, log, patch, toast],
+    [ackTaller, log, marcarCola, patch],
   );
 
   /* --------- diálogos --------- */
@@ -1310,6 +1705,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
     redExterna,
     avisoCola,
     haySolPendiente,
+    conductorId,
     listo1: wizListo1(s.wiz),
     listo2: wizListo2(s.wiz),
     acciones: {
@@ -1343,6 +1739,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
       reportar,
       dlgCancelar,
       dlgConfirmar,
+      activarGps,
       abrirCam,
       cerrarCam,
       reintentarCam,

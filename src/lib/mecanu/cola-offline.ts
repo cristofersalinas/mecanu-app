@@ -1,10 +1,25 @@
 /**
  * Cola local del conductor (P16). IndexedDB en el navegador; localStorage / memoria
  * como fallback (tests y entornos sin IDB). Reintentar envía los mismos ítems.
+ *
+ * Solo acciones puntuales del traslado (subestado, check-in, entrega…).
+ * Nada de GPS, fotos sueltas ni «acciones» vacías de capa UI.
  */
 export const COLA_STORAGE_KEY = 'mecanu.conductor.cola.v1';
 export const COLA_IDB_NAME = 'mecanu.conductor';
 export const COLA_IDB_STORE = 'cola';
+
+/** Tipos que merecen reintento. El resto es ruido (gps_ping, accion, foto…). */
+export const TIPOS_COLA_ACCION = new Set([
+  'subestado',
+  'entrega',
+  'checkin',
+  'km',
+  'asignar',
+  'confirmacion',
+  'solicitud',
+  'incidencia',
+]);
 
 export interface ItemColaOffline {
   id: string;
@@ -13,6 +28,15 @@ export interface ItemColaOffline {
   /** Cuerpo a reenviar al API (misma tarea). */
   payload?: unknown;
   idempotencyKey?: string;
+}
+
+export function esTipoColaAccion(tipo: string): boolean {
+  return TIPOS_COLA_ACCION.has(tipo);
+}
+
+/** Quita pings GPS y entradas sin payload reenviable. */
+export function purgarColaEphemeral(items: ItemColaOffline[]): ItemColaOffline[] {
+  return items.filter((i) => esTipoColaAccion(i.tipo));
 }
 
 export type StorageLike = {
@@ -27,7 +51,13 @@ export function leerCola(storage: StorageLike | null | undefined): ItemColaOffli
     const raw = storage.getItem(COLA_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed as ItemColaOffline[] : [];
+    if (!Array.isArray(parsed)) return [];
+    const limpia = purgarColaEphemeral(parsed as ItemColaOffline[]);
+    /* Autolimpieza: si había 40 gps_ping, no los dejamos en disco. */
+    if (limpia.length !== (parsed as ItemColaOffline[]).length) {
+      escribirCola(limpia, storage);
+    }
+    return limpia;
   } catch {
     return [];
   }
@@ -48,8 +78,9 @@ export function encolarItem(
   ahora = new Date(),
   extra?: { payload?: unknown; idempotencyKey?: string },
 ): ItemColaOffline[] {
+  if (!esTipoColaAccion(tipo)) return purgarColaEphemeral(items);
   return [
-    ...items,
+    ...purgarColaEphemeral(items),
     {
       id: `q-${ahora.getTime()}-${items.length}`,
       tipo,

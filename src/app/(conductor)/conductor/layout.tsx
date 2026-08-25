@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { ConMarcoDemo } from '@/components/entorno/ConMarcoDemo';
 
 /**
  * Metadata de PWA acotada a `/conductor`. Deliberadamente NO va en
@@ -29,5 +30,5 @@ export const viewport: Viewport = {
 };
 
 export default function ConductorLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <ConMarcoDemo>{children}</ConMarcoDemo>;
 }
