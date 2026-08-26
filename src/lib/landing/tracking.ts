@@ -12,11 +12,6 @@ import {
   readConsentFromCookieString,
   type Consent,
 } from "./consent";
-import {
-  HERO_AB_EXPERIMENT,
-  heroAbDesdeCookieString,
-  type HeroAbVariant,
-} from "./hero-ab";
 
 export type CategoriaDispositivo = "mobile" | "tablet" | "desktop";
 export type NombreDispositivo = "iPhone" | "iPad" | "Android" | "desktop" | "otro";
@@ -91,8 +86,6 @@ export type ContextoPagina = {
   page_title: string;
   page_referrer: string;
   language: string;
-  hero_ab?: HeroAbVariant;
-  experiment_id?: string;
 } & DispositivoTracking;
 
 export function contextoPagina(input: {
@@ -101,18 +94,13 @@ export function contextoPagina(input: {
   referrer: string;
   language: string;
   ua: string;
-  heroAb?: HeroAbVariant | null;
 }): ContextoPagina {
-  const hero = input.heroAb ?? null;
   return {
     page_location: input.href,
     page_title: input.title,
     page_referrer: input.referrer,
     language: input.language,
     ...dispositivoDesdeUA(input.ua),
-    ...(hero
-      ? { hero_ab: hero, experiment_id: HERO_AB_EXPERIMENT }
-      : {}),
   };
 }
 
@@ -127,9 +115,6 @@ export function eventoPageView(ctx: ContextoPagina): Record<string, unknown> {
     device: ctx.device,
     operating_system: ctx.operating_system,
     device_category: ctx.device_category,
-    ...(ctx.hero_ab
-      ? { hero_ab: ctx.hero_ab, experiment_id: ctx.experiment_id }
-      : {}),
   };
 }
 
@@ -187,14 +172,12 @@ export function emitirContextoDispositivo(): void {
   if (typeof window === "undefined" || typeof navigator === "undefined") return;
   if (!esRutaPublicaMedible(window.location.pathname)) return;
 
-  const heroAb = heroAbDesdeCookieString(document.cookie);
   const ctx = contextoPagina({
     href: window.location.href,
     title: document.title,
     referrer: document.referrer,
     language: document.documentElement.lang || navigator.language,
     ua: navigator.userAgent,
-    heroAb,
   });
 
   pushDataLayer({
@@ -204,9 +187,6 @@ export function emitirContextoDispositivo(): void {
     language: ctx.language,
     page_location: ctx.page_location,
     page_title: ctx.page_title,
-    ...(ctx.hero_ab
-      ? { hero_ab: ctx.hero_ab, experiment_id: ctx.experiment_id }
-      : {}),
   });
 }
 
@@ -222,7 +202,6 @@ export function emitirPageView(): void {
     referrer: document.referrer,
     language: document.documentElement.lang || navigator.language,
     ua: navigator.userAgent,
-    heroAb: heroAbDesdeCookieString(document.cookie),
   });
 
   if (hayAnalitica(consent)) {

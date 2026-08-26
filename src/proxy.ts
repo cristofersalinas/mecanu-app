@@ -30,13 +30,6 @@ import {
   esRutaPanelBonita,
   pathBonitoDesdeUbicacionInterna,
 } from "@/lib/mecanu/panel-rutas";
-import {
-  elegirHeroAb,
-  esLandingHomePath,
-  HERO_AB_COOKIE,
-  HERO_AB_MAX_AGE_SEG,
-  parseHeroAb,
-} from "@/lib/landing/hero-ab";
 
 /**
  * 1. Fuera de local: corte fail-closed de apps mock, salvo auth pública del panel
@@ -81,21 +74,11 @@ function rewriteConPathname(
   );
 }
 
-/** Cookie sticky 50/50 del hero A/B en homes de la landing pública. */
-function conHeroAbCookie(
-  request: NextRequest,
-  response: NextResponse,
-  host: string,
-): NextResponse {
-  if (esHostNegocio(host) || !esLandingHomePath(request.nextUrl.pathname)) {
-    return response;
-  }
-  const forzada = parseHeroAb(request.nextUrl.searchParams.get("hero"));
-  const actual = parseHeroAb(request.cookies.get(HERO_AB_COOKIE)?.value);
-  const valor = forzada ?? actual ?? elegirHeroAb();
-  if (forzada || !actual) {
-    response.cookies.set(HERO_AB_COOKIE, valor, {
-      maxAge: HERO_AB_MAX_AGE_SEG,
+/** Borra la cookie del A/B retirado para que nadie se quede en la foto antigua. */
+function sinCookieHeroAb(request: NextRequest, response: NextResponse): NextResponse {
+  if (request.cookies.has("mecanu_hero_ab")) {
+    response.cookies.set("mecanu_hero_ab", "", {
+      maxAge: 0,
       path: "/",
       sameSite: "lax",
       secure: process.env.VERCEL === "1",
@@ -145,7 +128,7 @@ export async function proxy(request: NextRequest) {
         secure: process.env.VERCEL === "1",
       });
       respuesta.headers.set("Cache-Control", "private, no-store");
-      return conHeroAbCookie(request, respuesta, host);
+      return sinCookieHeroAb(request, respuesta);
     }
   }
 
@@ -278,11 +261,10 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (tocaSupabase) return conHeroAbCookie(request, sesionRes, host);
-  return conHeroAbCookie(
+  if (tocaSupabase) return sinCookieHeroAb(request, sesionRes);
+  return sinCookieHeroAb(
     request,
     NextResponse.next({ request: { headers: requestHeaders } }),
-    host,
   );
 }
 

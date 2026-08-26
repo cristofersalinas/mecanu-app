@@ -29,9 +29,8 @@ export type LandingCopy = {
     subtext: string;
     primary: string;
     secondary: string;
+    /** Alt de la foto del hero. */
     photoAlt: string;
-    /** Variante A/B del hero (`hero-volvo.jpg`). */
-    photoAltVolvo: string;
   };
   logosAria: string;
   map: {
@@ -192,10 +191,9 @@ const es: LandingCopy = {
     headline: "Tu taller no para cuando los coches se mueven.",
     subtext:
       "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones con clientes.",
-    primary: "Ver cómo funciona",
-    secondary: "Hablar con nosotros",
-    photoAlt: "Volvo recorriendo una calle estrecha al atardecer",
-    photoAltVolvo: "Volvo blanco visto desde arriba en una calle urbana",
+    primary: "Hablar con nosotros",
+    secondary: "Ver cómo funciona",
+    photoAlt: "Volvo blanco visto desde arriba en una calle urbana",
   },
   logosAria: "Logos de talleres clientes de referencia",
   map: {
@@ -265,8 +263,9 @@ const es: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "¿Pico de trabajo?",
-    subtext: "Tu capacidad puede crecer sin ampliar la nave.",
+    heading: "¿Tu taller ocupado por autos listos?",
+    subtext:
+      "Crece sin ampliar la nave: despacha al instante los coches listos y entrégalos en puerta, con una experiencia que se nota.",
     cta: "Pide apoyo a Mecanu",
     photoAlt: "Coche clásico partido en collage vintage.",
   },
@@ -363,7 +362,7 @@ const es: LandingCopy = {
     terminos: "Términos",
     accesibilidad: "Accesibilidad",
     cumplimientoTitulo: "Cumplimiento UE",
-    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sin cookies de analítica hasta que digas que sí.",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
   },
   errors: {
     notFound: {
@@ -517,10 +516,9 @@ const ca: LandingCopy = {
     headline: "El teu taller no s'atura quan els cotxes es mouen.",
     subtext:
       "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions amb clients.",
-    primary: "Veure com funciona",
-    secondary: "Parlar amb nosaltres",
-    photoAlt: "Volvo recorrent un carrer estret al capvespre",
-    photoAltVolvo: "Volvo blanc vist des de dalt en un carrer urbà",
+    primary: "Parlar amb nosaltres",
+    secondary: "Veure com funciona",
+    photoAlt: "Volvo blanc vist des de dalt en un carrer urbà",
   },
   logosAria: "Logotips de tallers clients de referència",
   map: {
@@ -590,8 +588,9 @@ const ca: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "Pic de feina?",
-    subtext: "La teva capacitat pot créixer sense ampliar la nau.",
+    heading: "El teu taller ple de cotxes a punt?",
+    subtext:
+      "Creix sense ampliar la nau: despacha a l'instant els cotxes a punt i lliura'ls a la porta, amb una experiència que es nota.",
     cta: "Demana suport a Mecanu",
     photoAlt: "Cotxe clàssic partit en collage vintage.",
   },
@@ -688,7 +687,7 @@ const ca: LandingCopy = {
     terminos: "Termes",
     accesibilidad: "Accessibilitat",
     cumplimientoTitulo: "Compliment UE",
-    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sense galetes d'analítica fins que diguis que sí.",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
   },
   errors: {
     notFound: {
@@ -842,10 +841,9 @@ const en: LandingCopy = {
     headline: "Your shop never stops when cars move.",
     subtext:
       "Send cars where you need them, free the shop, and look after the customer. Every run under control. No friction with customers.",
-    primary: "See how it works",
-    secondary: "Talk to us",
-    photoAlt: "Volvo on a narrow street at dusk",
-    photoAltVolvo: "White Volvo seen from above on an urban street",
+    primary: "Talk to us",
+    secondary: "See how it works",
+    photoAlt: "White Volvo seen from above on an urban street",
   },
   logosAria: "Shop logos",
   map: {
@@ -911,8 +909,9 @@ const en: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "Workload spike?",
-    subtext: "Grow capacity without a bigger shop.",
+    heading: "Shop packed with cars ready to go?",
+    subtext:
+      "Grow without a bigger bay: dispatch ready cars right away and deliver to the door—an experience customers notice.",
     cta: "Bring Mecanu in",
     photoAlt: "Classic car split in vintage collage.",
   },
@@ -1009,7 +1008,7 @@ const en: LandingCopy = {
     terminos: "Terms",
     accesibilidad: "Accessibility",
     cumplimientoTitulo: "EU compliance",
-    cumplimientoTexto: "GDPR · ePrivacy · LSSI-CE — no analytics cookies until you say yes.",
+    cumplimientoTexto: "GDPR · ePrivacy · LSSI-CE",
   },
   errors: {
     notFound: {
@@ -1163,10 +1162,9 @@ const pt: LandingCopy = {
     headline: "A tua oficina não para quando os carros se movem.",
     subtext:
       "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito com clientes.",
-    primary: "Ver como funciona",
-    secondary: "Falar connosco",
-    photoAlt: "Volvo numa rua estreita ao entardecer",
-    photoAltVolvo: "Volvo branco visto de cima numa rua urbana",
+    primary: "Falar connosco",
+    secondary: "Ver como funciona",
+    photoAlt: "Volvo branco visto de cima numa rua urbana",
   },
   logosAria: "Logótipos de oficinas",
   map: {
@@ -1232,8 +1230,9 @@ const pt: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "Pico de trabalho?",
-    subtext: "Aumenta a capacidade sem alargar a oficina.",
+    heading: "Oficina cheia de carros prontos?",
+    subtext:
+      "Cresce sem alargar a oficina: despacha já os carros prontos e entrega à porta, com uma experiência que se nota.",
     cta: "Chama a Mecanu",
     photoAlt: "Carro clássico partido em collage vintage.",
   },
@@ -1330,7 +1329,7 @@ const pt: LandingCopy = {
     terminos: "Termos",
     accesibilidad: "Acessibilidade",
     cumplimientoTitulo: "Cumprimento UE",
-    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sem cookies de analítica até dizeres que sim.",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
   },
   errors: {
     notFound: {

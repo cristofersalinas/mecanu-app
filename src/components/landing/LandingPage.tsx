@@ -1,7 +1,6 @@
 import { Inter_Tight } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { Icon } from "@/components/ds/Icon";
 import { Logo } from "@/components/ds/Logo";
 import { LanguageSwitch } from "@/components/landing/LanguageSwitch";
@@ -11,13 +10,15 @@ import { JsonLd } from "@/components/landing/JsonLd";
 import { getPost } from "@/lib/blog/data";
 import { copyFor } from "@/lib/landing/copy";
 import { FAQ_LANDING } from "@/lib/landing/faq";
-import {
-  HERO_AB_COOKIE,
-  HERO_AB_FOTOS,
-  resolverHeroAb,
-} from "@/lib/landing/hero-ab";
 import { type Locale, pathFor, contactoPathFor } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
+
+/** Foto única del hero. Recorte: `.heroPhotoVolvo` en landing.module.css. */
+const HERO_FOTO = {
+  src: "/landing/hero-volvo.jpg" as const,
+  width: 800,
+  height: 600,
+};
 
 // Instanciado a nivel de módulo para que next/font no re-evalúe en cada render
 const interTight = Inter_Tight({
@@ -69,20 +70,9 @@ const RESOURCE_POSTS = [
 ] as const;
 
 
-export async function LandingPage({
-  locale,
-  heroForce,
-}: {
-  locale: Locale;
-  /** Query `?hero=calle|volvo` para forzar variante al afinar el recorte. */
-  heroForce?: string;
-}) {
+export async function LandingPage({ locale }: { locale: Locale }) {
   const copy = copyFor(locale);
   const ctaHref = contactoPathFor(locale);
-  const jar = await cookies();
-  const heroVariant = resolverHeroAb(jar.get(HERO_AB_COOKIE)?.value, heroForce);
-  const heroFoto = HERO_AB_FOTOS[heroVariant];
-  const heroAlt = copy.hero[heroFoto.altKey];
 
   return (
     <main className={`${styles.page} ${interTight.variable}`}>
@@ -101,18 +91,18 @@ export async function LandingPage({
             <h1 className={styles.headline}>{copy.hero.headline}</h1>
             <p className={styles.subtext}>{copy.hero.subtext}</p>
             <div className={styles.actions}>
-              <a className={styles.btnPrimary} href="#como-funciona">{copy.hero.primary}</a>
-              <a className={styles.btnSecondary} href={ctaHref}>{copy.hero.secondary}</a>
+              <a className={styles.btnPrimary} href={ctaHref}>{copy.hero.primary}</a>
+              <a className={styles.btnSecondary} href="#como-funciona">{copy.hero.secondary}</a>
             </div>
           </div>
 
           <div className={styles.heroVisual}>
             <Image
-              className={`${styles.heroPhoto} ${styles[heroFoto.styleKey]}`}
-              src={heroFoto.src}
-              alt={heroAlt}
-              width={heroFoto.width}
-              height={heroFoto.height}
+              className={`${styles.heroPhoto} ${styles.heroPhotoVolvo}`}
+              src={HERO_FOTO.src}
+              alt={copy.hero.photoAlt}
+              width={HERO_FOTO.width}
+              height={HERO_FOTO.height}
               priority
               unoptimized
             />
@@ -155,15 +145,28 @@ export async function LandingPage({
           </div>
         </section>
 
-        <section className={styles.hiringCta} id="flota">
-          <div className={styles.ctaSection}>
-            <div className={styles.ctaText}>
-              <h2 className={styles.ctaHeading}>{copy.hiring.heading}</h2>
-              <p className={styles.ctaSubtext}>{copy.hiring.subtext}</p>
+        <section className={styles.ctaGrid} id="contacto">
+          <div className={styles.ctaLeft}>
+            <p className={styles.eyebrow}>{copy.close.eyebrow}</p>
+            <h2 className={styles.heading}>{copy.close.heading}</h2>
+            <p className={styles.subtext}>{copy.close.subtext}</p>
+            <div className={styles.actions}>
+              <a className={styles.btnPrimary} href={ctaHref}>{copy.close.primary}</a>
+              <a className={styles.btnSecondary} href="#como-funciona">{copy.close.secondary}</a>
             </div>
-            <div className={styles.ctaButtonWrapper}>
-              <a className={styles.ctaButton} href={ctaHref}>{copy.hiring.cta}</a>
-            </div>
+          </div>
+          <div className={styles.ctaRight}>
+            <p className={styles.featuresLabel}>{copy.close.featuresLabel}</p>
+            <ul className={styles.featureList}>
+              {copy.close.beneficios.map((beneficio) => (
+                <li className={styles.featureItem} key={beneficio.texto}>
+                  <span className={styles.featureIcon} aria-hidden="true">
+                    <Icon name={beneficio.icono} size="sm" />
+                  </span>
+                  <span>{beneficio.texto}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
@@ -199,28 +202,15 @@ export async function LandingPage({
           })}
         </section>
 
-        <section className={styles.ctaGrid} id="contacto">
-          <div className={styles.ctaLeft}>
-            <p className={styles.eyebrow}>{copy.close.eyebrow}</p>
-            <h2 className={styles.heading}>{copy.close.heading}</h2>
-            <p className={styles.subtext}>{copy.close.subtext}</p>
-            <div className={styles.actions}>
-              <a className={styles.btnPrimary} href={ctaHref}>{copy.close.primary}</a>
-              <a className={styles.btnSecondary} href="#como-funciona">{copy.close.secondary}</a>
+        <section className={styles.hiringCta} id="flota">
+          <div className={styles.ctaSection}>
+            <div className={styles.ctaText}>
+              <h2 className={styles.ctaHeading}>{copy.hiring.heading}</h2>
+              <p className={styles.ctaSubtext}>{copy.hiring.subtext}</p>
             </div>
-          </div>
-          <div className={styles.ctaRight}>
-            <p className={styles.featuresLabel}>{copy.close.featuresLabel}</p>
-            <ul className={styles.featureList}>
-              {copy.close.beneficios.map((beneficio) => (
-                <li className={styles.featureItem} key={beneficio.texto}>
-                  <span className={styles.featureIcon} aria-hidden="true">
-                    <Icon name={beneficio.icono} size="sm" />
-                  </span>
-                  <span>{beneficio.texto}</span>
-                </li>
-              ))}
-            </ul>
+            <div className={styles.ctaButtonWrapper}>
+              <a className={styles.ctaButton} href={ctaHref}>{copy.hiring.cta}</a>
+            </div>
           </div>
         </section>
 

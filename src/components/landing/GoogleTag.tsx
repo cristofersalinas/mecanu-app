@@ -65,9 +65,6 @@ export function GoogleTag({
   const [detalle, setDetalle] = useState(false);
   const [borrador, setBorrador] = useState({ analitica: false, publicidad: false });
   const [contextoListo, setContextoListo] = useState(false);
-  /** Evita flash del banner: el layout raíz no lee cookies (cacheable), así que
-   *  hasta hidratar no sabemos si ya hay `mecanu_consent`. */
-  const [clienteListo, setClienteListo] = useState(false);
   const pathAnterior = useRef<string | null>(null);
 
   const cookies = useSyncExternalStore(
@@ -80,12 +77,8 @@ export function GoogleTag({
   const medicionOn = analiticaHabilitada() && hayAnalitica(consent);
   const adsOn = analiticaHabilitada() && hayPublicidad(consent);
   const cargarGtm = medicionOn || adsOn;
-  const mostrarBanner = clienteListo && (!decidido || bannerAbierto);
+  const mostrarBanner = !decidido || bannerAbierto;
   const rutaPublica = esRutaPublicaMedible(pathname);
-
-  useEffect(() => {
-    setClienteListo(true);
-  }, []);
 
   const persistir = useCallback((siguiente: Consent) => {
     document.cookie = consentCookieHeader(siguiente);
@@ -152,7 +145,7 @@ export function GoogleTag({
         </>
       ) : null}
 
-      {clienteListo && decidido && !bannerAbierto ? (
+      {decidido && !bannerAbierto ? (
         <button
           type="button"
           className={styles.consentReopen}

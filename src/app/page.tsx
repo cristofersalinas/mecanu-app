@@ -10,11 +10,6 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ hero?: string }>;
-}) {
-  const { hero } = await searchParams;
-  return <LandingPage locale="es" heroForce={hero} />;
+export default function Home() {
+  return <LandingPage locale="es" />;
 }
