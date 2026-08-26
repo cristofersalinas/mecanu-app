@@ -10,6 +10,17 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--mecanu-font-family);
+  --color-neutral-50: var(--mecanu-neutral-25);
+  --color-neutral-100: var(--mecanu-neutral-25);
+  --color-neutral-200: var(--mecanu-neutral-200);
+  --color-neutral-300: var(--mecanu-neutral-300);
+  --color-neutral-400: var(--mecanu-neutral-400);
+  --color-neutral-500: var(--mecanu-neutral-600);
+  --color-neutral-600: var(--mecanu-neutral-600);
+  --color-neutral-700: var(--mecanu-neutral-700);
+  --color-neutral-800: var(--mecanu-neutral-800);
+  --color-neutral-900: var(--mecanu-neutral-900);
+  --color-neutral-950: var(--mecanu-neutral-900);
 }
 
 body {
