@@ -23,7 +23,46 @@ function esParadaTaller(p: Parada | null | undefined): boolean {
   return p?.tipo === 'proveedor' && p.subtipo === 'taller';
 }
 
-/** Referencia corta origen/destino en la card del kanban. */
+/**
+ * Primera parte de la dirección con tipología abreviada (Av., C/, Pg.…).
+ * Exportada para tests; la usa `refParadaKanban`.
+ */
+export function calleCorta(direccion: string | null | undefined): string | null {
+  const first = direccion?.split(',')[0]?.trim() ?? null;
+  if (!first) return null;
+
+  const abreviaturas: [RegExp, string][] = [
+    [/^Avinguda\s+/i, 'Av. '],
+    [/^Avenida\s+/i, 'Av. '],
+    [/^Avda\.?\s+/i, 'Av. '],
+    [/^Calle\s+/i, 'C/ '],
+    [/^Carrer\s+/i, 'C/ '],
+    [/^Pasaje\s+/i, 'Pje. '],
+    [/^Passatge\s+/i, 'Pje. '],
+    [/^Passeig\s+/i, 'Pg. '],
+    [/^Paseo\s+/i, 'Pg. '],
+    [/^Plaza\s+/i, 'Pl. '],
+    [/^Plaça\s+/i, 'Pl. '],
+    [/^Camino\s+/i, 'Cam. '],
+    [/^Camí\s+/i, 'Cam. '],
+    [/^Ronda\s+/i, 'Rda. '],
+    [/^Travessera\s+/i, 'Trav. '],
+    [/^Traves[ií]a\s+/i, 'Trav. '],
+    [/^Carretera\s+/i, 'Ctra. '],
+    [/^Urbanizaci[oó]n\s+/i, 'Urb. '],
+  ];
+
+  for (const [re, abrev] of abreviaturas) {
+    if (re.test(first)) return first.replace(re, abrev).replace(/\s+/g, ' ').trim();
+  }
+  return first;
+}
+
+/**
+ * Referencia corta origen/destino en la card del kanban (dos filas).
+ * - Taller: negrita «Taller» · sub distrito/zona.
+ * - Resto: negrita zona · sub calle.
+ */
 export function refParadaKanban(p: Parada | null | undefined): { bold: string; sub: string | null } {
   if (!p) return { bold: '—', sub: null };
 
@@ -32,13 +71,11 @@ export function refParadaKanban(p: Parada | null | undefined): { bold: string; s
     return { bold: 'Taller', sub: distrito };
   }
 
-  const calle = p.direccion?.split(',')[0]?.trim() ?? null;
-  const bold = p.sublocalidad ?? calle ?? p.localidad ?? '—';
-  const sub = p.sublocalidad
-    ? (p.localidad ?? null)
-    : (calle && p.localidad && calle !== p.localidad ? p.localidad : null);
-
-  return { bold, sub };
+  const zona = p.sublocalidad ?? p.localidad;
+  const calle = calleCorta(p.direccion);
+  if (zona) return { bold: zona, sub: calle };
+  if (calle) return { bold: calle, sub: null };
+  return { bold: p.etiqueta?.trim() || '—', sub: null };
 }
 
 const COLOR_POR_KIND: Record<string, string> = {

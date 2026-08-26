@@ -184,23 +184,43 @@ export function KanbanCard({
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 8 }}>
         {[
           { icon: 'arrow_downward', label: 'Origen', ...origen },
           { icon: 'arrow_upward', label: 'Destino', ...destino },
         ].map((b) => (
-          <div key={b.label} style={{ padding: '7px 9px', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
+          <div
+            key={b.label}
+            style={{
+              padding: '7px 9px',
+              borderRadius: 8,
+              background: 'var(--mecanu-neutral-25)',
+              minWidth: 0,
+              overflow: 'hidden',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
               <Icon name={b.icon} size="sm" color="var(--mecanu-neutral-300)" />
               <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--mecanu-neutral-300)' }}>
                 {b.label}
               </span>
             </div>
-            <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {b.bold}
             </div>
             {b.sub ? (
-              <div style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  lineHeight: '14px',
+                  color: 'var(--mecanu-text-secondary-light)',
+                  overflow: 'hidden',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  wordBreak: 'break-word',
+                }}
+              >
                 {b.sub}
               </div>
             ) : null}

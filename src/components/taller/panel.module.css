@@ -159,6 +159,43 @@
   white-space: nowrap;
 }
 
+.tareaChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--mecanu-neutral-25);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mecanu-text-secondary-light);
+  white-space: nowrap;
+}
+
+.tareaChipOrigen {
+  background: transparent;
+  border: 1px solid var(--mecanu-border);
+  font-weight: 600;
+  color: var(--mecanu-neutral-700);
+}
+
+.tareaUrgencia {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--mecanu-text-primary-light);
+}
+
+.tareaUrgenciaDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .fichaHeaderRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

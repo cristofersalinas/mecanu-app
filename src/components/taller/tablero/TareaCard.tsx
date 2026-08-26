@@ -9,6 +9,12 @@ import { usePanel } from '../store';
 import { contextoTareaCard } from './tarea-card-copy';
 import styles from '../panel.module.css';
 
+const URGENCIA_COLOR: Record<string, string> = {
+  alert: 'var(--mecanu-alert)',
+  warning: 'var(--mecanu-warning)',
+  info: 'var(--mecanu-info)',
+};
+
 interface Props {
   tarea: TareaKanban;
   enCurso: boolean;
@@ -33,6 +39,8 @@ export function TareaCard({
     rutaPorId: p.rutaPorId,
     campanaPorId: p.campanaPorId,
   });
+  const origenLabel = tarea.deber.entidadKind === 'campana' ? 'Campaña' : 'Traslados';
+  const urgencia = URGENCIA_ETIQUETA[tarea.deber.urgencia];
 
   return (
     <div
@@ -44,21 +52,13 @@ export function TareaCard({
       style={{ cursor: tarea.arrastrable ? 'grab' : esPendiente ? 'pointer' : 'default' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 999,
-            background: 'var(--mecanu-neutral-25)', fontSize: 11, fontWeight: 700,
-            color: 'var(--mecanu-text-secondary-light)',
-          }}
-        >
+        <span className={styles.tareaChip}>
           <Icon name={meta.icono} size="sm" />
           {meta.corto}
         </span>
-        {esPendiente ? (
-          <Badge kind={URGENCIA_ETIQUETA[tarea.deber.urgencia].kind} dot>
-            {URGENCIA_ETIQUETA[tarea.deber.urgencia].label}
-          </Badge>
-        ) : null}
+        <span className={`${styles.tareaChip} ${styles.tareaChipOrigen}`}>
+          {origenLabel}
+        </span>
         {!esPendiente && !esCancelada ? (
           <Badge kind="positive" dot={false}>Hecho</Badge>
         ) : null}
@@ -110,6 +110,17 @@ export function TareaCard({
       {detalle && !esCancelada ? (
         <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {detalle}
+        </div>
+      ) : null}
+
+      {esPendiente ? (
+        <div className={styles.tareaUrgencia}>
+          <span
+            className={styles.tareaUrgenciaDot}
+            style={{ background: URGENCIA_COLOR[urgencia.kind] }}
+            aria-hidden
+          />
+          {urgencia.label}
         </div>
       ) : null}
 
