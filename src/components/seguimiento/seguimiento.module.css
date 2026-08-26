@@ -36,6 +36,38 @@
   gap: 12px;
 }
 
+.vistaTabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--sg-line);
+}
+
+.vistaTab,
+.vistaTabOn {
+  flex: 1;
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  color: var(--sg-muted);
+}
+
+.vistaTabOn {
+  background: var(--sg-dash);
+  color: #fff;
+}
+
+.vistaTab:hover {
+  color: var(--sg-ink);
+}
+
 .layout {
   display: flex;
   flex-direction: column;
@@ -814,6 +846,91 @@
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+.lineaLabel {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  cursor: inherit;
+}
+
+.lineaCheck {
+  margin: 2px 0 0;
+  flex-shrink: 0;
+}
+
+.lineaSelectable {
+  cursor: pointer;
+}
+
+.lineaOff {
+  opacity: 0.45;
+}
+
+.presNota {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: var(--sg-muted);
+  line-height: 1.4;
+}
+
+.presEstado {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--sg-teal-deep);
+  text-transform: capitalize;
+}
+
+.presActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.presAccept,
+.presReject {
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.presAccept {
+  flex: 1;
+  background: var(--sg-teal);
+  color: #fff;
+}
+
+.presAccept:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.presReject {
+  background: #fff;
+  color: #9f1239;
+  border: 1px solid #fecdd3;
+}
+
+.presOk {
+  margin: 10px 0 0;
+  font-size: 0.84rem;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.presErr {
+  margin: 10px 0 0;
+  font-size: 0.84rem;
+  color: #9f1239;
 }
 
 .foot {

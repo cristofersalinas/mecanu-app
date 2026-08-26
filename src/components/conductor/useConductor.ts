@@ -1200,25 +1200,40 @@ export function useConductor(opts: OpcionesConductor = {}) {
     };
     const tid = wiz.tid;
     const vehiculoId = j.vehiculoId;
-    if (motivoItv) {
-      const key = nuevaClaveIdempotencia('itv-' + tid);
+    const postHallazgo = (body: Record<string, unknown>, prefijo: string) => {
+      const key = nuevaClaveIdempotencia(`${prefijo}-${tid}`);
       void fetch('/api/v1/campanas/hallazgos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Idempotency-Key': key,
         },
-        body: JSON.stringify({
-          rutaId: j.rutaId,
-          trasladoId: tid,
+        body: JSON.stringify({ rutaId: j.rutaId, trasladoId: tid, ...body }),
+      }).catch(() => {
+        /* Offline: el sello local ya ocurrió; P16 cubre reintentar la cola. */
+      });
+    };
+    if (motivoItv) {
+      postHallazgo(
+        {
           testigo: 'itv',
           nivel: nivelHallazgoItv(motivoItv),
           detalle: motivoItv,
           dias: wiz.itvSinDato ? null : dias,
-        }),
-      }).catch(() => {
-        /* Offline: el sello local ya ocurrió; P16 cubre reintentar la cola. */
-      });
+        },
+        'itv',
+      );
+    }
+    for (const k of ambar) {
+      postHallazgo({ testigo: k, nivel: 3 }, `hallazgo-${k}`);
+    }
+    for (const i of ITEMS) {
+      const n = wiz.items[i.key] ?? 0;
+      if (n >= 2) postHallazgo({ testigo: `item:${i.key}`, nivel: n }, `hallazgo-item-${i.key}`);
+    }
+    for (const rueda of RUEDAS) {
+      const n = wiz.ruedas[rueda.key] ?? 0;
+      if (n >= 2) postHallazgo({ testigo: `rueda:${rueda.key}`, nivel: n }, `hallazgo-rueda-${rueda.key}`);
     }
     void (async () => {
       const escrituras = [

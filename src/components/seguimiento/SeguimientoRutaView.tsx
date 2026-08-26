@@ -1,10 +1,16 @@
+'use client';
+
+import { useMemo, useState } from 'react';
 import {
   tituloEstadoPublico,
   type SeguimientoPublico,
 } from '@/lib/mecanu/seguimiento-ruta';
 import type { UbicacionSeguimientoPublico } from '@/lib/mecanu/repo/repo';
 import { PasosResumen, SeguimientoLiveBlock } from './SeguimientoLiveBlock';
+import { PresupuestoClientePanel } from './PresupuestoClientePanel';
 import styles from './seguimiento.module.css';
+
+type Vista = 'viaje' | 'presupuesto';
 
 /** Subtítulo: solo si aporta algo distinto del título. */
 function detalleEstado(data: SeguimientoPublico, titulo: string): string | null {
@@ -108,7 +114,6 @@ function DashCluster({ data }: { data: SeguimientoPublico }) {
   );
 }
 
-/** Direcciones compactas bajo el mapa (no sustituye al mapa real). */
 function DireccionesStrip({ data }: { data: SeguimientoPublico }) {
   return (
     <div className={styles.dirStrip} aria-label="Origen y destino">
@@ -268,48 +273,30 @@ function VehiclePanel({ data }: { data: SeguimientoPublico }) {
   );
 }
 
-function PresupuestoBlock({ data }: { data: SeguimientoPublico }) {
-  return (
-    <section className={styles.presCard} aria-label="Presupuesto">
-      <h2 className={styles.sectionTitle}>Presupuesto</h2>
-      {!data.presupuesto ? (
-        <div className={styles.emptyCheck}>
-          <p className={styles.emptyTitle}>Sin presupuesto en Mecanu</p>
-          <p className={styles.emptyText}>
-            Si el taller valoró la reparación fuera de la plataforma, este bloque puede quedar vacío
-            o mostrar solo traslados.
-          </p>
-        </div>
-      ) : (
-        <>
-          {data.presupuesto.soloTraslado ? (
-            <p className={styles.badgeTraslado}>Solo traslados</p>
-          ) : null}
-          <ul className={styles.presLines}>
-            {data.presupuesto.lineas.map((l, i) => (
-              <li
-                key={`${l.descripcion}-${i}`}
-                className={l.esTraslado ? styles.lineaTraslado : undefined}
-              >
-                <div>
-                  <strong>{l.descripcion}</strong>
-                  <span>{l.origenLabel}</span>
-                </div>
-                <em>{l.importeLabel}</em>
-              </li>
-            ))}
-          </ul>
-          <div className={styles.presTotal}>
-            <span>Total {data.presupuesto.ivaIncluido ? '(IVA incl.)' : ''}</span>
-            <strong>{data.presupuesto.totalLabel}</strong>
-          </div>
-        </>
-      )}
-    </section>
-  );
-}
+export function SeguimientoRutaView({
+  data,
+  vistaInicial = 'viaje',
+}: {
+  data: SeguimientoPublico | null;
+  vistaInicial?: Vista;
+}) {
+  const [vista, setVista] = useState<Vista>(vistaInicial);
 
-export function SeguimientoRutaView({ data }: { data: SeguimientoPublico | null }) {
+  const ubicacionInicial: UbicacionSeguimientoPublico | null = useMemo(() => {
+    if (!data?.ubicacion) return null;
+    return {
+      token: data.token,
+      rutaId: data.rutaId,
+      estadoId: data.estadoId,
+      subestado: data.subestadoLabel,
+      callout: data.ubicacion.callout,
+      visible: data.ubicacion.visible,
+      conductor: data.ubicacion.conductor,
+      origen: data.ubicacion.origen,
+      destino: data.ubicacion.destino,
+    };
+  }, [data]);
+
   if (!data) {
     return (
       <main className={styles.page}>
@@ -326,20 +313,6 @@ export function SeguimientoRutaView({ data }: { data: SeguimientoPublico | null 
     );
   }
 
-  const ubicacionInicial: UbicacionSeguimientoPublico | null = data.ubicacion
-    ? {
-        token: data.token,
-        rutaId: data.rutaId,
-        estadoId: data.estadoId,
-        subestado: data.subestadoLabel,
-        callout: data.ubicacion.callout,
-        visible: data.ubicacion.visible,
-        conductor: data.ubicacion.conductor,
-        origen: data.ubicacion.origen,
-        destino: data.ubicacion.destino,
-      }
-    : null;
-
   return (
     <main className={styles.page}>
       <div className={styles.bg} aria-hidden />
@@ -352,30 +325,50 @@ export function SeguimientoRutaView({ data }: { data: SeguimientoPublico | null 
           <p className={styles.live}>{data.actualizadoLabel}</p>
         </header>
 
-        <div className={styles.layout}>
-          <div className={styles.colMain}>
-            <DashCluster data={data} />
+        <nav className={styles.vistaTabs} aria-label="Secciones">
+          <button
+            type="button"
+            className={vista === 'viaje' ? styles.vistaTabOn : styles.vistaTab}
+            onClick={() => setVista('viaje')}
+          >
+            Viaje
+          </button>
+          <button
+            type="button"
+            className={vista === 'presupuesto' ? styles.vistaTabOn : styles.vistaTab}
+            onClick={() => setVista('presupuesto')}
+          >
+            Presupuesto
+          </button>
+        </nav>
 
-            <section className={styles.mapBlock} aria-label="Seguimiento en mapa">
-              <div className={styles.mapRow}>
-                <SeguimientoLiveBlock
-                  token={data.token}
-                  initial={ubicacionInicial}
-                  calloutFallback={data.ubicacion?.callout ?? data.mensaje}
-                />
-                <PasosResumen pasos={data.pasos} />
-              </div>
-              <DireccionesStrip data={data} />
-              <p className={styles.tripServicio}>{data.servicio}</p>
-            </section>
+        {vista === 'presupuesto' ? (
+          <PresupuestoClientePanel token={data.token} presupuesto={data.presupuesto} />
+        ) : (
+          <div className={styles.layout}>
+            <div className={styles.colMain}>
+              <DashCluster data={data} />
 
-            <TimelineBlock data={data} />
+              <section className={styles.mapBlock} aria-label="Seguimiento en mapa">
+                <div className={styles.mapRow}>
+                  <SeguimientoLiveBlock
+                    token={data.token}
+                    initial={ubicacionInicial}
+                    calloutFallback={data.ubicacion?.callout ?? data.mensaje}
+                  />
+                  <PasosResumen pasos={data.pasos} />
+                </div>
+                <DireccionesStrip data={data} />
+                <p className={styles.tripServicio}>{data.servicio}</p>
+              </section>
+
+              <TimelineBlock data={data} />
+            </div>
+            <aside className={styles.colSide}>
+              <VehiclePanel data={data} />
+            </aside>
           </div>
-          <aside className={styles.colSide}>
-            <VehiclePanel data={data} />
-            <PresupuestoBlock data={data} />
-          </aside>
-        </div>
+        )}
 
         <p className={styles.foot}>
           ¿Cambiar la hora o reportar una incidencia? Responde al WhatsApp del taller.

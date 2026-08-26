@@ -68,6 +68,15 @@ export function urlSeguimientoRuta(token: string | null | undefined, origin = 'h
   return `${origin.replace(/\/$/, '')}/s/${encodeURIComponent(token.trim())}`;
 }
 
+/** Misma ruta pública, abierta en la pestaña Presupuesto (cotización interactiva). */
+export function urlSeguimientoPresupuesto(
+  token: string | null | undefined,
+  origin = 'https://mecanu.com',
+): string | null {
+  const base = urlSeguimientoRuta(token, origin);
+  return base ? `${base}?vista=presupuesto` : null;
+}
+
 function fmtDinero(n: number): string {
   return (
     n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'

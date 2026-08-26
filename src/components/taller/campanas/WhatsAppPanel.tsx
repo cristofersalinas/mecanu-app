@@ -8,9 +8,9 @@ import { Icon } from '@/components/ds/Icon';
 import { esModoDemo } from '@/lib/entorno';
 import {
   CampanaItem, ERRORES, ESTADO_MENSAJE, ETIQUETA_ORIGEN, MAX_CUERPO, MENSAJE, MensajeWa,
-  PRESUPUESTO_META, RESPUESTAS_DEMO, cliente, detalleHallazgo, enviar, estadoVentana, e164, fmtDia,
+  PRESUPUESTO_META, RESPUESTAS_DEMO, asegurarLinkTokenRuta, cliente, detalleHallazgo, enviar, estadoVentana, e164, fmtDia,
   fmtDinero, fmtReloj, fmtTel, fromISO, payloadRecordatorio, payloadSeguimiento, payloadTexto, rangoFecha, renderMensaje,
-  toISO, valoresOportunidad, vehiculo,
+  renderMensajeCotizacion, toISO, valoresOportunidad, vehiculo,
 } from '../data';
 import { usePanel } from '../store';
 import { Input, Tabs } from '../ui/Primitives';
@@ -26,6 +26,7 @@ import {
   marcarUsadaSesion,
   sugerenciasRapidas,
 } from '@/lib/mecanu/whatsapp-respuestas-rapidas';
+import { urlSeguimientoPresupuesto } from '@/lib/mecanu/whatsapp-contexto';
 import {
   esDeberAgendaCampana,
   esDeberSeguirAgenda,
@@ -91,9 +92,14 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 
   const valores = useMemo(() => {
     if (!campana) return null;
-    const ov: { nombre?: string; fecha?: string } = {};
+    const ov: { nombre?: string; fecha?: string; link?: string } = {};
     if (nombreOv !== null) ov.nombre = nombreOv;
     if (fechaOv !== null) ov.fecha = fechaOv;
+    if (campana.rutaOrigenId) {
+      const token = asegurarLinkTokenRuta(campana.rutaOrigenId);
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mecanu.com';
+      ov.link = urlSeguimientoPresupuesto(token, origin) ?? undefined;
+    }
     return valoresOportunidad(campana, seleccion, ov);
   }, [campana, seleccion, nombreOv, fechaOv]);
 
@@ -125,7 +131,11 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 
   const c = cliente(campana.clienteId);
   const v = vehiculo(campana.vehiculoId);
-  const cuerpo = modo === 'seguimiento' ? renderSeguimiento(valores) : renderMensaje(valores);
+  const cuerpo = modo === 'seguimiento'
+    ? renderSeguimiento(valores)
+    : campana.origenAutomatico
+      ? renderMensajeCotizacion(valores)
+      : renderMensaje(valores);
   const meta = PRESUPUESTO_META[campana.estado];
   const rango = rangoFecha(campana.fecha);
 
@@ -135,10 +145,17 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
   if (campana.items.length > 0 && !seleccion.length) {
     avisos.push({ titulo: 'Sin hallazgos marcados', detalle: 'Marca al menos un servicio para poder enviar el mensaje.' });
   }
+  if (campana.origenAutomatico && !valores.link) {
+    avisos.push({
+      titulo: 'Sin link de cotización',
+      detalle: 'La campaña no tiene ruta de origen con token de seguimiento.',
+    });
+  }
   if (cuerpo.length > MAX_CUERPO) avisos.push({ titulo: 'Mensaje demasiado largo', detalle: `El cuerpo admite ${MAX_CUERPO} caracteres.` });
 
   const noEnviar = optIn === 'OUT'
     || (campana.items.length > 0 && !seleccion.length)
+    || (campana.origenAutomatico && !valores.link)
     || enviando
     || cuerpo.length > MAX_CUERPO;
   const deberCampana = p.deberActivo?.entidadKind === 'campana' && p.deberActivo.entidadId === campana.id
@@ -168,7 +185,7 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
       const to = e164(c?.telefono ?? null) ?? '';
       const payload = modo === 'seguimiento'
         ? payloadSeguimiento(to, valores, cuerpo)
-        : payloadRecordatorio(to, valores);
+        : payloadRecordatorio(to, valores, cuerpo);
       await enviar(payload, {
         onEstado: (_id, estado) => {
           setMensajes((ms) => ms.map((m) => (m.id === localId ? { ...m, estado: estado as MensajeWa['estado'] } : m)));
@@ -425,24 +442,30 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {meta?.siguiente && meta.accion ? (
-                <Button kind="secondary" size="compact" onClick={() => p.avanzarCampana(campana.id)}>{meta.accion}</Button>
-              ) : null}
               {campana.estado === 'enviada' ? (
-                confirmarRechazo ? (
-                  <Button
-                    kind="negative"
-                    size="compact"
-                    onClick={() => {
-                      p.rechazarCampana(campana.id);
-                      setConfirmarRechazo(false);
-                    }}
-                  >
-                    Confirmar rechazo
+                <>
+                  <Button kind="primary" size="compact" icon="check" onClick={() => p.avanzarCampana(campana.id)}>
+                    Cliente aceptó
                   </Button>
-                ) : (
-                  <Button kind="tertiary" size="compact" onClick={() => setConfirmarRechazo(true)}>Marcar rechazada</Button>
-                )
+                  {confirmarRechazo ? (
+                    <Button
+                      kind="negative"
+                      size="compact"
+                      onClick={() => {
+                        p.rechazarCampana(campana.id);
+                        setConfirmarRechazo(false);
+                      }}
+                    >
+                      Confirmar rechazo
+                    </Button>
+                  ) : (
+                    <Button kind="secondary" size="compact" icon="close" onClick={() => setConfirmarRechazo(true)}>
+                      Cliente rechazó
+                    </Button>
+                  )}
+                </>
+              ) : meta?.siguiente && meta.accion ? (
+                <Button kind="secondary" size="compact" onClick={() => p.avanzarCampana(campana.id)}>{meta.accion}</Button>
               ) : null}
               {campana.estado === 'aceptada' && !campana.rutaGeneradaId ? (
                 <Button kind="primary" size="compact" icon="add_road" onClick={() => setCrearRuta(true)}>Crear ruta</Button>

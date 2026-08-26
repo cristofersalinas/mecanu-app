@@ -3,6 +3,7 @@ import { SeguimientoRutaView } from '@/components/seguimiento/SeguimientoRutaVie
 import { repo } from '@/lib/mecanu/repo';
 import { mockRepo } from '@/lib/mecanu/repo/repo-mock';
 import {
+  campanaOfertaDeRuta,
   construirSeguimientoPublico,
   rutaPorLinkToken,
 } from '@/lib/mecanu/seguimiento-ruta';
@@ -17,7 +18,10 @@ import type {
   Vehiculo,
 } from '@/lib/mecanu/types';
 
-type Props = { params: Promise<{ token: string }> };
+type Props = {
+  params: Promise<{ token: string }>;
+  searchParams: Promise<{ vista?: string }>;
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +44,7 @@ type Carga = {
   actividad: Actividad[];
   inspecciones: Inspeccion[];
   presupuesto: Presupuesto | null;
+  campanaOferta: { id: string; estado: string; presupuesto: Presupuesto } | null;
 };
 
 async function cargarPorToken(token: string): Promise<Carga> {
@@ -52,12 +57,14 @@ async function cargarPorToken(token: string): Promise<Carga> {
     actividad: [],
     inspecciones: [],
     presupuesto: null,
+    campanaOferta: null,
   };
 
   const tryFuente = async (fuente: typeof repo): Promise<Carga | null> => {
-    const [rutas, conductores] = await Promise.all([
+    const [rutas, conductores, campanas] = await Promise.all([
       fuente.listRutasVista(),
       fuente.listConductores(),
+      fuente.listCampanas(),
     ]);
     const ruta = rutaPorLinkToken(rutas, token);
     if (!ruta) return null;
@@ -86,16 +93,19 @@ async function cargarPorToken(token: string): Promise<Carga> {
       actividad,
       inspecciones,
       presupuesto: presupuesto ?? ruta.presupuesto,
+      campanaOferta: campanaOfertaDeRuta(campanas, ruta.id),
     };
   };
 
   return (await tryFuente(repo)) ?? (await tryFuente(mockRepo)) ?? vacio;
 }
 
-export default async function SeguimientoTokenPage({ params }: Props) {
+export default async function SeguimientoTokenPage({ params, searchParams }: Props) {
   const { token: raw } = await params;
+  const sp = await searchParams;
   const token = decodeURIComponent(raw || '').trim();
   const carga = await cargarPorToken(token);
+  const vistaInicial = sp.vista === 'presupuesto' ? 'presupuesto' : 'viaje';
 
   const data = construirSeguimientoPublico({
     token,
@@ -108,7 +118,8 @@ export default async function SeguimientoTokenPage({ params }: Props) {
     actividad: carga.actividad,
     inspecciones: carga.inspecciones,
     presupuesto: carga.presupuesto,
+    campanaOferta: carga.campanaOferta,
   });
 
-  return <SeguimientoRutaView data={data} />;
+  return <SeguimientoRutaView data={data} vistaInicial={vistaInicial} />;
 }

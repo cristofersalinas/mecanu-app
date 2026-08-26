@@ -767,6 +767,58 @@ export function PanelProvider({
     }
   }, []);
 
+  /**
+   * En mock, el conductor crea campañas en el proceso del servidor (API).
+   * El panel tiene una copia local de CAMPANAS: traemos las nuevas / ampliadas.
+   */
+  const sincronizarCampanasMock = useCallback(async () => {
+    if (supabasePanelActivo()) return;
+    try {
+      const res = await fetch('/api/v1/panel/snapshot', FETCH_SNAPSHOT);
+      if (!res.ok) return;
+      const raw = await res.json();
+      const serverCampanas = revivirFechas(raw.campanas ?? []) as Campana[];
+      setCampanasBase((prev) => {
+        const byServer = new Map(serverCampanas.map((c) => [c.id, c]));
+        let changed = false;
+        const next = prev.map((c) => {
+          const s = byServer.get(c.id);
+          if (!s) return c;
+          if (s.presupuesto.lineas.length > c.presupuesto.lineas.length) {
+            changed = true;
+            return s;
+          }
+          return c;
+        });
+        const ids = new Set(prev.map((c) => c.id));
+        const nuevas = serverCampanas.filter((c) => !ids.has(c.id));
+        if (nuevas.length) {
+          changed = true;
+          for (const c of nuevas) {
+            if (!CAMPANAS.some((x) => x.id === c.id)) CAMPANAS.push(c);
+          }
+        }
+        return changed ? [...next, ...nuevas] : prev;
+      });
+    } catch (e) {
+      console.warn('[panel] sync campañas mock falló', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (supabasePanelActivo()) return;
+    void sincronizarCampanasMock();
+    const id = window.setInterval(() => { void sincronizarCampanasMock(); }, 6000);
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void sincronizarCampanasMock();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [sincronizarCampanasMock]);
+
   const kanbanSeqRef = useRef(0);
 
   const parchearKanban = useCallback(
@@ -950,12 +1002,12 @@ export function PanelProvider({
     const prevCamp = campanas.find((c) => c.id === id);
     const estadoAntes = desde ?? prevCamp?.estado;
     setCampOverlays((o) => {
-      const base = CAMPANAS.find((c) => c.id === id);
       const prev = o[id] ?? {};
       const ahora = new Date();
-      const pres: Presupuesto | undefined = base
+      const fuente = prevCamp ?? CAMPANAS.find((c) => c.id === id);
+      const pres: Presupuesto | undefined = fuente
         ? {
-            ...(prev.presupuesto ?? base.presupuesto),
+            ...(prev.presupuesto ?? fuente.presupuesto),
             estado,
             actualizado: ahora,
           }

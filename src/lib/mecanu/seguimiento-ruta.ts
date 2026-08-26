@@ -50,10 +50,13 @@ export interface TramoPublico {
 }
 
 export interface LineaPresupuestoPublica {
+  id: string;
   descripcion: string;
   importeLabel: string;
+  importe: number;
   origenLabel: string;
   esTraslado: boolean;
+  seleccionable: boolean;
 }
 
 export interface PresupuestoPublico {
@@ -63,6 +66,10 @@ export interface PresupuestoPublico {
   ivaIncluido: boolean;
   lineas: LineaPresupuestoPublica[];
   nota: string;
+  campanaId: string | null;
+  estado: string | null;
+  /** Cliente puede marcar/desmarcar y aceptar o rechazar. */
+  interactivo: boolean;
 }
 
 export interface CheckinPublico {
@@ -343,15 +350,23 @@ export function timelineDesdeActividad(
   return hechos;
 }
 
-export function presupuestoPublico(pres: Presupuesto | null | undefined): PresupuestoPublico | null {
+export function presupuestoPublico(
+  pres: Presupuesto | null | undefined,
+  opts?: { campanaId?: string | null; estado?: string | null },
+): PresupuestoPublico | null {
   if (!pres || !pres.lineas.length) return null;
-  const lineas = pres.lineas.map((l) => ({
+  const estado = opts?.estado ?? pres.estado;
+  const lineas = pres.lineas.map((l, i) => ({
+    id: `${pres.id}-${i}`,
     descripcion: l.descripcion,
     importeLabel: fmtDinero(l.importe),
+    importe: l.importe,
     origenLabel: ORIGEN_LINEA[l.origen]?.label ?? l.origen,
     esTraslado: l.origen === 'traslado',
+    seleccionable: l.origen !== 'traslado',
   }));
   const soloTraslado = lineas.every((l) => l.esTraslado);
+  const interactivo = estado === 'enviada' || estado === 'valorada';
   return {
     modo: pres.modo,
     soloTraslado,
@@ -360,8 +375,25 @@ export function presupuestoPublico(pres: Presupuesto | null | undefined): Presup
     lineas,
     nota: soloTraslado
       ? 'Este presupuesto incluye solo los traslados. La reparación se gestionó aparte o aún no está valorada en Mecanu.'
-      : 'Importes con IVA incluido. El total incluye reparación y traslados.',
+      : 'Importes con IVA incluido. Desmarca lo que no quieras antes de aceptar.',
+    campanaId: opts?.campanaId ?? pres.campanaId,
+    estado,
+    interactivo,
   };
+}
+
+/** Campaña de hallazgos abierta ligada a la ruta (preferida frente al presupuesto de traslado). */
+export function campanaOfertaDeRuta(
+  campanas: { id: string; rutaOrigenId: string | null; origenAutomatico?: boolean; estado: string; presupuesto: Presupuesto }[],
+  rutaId: string,
+): { id: string; estado: string; presupuesto: Presupuesto } | null {
+  const abiertas = campanas.filter((c) => {
+    if (c.rutaOrigenId !== rutaId) return false;
+    if (c.estado === 'rechazada' || c.estado === 'caducada') return false;
+    return true;
+  });
+  const auto = abiertas.find((c) => c.origenAutomatico) ?? abiertas[0];
+  return auto ? { id: auto.id, estado: auto.estado, presupuesto: auto.presupuesto } : null;
 }
 
 export function checkinPublico(
@@ -438,6 +470,8 @@ export function construirSeguimientoPublico(opts: {
   actividad?: Actividad[];
   inspecciones?: Inspeccion[];
   presupuesto?: Presupuesto | null;
+  /** Oferta de campaña (hallazgos) para la pestaña Presupuesto. */
+  campanaOferta?: { id: string; estado: string; presupuesto: Presupuesto } | null;
 }): SeguimientoPublico | null {
   const { token, ruta, vehiculo, conductor, tallerNombre } = opts;
   if (!ruta || !ruta.linkToken || ruta.linkToken !== token) return null;
@@ -478,6 +512,12 @@ export function construirSeguimientoPublico(opts: {
     destino,
   });
 
+  const oferta = opts.campanaOferta ?? null;
+  const presupuesto = presupuestoPublico(
+    oferta?.presupuesto ?? opts.presupuesto ?? ruta.presupuesto,
+    oferta ? { campanaId: oferta.id, estado: oferta.estado } : undefined,
+  );
+
   return {
     token,
     rutaId: ruta.id,
@@ -502,7 +542,7 @@ export function construirSeguimientoPublico(opts: {
     progresoPct: progresoPorcentaje(ruta.estado),
     tramos: tramosPublicos(tramos, paradas, ruta.tramoActivoId),
     timeline: timelineDesdeActividad(actividad, tramos, chkInsp),
-    presupuesto: presupuestoPublico(opts.presupuesto ?? ruta.presupuesto),
+    presupuesto,
     checkin,
     actualizadoLabel: ultAct ? `Actualizado ${fmtFechaHora(ultAct)}` : 'Sin eventos registrados aún',
     ubicacion: {

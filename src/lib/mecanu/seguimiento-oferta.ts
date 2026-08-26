@@ -18,6 +18,7 @@ export interface DatosCitaOferta {
   vehiculo: string;
   matricula: string;
   importe: string;
+  link?: string;
 }
 
 export type ModoContactoOferta = 'primer_envio' | 'seguimiento' | 'responder' | 'al_dia';
@@ -58,14 +59,18 @@ export function intencionRespuestaCliente(texto: string): IntencionCliente {
 }
 
 export function renderSeguimiento(valores: DatosCitaOferta): string {
+  const link = valores.link?.trim()
+    ? `\n\nCotización: ${valores.link.trim()}`
+    : '';
   const sugeridos = valores.sugeridos
     ? ` También te sugerimos ${valores.sugeridos}.`
     : '';
   return (
     `Hola ${valores.nombre}.\n\n` +
     `Te escribimos sobre ${valores.pendientes} de tu ${valores.vehiculo} (${valores.matricula}). ` +
-    `El presupuesto que te pasamos era ${valores.importe} (IVA incluido, con traslado).${sugeridos}\n\n` +
-    `¿Lo agendamos con recogida o lo dejas para más adelante?`
+    `El presupuesto que te pasamos era ${valores.importe} (IVA incluido).${sugeridos}` +
+    `${link}\n\n` +
+    `¿Lo dejamos o lo rechazas desde el enlace?`
   );
 }
 

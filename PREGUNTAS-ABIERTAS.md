@@ -43,13 +43,12 @@ completamente distinta. Hay que decidir: ¿es un booleano explícito
 (agendado + sin conductor + dentro de X horas)? Afecta directamente a R8 (solape al
 tomar un disponible) y a la métrica "Disponibles" del header del conductor.
 
-### 5. `registrarHallazgoCampana` no crea campaña para testigos ámbar (sí para ITV)
-`testigo: "itv"` (pegatina ausente, vencida o <60 días) **sí crea** una oferta
-`SV-04` (revisión pre-ITV) en el mock — ver `campanaDesdeItvCheckin` y
-`src/lib/mecanu/oferta-itv.ts`. El resto de testigos ámbar del check-in sigue
-devolviendo `null`: falta un catálogo testigo→servicio de tempario resuelto en
-tiempo de ejecución (`CATALOGO_DETECCION` mapea *tipos* de oportunidad, no los
-8 testigos del conductor).
+### 5. ~~`registrarHallazgoCampana` no crea campaña para testigos ámbar~~ (cerrado en mock)
+Mock + conductor: testigos ámbar, ítems/ruedas nivel ≥ 2 e ITV crean oferta vía
+`oferta-hallazgo-checkin.ts` + `campanaDesdeHallazgoCheckin` (acumulados en una
+campaña por ruta). Tempario: carrocería SV-12 (150 € IVA), cristales SV-13 (120 €),
+limpieza SV-14 (39 €). Cotización al cliente: mensaje + `/s/{token}?vista=presupuesto`.
+Supabase `registrarHallazgoCampana` sigue en `null` — ver TODO-LIST.
 
 ## Casos borde del modelo sin cubrir explícitamente
 

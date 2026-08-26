@@ -33,7 +33,7 @@ import type {
   GpsPingInput,
 } from './repo';
 import { construirUbicacionSeguimiento } from '../ubicacion-seguimiento';
-import { rutaPorLinkToken } from '../seguimiento-ruta';
+import { campanaOfertaDeRuta, rutaPorLinkToken } from '../seguimiento-ruta';
 import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '../transicion-en-ruta';
 
 /** Trail en memoria (mock): no se rehidrata entre procesos. */
@@ -315,14 +315,13 @@ export const mockRepo: MecanuRepo = {
       texto: `Hallazgo: ${testigo} nivel ${nivel}`, rutaId,
       detalle: detalle ?? undefined,
     });
-    if (testigo !== 'itv') {
-      // El resto de testigos ámbar sigue sin catálogo testigo→servicio. Ver PREGUNTAS-ABIERTAS.md #5.
-      return null;
+    if (testigo === 'itv') {
+      const motivo = detalle === 'sin_pegatina' || detalle === 'vencida' || detalle === 'por_vencer'
+        ? detalle
+        : 'vencida';
+      return m.campanaDesdeItvCheckin({ rutaId, motivo, dias: dias ?? null });
     }
-    const motivo = detalle === 'sin_pegatina' || detalle === 'vencida' || detalle === 'por_vencer'
-      ? detalle
-      : 'vencida';
-    return m.campanaDesdeItvCheckin({ rutaId, motivo, dias: dias ?? null });
+    return m.campanaDesdeHallazgoCheckin({ rutaId, testigo, nivel });
   },
 
   async entregar({ trasladoId, firmaCliente }: EntregaInput) {
@@ -406,6 +405,35 @@ export const mockRepo: MecanuRepo = {
       ? paradas.find((p) => p.id === tramo.paradaDestinoId) ?? null
       : ruta.paradaDestino;
     return construirUbicacionSeguimiento({ token, ruta, tramo, origen, destino });
+  },
+
+  async responderPresupuestoSeguimiento({ token, accion, indices }) {
+    const vistas = m.RUTAS_VISTA as RutaVista[];
+    const rutaV = rutaPorLinkToken(vistas, token);
+    if (!rutaV) throw new Error('Enlace de seguimiento no válido');
+    const oferta = campanaOfertaDeRuta(m.CAMPANAS, rutaV.id);
+    if (!oferta) throw new Error('No hay cotización abierta en este enlace');
+    const campana = m.campana(oferta.id);
+    if (!campana) throw new Error('Cotización no encontrada');
+    if (campana.estado === 'aceptada' || campana.estado === 'rechazada' || campana.estado === 'caducada') {
+      throw new Error('Esta cotización ya está cerrada');
+    }
+    if (accion === 'rechazar') {
+      campana.estado = 'rechazada';
+      campana.presupuesto.estado = 'rechazada';
+      campana.presupuesto.actualizado = new Date();
+      return { campanaId: campana.id, estado: 'rechazada' };
+    }
+    const uniq = [...new Set(indices)].filter((i) => i >= 0 && i < campana.presupuesto.lineas.length);
+    if (!uniq.length) throw new Error('Selecciona al menos una línea');
+    const elegidas = uniq.map((i) => campana.presupuesto.lineas[i]!).filter(Boolean);
+    campana.presupuesto.lineas = elegidas;
+    campana.presupuesto.total = Math.round(elegidas.reduce((a, l) => a + l.importe, 0) * 100) / 100;
+    campana.presupuesto.estado = 'aceptada';
+    campana.presupuesto.actualizado = new Date();
+    campana.estado = 'aceptada';
+    campana.valor = campana.presupuesto.total;
+    return { campanaId: campana.id, estado: 'aceptada' };
   },
 
   async reasignarConductorTramo({ tramoId, conductorId }: ReasignarConductorInput) {

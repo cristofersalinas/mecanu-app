@@ -441,6 +441,7 @@ export interface ValoresMensaje {
   matricula: string;
   importe: string;
   fecha: string;
+  link: string;
   _total: number;
   _items: CampanaItem[];
 }
@@ -468,9 +469,11 @@ export const RESPUESTAS_DEMO = w.RESPUESTAS_DEMO as string[];
 export const ERRORES = w.ERRORES as Record<number, { titulo: string; detalle: string }>;
 export const ESTADO_MENSAJE = w.ESTADO_MENSAJE as Record<string, { icono: string; color: string; label: string }>;
 export const valoresOportunidad = w.valoresOportunidad as (
-  o: Campana, seleccion: string[], overrides?: { nombre?: string; fecha?: string },
+  o: Campana, seleccion: string[], overrides?: { nombre?: string; fecha?: string; link?: string },
 ) => ValoresMensaje;
 export const renderMensaje = w.renderMensaje as (valores: ValoresMensaje) => string;
+export const renderMensajeCotizacion = w.renderMensajeCotizacion as (valores: ValoresMensaje) => string;
+export const asegurarLinkTokenRuta = m.asegurarLinkTokenRuta as (rutaId: string) => string | null;
 export const detalleHallazgo = w.detalleHallazgo as (o: Campana, it: CampanaItem) => {
   titulo: string;
   tags: string[];
@@ -482,7 +485,9 @@ export const enviar = w.enviar as (
   payload: unknown,
   opts?: { forzarError?: number; onEstado?: (id: string, estado: string) => void },
 ) => Promise<{ messages: { id: string }[] }>;
-export const payloadRecordatorio = w.payloadRecordatorio as (to: string, valores: ValoresMensaje) => unknown;
+export const payloadRecordatorio = w.payloadRecordatorio as (
+  to: string, valores: ValoresMensaje, cuerpo?: string,
+) => unknown;
 export const payloadSeguimiento = w.payloadSeguimiento as (to: string, valores: ValoresMensaje, cuerpo: string) => unknown;
 export const payloadTexto = w.payloadTexto as (to: string, body: string) => unknown;
 export const estadoVentana = w.estadoVentana as (

@@ -12,7 +12,7 @@ export * from './mecanu-pipeline';
 import {
   at, TALLER, cliente, vehiculo, conductor,
   servicio, INSPECCIONES_RAW, ZONAS_CARROCERIA, foto, OPORTUNIDADES_BASE, DIAS_SEMANA,
-  localizarDireccion,
+  localizarDireccion, CATALOGO_DETECCION,
 } from './mecanu-data';
 
 import { coordsDesdeCatalogo } from './geocode';
@@ -36,6 +36,12 @@ import {
   evidenciaOfertaItv, fallaOfertaItv, SERVICIO_ITV_ID, UMBRAL_DIAS_ITV,
   type MotivoOfertaItv,
 } from './oferta-itv';
+import {
+  etiquetaHallazgoCheckin,
+  severidadDesdeNivel,
+  servicioIdParaHallazgoCheckin,
+  tipoDeteccionParaHallazgo,
+} from './oferta-hallazgo-checkin';
 
 const DIA = 86400000;
 
@@ -709,6 +715,19 @@ RutaSchema.array().parse(RUTAS);
    ============================================================== */
 
 export const ruta = (id: string | null | undefined): Ruta | null => RUTAS.find((r) => r.id === id) || null;
+
+/** Asegura un token público `/s/{token}` en la ruta (p. ej. para cotización post check-in). */
+export function asegurarLinkTokenRuta(rutaId: string): string | null {
+  const r = ruta(rutaId);
+  if (!r) return null;
+  if (r.linkToken) return r.linkToken;
+  const token = `s-${rutaId.replace(/^TR-/i, '').toLowerCase()}`;
+  r.linkToken = token;
+  const i = RUTAS_VISTA.findIndex((v) => v.id === rutaId);
+  if (i >= 0) RUTAS_VISTA[i] = vistaRuta(r);
+  return token;
+}
+
 export const rutaVista = (id: string | null | undefined): RutaVista | null => { const r = ruta(id); return r ? vistaRuta(r) : null; };
 export const parada = (id: string | null | undefined): Parada | null => PARADAS.find((p) => p.id === id) || null;
 export const tramo = (id: string | null | undefined): Tramo | null => TRASLADOS.find((t) => t.id === id) || null;
@@ -1206,6 +1225,7 @@ export function campanaDesdeItvCheckin(input: {
   const sv = servicio(SERVICIO_ITV_ID);
   if (!sv) return null;
   const r = ruta(input.rutaId);
+  if (r) asegurarLinkTokenRuta(input.rutaId);
   const existente = campanaItvAbierta(r ? r.vehiculoId : null, input.rutaId);
   if (existente) return existente;
 
@@ -1245,6 +1265,130 @@ export function campanaDesdeItvCheckin(input: {
     servicio: sv,
     urgente: input.motivo !== 'por_vencer',
     severidad: input.motivo === 'por_vencer' ? 'warning' : 'alert',
+    fecha: item.fecha,
+    habito: '—',
+    motivoFecha: 'Detectado en el check-in',
+    fotoUrl: null,
+    estadoEnvio: 'pendiente',
+    presupuestoId: p.id,
+    presupuesto: p,
+    estado: 'nueva',
+    origenAutomatico: true,
+  };
+  CampanaSchema.parse(c);
+  CAMPANAS.push(c);
+  return c;
+}
+
+function campanaCheckinAbierta(vehiculoId: string | null, rutaId: string): Campana | null {
+  return CAMPANAS.find((c) => {
+    if (c.estado === 'aceptada' || c.estado === 'rechazada' || c.estado === 'caducada') return false;
+    if (!c.origenAutomatico) return false;
+    if ((c.tipos || []).indexOf('itv') >= 0) return false;
+    if (c.rutaOrigenId === rutaId) return true;
+    return !!(vehiculoId && c.vehiculoId === vehiculoId && c.rutaOrigenId === rutaId);
+  }) || null;
+}
+
+function recalcularTotalPresupuesto(p: Presupuesto): void {
+  p.total = Math.round(p.lineas.reduce((a, l) => a + l.importe, 0) * 100) / 100;
+  p.actualizado = new Date();
+}
+
+/**
+ * Check-in: testigo ámbar / ítem o rueda nivel ≥ 2 → oferta del tempario.
+ * Varios hallazgos de la misma ruta se acumulan en una sola campaña (no ITV).
+ */
+export function campanaDesdeHallazgoCheckin(input: {
+  rutaId: string;
+  testigo: string;
+  nivel: number;
+}): Campana | null {
+  const servicioId = servicioIdParaHallazgoCheckin(input.testigo);
+  const tipo = tipoDeteccionParaHallazgo(input.testigo);
+  if (!servicioId || !tipo) return null;
+  const sv = servicio(servicioId);
+  if (!sv) return null;
+
+  const r = ruta(input.rutaId);
+  if (r) asegurarLinkTokenRuta(input.rutaId);
+  const etiqueta = etiquetaHallazgoCheckin(input.testigo);
+  const severidad = severidadDesdeNivel(input.nivel);
+  const urgente = input.nivel >= 3;
+
+  const existente = campanaCheckinAbierta(r ? r.vehiculoId : null, input.rutaId);
+  if (existente) {
+    const ya = existente.presupuesto.lineas.some((l) => l.servicioTemparioId === servicioId);
+    if (!ya) {
+      existente.presupuesto.lineas.push(
+        linea(sv.nombre, sv.totalIva, 'inspeccion', servicioId),
+      );
+      recalcularTotalPresupuesto(existente.presupuesto);
+      existente.valor = existente.presupuesto.total;
+      if ((existente.tipos || []).indexOf(tipo) < 0) existente.tipos = [...(existente.tipos || []), tipo];
+      if ((existente.etiquetas || []).indexOf(etiqueta) < 0) {
+        existente.etiquetas = [...(existente.etiquetas || []), etiqueta];
+      }
+      existente.falla = (existente.etiquetas || []).join(' · ');
+      existente.evidencia = `${existente.presupuesto.lineas.length} hallazgos en el check-in`;
+      if (urgente) existente.urgente = true;
+      if (severidad === 'alert') existente.severidad = 'alert';
+      existente.items = [
+        ...existente.items,
+        {
+          id: `${existente.id}-${existente.items.length + 1}`,
+          tipo,
+          origen: 'confirmado',
+          dias: 0,
+          falla: etiqueta,
+          registroIdx: existente.items.length,
+          datos: { testigo: input.testigo, nivel: input.nivel },
+          etiqueta: CATALOGO_DETECCION[tipo]?.etiqueta ?? etiqueta,
+          servicio: sv,
+          valor: sv.totalIva,
+          fecha: at(9, 0, 7),
+        },
+      ];
+    }
+    CampanaSchema.parse(existente);
+    return existente;
+  }
+
+  const id = `CMP-CHK-${input.rutaId.replace('TR-', '')}`;
+  const item: CampanaItem = {
+    id: `${id}-1`,
+    tipo,
+    origen: 'confirmado',
+    dias: 0,
+    falla: etiqueta,
+    registroIdx: 0,
+    datos: { testigo: input.testigo, nivel: input.nivel },
+    etiqueta: CATALOGO_DETECCION[tipo]?.etiqueta ?? etiqueta,
+    servicio: sv,
+    valor: sv.totalIva,
+    fecha: at(9, 0, 7),
+  };
+  const p = crearPresupuesto(`PR-${id}`, {
+    campanaId: id, vehiculoId: r ? r.vehiculoId : null, rutaOrigenId: input.rutaId,
+    modo: 'detallado', estado: 'nueva', creado: new Date(), actualizado: new Date(),
+    lineas: [linea(sv.nombre, sv.totalIva, 'inspeccion', servicioId)],
+  });
+  const c: Campana = {
+    id,
+    clienteId: r ? r.clienteId : null,
+    vehiculoId: r ? r.vehiculoId : null,
+    rutaOrigenId: input.rutaId,
+    rutaGeneradaId: null,
+    inspeccionId: null,
+    items: [item],
+    tipos: [tipo],
+    etiquetas: [etiqueta],
+    falla: etiqueta,
+    evidencia: 'Detectado en el check-in del conductor',
+    valor: p.total,
+    servicio: sv,
+    urgente,
+    severidad,
     fecha: item.fecha,
     habito: '—',
     motivoFecha: 'Detectado en el check-in',

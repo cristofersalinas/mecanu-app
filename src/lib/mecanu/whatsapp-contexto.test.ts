@@ -3,6 +3,7 @@ import {
   camposFichaCliente,
   construirContextoContactoWa,
   fusionarFichaParcial,
+  urlSeguimientoPresupuesto,
   urlSeguimientoRuta,
 } from './whatsapp-contexto';
 import type { Cliente, RutaVista } from './types';
@@ -21,6 +22,12 @@ describe('whatsapp-contexto', () => {
   it('propone link /s/{token} para seguimiento', () => {
     expect(urlSeguimientoRuta('cristofer-wa-demo')).toBe('https://mecanu.com/s/cristofer-wa-demo');
     expect(urlSeguimientoRuta(null)).toBeNull();
+  });
+
+  it('abre presupuesto en la misma URL con ?vista=presupuesto', () => {
+    expect(urlSeguimientoPresupuesto('cristofer-wa-demo')).toBe(
+      'https://mecanu.com/s/cristofer-wa-demo?vista=presupuesto',
+    );
   });
 
   it('marca correo vacío como faltante y teléfono no editable', () => {

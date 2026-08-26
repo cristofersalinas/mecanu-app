@@ -90,6 +90,23 @@ export const MENSAJE: PlantillaMensaje = {
   respuestas: ['Sí, agendar', 'Ver presupuesto', 'Ahora no'],
 };
 
+/** Cotización tras check-in / hallazgos en recepción (link a /s/{token}?vista=presupuesto). */
+export const MENSAJE_COTIZACION_CHECKIN: PlantillaMensaje = {
+  id: 'cotizacion_checkin',
+  body:
+    'Hola {{nombre}}.\n\n' +
+    'En la recepción de tu {{vehiculo}} ({{matricula}}) vimos algunas observaciones de las que podemos hacernos cargo. ' +
+    'En este enlace tienes la cotización: puedes desmarcar lo que no quieras y aceptar o rechazar.\n\n' +
+    '{{link}}',
+  bodySoloPendientes:
+    'Hola {{nombre}}.\n\n' +
+    'En la recepción de tu {{vehiculo}} ({{matricula}}) vimos algunas observaciones de las que podemos hacernos cargo. ' +
+    'En este enlace tienes la cotización: puedes desmarcar lo que no quieras y aceptar o rechazar.\n\n' +
+    '{{link}}',
+  footer: 'Taller Central Mecanu',
+  respuestas: ['Acepto', 'Lo miro', 'Ahora no'],
+};
+
 /** Qué campos puede ajustar el operador y qué viene fijo del sistema. */
 export const META_VARIABLES: Record<string, { label: string; editable: boolean; fuente: string }> = {
   nombre:     { label: 'Nombre en el saludo', editable: true,  fuente: 'Ficha del cliente' },
@@ -121,6 +138,9 @@ export const FRASE_SERVICIO: Record<string, string> = {
   'Escobillas': 'el cambio de escobillas',
   'Filtros': 'el cambio de filtros',
   'Refrigerante': 'la revisión del circuito de refrigeración',
+  'Carrocería': 'la reparación de carrocería',
+  'Cristales': 'la reparación de cristales',
+  'Limpieza': 'la limpieza interior',
 };
 export const frase = (etiqueta: string): string => FRASE_SERVICIO[etiqueta] || etiqueta.toLowerCase();
 
@@ -305,6 +325,8 @@ export interface ValoresMensaje {
   matricula: string;
   importe: string;
   fecha: string;
+  /** Link a /s/{token}?vista=presupuesto (cotización). */
+  link: string;
   /** total en euros de los ítems marcados (no se interpola: lo usa la UI) */
   _total: number;
   _items: CampanaItem[];
@@ -315,6 +337,7 @@ export interface OverridesMensaje {
   nombre?: string;
   /** ISO yyyy-mm-dd, tal cual sale del <input type="date"> */
   fecha?: string;
+  link?: string;
 }
 
 /** Diccionario de valores según los hallazgos marcados. */
@@ -335,6 +358,7 @@ export function valoresOportunidad(o: Campana, seleccion: string[], overrides?: 
     matricula: v ? v.matricula : '—',
     importe: fmtDinero(total),
     fecha: ov.fecha != null ? fmtDia(fromISO(ov.fecha)) : fmtDia(o.fecha),
+    link: (ov.link ?? '').trim(),
     _total: total,
     _items: items,
   };
@@ -342,8 +366,15 @@ export function valoresOportunidad(o: Campana, seleccion: string[], overrides?: 
 
 export function renderMensaje(valores: ValoresMensaje): string {
   const body = valores.sugeridos ? MENSAJE.body : MENSAJE.bodySoloPendientes;
-  /* Todos los placeholders de la plantilla son campos de texto de `ValoresMensaje`;
-     el acceso dinámico se estrecha aquí en vez de abrir la interfaz con un index signature. */
+  return interpolarPlantilla(body, valores);
+}
+
+/** Cotización de hallazgos de check-in (incluye link de presupuesto). */
+export function renderMensajeCotizacion(valores: ValoresMensaje): string {
+  return interpolarPlantilla(MENSAJE_COTIZACION_CHECKIN.body, valores);
+}
+
+function interpolarPlantilla(body: string, valores: ValoresMensaje): string {
   const texto = valores as unknown as Record<string, string | undefined>;
   return body.replace(/\{\{(\w+)\}\}/g, (_, k: string) => {
     const val = texto[k];
@@ -373,13 +404,16 @@ export interface PayloadWa {
   text: { preview_url: boolean; body: string };
 }
 
-export function payloadRecordatorio(to: string, valores: ValoresMensaje): PayloadWa {
-  return { messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text',
-    text: { preview_url: false, body: renderMensaje(valores) } };
+export function payloadRecordatorio(to: string, valores: ValoresMensaje, cuerpo?: string): PayloadWa {
+  const body = cuerpo ?? renderMensaje(valores);
+  return {
+    messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text',
+    text: { preview_url: true, body },
+  };
 }
 export function payloadSeguimiento(to: string, valores: ValoresMensaje, cuerpo: string): PayloadWa {
   return { messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text',
-    text: { preview_url: false, body: cuerpo } };
+    text: { preview_url: true, body: cuerpo } };
 }
 export function payloadTexto(to: string, body: string): PayloadWa {
   return { messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text', text: { preview_url: false, body } };

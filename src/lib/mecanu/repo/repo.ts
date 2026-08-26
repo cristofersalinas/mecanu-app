@@ -233,6 +233,12 @@ export interface MecanuRepo {
   registrarGpsTramo(input: GpsPingInput): Promise<Tramo>;
   /** Lectura pública por link_token (sin PII). */
   getUbicacionSeguimientoPublico(token: string): Promise<UbicacionSeguimientoPublico | null>;
+  /** Cliente responde la cotización desde `/s/{token}?vista=presupuesto`. */
+  responderPresupuestoSeguimiento(input: {
+    token: string;
+    accion: 'aceptar' | 'rechazar';
+    indices: number[];
+  }): Promise<{ campanaId: string; estado: string }>;
 
   /* ---------- Escrituras: panel del taller ---------- */
   reasignarConductorTramo(input: ReasignarConductorInput): Promise<Tramo>;

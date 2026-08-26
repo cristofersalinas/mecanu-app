@@ -31,7 +31,7 @@ import {
 } from './mappers-supabase';
 import { tagsDeRutaConDatos } from '../mecanu-rutas';
 import { construirUbicacionSeguimiento } from '../ubicacion-seguimiento';
-import { rutaPorLinkToken } from '../seguimiento-ruta';
+import { campanaOfertaDeRuta, rutaPorLinkToken } from '../seguimiento-ruta';
 import { geocodificarDireccion } from '../geocode';
 import { gpsPosicionEsquemaAusente } from '../gps-conductor';
 import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '../transicion-en-ruta';
@@ -697,6 +697,27 @@ export const supabaseRepo: MecanuRepo = {
     }
 
     return construirUbicacionSeguimiento({ token, ruta, tramo, origen, destino });
+  },
+
+  async responderPresupuestoSeguimiento({ token, accion, indices }) {
+    const vistas = await this.listRutasVista();
+    const rutaV = rutaPorLinkToken(vistas, token);
+    if (!rutaV) throw new Error('Enlace de seguimiento no válido');
+    const campanas = await this.listCampanas();
+    const oferta = campanaOfertaDeRuta(campanas, rutaV.id);
+    if (!oferta) throw new Error('No hay cotización abierta en este enlace');
+    const estado = accion === 'aceptar' ? 'aceptada' : 'rechazada';
+    if (accion === 'aceptar' && indices.length === 0) {
+      throw new Error('Selecciona al menos una línea');
+    }
+    // En Postgres aún no recortamos líneas por índice; solo cerramos el estado.
+    await this.cambiarEstadoPresupuesto({
+      presupuestoId: oferta.presupuesto.id,
+      estado,
+    });
+    const { error } = await sb().from('campanas').update({ estado }).eq('id', oferta.id);
+    throwPg(error, 'campana estado cliente');
+    return { campanaId: oferta.id, estado };
   },
 
   async reasignarConductorTramo({ tramoId, conductorId }: ReasignarConductorInput) {

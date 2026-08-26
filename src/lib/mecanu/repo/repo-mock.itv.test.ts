@@ -4,15 +4,6 @@ import { SERVICIO_ITV_ID } from '../oferta-itv';
 import { mockRepo } from './repo-mock';
 
 describe('registrarHallazgoCampana: oferta de ITV', () => {
-  it('un testigo que no es ITV sigue sin crear campaña', async () => {
-    const before = CAMPANAS.length;
-    const c = await mockRepo.registrarHallazgoCampana({
-      rutaId: 'TR-1055', trasladoId: 'TS-1055-1', testigo: 'presion', nivel: 3,
-    });
-    expect(c).toBeNull();
-    expect(CAMPANAS.length).toBe(before);
-  });
-
   it('ITV no hecha crea oferta SV-04 y no duplica en el mismo vehículo', async () => {
     const nCamp = CAMPANAS.length;
     const nPres = PRESUPUESTOS.length;

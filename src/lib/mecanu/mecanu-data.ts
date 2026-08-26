@@ -631,6 +631,13 @@ const SERVICIOS_RAW: ServicioRaw[] = [
   /* El traslado es un servicio del tempario del taller: cada taller fija su precio. Mecanu no lo sugiere. */
   { id: 'SV-11', nombre: 'Traslado a domicilio (por trayecto)', categoria: 'Traslado', horas: 1.0, manoObra: 38, materiales: 0,
     aplica: ['Turismo', 'SUV', 'Furgoneta'], garantia: '—', notas: 'Recogida o devolución con seguro puerta a puerta' },
+  /* Precios de vitrina (IVA incl.): 150 / 120 / 39 € — manoObra+materiales = base sin IVA. */
+  { id: 'SV-12', nombre: 'Reparación de carrocería (pieza / rayón)', categoria: 'Estética', horas: 2.0, manoObra: 49.59, materiales: 74.38,
+    aplica: ['Turismo', 'SUV', 'Furgoneta'], garantia: '12 meses', notas: 'Presupuesto orientativo; puede variar con la pieza' },
+  { id: 'SV-13', nombre: 'Cristal / luna (reparación o sustitución)', categoria: 'Estética', horas: 1.5, manoObra: 39.67, materiales: 59.5,
+    aplica: ['Turismo', 'SUV', 'Furgoneta'], garantia: '12 meses', notas: 'Incluye calibración de ADAS si aplica' },
+  { id: 'SV-14', nombre: 'Limpieza interior completa', categoria: 'Estética', horas: 1.0, manoObra: 12.89, materiales: 19.34,
+    aplica: ['Turismo', 'SUV', 'Furgoneta'], garantia: '—', notas: 'Aspirado, plásticos y tapicería' },
 ];
 
 export const SERVICIOS: Servicio[] = SERVICIOS_RAW.map((s) => {
@@ -669,6 +676,9 @@ export const CATALOGO_DETECCION: Record<string, { etiqueta: string; servicioId: 
   escobillas:   { etiqueta: 'Escobillas',   servicioId: 'SV-08' },
   filtros:      { etiqueta: 'Filtros',      servicioId: 'SV-09' },
   refrigerante: { etiqueta: 'Refrigerante', servicioId: 'SV-10' },
+  carroceria:   { etiqueta: 'Carrocería',   servicioId: 'SV-12' },
+  cristales:    { etiqueta: 'Cristales',    servicioId: 'SV-13' },
+  limpieza:     { etiqueta: 'Limpieza',     servicioId: 'SV-14' },
 };
 
 export const DIAS_SEMANA: string[] = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
