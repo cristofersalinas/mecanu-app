@@ -4,6 +4,7 @@ import { DragEvent, useMemo, useState } from 'react';
 import { ErrorState } from '@/components/ds/ErrorState';
 import { MetricsCard } from '@/components/ds/MetricsCard';
 import { COLUMNAS_TAREA, TIPO_TAREA_META, type TareaKanban } from '@/lib/mecanu/pipeline-tareas';
+import { kpisTareas } from '@/lib/mecanu/kpis-panel';
 import type { ColumnaTareaPipeline } from '@/lib/mecanu/types';
 import { usePanel } from '../store';
 import { usePanelUrlFiltros } from '../usePanelUrlFiltros';
@@ -12,6 +13,8 @@ import { useCarga } from '../ui/useCarga';
 import { TareaCard } from './TareaCard';
 import { CancelarTareaModal } from './CancelarTareaModal';
 import { contextoTareaCard } from './tarea-card-copy';
+import { WhatsAppPanel } from '../campanas/WhatsAppPanel';
+import { SidePanel } from '../ficha/SidePanel';
 import styles from '../panel.module.css';
 
 function colorCol(kind: (typeof COLUMNAS_TAREA)[number]['kind']): string {
@@ -64,19 +67,7 @@ export function TareasView() {
     [pipelineFiltrado],
   );
 
-  const kpis = useMemo(() => {
-    const pendientes = p.pipelineTareas.pendiente;
-    return [
-      { id: 'pendientes', label: 'Pendientes', value: String(pendientes.length) },
-      {
-        id: 'urgentes',
-        label: 'Urgentes',
-        value: String(pendientes.filter((t) => t.deber.urgencia === 'ahora').length),
-      },
-      { id: 'hechas', label: 'Hechas', value: String(p.pipelineTareas.hecho.length) },
-      { id: 'canceladas', label: 'Canceladas', value: String(p.pipelineTareas.cancelado.length) },
-    ];
-  }, [p.pipelineTareas]);
+  const kpis = useMemo(() => kpisTareas(p.pipelineTareas), [p.pipelineTareas]);
 
   const plana = useMemo(
     () => COLUMNAS_TAREA.flatMap((c) => pipelineFiltrado[c.id]),
@@ -101,6 +92,21 @@ export function TareasView() {
     ? plana.find((t) => t.id === cancelarTareaId) ?? p.pipelineTareas.pendiente.find((t) => t.id === cancelarTareaId) ?? null
     : null;
 
+  const campanaDeberId = p.deberActivo?.entidadKind === 'campana' ? p.deberActivo.entidadId : null;
+  const sidebarRutaDeber = p.deberActivo?.entidadKind === 'ruta'
+    && p.seleccion?.kind === 'ruta'
+    && p.modoFicha === 'panel';
+
+  const abrirTarea = (t: TareaKanban) => {
+    if (t.columna === 'hecho') return;
+    if (p.deberActivo?.id === t.id) {
+      p.volverDeDeber();
+      return;
+    }
+    p.limpiarTareaResaltada();
+    p.abrirDeber(t.deber);
+  };
+
   if (cargando) {
     return (
       <div style={{ flex: 1, minHeight: 0 }}>
@@ -110,7 +116,8 @@ export function TareasView() {
   }
 
   return (
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
       <div className="mcn-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
         {kpis.map((k) => (
           <MetricsCard key={k.id} value={k.value} label={k.label} />
@@ -181,6 +188,7 @@ export function TareasView() {
                     key={t.id}
                     tarea={t}
                     enCurso={p.deberActivo?.id === t.id}
+                    resaltada={p.tareaResaltadaId === t.id}
                     arrastrando={dragId === t.id}
                     onDragStart={(e) => {
                       setDragId(t.id);
@@ -188,7 +196,7 @@ export function TareasView() {
                       e.dataTransfer.effectAllowed = 'move';
                     }}
                     onDragEnd={() => { setDragId(null); setDropCol(null); }}
-                    onClick={() => p.abrirDeber(t.deber)}
+                    onClick={() => abrirTarea(t)}
                     onReabrir={(t.columna === 'cancelado' || (t.columna === 'hecho' && t.via === 'archivada'))
                       ? () => p.reabrirTareaPipeline(t.id)
                       : undefined}
@@ -225,6 +233,16 @@ export function TareasView() {
           setCancelarTareaId(null);
         }}
       />
+      </div>
+
+      {sidebarRutaDeber ? <SidePanel /> : null}
+      {campanaDeberId ? (
+        <WhatsAppPanel
+          key={`${campanaDeberId}-${p.deberActivo?.id ?? ''}`}
+          campanaId={campanaDeberId}
+          onCerrar={() => p.volverDeDeber()}
+        />
+      ) : null}
     </div>
   );
 }

@@ -8,9 +8,10 @@ import { ErrorState } from '@/components/ds/ErrorState';
 import { Icon } from '@/components/ds/Icon';
 import { MetricsCard } from '@/components/ds/MetricsCard';
 import {
-  Campana, PRESUPUESTO_ESTADOS, PRESUPUESTO_META, PRESUPUESTO_PENDIENTES, cliente, etiquetaVehiculo, fmtDia, fmtDinero,
+  Campana, PRESUPUESTO_ESTADOS, PRESUPUESTO_META, cliente, etiquetaVehiculo, fmtDia, fmtDinero,
   nombreCorto, vehiculo,
 } from '../data';
+import { kpisCampanas } from '@/lib/mecanu/kpis-panel';
 import { usePanel } from '../store';
 import { usePanelUrlFiltros } from '../usePanelUrlFiltros';
 import { CardsSkeleton, SearchInput } from '../ui/Primitives';
@@ -45,30 +46,13 @@ export function CampanasView() {
     });
   }, [p.campanas, busqueda]);
 
-  const kpis = useMemo(() => {
-    const pendientes = p.campanas.filter((c) => PRESUPUESTO_PENDIENTES.includes(c.estado));
-    const enviadas = p.campanas.filter((c) => c.estado === 'enviada');
-    const activas = p.campanas.filter((c) => c.estado === 'nueva' || c.estado === 'valorada' || c.estado === 'enviada');
-    const aceptadas = p.campanas.filter((c) => c.estado === 'aceptada');
-    const montoActivo = activas.reduce((a, c) => a + (c.presupuesto.total ?? 0), 0);
-    const montoAceptado = aceptadas.reduce((a, c) => a + (c.presupuesto.total ?? 0), 0);
-    return [
-      { id: 'pendientes', label: 'Pendientes', value: String(pendientes.length) },
-      { id: 'enviadas', label: 'Enviadas', value: String(enviadas.length) },
-      {
-        id: 'monto-activo',
-        label: 'Monto activo',
-        value: fmtDinero(montoActivo, true),
-        iva: true,
-      },
-      {
-        id: 'monto-aceptado',
-        label: 'Monto aceptado',
-        value: fmtDinero(montoAceptado, true),
-        iva: true,
-      },
-    ];
-  }, [p.campanas]);
+  const kpis = useMemo(
+    () => kpisCampanas(p.campanas).map((k) => ({
+      ...k,
+      value: k.iva ? fmtDinero(Number(k.value), true) : k.value,
+    })),
+    [p.campanas],
+  );
 
   const toggleSel = (id: string) =>
     setSeleccionadas((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));

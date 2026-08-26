@@ -153,9 +153,6 @@ export function RecordDrawer() {
               <div style={{ fontSize: 14, fontWeight: 800 }}>{deber.titulo}</div>
               <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>{deber.detalle}</div>
             </div>
-            <Button kind="tertiary" size="compact" onClick={() => p.volverDeDeber()}>
-              Volver a Tareas
-            </Button>
           </div>
         ) : null}
 

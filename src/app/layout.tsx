@@ -35,8 +35,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   // El Root Layout no lee headers() ni cookies para ser cacheable/estático.
   // El lang="es" es el default; /ca, /en, /pt tienen su propio layout que
-  // aplica HtmlLangPatch en el cliente. El consent se gestiona íntegramente
-  // en GoogleTag (client component) sin necesitar el snapshot del servidor.
+  // aplica HtmlLangPatch en el cliente. GoogleTag no pinta el banner hasta
+  // hidratar y leer `mecanu_consent` (evita flash si ya aceptaste).
   return (
     <html lang="es" className={`h-full antialiased ${plusJakartaSans.variable}`}>
       <head>

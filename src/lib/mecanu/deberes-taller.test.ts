@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  agruparDeberes, deberesDelTaller, deberSiguePendiente, type CampanaParaDeber, type RutaParaDeber,
+  agruparDeberes, deberesDelTaller, deberSiguePendiente, descripcionSidebarDeber,
+  type CampanaParaDeber, type RutaParaDeber,
 } from './deberes-taller';
 
 const ahora = new Date('2026-08-21T10:00:00');
@@ -80,6 +81,45 @@ describe('Deberes del taller', () => {
     expect(list[0].urgencia).toBe('ahora');
   });
 
+  it('tras enviar link de agenda: sin crear_ruta; a las 12 h nace seguimiento', () => {
+    const t0 = ahora.getTime();
+    const conLinkReciente = deberesDelTaller({
+      rutas: [],
+      campanas: [campana({
+        estado: 'aceptada',
+        agendaLink: { enviadoEn: t0 - 3600000, token: 'ag-x' },
+      })],
+      ahora, ...labels,
+    });
+    expect(conLinkReciente).toEqual([]);
+
+    const conLinkViejo = deberesDelTaller({
+      rutas: [],
+      campanas: [campana({
+        estado: 'aceptada',
+        agendaLink: { enviadoEn: t0 - 13 * 3600000, token: 'ag-x' },
+      })],
+      ahora, ...labels,
+    });
+    expect(conLinkViejo).toHaveLength(1);
+    expect(conLinkViejo[0].id).toBe('seguir-agenda-CP-1');
+    expect(conLinkViejo[0].detalle).toBe('Link sin agendar');
+
+    const conAyuda = deberesDelTaller({
+      rutas: [],
+      campanas: [campana({
+        estado: 'aceptada',
+        agendaLink: {
+          enviadoEn: t0 - 13 * 3600000,
+          token: 'ag-x',
+          ayudaEn: t0 - 3600000,
+        },
+      })],
+      ahora, ...labels,
+    });
+    expect(conAyuda).toEqual([]);
+  });
+
   it('oferta enviada: seguimiento si calla, responder si escribió, nada si ya contestamos', () => {
     const silencio = deberesDelTaller({
       rutas: [],
@@ -148,5 +188,30 @@ describe('Deberes del taller', () => {
     });
     const g = agruparDeberes(list);
     expect(g.map((x) => x.urgencia)).toEqual(['hoy', 'cuando_puedas']);
+  });
+
+  it('descripcionSidebarDeber explica disparo, acción y motivo', () => {
+    const agendar = deberesDelTaller({ rutas: [ruta({})], campanas: [], ahora, ...labels })[0];
+    expect(descripcionSidebarDeber(agendar)).toMatch(/prospectos.*Agendar.*cliente/i);
+
+    const caducado = deberesDelTaller({
+      rutas: [ruta({ subestado: 'caducado' })], campanas: [], ahora, ...labels,
+    })[0];
+    expect(descripcionSidebarDeber(caducado)).toMatch(/caducó/i);
+
+    const conductor = deberesDelTaller({
+      rutas: [ruta({
+        estado: 'agendado', subestado: 'sin_conductor',
+        fecha: new Date('2026-08-21T16:00:00'), franja: '16:00 - 17:00',
+      })],
+      campanas: [], ahora, ...labels,
+    })[0];
+    expect(descripcionSidebarDeber(conductor)).toContain('16:00 - 17:00');
+    expect(descripcionSidebarDeber(conductor)).toMatch(/Asignar flota/i);
+
+    const valorar = deberesDelTaller({
+      rutas: [], campanas: [campana({ estado: 'nueva' })], ahora, ...labels,
+    })[0];
+    expect(descripcionSidebarDeber(valorar)).toMatch(/inspección.*Valorar/i);
   });
 });

@@ -8,9 +8,10 @@ import { ErrorState } from '@/components/ds/ErrorState';
 import { Icon } from '@/components/ds/Icon';
 import { MetricsCard } from '@/components/ds/MetricsCard';
 import {
-  CONDUCTORES, ESTADOS, ESTADO, EstadoRuta, KPIS_RUTAS, RutaVista, cliente, fuzzyScore,
+  CONDUCTORES, ESTADOS, ESTADO, EstadoRuta, RutaVista, cliente, fuzzyScore,
   nombreCorto, toISO, vehiculo,
 } from '../data';
+import { kpisTraslados } from '@/lib/mecanu/kpis-panel';
 import { usePanel } from '../store';
 import { usePanelUrlFiltros } from '../usePanelUrlFiltros';
 import { SearchInput, TableSkeleton, CardsSkeleton } from '../ui/Primitives';
@@ -173,13 +174,7 @@ export function TrasladosView({ agendarPeticion }: Props) {
     return cand && cand.score >= 0.4 ? cand.texto : null;
   }, [filtradas.length, busqueda, p.rutas]);
 
-  const kpis = useMemo(() => KPIS_RUTAS.map((k) => {
-    const hoy = new Date();
-    const value = k.hoy
-      ? p.rutas.filter((r) => r.fecha && mismoDia(r.fecha, hoy)).length
-      : p.rutas.filter((r) => r.estado === k.estado).length;
-    return { ...k, value: String(value) };
-  }), [p.rutas]);
+  const kpis = useMemo(() => kpisTraslados(p.rutas, new Date(ahora)), [p.rutas, ahora]);
 
   const limpiarFiltros = useCallback(() => {
     limpiarFiltrosUrl();

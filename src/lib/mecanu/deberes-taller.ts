@@ -6,6 +6,12 @@
  * vive en la card, no en la columna.
  */
 import { modoContactoOferta } from './seguimiento-oferta';
+import {
+  DETALLE_SEGUIR_AGENDA,
+  idDeberSeguirAgenda,
+  tocaSeguirAgendaLink,
+  type AgendaLinkCampana,
+} from './agenda-link-campana';
 
 export type TipoDeberTaller =
   | 'agendar'
@@ -51,6 +57,8 @@ export interface CampanaParaDeber {
   vehiculoId: string | null;
   rutaGeneradaId: string | null;
   mensajes: { dir: 'in' | 'out' | 'sistema'; texto?: string | null }[];
+  /** Último link de autoagenda enviado (tarea crear ruta). */
+  agendaLink?: AgendaLinkCampana | null;
 }
 
 export const URGENCIA_LABEL: Record<UrgenciaDeber, string> = {
@@ -66,6 +74,51 @@ export const URGENCIA_ETIQUETA: Record<UrgenciaDeber, { label: string; kind: 'al
 };
 
 export const URGENCIA_ORDEN: UrgenciaDeber[] = ['ahora', 'hoy', 'cuando_puedas'];
+
+/** Texto breve para la sidebar: disparo · qué hacer · por qué. */
+export function descripcionSidebarDeber(deber: DeberTaller): string {
+  const d = deber.detalle.trim();
+
+  switch (deber.tipo) {
+    case 'agendar':
+      if (d === 'Oferta caducada') {
+        return 'La ventana propuesta caducó · Agendar otra franja de 1 h para retomar el traslado con el cliente.';
+      }
+      return 'Ruta en prospectos sin fecha · Agendar ventana de 1 h para que el cliente confirme el traslado.';
+
+    case 'asignar_conductor':
+      return d
+        ? `Traslado agendado (${d}) sin conductor · Asignar flota para que salga a tiempo.`
+        : 'Traslado agendado sin conductor · Asignar flota para que salga a tiempo.';
+
+    case 'agendar_vuelta':
+      if (d === 'Falta la devolución') {
+        return 'Reparación lista, sin devolución · Agendar ventana de vuelta para devolver el coche al cliente.';
+      }
+      return 'Sin ventana de vuelta · Agendar recogida para cerrar el ciclo con el cliente.';
+
+    case 'valorar_oferta':
+      return 'Campaña nueva desde la inspección · Valorar el presupuesto para poder enviarlo al cliente.';
+
+    case 'enviar_oferta':
+      return 'Presupuesto valorado, aún no enviado · Enviar recordatorio por WhatsApp para que el cliente lo vea.';
+
+    case 'responder_oferta':
+      return 'El cliente escribió tras el recordatorio · Responder en el chat para no perder la oportunidad.';
+
+    case 'recordar_oferta':
+      if (d === DETALLE_SEGUIR_AGENDA || deber.id.startsWith('seguir-agenda-')) {
+        return 'Se envió el link de agenda y aún no hay cita · Preguntar si necesita ayuda o prefiere agendar por el chat.';
+      }
+      return 'Oferta enviada sin respuesta · Enviar seguimiento antes de que caduque o se enfríe.';
+
+    case 'crear_ruta':
+      return 'Cliente aceptó la oferta · Crear la ruta o enviarle el link para que agende él mismo.';
+
+    default:
+      return deber.hintNudge.trim() || d || deber.titulo;
+  }
+}
 
 const DIA_MS = 86400000;
 
@@ -199,18 +252,33 @@ export function deberesDelTaller(opts: {
         });
       }
     } else if (c.estado === 'aceptada' && !c.rutaGeneradaId) {
-      out.push({
-        id: `ruta-${c.id}`,
-        tipo: 'crear_ruta',
-        urgencia: 'ahora',
-        entidadKind: 'campana',
-        entidadId: c.id,
-        zona: 'campana_acciones',
-        titulo: label,
-        detalle: 'Aceptada',
-        cta: 'Crear',
-        hintNudge: 'Crea la ruta (taller, ITV o chapista).',
-      });
+      if (tocaSeguirAgendaLink(c.agendaLink, opts.ahora.getTime())) {
+        out.push({
+          id: idDeberSeguirAgenda(c.id),
+          tipo: 'recordar_oferta',
+          urgencia: 'hoy',
+          entidadKind: 'campana',
+          entidadId: c.id,
+          zona: 'campana_acciones',
+          titulo: label,
+          detalle: DETALLE_SEGUIR_AGENDA,
+          cta: 'Seguir',
+          hintNudge: 'Pregúntale si necesita ayuda o prefiere agendar por el chat.',
+        });
+      } else if (!c.agendaLink) {
+        out.push({
+          id: `ruta-${c.id}`,
+          tipo: 'crear_ruta',
+          urgencia: 'ahora',
+          entidadKind: 'campana',
+          entidadId: c.id,
+          zona: 'campana_acciones',
+          titulo: label,
+          detalle: 'Aceptada',
+          cta: 'Crear',
+          hintNudge: 'Crea la ruta o envía el link de agenda.',
+        });
+      }
     }
   }
 

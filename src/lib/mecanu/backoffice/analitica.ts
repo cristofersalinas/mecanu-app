@@ -1,6 +1,7 @@
 import { fmtDinero } from '../mecanu-data';
+import { trasladosVentanaEnDia, rutasPorEstado } from '../kpis-panel';
 import type { PresupuestoEstado } from '../types';
-import { mismoDia, type MundoBackoffice } from './mundo';
+import { type MundoBackoffice } from './mundo';
 
 export interface AnaliticaBackoffice {
   trasladosHoy: number;
@@ -23,7 +24,7 @@ const ESTADOS: PresupuestoEstado[] = [
 
 export function buildAnalitica(mundo: MundoBackoffice, huecosUrgentes: number): AnaliticaBackoffice {
   const { ahora, rutas, campanas, solicitudes, conductores } = mundo;
-  const trasladosHoy = rutas.filter((r) => r.fecha && mismoDia(r.fecha, ahora) && r.estado !== 'cancelado').length;
+  const trasladosHoy = trasladosVentanaEnDia(rutas, ahora);
   const facturadoCerrado = rutas
     .filter((r) => r.estado === 'completado')
     .reduce((a, r) => a + (r.importe ?? 0), 0);
@@ -47,9 +48,9 @@ export function buildAnalitica(mundo: MundoBackoffice, huecosUrgentes: number): 
 
   return {
     trasladosHoy,
-    enRuta: rutas.filter((r) => r.estado === 'en_ruta').length,
-    enTaller: rutas.filter((r) => r.estado === 'en_taller').length,
-    prospectos: rutas.filter((r) => r.estado === 'prospectos').length,
+    enRuta: rutasPorEstado(rutas, 'en_ruta'),
+    enTaller: rutasPorEstado(rutas, 'en_taller'),
+    prospectos: rutasPorEstado(rutas, 'prospectos'),
     huecosUrgentes,
     solicitudesPendientes: solicitudes.filter((s) => s.estado === 'pendiente').length,
     facturadoCerrado,

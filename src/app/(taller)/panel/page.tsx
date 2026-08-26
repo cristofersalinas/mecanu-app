@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { PanelApp } from '@/components/taller/PanelApp';
+import { PANEL_NAV_MIN_COOKIE } from '@/components/taller/panel-nav-prefs';
 import { leerEstadoUrl, searchDesdeParams } from '@/lib/mecanu/panel-url-estado';
 import { createSupabaseServerAuth } from '@/lib/supabase/auth-server';
 import { ensurePerfilPanel } from '@/lib/supabase/ensure-panel-perfil';
@@ -31,11 +32,13 @@ export default async function PanelPage({
 
   const h = await headers();
   const sp = await searchParams;
+  const cookieStore = await cookies();
+  const navMinimizadoInicial = cookieStore.get(PANEL_NAV_MIN_COOKIE)?.value === '1';
   const inicial = leerEstadoUrl({
     pathname: h.get('x-mecanu-pathname') ?? '/panel',
     search: searchDesdeParams(sp),
     host: h.get('x-forwarded-host') ?? h.get('host') ?? '',
   });
 
-  return <PanelApp inicial={inicial} />;
+  return <PanelApp inicial={inicial} navMinimizadoInicial={navMinimizadoInicial} />;
 }

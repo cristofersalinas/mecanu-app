@@ -8,6 +8,8 @@ import {
   createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import type { DeberTaller, TipoDeberTaller } from '@/lib/mecanu/deberes-taller';
+import type { AgendaLinkCampana } from '@/lib/mecanu/agenda-link-campana';
+import { tokenAgendaCampana } from '@/lib/mecanu/agenda-link-campana';
 import {
   PIPELINE_TAREAS_VACIO, aplicarMovimientoTarea, contarPendientesPipeline,
   proyectarPipelineTareas, reabrirTareaArchivada, reconciliarPipelineTareas,
@@ -26,6 +28,7 @@ import { reemplazarArray, revivirFechas, supabasePanelActivo, FETCH_SNAPSHOT } f
 import { panelApi } from './panel-api';
 import { leerEstadoUrl, sincronizarEstadoUrlPanel, urlsPanelActivas, type PanelUrlEstado } from './panel-url';
 import { usePanelKanbanRealtime } from './usePanelRealtime';
+import { useAhora } from './ui/useCarga';
 
 /* ------------------------- Navegación ------------------------- */
 
@@ -243,6 +246,14 @@ interface PanelStore {
   moverTareaPipeline: (id: string, hacia: ColumnaTareaPipeline) => void;
   cancelarTareaPipeline: (id: string, cancelacion: CancelacionTarea) => void;
   reabrirTareaPipeline: (id: string) => void;
+  /** Tarea pendiente resaltada en verde tras cerrar otra. */
+  tareaResaltadaId: string | null;
+  limpiarTareaResaltada: () => void;
+  /** Tras enviar link de autoagenda: cierra crear_ruta y arranca el reloj de 12 h. */
+  registrarLinkAgendaEnviado: (campanaId: string) => void;
+  /** Tras preguntar ayuda en el seguimiento post-link. */
+  registrarAyudaAgendaEnviada: (campanaId: string) => void;
+  agendaLinkDe: (campanaId: string) => AgendaLinkCampana | null;
   canalesWa: Record<string, CanalWa>;
   setMensajesWa: (campanaId: string, mensajes: MensajeWa[] | ((prev: MensajeWa[]) => MensajeWa[])) => void;
 
@@ -377,6 +388,8 @@ export function PanelProvider({
   const [fuenteDatos, setFuenteDatos] = useState<'mock' | 'supabase'>('mock');
   const [cargandoDatos, setCargandoDatos] = useState(false);
   const snapSeqRef = useRef(0);
+  const ahoraMs = useAhora();
+  const ahoraRef = useMemo(() => new Date(ahoraMs), [ahoraMs]);
 
   useEffect(() => {
     if (!supabasePanelActivo()) return;
@@ -431,6 +444,8 @@ export function PanelProvider({
   const [origenDeber, setOrigenDeber] = useState<{ nav: NavId; sub: string } | null>(null);
   const [pipelineEstado, setPipelineEstado] = useState(PIPELINE_TAREAS_VACIO);
   const [canalesWa, setCanalesWa] = useState<Record<string, CanalWa>>(() => ({ ...CANALES_SEED }));
+  const [agendaLinks, setAgendaLinks] = useState<Record<string, AgendaLinkCampana>>({});
+  const [tareaResaltadaId, setTareaResaltadaId] = useState<string | null>(null);
 
   const [notas, setNotas] = useState<Record<string, Nota[]>>({});
   const [tareas, setTareas] = useState<Record<string, Tarea[]>>({
@@ -522,17 +537,17 @@ export function PanelProvider({
 
   const tagsDe = useCallback((r: RutaVista): TagRuta[] => {
     try {
-      return tagsDeRuta(r);
+      return tagsDeRuta(r, ahoraMs);
     } catch {
       return [];
     }
-  }, []);
+  }, [ahoraMs]);
 
   const derivadosTareas = useMemo(
-    () => deberesDesdePanel(rutas, campanas, new Date(), canalesWa),
-    [rutas, campanas, canalesWa],
+    () => deberesDesdePanel(rutas, campanas, ahoraRef, canalesWa, agendaLinks),
+    [rutas, campanas, canalesWa, agendaLinks, ahoraRef],
   );
-  const pipelineReconciliado = reconciliarPipelineTareas(pipelineEstado, derivadosTareas, new Date());
+  const pipelineReconciliado = reconciliarPipelineTareas(pipelineEstado, derivadosTareas, ahoraRef);
   if (pipelineReconciliado !== pipelineEstado) setPipelineEstado(pipelineReconciliado);
   const pipelineTareas = useMemo(
     () => proyectarPipelineTareas(pipelineReconciliado, derivadosTareas),
@@ -576,13 +591,11 @@ export function PanelProvider({
     setNav(n);
     setSub(s ?? SUBNAV_DEFAULT[n]);
     setFiltrosUrlState({});
-    if (origenDeber) {
-      setDeberActivo(null);
-      setOrigenDeber(null);
-      setSeleccion(null);
-      setModoFicha('panel');
-    }
-  }, [origenDeber]);
+    setDeberActivo(null);
+    setOrigenDeber(null);
+    setSeleccion(null);
+    setModoFicha('panel');
+  }, []);
 
   const seleccionar = useCallback((s: Seleccion | null, modo?: 'panel' | 'ficha') => {
     setSeleccion(s);
@@ -606,23 +619,64 @@ export function PanelProvider({
   const abrirDeber = useCallback((d: DeberTaller) => {
     setOrigenDeber((o) => o ?? { nav, sub });
     setDeberActivo(d);
+    setTareaResaltadaId(null);
     if (d.entidadKind === 'ruta') {
       setSeleccion({ kind: 'ruta', id: d.entidadId });
-      setModoFicha('ficha');
-      setNav('tablero');
-      setSub('tareas');
+      setModoFicha('panel');
     } else {
       setSeleccion(null);
       setModoFicha('panel');
-      setNav('tablero');
-      setSub('campanas');
     }
+    setNav('tablero');
+    setSub('tareas');
   }, [nav, sub]);
 
   const limpiarDeber = useCallback(() => {
     setDeberActivo(null);
     setOrigenDeber(null);
   }, []);
+
+  const limpiarTareaResaltada = useCallback(() => setTareaResaltadaId(null), []);
+
+  const resaltarSiguientePendiente = useCallback((cerradoId: string | null | undefined) => {
+    const siguiente = pipelineTareas.pendiente.find((t) => t.id !== cerradoId);
+    setTareaResaltadaId(siguiente?.id ?? null);
+  }, [pipelineTareas.pendiente]);
+
+  const agendaLinkDe = useCallback(
+    (campanaId: string) => agendaLinks[campanaId] ?? null,
+    [agendaLinks],
+  );
+
+  const registrarLinkAgendaEnviado = useCallback((campanaId: string) => {
+    const cerradoId = deberActivo?.entidadId === campanaId ? deberActivo.id : `ruta-${campanaId}`;
+    setAgendaLinks((prev) => ({
+      ...prev,
+      [campanaId]: {
+        enviadoEn: Date.now(),
+        token: prev[campanaId]?.token ?? tokenAgendaCampana(campanaId),
+      },
+    }));
+    resaltarSiguientePendiente(cerradoId);
+    if (deberActivo?.entidadKind === 'campana' && deberActivo.entidadId === campanaId) {
+      volverDeDeber();
+    }
+    toast('Link de agenda enviado. Si no agenda en 12 h, vuelve el seguimiento.');
+  }, [deberActivo, resaltarSiguientePendiente, toast, volverDeDeber]);
+
+  const registrarAyudaAgendaEnviada = useCallback((campanaId: string) => {
+    const cerradoId = deberActivo?.entidadId === campanaId ? deberActivo.id : null;
+    setAgendaLinks((prev) => {
+      const actual = prev[campanaId];
+      if (!actual) return prev;
+      return { ...prev, [campanaId]: { ...actual, ayudaEn: Date.now() } };
+    });
+    resaltarSiguientePendiente(cerradoId);
+    if (deberActivo?.entidadKind === 'campana' && deberActivo.entidadId === campanaId) {
+      volverDeDeber();
+    }
+    toast('Seguimiento enviado.');
+  }, [deberActivo, resaltarSiguientePendiente, toast, volverDeDeber]);
 
   const moverTareaPipeline = useCallback((id: string, hacia: ColumnaTareaPipeline) => {
     const card = (['pendiente', 'hecho', 'cancelado'] as const).flatMap((c) => pipelineTareas[c]).find((t) => t.id === id);
@@ -667,9 +721,10 @@ export function PanelProvider({
     if (!deberActivo) return false;
     if (deberActivo.entidadKind !== entidadKind || deberActivo.entidadId !== entidadId) return false;
     if (!tipos.includes(deberActivo.tipo)) return false;
+    resaltarSiguientePendiente(deberActivo.id);
     volverDeDeber();
     return true;
-  }, [deberActivo, volverDeDeber]);
+  }, [deberActivo, volverDeDeber, resaltarSiguientePendiente]);
 
   const patch = useCallback((id: string, p: Partial<RutaVista>) => {
     setOverlays((o) => ({ ...o, [id]: { ...o[id], ...p } }));
@@ -1179,6 +1234,8 @@ export function PanelProvider({
     filtrosUrl, setFiltroUrl, setFiltrosUrl, limpiarFiltrosUrl,
     deberActivo, abrirDeber, limpiarDeber, volverDeDeber,
     pipelineTareas, tareasPendientesN, moverTareaPipeline, cancelarTareaPipeline, reabrirTareaPipeline,
+    tareaResaltadaId, limpiarTareaResaltada,
+    registrarLinkAgendaEnviado, registrarAyudaAgendaEnviada, agendaLinkDe,
     canalesWa, setMensajesWa,
     notas, addNota, tareas, toggleTarea, addTarea,
     agendarRuta, cancelarRuta, avanzarSubestadoEnRuta, setEstadoRuta, toggleTagManual, asignarConductor,

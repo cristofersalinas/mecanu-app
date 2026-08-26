@@ -22,6 +22,8 @@ import { EncuestaOnboarding } from './onboarding/OnboardingTaller';
 import { SidePanel } from './ficha/SidePanel';
 import { RecordDrawer } from './ficha/RecordDrawer';
 import { InspeccionModal } from './ficha/InspeccionModal';
+import { useCerrarSidebarClickFuera } from './useCerrarSidebarClickFuera';
+import { setPanelNavMinimizado } from './panel-nav-prefs';
 
 const TITULOS: Record<NavId, string> = {
   general: 'General',
@@ -66,9 +68,9 @@ function migasMuestranFlecha(nav: NavId, sub: string): boolean {
   return true;
 }
 
-function Shell() {
+function Shell({ navMinimizadoInicial }: { navMinimizadoInicial: boolean }) {
   const p = usePanel();
-  const [minimizado, setMinimizado] = useState(false);
+  const [minimizado, setMinimizado] = useState(navMinimizadoInicial);
   const [tooltip, setTooltip] = useState<{ label: string; y: number } | null>(null);
   const [agendarPeticion, setAgendarPeticion] = useState(0);
   const [servicioPeticion, setServicioPeticion] = useState(0);
@@ -97,6 +99,9 @@ function Shell() {
   const hayMigas = p.sub !== p.nav && !!SUBTITULOS[p.sub];
   const migasConFlecha = hayMigas && migasMuestranFlecha(p.nav, p.sub);
   const trailDeber = p.deberActivo;
+  const sidebarEnTareasDeber = p.nav === 'tablero' && p.sub === 'tareas' && !!p.deberActivo;
+  const sidebarGlobalVisible = !!(p.seleccion && p.modoFicha === 'panel' && !sidebarEnTareasDeber);
+  useCerrarSidebarClickFuera(sidebarGlobalVisible);
 
   return (
     <div className={styles.root}>
@@ -127,7 +132,13 @@ function Shell() {
         />
         <button
           type="button"
-          onClick={() => setMinimizado((m) => !m)}
+          onClick={() => {
+            setMinimizado((m) => {
+              const next = !m;
+              setPanelNavMinimizado(next);
+              return next;
+            });
+          }}
           title={minimizado ? 'Expandir menú' : 'Contraer menú'}
           aria-label={minimizado ? 'Expandir menú' : 'Contraer menú'}
           style={{
@@ -227,7 +238,7 @@ function Shell() {
           <Avatar name="Rubén Ortega" size={40} />
         </header>
 
-        <div style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex', gap: 12, overflow: 'hidden' }}>
           <div
             className={styles.dense}
             style={{
@@ -244,7 +255,11 @@ function Shell() {
             {p.nav === 'config' ? <ConfiguracionView /> : null}
           </div>
 
-          {p.seleccion && p.modoFicha === 'panel' ? <SidePanel /> : null}
+          {sidebarGlobalVisible ? (
+            <div className={styles.sidebarCompactDock} data-sidebar-compact>
+              <SidePanel />
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -261,10 +276,16 @@ function Shell() {
   );
 }
 
-export function PanelApp({ inicial }: { inicial?: PanelUrlEstado | null }) {
+export function PanelApp({
+  inicial,
+  navMinimizadoInicial = false,
+}: {
+  inicial?: PanelUrlEstado | null;
+  navMinimizadoInicial?: boolean;
+}) {
   return (
     <PanelProvider inicial={inicial}>
-      <Shell />
+      <Shell navMinimizadoInicial={navMinimizadoInicial} />
     </PanelProvider>
   );
 }

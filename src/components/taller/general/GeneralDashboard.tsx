@@ -12,6 +12,7 @@ import { CardsSkeleton, Eyebrow } from '../ui/Primitives';
 import { ImporteIva } from '../ui/ImporteIva';
 import { useCarga, useAhora } from '../ui/useCarga';
 import { COLUMNAS_TAREA } from '@/lib/mecanu/pipeline-tareas';
+import { metricasGeneralesRutas } from '@/lib/mecanu/kpis-panel';
 import styles from '../panel.module.css';
 
 const DIA_MS = 86400000;
@@ -28,20 +29,15 @@ export function GeneralDashboard() {
   const [rank, setRank] = useState<'conductor' | 'cliente'>('conductor');
 
   const metricas = useMemo(() => {
-    const hoy = new Date();
-    const mismoDia = (d: Date | null) =>
-      !!d && d.getFullYear() === hoy.getFullYear() && d.getMonth() === hoy.getMonth() && d.getDate() === hoy.getDate();
-    const facturado = rutas
-      .filter((r) => r.estado === 'completado')
-      .reduce((a, r) => a + (r.importe ?? 0), 0);
+    const m = metricasGeneralesRutas(rutas, new Date(ahora));
     return [
-      { label: 'Traslados hoy', icono: 'today', value: String(rutas.filter((r) => mismoDia(r.fecha)).length) },
-      { label: 'En taller', icono: 'garage', value: String(rutas.filter((r) => r.estado === 'en_taller').length) },
-      { label: 'En ruta', icono: 'local_shipping', value: String(rutas.filter((r) => r.estado === 'en_ruta').length) },
-      { label: 'Prospectos', icono: 'flag', value: String(rutas.filter((r) => r.estado === 'prospectos').length) },
-      { label: 'Facturado (cerrado)', icono: 'payments', value: fmtDinero(facturado, true), iva: true },
+      { label: 'Traslados hoy', icono: 'today', value: String(m.trasladosHoy) },
+      { label: 'En taller', icono: 'garage', value: String(m.enTaller) },
+      { label: 'En ruta', icono: 'local_shipping', value: String(m.enRuta) },
+      { label: 'Prospectos', icono: 'flag', value: String(m.prospectos) },
+      { label: 'Facturado (cerrado)', icono: 'payments', value: fmtDinero(m.facturado, true), iva: true },
     ];
-  }, [rutas]);
+  }, [rutas, ahora]);
 
   const citas = useMemo<RutaVista[]>(
     () => rutas

@@ -44,6 +44,35 @@
 }
 
 .fichaIn { animation: mcnFichaIn 220ms cubic-bezier(.22, 1, .36, 1); }
+
+/* Sidebar compacto (Traslados, Tareas, Campañas): ancho y borde unificados. */
+.sidebarCompact {
+  flex: none;
+  width: 400px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--mecanu-border);
+  border-radius: 12px;
+  background: var(--mecanu-neutral-0);
+  overflow: hidden;
+  animation: mcnFichaIn 220ms cubic-bezier(.22, 1, .36, 1);
+}
+
+/* En PanelApp (Traslados, etc.): mismo inset que el área de contenido. */
+.sidebarCompactDock {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  min-height: 0;
+  align-self: stretch;
+  margin: 14px 24px 16px 0;
+}
+.sidebarCompactDock > .sidebarCompact {
+  flex: 1;
+  min-height: 0;
+  width: 400px;
+}
 .colCollapsed { animation: mcnColToCollapsed 520ms cubic-bezier(.22, 1, .36, 1); }
 .colExpanded { animation: mcnColToExpanded 520ms cubic-bezier(.22, 1, .36, 1); }
 /* Solo el cuerpo: si la cabecera también anima opacity, las cards se pintan
@@ -113,6 +142,10 @@
 .cardEnCurso {
   border-color: var(--mecanu-electric-600);
   box-shadow: 0 0 0 2px var(--mecanu-electric-100);
+}
+.cardSiguiente {
+  border-color: var(--mecanu-positive);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mecanu-positive) 40%, transparent);
 }
 
 .cardPill {

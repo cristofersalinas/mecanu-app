@@ -1,8 +1,11 @@
 import {
-  ESTADO, SUBESTADO, conductor, type RutaVista, type TagRuta,
+  ESTADO, SUBESTADO, PRESUPUESTO_META, conductor, type Campana, type RutaVista, type TagRuta,
+  cliente, fmtTel,
 } from '../data';
+import { CICLO_VIDA_LABEL, type CicloVidaCliente } from '@/lib/mecanu/cliente-ciclo-vida';
 import { etiquetaEnRutaKanban } from '@/lib/mecanu/etiqueta-en-ruta';
 import { colorPillEstado } from '../tablero/kanban-card-copy';
+import { nombreClienteTareas } from '../tablero/tarea-card-copy';
 import type { BadgeFicha } from './resumen';
 
 export interface PillFicha {
@@ -55,6 +58,67 @@ export function pillsDeRuta(r: RutaVista, tags: TagRuta[]): PillFicha[] {
   });
 
   return pills;
+}
+
+const CICLO_PILL: Record<CicloVidaCliente, string> = {
+  prospecto: 'var(--mecanu-neutral-600)',
+  registrado: 'var(--mecanu-electric-600)',
+  nuevo: 'var(--mecanu-info)',
+  recompra: 'var(--mecanu-positive)',
+  fidelizado: 'var(--mecanu-positive)',
+  en_riesgo: 'var(--mecanu-warning)',
+  perdido: 'var(--mecanu-alert)',
+};
+
+/** Campaña / WhatsApp: presupuesto, ciclo de vida, opt-in y ventana 24 h. */
+export function pillsDeCampana(
+  campana: Campana,
+  opts: { optIn: 'IN' | 'OUT'; ventanaAbierta: boolean; cicloVida?: CicloVidaCliente | null },
+): PillFicha[] {
+  const meta = PRESUPUESTO_META[campana.estado];
+  const pills: PillFicha[] = [];
+
+  if (meta?.label) {
+    pills.push({
+      id: 'presupuesto',
+      label: meta.label,
+      color: colorPillEstado(meta.kind),
+      title: 'Estado del presupuesto',
+    });
+  }
+
+  const cl = cliente(campana.clienteId);
+  const ciclo = opts.cicloVida ?? (cl as { cicloVida?: CicloVidaCliente } | null)?.cicloVida ?? null;
+  if (ciclo && CICLO_VIDA_LABEL[ciclo]) {
+    pills.push({
+      id: 'ciclo-vida',
+      label: CICLO_VIDA_LABEL[ciclo],
+      color: CICLO_PILL[ciclo],
+      title: 'Ciclo de vida del cliente',
+    });
+  }
+
+  pills.push({
+    id: 'opt-in',
+    label: opts.optIn === 'IN' ? 'Opt-in activo' : 'Dado de baja',
+    color: opts.optIn === 'IN' ? colorPillEstado('positive') : colorPillEstado('alert'),
+    title: 'Consentimiento WhatsApp',
+  });
+
+  pills.push({
+    id: 'ventana-wa',
+    label: opts.ventanaAbierta ? 'Ventana 24 h abierta' : 'Ventana cerrada',
+    color: opts.ventanaAbierta ? colorPillEstado('info') : colorPillEstado('neutral'),
+    title: 'Ventana de mensajería WhatsApp',
+  });
+
+  return pills;
+}
+
+export function lineaPersonaTelefono(nombre: string | null | undefined, telefono: string | null | undefined): string {
+  const n = nombre?.trim() ? nombreClienteTareas(nombre) : '—';
+  const t = telefono?.trim() ? fmtTel(telefono) : '—';
+  return `${n} · ${t}`;
 }
 
 export function pillsDesdeBadges(badges: BadgeFicha[]): PillFicha[] {

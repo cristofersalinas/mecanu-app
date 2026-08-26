@@ -12,6 +12,7 @@ import styles from '../panel.module.css';
 interface Props {
   tarea: TareaKanban;
   enCurso: boolean;
+  resaltada?: boolean;
   arrastrando: boolean;
   onDragStart: (e: DragEvent<HTMLDivElement>) => void;
   onDragEnd: () => void;
@@ -20,7 +21,7 @@ interface Props {
 }
 
 export function TareaCard({
-  tarea, enCurso, arrastrando, onDragStart, onDragEnd, onClick, onReabrir,
+  tarea, enCurso, resaltada, arrastrando, onDragStart, onDragEnd, onClick, onReabrir,
 }: Props) {
   const p = usePanel();
   const meta = TIPO_TAREA_META[tarea.deber.tipo];
@@ -35,12 +36,12 @@ export function TareaCard({
 
   return (
     <div
-      className={`${styles.card} ${arrastrando ? styles.cardDragging : ''} ${enCurso ? styles.cardEnCurso : ''}`}
+      className={`${styles.card} ${arrastrando ? styles.cardDragging : ''} ${enCurso ? styles.cardEnCurso : ''} ${resaltada ? styles.cardSiguiente : ''}`}
       draggable={tarea.arrastrable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      onClick={onClick}
-      style={{ cursor: tarea.arrastrable ? 'grab' : 'pointer' }}
+      onClick={esPendiente ? onClick : undefined}
+      style={{ cursor: tarea.arrastrable ? 'grab' : esPendiente ? 'pointer' : 'default' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span
