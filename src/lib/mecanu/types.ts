@@ -182,6 +182,11 @@ export const ConductorSchema = z.object({
   valoraciones: z.number().int().nonnegative(),
   docs: ConductorDocsSchema,
   incidencias: z.array(IncidenciaConductorSchema),
+  /** Última ubicación de la app del conductor (null si nunca abrió con GPS). */
+  posLat: z.number().nullable().optional(),
+  posLng: z.number().nullable().optional(),
+  posPrecisionM: z.number().nullable().optional(),
+  posActualizadaEn: FechaSchema.nullable().optional(),
 });
 export type Conductor = z.infer<typeof ConductorSchema>;
 

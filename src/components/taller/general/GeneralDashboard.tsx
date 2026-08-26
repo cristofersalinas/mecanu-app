@@ -1,19 +1,29 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@/components/ds/Icon';
 import { ErrorState } from '@/components/ds/ErrorState';
 import { usePanel } from '../store';
 import {
-  CONDUCTORES, cliente, conductor, fmtDia, fmtDinero, fmtHora, nombreCliente1, vehiculo,
-  etiquetaVehiculo, RutaVista,
+  CONDUCTORES, TALLER, cliente, conductor, fmtDia, fmtDinero, fmtHora, nombreCliente1, vehiculo,
+  etiquetaVehiculo,
 } from '../data';
 import { CardsSkeleton, Eyebrow } from '../ui/Primitives';
 import { ImporteIva } from '../ui/ImporteIva';
 import { useCarga, useAhora } from '../ui/useCarga';
 import { COLUMNAS_TAREA } from '@/lib/mecanu/pipeline-tareas';
 import { metricasGeneralesRutas } from '@/lib/mecanu/kpis-panel';
+import {
+  construirVistaFlota, conductorIdsEnServicioTaller, proximasCitas, type MarcadorFlota,
+} from '@/lib/mecanu/flota-panel';
+import { supabasePanelActivo, FETCH_SNAPSHOT } from '../hidratar-panel';
 import styles from '../panel.module.css';
+
+const FlotaMapa = dynamic(
+  () => import('./FlotaMapa').then((m) => m.FlotaMapa),
+  { ssr: false, loading: () => <div style={{ minHeight: 480, borderRadius: 12, background: 'var(--mecanu-neutral-25)' }} /> },
+);
 
 const DIA_MS = 86400000;
 
@@ -27,27 +37,57 @@ export function GeneralDashboard() {
   const ahora = useAhora();
   const [rango, setRango] = useState<'7d' | '1m'>('7d');
   const [rank, setRank] = useState<'conductor' | 'cliente'>('conductor');
+  const [marcadores, setMarcadores] = useState<MarcadorFlota[]>([]);
 
-  const metricas = useMemo(() => {
-    const m = metricasGeneralesRutas(rutas, new Date(ahora));
-    return [
-      { label: 'Traslados hoy', icono: 'today', value: String(m.trasladosHoy) },
-      { label: 'En taller', icono: 'garage', value: String(m.enTaller) },
-      { label: 'En ruta', icono: 'local_shipping', value: String(m.enRuta) },
-      { label: 'Prospectos', icono: 'flag', value: String(m.prospectos) },
-      { label: 'Facturado (cerrado)', icono: 'payments', value: fmtDinero(m.facturado, true), iva: true },
-    ];
-  }, [rutas, ahora]);
-
-  const citas = useMemo<RutaVista[]>(
-    () => rutas
-      .filter((r) => r.fecha && r.fecha.getTime() >= ahora - 2 * 3600000 && r.estado !== 'cancelado')
-      .sort((a, b) => (a.fecha?.getTime() ?? 0) - (b.fecha?.getTime() ?? 0))
-      .slice(0, 6),
+  const citas = useMemo(
+    () => proximasCitas(rutas, new Date(ahora)),
     [rutas, ahora],
   );
 
   const proxima = citas[0] ?? null;
+
+  const idsActivos = useMemo(() => conductorIdsEnServicioTaller(rutas), [rutas]);
+
+  const vistaLocal = useMemo(
+    () => construirVistaFlota({
+      tallerDireccion: TALLER.direccion,
+      tallerNombre: TALLER.nombre,
+      conductores: CONDUCTORES,
+      conductorIdsActivos: idsActivos,
+      ahora: new Date(ahora),
+    }),
+    [ahora, idsActivos],
+  );
+
+  useEffect(() => {
+    if (!supabasePanelActivo()) {
+      setMarcadores(vistaLocal.marcadores);
+      return;
+    }
+    let cancelado = false;
+    const cargar = async () => {
+      try {
+        const res = await fetch('/api/v1/panel/flota', FETCH_SNAPSHOT);
+        if (!res.ok) throw new Error(String(res.status));
+        const raw = await res.json() as {
+          marcadores?: (Omit<MarcadorFlota, 'actualizadaEn'> & { actualizadaEn: string | null })[];
+        };
+        if (cancelado) return;
+        setMarcadores((raw.marcadores ?? []).map((m) => ({
+          ...m,
+          actualizadaEn: m.actualizadaEn ? new Date(m.actualizadaEn) : null,
+        })));
+      } catch {
+        if (!cancelado) setMarcadores(vistaLocal.marcadores);
+      }
+    };
+    void cargar();
+    const t = setInterval(cargar, 30_000);
+    return () => {
+      cancelado = true;
+      clearInterval(t);
+    };
+  }, [vistaLocal]);
 
   const barras = useMemo(() => {
     const dias = rango === '7d' ? 7 : 30;
@@ -92,13 +132,14 @@ export function GeneralDashboard() {
       .slice(0, 5);
   }, [rutas, rank]);
 
+  const m = useMemo(() => metricasGeneralesRutas(rutas, new Date(ahora)), [rutas, ahora]);
   const kmRecorridos = rutas.filter((r) => r.estado === 'completado').length * 14.2;
   const califMedia = CONDUCTORES.reduce((a, c) => a + c.calificacion, 0) / CONDUCTORES.length;
 
   if (cargando) {
     return (
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <CardsSkeleton cards={5} />
+        <CardsSkeleton cards={2} />
         <CardsSkeleton cards={2} />
       </div>
     );
@@ -106,22 +147,89 @@ export function GeneralDashboard() {
 
   return (
     <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingRight: 4 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
-        {metricas.map((m) => (
-          <div key={m.label} className={styles.panelBox} style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10, height: 96, boxSizing: 'border-box', justifyContent: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {m.label}
-              </span>
-              <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
-                <Icon name={m.icono} size="sm" />
-              </span>
-            </div>
-            <span style={{ fontSize: 30, lineHeight: '34px', fontWeight: 700 }}>
-              {'iva' in m && m.iva ? <ImporteIva texto={m.value} /> : m.value}
+      <div className={styles.flotaHero}>
+        <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flex: 'none' }}>
+            <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
+              <Icon name="event" size="sm" />
+            </span>
+            <span style={{ flex: 1, fontSize: 13, fontWeight: 700 }}>Próximas citas</span>
+            <span style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>
+              Hoy · {m.trasladosHoy} · {citas.length} en agenda
             </span>
           </div>
-        ))}
+
+          {proxima && (proxima.fecha || proxima.fechaPropuesta) ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 10, background: 'var(--mecanu-neutral-25)', marginBottom: 12, flex: 'none' }}>
+              <div style={{ textAlign: 'center', lineHeight: 1 }}>
+                <div style={{ fontSize: 26, fontWeight: 800 }}>{(proxima.fecha ?? proxima.fechaPropuesta)!.getDate()}</div>
+                <div style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--mecanu-neutral-300)' }}>
+                  {(proxima.fecha ?? proxima.fechaPropuesta)!.toLocaleDateString('es-ES', { month: 'short' })}
+                </div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {etiquetaVehiculo(vehiculo(proxima.vehiculoId))} · {nombreCliente1(cliente(proxima.clienteId)?.nombre ?? null)}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
+                  {proxima.franja ?? proxima.franjaPropuesta ?? 'Pendiente de agendar'}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }}>
+            {citas.map((c) => {
+              const f = c.fecha ?? c.fechaPropuesta;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => seleccionar({ kind: 'ruta', id: c.id }, 'ficha')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', border: 'none',
+                    borderBottom: '1px solid var(--mecanu-border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'left',
+                  }}
+                >
+                  <span style={{ flex: 'none', fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)', width: 46 }}>
+                    {f ? fmtDia(f) : '—'}
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {etiquetaVehiculo(vehiculo(c.vehiculoId))}
+                    </span>
+                    <span style={{ display: 'block', fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
+                      {c.descripcionServicio}
+                    </span>
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{f ? fmtHora(f) : '—'}</span>
+                </button>
+              );
+            })}
+            {citas.length === 0 ? (
+              <ErrorState variant="empty" compact title="Sin citas" message="No hay traslados agendados hoy ni en los próximos días." />
+            ) : null}
+          </div>
+        </section>
+
+        <section className={styles.panelBox} style={{ padding: 12, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px 0', flex: 'none' }}>
+            <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
+              <Icon name="map" size="sm" />
+            </span>
+            <span style={{ flex: 1, fontSize: 13, fontWeight: 700 }}>Flota alrededor del taller</span>
+            <span style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>
+              {marcadores.filter((x) => x.kind === 'conductor' && x.enVivo).length} en vivo ·{' '}
+              {marcadores.filter((x) => x.kind === 'conductor').length} conductores
+            </span>
+          </div>
+          <div style={{ flex: 1, minHeight: 480 }}>
+            <FlotaMapa marcadores={marcadores} />
+          </div>
+          <p style={{ margin: 0, padding: '0 6px 2px', fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
+            El zoom encaja el taller y los conductores con servicio en ruta (GPS real o última vista).
+          </p>
+        </section>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(280px,0.8fr)', gap: 16, alignItems: 'stretch' }}>
@@ -165,59 +273,22 @@ export function GeneralDashboard() {
           </div>
         </section>
 
-        <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flex: 'none' }}>
-            <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
-              <Icon name="event" size="sm" />
-            </span>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>Próximas citas</span>
-          </div>
-
-          {proxima && proxima.fecha ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 10, background: 'var(--mecanu-neutral-25)', marginBottom: 12, flex: 'none' }}>
-              <div style={{ textAlign: 'center', lineHeight: 1 }}>
-                <div style={{ fontSize: 26, fontWeight: 800 }}>{proxima.fecha.getDate()}</div>
-                <div style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--mecanu-neutral-300)' }}>
-                  {proxima.fecha.toLocaleDateString('es-ES', { month: 'short' })}
+        <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'center' }}>
+          <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>Resumen rápido</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {[
+              { label: 'En taller', value: String(m.enTaller) },
+              { label: 'En ruta', value: String(m.enRuta) },
+              { label: 'Prospectos', value: String(m.prospectos) },
+              { label: 'Facturado', value: fmtDinero(m.facturado, true), iva: true },
+            ].map((x) => (
+              <div key={x.label} style={{ padding: 12, borderRadius: 10, background: 'var(--mecanu-neutral-25)' }}>
+                <div style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>{x.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800 }}>
+                  {'iva' in x && x.iva ? <ImporteIva texto={x.value} /> : x.value}
                 </div>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {etiquetaVehiculo(vehiculo(proxima.vehiculoId))} · {nombreCliente1(cliente(proxima.clienteId)?.nombre ?? null)}
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>{proxima.franja ?? 'Pendiente de agendar'}</div>
-              </div>
-            </div>
-          ) : null}
-
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }}>
-            {citas.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => seleccionar({ kind: 'ruta', id: c.id }, 'ficha')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', border: 'none',
-                  borderBottom: '1px solid var(--mecanu-border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'left',
-                }}
-              >
-                <span style={{ flex: 'none', fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)', width: 46 }}>
-                  {c.fecha ? fmtDia(c.fecha) : '—'}
-                </span>
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {etiquetaVehiculo(vehiculo(c.vehiculoId))}
-                  </span>
-                  <span style={{ display: 'block', fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-                    {c.descripcionServicio}
-                  </span>
-                </span>
-                <span style={{ fontSize: 12, fontWeight: 600 }}>{c.fecha ? fmtHora(c.fecha) : '—'}</span>
-              </button>
             ))}
-            {citas.length === 0 ? (
-              <ErrorState variant="empty" compact title="Sin citas" message="Sin citas agendadas próximamente." />
-            ) : null}
           </div>
         </section>
       </div>
@@ -339,7 +410,7 @@ export function GeneralDashboard() {
       </div>
 
       <Eyebrow style={{ paddingBottom: 8 }}>
-        Datos en memoria · sin backend. {conductor('d1') ? '' : ''}
+        {conductor('d1') ? 'Mapa · última ubicación de la app del conductor.' : ''}
       </Eyebrow>
     </div>
   );

@@ -30,7 +30,7 @@ import type {
   CancelarRutaInput, CheckinInput, ConfirmacionInput, CrearRutaDesdeCampanaInput,
   EntregaInput, HallazgoCampanaInput, IncidenciaInput, MecanuRepo,
   ReasignarConductorInput, SolicitudInput, AgendarRutaInput,
-  GpsPingInput,
+  GpsPingInput, UbicacionConductorInput,
 } from './repo';
 import { construirUbicacionSeguimiento } from '../ubicacion-seguimiento';
 import { campanaOfertaDeRuta, rutaPorLinkToken } from '../seguimiento-ruta';
@@ -375,6 +375,15 @@ export const mockRepo: MecanuRepo = {
     t.posLng = input.lng;
     t.posPrecisionM = input.accuracy ?? null;
     t.posActualizadaEn = ts;
+    if (t.conductorId) {
+      const c = m.CONDUCTORES.find((x) => x.id === t.conductorId);
+      if (c) {
+        c.posLat = input.lat;
+        c.posLng = input.lng;
+        c.posPrecisionM = input.accuracy ?? null;
+        c.posActualizadaEn = ts;
+      }
+    }
     TRAIL_MOCK.push({
       trasladoId: t.id,
       lat: input.lat,
@@ -385,6 +394,16 @@ export const mockRepo: MecanuRepo = {
       texto: `Posición ${input.lat.toFixed(5)}, ${input.lng.toFixed(5)}`,
     });
     return t;
+  },
+
+  async registrarUbicacionConductor(input: UbicacionConductorInput) {
+    const c = m.CONDUCTORES.find((x) => x.id === input.conductorId);
+    if (!c) throw new Error(`Conductor ${input.conductorId} no encontrado`);
+    const ts = input.ts ? new Date(input.ts) : new Date();
+    c.posLat = input.lat;
+    c.posLng = input.lng;
+    c.posPrecisionM = input.accuracy ?? null;
+    c.posActualizadaEn = ts;
   },
 
   async getUbicacionSeguimientoPublico(token: string) {

@@ -24,6 +24,7 @@ import type {
   EntregaInput, HallazgoCampanaInput, IncidenciaInput, MecanuRepo,
   ReasignarConductorInput, SolicitudInput, AgendarRutaInput,
   GpsPingInput,
+  UbicacionConductorInput,
 } from './repo';
 import {
   construirVista, mapCampana, mapCampanaItem, mapCliente, mapConductor, mapLog, mapParada, mapPerfilAUsuario,
@@ -647,6 +648,20 @@ export const supabaseRepo: MecanuRepo = {
       })
       .eq('id', input.trasladoId);
     if (error && !gpsPosicionEsquemaAusente(error.message)) throwPg(error, 'gps pos');
+    if (t.conductorId) {
+      const { error: eCond } = await sb()
+        .from('conductores')
+        .update({
+          pos_lat: input.lat,
+          pos_lng: input.lng,
+          pos_precision_m: input.accuracy ?? null,
+          pos_actualizada_en: ts.toISOString(),
+        })
+        .eq('id', t.conductorId);
+      if (eCond && !gpsPosicionEsquemaAusente(eCond.message)) {
+        console.warn('[repo] conductor pos no escrita', eCond.message);
+      }
+    }
     const { error: eTrail } = await sb().from('traslado_ubicaciones').insert({
       traslado_id: t.id,
       conductor_id: t.conductorId,
@@ -663,6 +678,20 @@ export const supabaseRepo: MecanuRepo = {
     /* Sin log por ping: el trail (`traslado_ubicaciones`) ya es la fuente.
        Un LG-* por cada 20 s chocaba la PK y tumba el POST → cola hinchada. */
     return requireTramo(input.trasladoId);
+  },
+
+  async registrarUbicacionConductor(input: UbicacionConductorInput) {
+    const ts = input.ts ? new Date(input.ts) : new Date();
+    const { error } = await sb()
+      .from('conductores')
+      .update({
+        pos_lat: input.lat,
+        pos_lng: input.lng,
+        pos_precision_m: input.accuracy ?? null,
+        pos_actualizada_en: ts.toISOString(),
+      })
+      .eq('id', input.conductorId);
+    if (error && !gpsPosicionEsquemaAusente(error.message)) throwPg(error, 'conductor ubicacion');
   },
 
   async getUbicacionSeguimientoPublico(token: string) {

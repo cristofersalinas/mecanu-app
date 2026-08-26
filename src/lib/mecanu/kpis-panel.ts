@@ -116,7 +116,10 @@ export function kpisTareas(
 }
 
 /** Resumen de rutas para General (alineado con kpisTraslados / analitica). */
-export function metricasGeneralesRutas(rutas: RutaVista[], ahora: Date) {
+export function metricasGeneralesRutas(
+  rutas: Pick<RutaVista, 'estado' | 'fecha' | 'importe'>[],
+  ahora: Date,
+) {
   const facturado = rutas
     .filter((r) => r.estado === 'completado')
     .reduce((a, r) => a + (r.importe ?? 0), 0);

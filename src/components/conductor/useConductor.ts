@@ -552,6 +552,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
   }, [conductorId]);
 
   const ultimoPingRef = useRef<GpsPunto | null>(null);
+  const ultimaUbicacionAppRef = useRef<GpsPunto | null>(null);
   const watchIdRef = useRef<number | null>(null);
 
   /**
@@ -651,6 +652,29 @@ export function useConductor(opts: OpcionesConductor = {}) {
         gpsPermiso: 'concedido',
         gpsError: null,
       });
+      /* Última vista para el mapa del taller (aunque no haya viaje activo). */
+      if (
+        conductorId
+        && debeEnviarPing(ultimaUbicacionAppRef.current, punto, Date.parse(punto.ts), {
+          throttleMs: 60_000,
+          throttleM: 80,
+        })
+      ) {
+        ultimaUbicacionAppRef.current = punto;
+        void fetch(`/api/v1/conductores/${encodeURIComponent(conductorId)}/ubicacion`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': `ubicacion-${conductorId}-${punto.ts}`,
+          },
+          body: JSON.stringify({
+            lat: punto.lat,
+            lng: punto.lng,
+            accuracy: punto.accuracy,
+            ts: punto.ts,
+          }),
+        }).catch(() => { /* best-effort */ });
+      }
       const tid = activoId(ref.current);
       if (!tid) return;
       const j = buildJob(tid, ref.current);
@@ -660,7 +684,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
       if (!debeEnviarPing(ultimoPingRef.current, punto)) return;
       void enviarGpsPing(tid, punto);
     },
-    [enviarGpsPing, patch],
+    [conductorId, enviarGpsPing, patch],
   );
 
   const pedirGps = useCallback(() => {

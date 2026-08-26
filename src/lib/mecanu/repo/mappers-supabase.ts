@@ -70,6 +70,10 @@ export function mapConductor(
       seguro: Boolean(row.docs_seguro),
     },
     incidencias,
+    posLat: row.pos_lat == null ? null : Number(row.pos_lat),
+    posLng: row.pos_lng == null ? null : Number(row.pos_lng),
+    posPrecisionM: row.pos_precision_m == null ? null : Number(row.pos_precision_m),
+    posActualizadaEn: asDate(row.pos_actualizada_en as string),
   };
 }
 

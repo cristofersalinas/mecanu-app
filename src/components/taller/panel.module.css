@@ -468,6 +468,21 @@
   background: var(--mecanu-neutral-0);
 }
 
+.flotaHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: stretch;
+  min-height: 570px;
+}
+
+@media (max-width: 960px) {
+  .flotaHero {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+}
+
 .overlay {
   position: fixed;
   inset: 0;

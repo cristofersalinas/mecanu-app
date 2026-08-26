@@ -158,6 +158,14 @@ export interface GpsPingInput {
   fuente?: 'conductor' | 'api' | 'cron';
 }
 
+export interface UbicacionConductorInput {
+  conductorId: string;
+  lat: number;
+  lng: number;
+  accuracy?: number | null;
+  ts?: string | null;
+}
+
 /** Payload público mínimo para el mapa de `/s/{token}`. */
 export interface UbicacionSeguimientoPublico {
   token: string;
@@ -231,6 +239,8 @@ export interface MecanuRepo {
   registrarIncidencia(input: IncidenciaInput): Promise<void>;
   /** Ping GPS del conductor: actualiza pos del tramo + trail append-only. */
   registrarGpsTramo(input: GpsPingInput): Promise<Tramo>;
+  /** Última ubicación al abrir la app (aunque no haya traslado activo). */
+  registrarUbicacionConductor(input: UbicacionConductorInput): Promise<void>;
   /** Lectura pública por link_token (sin PII). */
   getUbicacionSeguimientoPublico(token: string): Promise<UbicacionSeguimientoPublico | null>;
   /** Cliente responde la cotización desde `/s/{token}?vista=presupuesto`. */
