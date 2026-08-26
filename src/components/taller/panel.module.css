@@ -161,7 +161,7 @@
   padding: 10px 12px 11px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
   cursor: pointer;
   transition: box-shadow 140ms linear, border-color 140ms linear;
 }
@@ -177,6 +177,28 @@
 .cardSiguiente {
   border-color: var(--mecanu-positive);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--mecanu-positive) 40%, transparent);
+}
+
+.cardSection {
+  padding: 8px 0;
+}
+.cardSection:first-child {
+  padding-top: 0;
+}
+.cardSection:last-child {
+  padding-bottom: 0;
+}
+/* Línea a todo el ancho de la card (compensa el padding horizontal). */
+.cardSection + .cardSection {
+  border-top: 1px solid var(--mecanu-border);
+  margin-left: -12px;
+  margin-right: -12px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.cardSection + .cardSection.cardSectionSinLinea,
+.cardSection.cardSectionSinLinea {
+  border-top: none;
 }
 
 .cardPill {
@@ -250,9 +272,12 @@
   height: 24px;
   padding: 0;
   color: var(--mecanu-neutral-400);
-  font-size: 16px;
-  font-weight: 400;
   line-height: 1;
+}
+
+.cardCancelBtn :global(.mecanu-icon) {
+  font-size: 18px;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
 .cardCancelBtn:hover {
@@ -449,6 +474,58 @@
   color: var(--mecanu-text-primary-light);
 }
 
+/* Switch de segmentos: pista gris, opción activa en blanco.
+   Usar en Todos/Importantes, lista/tablero, 7d/1m, etc. */
+.segmentSwitch,
+.maestroFiltro {
+  display: inline-flex;
+  flex: none;
+  align-items: stretch;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--mecanu-border);
+  border-radius: 8px;
+  background: var(--mecanu-neutral-25);
+  box-sizing: border-box;
+}
+
+.segmentSwitchBtn,
+.maestroFiltroBtn {
+  margin: 0;
+  padding: 0 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mecanu-text-secondary-light);
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.segmentSwitchBtn:hover,
+.maestroFiltroBtn:hover {
+  color: var(--mecanu-text-primary-light);
+}
+
+.segmentSwitchBtnOn,
+.maestroFiltroBtnOn {
+  background: var(--mecanu-neutral-0);
+  color: var(--mecanu-text-primary-light);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(22, 23, 24, 0.12);
+}
+
+.segmentSwitchBtnIcon {
+  width: 32px;
+  padding: 0;
+}
+
 /* -- Pestañas -- */
 
 .tabs {
@@ -518,36 +595,166 @@
 .flotaMapRoot {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 480px;
+  min-height: 480px;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--mecanu-neutral-25);
+  /* Distinto del fondo del panel: si ves este color, el canvas no pinta tiles */
+  background: #e8eef0;
 }
 
 .flotaMapCanvas {
-  position: absolute;
-  inset: 0;
+  width: 100%;
+  height: 480px;
 }
 
-.flotaMapCentrar {
+.flotaMapCanvas :global(.maplibregl-map),
+.flotaMapCanvas :global(.maplibregl-canvas-container),
+.flotaMapCanvas :global(.maplibregl-canvas) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.flotaMapControls {
   position: absolute;
   top: 12px;
   right: 12px;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.flotaMapCentrar {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: 34px;
   height: 34px;
-  padding: 0 12px;
+  padding: 0;
   border: 1px solid var(--mecanu-border);
   border-radius: 8px;
   background: var(--mecanu-neutral-0);
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
   color: var(--mecanu-text-primary-light);
   cursor: pointer;
+}
+
+.flotaMapZoomGroup {
+  display: flex;
+  flex-direction: column;
+  width: 34px;
+  overflow: hidden;
+  border: 1px solid var(--mecanu-border);
+  border-radius: 8px;
+  background: var(--mecanu-neutral-0);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+}
+
+.flotaMapZoomBtn {
+  width: 100%;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  appearance: none;
+  border: none;
+  border-radius: 0;
+  background: var(--mecanu-neutral-0);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--mecanu-text-primary-light);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.flotaMapZoomBtn:hover {
+  background: var(--mecanu-neutral-25);
+}
+
+.flotaMapZoomBtn + .flotaMapZoomBtn {
+  border-top: 1px solid var(--mecanu-border);
+}
+
+.flotaMapLeyenda {
+  margin: 0;
+  padding: 0 6px 2px;
+  font-size: 11px;
+  color: var(--mecanu-neutral-300);
+}
+
+.flotaIconMenu {
+  position: relative;
+  width: 34px;
+}
+
+.flotaIconMenuTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--mecanu-border);
+  border-radius: 8px;
+  background: var(--mecanu-neutral-0);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+  color: var(--mecanu-text-primary-light);
+  cursor: pointer;
+}
+
+.flotaIconMenuTrigger:hover {
+  background: var(--mecanu-neutral-25);
+}
+
+.flotaIconMenuPanel {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  width: 34px;
+  overflow: hidden;
+  border: 1px solid var(--mecanu-border);
+  border-radius: 8px;
+  background: var(--mecanu-neutral-0);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+}
+
+.flotaIconMenuItem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--mecanu-neutral-400);
+  cursor: pointer;
+}
+
+.flotaIconMenuItem + .flotaIconMenuItem {
+  border-top: 1px solid var(--mecanu-border);
+}
+
+.flotaIconMenuItem:hover {
+  color: var(--mecanu-text-primary-light);
+  background: var(--mecanu-neutral-25);
+}
+
+.flotaIconMenuItemOn {
+  color: var(--mecanu-text-primary-light);
+  background: var(--mecanu-neutral-25);
 }
 
 .flotaMapPlaceCard {
@@ -579,9 +786,11 @@
 .flotaMapPlacePhotoImg {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   display: block;
+  transform: scale(1.1);
+  transform-origin: center center;
 }
 
 .flotaMapPlaceBody {
@@ -632,6 +841,16 @@
   border: 1px solid var(--mecanu-border);
   background: var(--mecanu-neutral-0);
   color: var(--mecanu-text-primary-light);
+}
+
+.root a.flotaMapBtnPrimary {
+  border: 1px solid #0f0f0f;
+  background: #0f0f0f;
+  color: #fff;
+}
+.root a.flotaMapBtnPrimary:hover {
+  color: #fff;
+  opacity: 0.92;
 }
 
 .flotaMapBtnPrimary {
@@ -773,4 +992,331 @@
 
 @media (max-width: 760px) {
   .fichaRail { display: none !important; }
+}
+
+/* -- Dashboard General editable -- */
+
+.dashRoot {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.dashToolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: none;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 8px 0;
+  background: var(--mecanu-bg-primary-light, var(--mecanu-neutral-0));
+}
+
+.dashToolbarSelectWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashToolbarLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mecanu-text-secondary-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dashToolbarSelect {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--mecanu-border);
+  background: var(--mecanu-neutral-0);
+  color: var(--mecanu-text-primary-light);
+}
+
+.dashBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--mecanu-neutral-25);
+  color: var(--mecanu-text-secondary-light);
+}
+
+.dashPrimaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: var(--mecanu-electric-600);
+  color: var(--mecanu-neutral-0);
+}
+
+.dashPrimaryBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dashPrimaryBtn:not(:disabled):hover {
+  filter: brightness(0.95);
+}
+
+.dashBody {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+}
+
+.dashGrid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+  align-content: start;
+}
+
+.dashGridEdit {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--mecanu-border-subtle) 60%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--mecanu-border-subtle) 60%, transparent) 1px, transparent 1px);
+  background-size: calc(100% / 12) 44px;
+  background-position: 0 0;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.dashGridItem {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dashGridItemActive {
+  z-index: 2;
+  opacity: 0.92;
+}
+
+.dashWidget {
+  position: relative;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dashWidgetEdit {
+  outline: 1px dashed color-mix(in srgb, var(--mecanu-electric-600) 55%, transparent);
+  outline-offset: -1px;
+}
+
+.dashWidgetHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex: none;
+  flex-wrap: wrap;
+}
+
+.dashWidgetBody {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dashScrollRoot {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.dashScrollBody {
+  flex: 1;
+  min-height: 0;
+}
+
+.dashScrollFade {
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 28px;
+  height: 28px;
+  background: linear-gradient(to bottom, transparent, var(--mecanu-neutral-0));
+}
+
+.dashVerMas {
+  flex: none;
+  align-self: center;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 8px;
+  background: var(--mecanu-neutral-25);
+  color: var(--mecanu-electric-700, var(--mecanu-electric-600));
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dashVerMas:hover {
+  background: var(--mecanu-electric-100);
+}
+
+.dashWidgetIcon {
+  display: flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--mecanu-neutral-25);
+  flex: none;
+}
+
+.dashWidgetTitle {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dashDragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: var(--mecanu-neutral-300);
+  padding: 2px;
+  border-radius: 6px;
+  flex: none;
+}
+
+.dashDragHandle:active {
+  cursor: grabbing;
+}
+
+.dashResizeHandle {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  border-radius: 2px;
+  background:
+    linear-gradient(135deg, transparent 50%, var(--mecanu-electric-600) 50%);
+  opacity: 0.7;
+}
+
+.dashBar:hover {
+  filter: brightness(1.08);
+}
+
+.dashAddPanel {
+  position: sticky;
+  top: 48px;
+  align-self: flex-start;
+  width: 340px;
+  max-height: calc(100vh - 120px);
+  flex: none;
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--mecanu-border);
+  border-radius: 12px;
+  background: var(--mecanu-neutral-0);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--mecanu-neutral-900, #0a0a0a) 8%, transparent);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.dashAddPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--mecanu-border-subtle);
+}
+
+.dashAddCats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--mecanu-neutral-25);
+}
+
+.dashAddList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashAddItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.dashAddItem:hover {
+  background: var(--mecanu-neutral-25);
+}
+
+.dashAddItemOn {
+  border-color: var(--mecanu-electric-600);
+  background: var(--mecanu-electric-100);
+}
+
+.dashAddFooter {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--mecanu-border-subtle);
+}
+
+@media (max-width: 960px) {
+  .dashAddPanel {
+    position: fixed;
+    right: 12px;
+    top: 72px;
+    max-height: calc(100vh - 96px);
+    margin-left: 0;
+  }
+
+  .dashGridEdit {
+    background-size: 100% 44px;
+  }
 }

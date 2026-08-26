@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { at } from './mecanu-data';
 import { RUTAS_VISTA } from './mecanu-rutas';
 import {
+  DISTANCIA_MEDIA_TRASLADO_KM,
+  VELOCIDAD_MEDIA_URBANA_KMH,
+  fmtHorasAhorradas,
+  horasAhorradasClientes,
+  kmRecorridosTraslados,
   kpisCampanas,
   kpisTareas,
   kpisTraslados,
@@ -117,5 +122,14 @@ describe('kpis-panel', () => {
     expect(kpis.find((k) => k.id === 'pendientes')?.value).toBe('2');
     expect(kpis.find((k) => k.id === 'urgentes')?.value).toBe('1');
     expect(kpis.find((k) => k.id === 'hechas')?.value).toBe('1');
+  });
+
+  it('horasAhorradasClientes convierte km de traslados a tiempo urbano', () => {
+    const km = kmRecorridosTraslados(10);
+    expect(km).toBe(10 * DISTANCIA_MEDIA_TRASLADO_KM);
+    expect(horasAhorradasClientes(km)).toBeCloseTo(km / VELOCIDAD_MEDIA_URBANA_KMH);
+    expect(horasAhorradasClientes(0)).toBe(0);
+    expect(fmtHorasAhorradas(0.4)).toBe('24 min');
+    expect(fmtHorasAhorradas(4.544)).toBe('4,5 h');
   });
 });

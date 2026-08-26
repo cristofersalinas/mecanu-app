@@ -131,3 +131,40 @@ export function metricasGeneralesRutas(
     facturado,
   };
 }
+
+/** Distancia media estimada por traslado (km). Misma cifra que el panel General. */
+export const DISTANCIA_MEDIA_TRASLADO_KM = 14.2;
+
+/**
+ * Velocidad media urbana (km/h) para estimar tiempo de conducción.
+ * Orden de magnitud Madrid / área metro en tráfico real.
+ */
+export const VELOCIDAD_MEDIA_URBANA_KMH = 25;
+
+/** Km totales estimados de traslados completados. */
+export function kmRecorridosTraslados(
+  completados: number,
+  kmMedia = DISTANCIA_MEDIA_TRASLADO_KM,
+): number {
+  return Math.max(0, completados) * kmMedia;
+}
+
+/**
+ * Horas que el cliente se ahorra de conducir: distancia de los traslados
+ * completados ÷ velocidad urbana media.
+ */
+export function horasAhorradasClientes(
+  km: number,
+  velocidadKmh = VELOCIDAD_MEDIA_URBANA_KMH,
+): number {
+  if (km <= 0 || velocidadKmh <= 0) return 0;
+  return km / velocidadKmh;
+}
+
+export function fmtHorasAhorradas(horas: number): string {
+  if (horas <= 0) return '0 h';
+  if (horas < 1) {
+    return `${Math.max(1, Math.round(horas * 60))} min`;
+  }
+  return `${horas.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} h`;
+}

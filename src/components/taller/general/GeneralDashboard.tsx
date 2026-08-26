@@ -1,35 +1,59 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
-import { Icon } from '@/components/ds/Icon';
 import { ErrorState } from '@/components/ds/ErrorState';
+import type { CatalogoEntrada } from '@/lib/mecanu/dashboard-catalogo';
+import { entradaCatalogo } from '@/lib/mecanu/dashboard-catalogo';
+import { clampLayout, primerHuecoLibre } from '@/lib/mecanu/dashboard-layout';
+import {
+  rankingClientes,
+  resolverMetrica,
+  resolverParaViz,
+  type DashboardDatosCtx,
+} from '@/lib/mecanu/dashboard-metricas';
+import { dashboardDesdePlantilla } from '@/lib/mecanu/dashboard-plantillas';
+import {
+  cargarDashboards,
+  duplicarDashboard,
+  eliminarDashboard,
+  guardarDashboards,
+  marcarUltimoDashboard,
+  resetDashboardAPlantilla,
+  TALLER_ID_DEFAULT,
+  upsertDashboard,
+} from '@/lib/mecanu/dashboard-store';
+import type { Dashboard, DashboardWidget, VizFormato, WidgetOpts } from '@/lib/mecanu/dashboard-types';
+import {
+  construirVistaFlota, esEstadoFlotaMapa, proximasCitas, type MarcadorFlota, type RutaFlotaInput,
+} from '@/lib/mecanu/flota-panel';
 import { usePanel } from '../store';
 import {
-  CONDUCTORES, TALLER, cliente, conductor, fmtDia, fmtDinero, fmtHora, nombreCliente1, vehiculo,
+  CONDUCTORES, TALLER, cliente, conductor, fmtDinero, vehiculo,
   etiquetaVehiculo,
 } from '../data';
 import { CardsSkeleton, Eyebrow } from '../ui/Primitives';
 import { ImporteIva } from '../ui/ImporteIva';
 import { useCarga, useAhora } from '../ui/useCarga';
-import { COLUMNAS_TAREA } from '@/lib/mecanu/pipeline-tareas';
-import { metricasGeneralesRutas } from '@/lib/mecanu/kpis-panel';
-import {
-  construirVistaFlota, esEstadoFlotaMapa, proximasCitas, type MarcadorFlota, type RutaFlotaInput,
-} from '@/lib/mecanu/flota-panel';
 import { supabasePanelActivo, FETCH_SNAPSHOT } from '../hidratar-panel';
+import {
+  guardarIconoConductorFlota,
+  ICONO_CONDUCTOR_DEFAULT,
+  leerIconoConductorFlota,
+  type IconoConductorFlota,
+} from './flota-icono-conductor';
+import { DashboardGrid } from './DashboardGrid';
+import { DashboardToolbar } from './DashboardToolbar';
+import { AddWidgetPanel } from './catalogo/AddWidgetPanel';
+import { WidgetBarras } from './widgets/WidgetBarras';
+import { WidgetDonut } from './widgets/WidgetDonut';
+import { WidgetFlotaMapa } from './widgets/WidgetFlotaMapa';
+import { WidgetKpiGrupo } from './widgets/WidgetKpiGrupo';
+import { WidgetKpiNumero } from './widgets/WidgetKpiNumero';
+import { WidgetLinea } from './widgets/WidgetLinea';
+import { WidgetProximasCitas } from './widgets/WidgetProximasCitas';
+import { WidgetRanking } from './widgets/WidgetRanking';
+import { WidgetTiles } from './widgets/WidgetTiles';
 import styles from '../panel.module.css';
-
-const FlotaMapa = dynamic(
-  () => import('./FlotaMapa').then((m) => m.FlotaMapa),
-  { ssr: false, loading: () => <div style={{ minHeight: 480, borderRadius: 12, background: 'var(--mecanu-neutral-25)' }} /> },
-);
-
-const DIA_MS = 86400000;
-
-function iniciales(nombre: string): string {
-  return nombre.split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
-}
 
 function rutasFlotaDesdePanel(
   rutas: ReturnType<typeof usePanel>['rutas'],
@@ -50,24 +74,60 @@ function rutasFlotaDesdePanel(
       vehiculoLabel,
       conductorNombre: c?.nombre ?? null,
       direccionCard,
+      marca: v?.marca ?? null,
+      modelo: v?.modelo ?? null,
     };
   });
 }
 
+function fmtValorMetrica(value: string, iva?: boolean) {
+  if (!iva) return value;
+  const n = Number(value);
+  if (Number.isFinite(n)) return <ImporteIva texto={fmtDinero(n, true)} />;
+  return <ImporteIva texto={value} />;
+}
+
 export function GeneralDashboard() {
-  const { rutas, seleccionar, irA, pipelineTareas, tareasPendientesN } = usePanel();
-  const cargando = useCarga();
+  const { rutas, campanas, seleccionar, irA, pipelineTareas, cargandoDatos } = usePanel();
+  const cargandoMock = useCarga();
+  const cargando = supabasePanelActivo() ? cargandoDatos : cargandoMock;
   const ahora = useAhora();
+
   const [rango, setRango] = useState<'7d' | '1m'>('7d');
   const [rank, setRank] = useState<'conductor' | 'cliente'>('conductor');
   const [marcadores, setMarcadores] = useState<MarcadorFlota[]>([]);
+  const [iconoConductor, setIconoConductor] = useState<IconoConductorFlota>(ICONO_CONDUCTOR_DEFAULT);
+
+  const [snapshot, setSnapshot] = useState(() =>
+    cargarDashboards(TALLER_ID_DEFAULT, typeof window !== 'undefined' ? window.localStorage : null),
+  );
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Dashboard | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setIconoConductor(leerIconoConductorFlota());
+    const loaded = cargarDashboards(TALLER_ID_DEFAULT, window.localStorage);
+    setSnapshot(loaded);
+    setHydrated(true);
+  }, []);
+
+  const activeId = editing && draft ? draft.id : snapshot.lastDashboardId;
+  const activeDashboard = editing && draft
+    ? draft
+    : (snapshot.dashboards.find((d) => d.id === activeId) ?? snapshot.dashboards[0]!);
+  const widgets = activeDashboard.widgets;
+  const dirty = editing && draft
+    ? JSON.stringify(draft.widgets) !== JSON.stringify(
+      snapshot.dashboards.find((d) => d.id === draft.id)?.widgets,
+    ) || draft.nombre !== snapshot.dashboards.find((d) => d.id === draft.id)?.nombre
+    : false;
 
   const citas = useMemo(
     () => proximasCitas(rutas, new Date(ahora)),
     [rutas, ahora],
   );
-
-  const proxima = citas[0] ?? null;
 
   const vistaLocal = useMemo(
     () => construirVistaFlota({
@@ -78,7 +138,6 @@ export function GeneralDashboard() {
         id: c.id,
         nombre: c.nombre,
         proceso: c.proceso,
-        red: c.red,
       })),
       ahora: new Date(ahora),
     }),
@@ -115,54 +174,245 @@ export function GeneralDashboard() {
     };
   }, [vistaLocal]);
 
-  const barras = useMemo(() => {
-    const dias = rango === '7d' ? 7 : 30;
-    const paso = rango === '7d' ? 1 : 5;
-    const out: { label: string; valor: number }[] = [];
-    for (let i = dias - 1; i >= 0; i -= paso) {
-      const desde = new Date(ahora - (i + paso - 1) * DIA_MS);
-      const hasta = new Date(ahora - (i - 1) * DIA_MS);
-      const valor = rutas.filter((r) => r.fecha && r.fecha >= desde && r.fecha < hasta).length;
-      out.push({
-        label: rango === '7d'
-          ? ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sá'][desde.getDay()]
-          : `${desde.getDate()}`,
-        valor,
-      });
-    }
-    return out;
-  }, [rutas, rango, ahora]);
+  const ctx: DashboardDatosCtx = useMemo(() => ({
+    rutas,
+    campanas,
+    pipelineTareas,
+    conductores: CONDUCTORES.map((c) => ({
+      id: c.id,
+      nombre: c.nombre,
+      calificacion: c.calificacion,
+    })),
+    ahora: new Date(ahora),
+    rangoSerie: rango,
+  }), [rutas, campanas, pipelineTareas, ahora, rango]);
 
-  const totalGrafica = barras.reduce((a, b) => a + b.valor, 0);
-  const maxBarra = Math.max(1, ...barras.map((b) => b.valor));
-
-  const ranking = useMemo(() => {
+  const rankingItems = useMemo(() => {
     if (rank === 'conductor') {
-      return CONDUCTORES.map((c) => ({
-        id: c.id,
-        nombre: c.nombre,
-        calif: c.calificacion.toLocaleString('es-ES', { minimumFractionDigits: 1 }),
-        valor: rutas.filter((r) => r.conductorId === c.id).length,
-      }))
-        .sort((a, b) => b.valor - a.valor)
-        .slice(0, 5);
+      const r = resolverMetrica('ranking', ctx);
+      return r.kind === 'ranking' ? r.items : [];
     }
-    const porCliente = new Map<string, number>();
-    rutas.forEach((r) => {
-      if (!r.clienteId) return;
-      porCliente.set(r.clienteId, (porCliente.get(r.clienteId) ?? 0) + 1);
-    });
-    return [...porCliente.entries()]
-      .map(([id, valor]) => ({ id, nombre: cliente(id)?.nombre ?? '—', calif: null, valor }))
-      .sort((a, b) => b.valor - a.valor)
-      .slice(0, 5);
-  }, [rutas, rank]);
+    return rankingClientes(rutas, (id) => cliente(id)?.nombre ?? '—');
+  }, [rank, ctx, rutas]);
 
-  const m = useMemo(() => metricasGeneralesRutas(rutas, new Date(ahora)), [rutas, ahora]);
-  const kmRecorridos = rutas.filter((r) => r.estado === 'completado').length * 14.2;
-  const califMedia = CONDUCTORES.reduce((a, c) => a + c.calificacion, 0) / CONDUCTORES.length;
+  const persist = (next: typeof snapshot) => {
+    setSnapshot(next);
+    guardarDashboards(next, typeof window !== 'undefined' ? window.localStorage : null);
+  };
 
-  if (cargando) {
+  const setWidgets = (next: DashboardWidget[]) => {
+    if (!draft) return;
+    setDraft({ ...draft, widgets: next });
+  };
+
+  const onAddWidget = (entrada: CatalogoEntrada, viz: VizFormato, opts?: WidgetOpts) => {
+    if (!draft) return;
+    const lim = entrada.limites;
+    const size = {
+      w: Math.min(lim.maxW, Math.max(lim.minW, lim.minW === lim.maxW ? lim.minW : Math.round((lim.minW + lim.maxW) / 2))),
+      h: Math.min(lim.maxH, Math.max(lim.minH, lim.minH + 1)),
+    };
+    const layout = clampLayout(primerHuecoLibre(draft.widgets, size), lim);
+    const id = `w-${Date.now().toString(36)}`;
+    const widget: DashboardWidget = {
+      id,
+      tipo: entrada.tipo,
+      metricaId: entrada.id,
+      viz,
+      layout,
+      titulo: entrada.label,
+      opts,
+    };
+    setDraft({ ...draft, widgets: [...draft.widgets, widget] });
+  };
+
+  const renderWidget = (w: DashboardWidget) => {
+    const remove = editing ? () => setWidgets(widgets.filter((x) => x.id !== w.id)) : undefined;
+    const titulo = w.titulo ?? entradaCatalogo(w.metricaId)?.label;
+    const ctxW: DashboardDatosCtx = {
+      ...ctx,
+      rangoSerie: w.opts?.rango ?? ctx.rangoSerie,
+    };
+
+    if (w.tipo === 'proximas_citas' || w.metricaId === 'proximas_citas') {
+      return (
+        <WidgetProximasCitas
+          citas={citas}
+          editing={editing}
+          onRemove={remove}
+          titulo={titulo}
+          onAbrirRuta={(id) => seleccionar({ kind: 'ruta', id }, 'ficha')}
+          onIrTraslados={() => irA('tablero', 'traslados')}
+        />
+      );
+    }
+
+    if (w.tipo === 'flota_mapa' || w.metricaId === 'flota_mapa') {
+      return (
+        <WidgetFlotaMapa
+          marcadores={marcadores}
+          tallerFallback={vistaLocal.taller}
+          iconoConductor={iconoConductor}
+          onIconoConductorChange={(id) => {
+            setIconoConductor(id);
+            guardarIconoConductorFlota(id);
+          }}
+          onAbrirRuta={(rutaId) => seleccionar({ kind: 'ruta', id: rutaId }, 'ficha')}
+          editing={editing}
+          onRemove={remove}
+          titulo={titulo}
+        />
+      );
+    }
+
+    if (w.tipo === 'ranking' || w.metricaId === 'ranking' || w.viz === 'ranking') {
+      return (
+        <WidgetRanking
+          titulo={titulo}
+          items={rankingItems}
+          modo={rank}
+          onModo={setRank}
+          editing={editing}
+          onRemove={remove}
+        />
+      );
+    }
+
+    if (
+      w.viz === 'kpi_grupo'
+      || w.tipo === 'kpis_generales'
+      || w.tipo === 'kpis_traslados'
+      || w.tipo === 'kpis_tareas'
+      || w.tipo === 'kpis_campanas'
+    ) {
+      const grupo = resolverMetrica(w.metricaId, ctxW);
+      if (grupo.kind !== 'kpi_grupo') return null;
+      const link = w.metricaId === 'kpis_traslados'
+        ? { label: 'Ir a traslados', go: () => irA('tablero', 'traslados') }
+        : w.metricaId === 'kpis_tareas'
+          ? { label: 'Abrir tablero', go: () => irA('tablero', 'tareas') }
+          : w.metricaId === 'kpis_campanas'
+            ? { label: 'Ir a campañas', go: () => irA('tablero', 'campanas') }
+            : null;
+      return (
+        <WidgetKpiGrupo
+          titulo={titulo ?? 'KPIs'}
+          gridW={w.layout.w}
+          items={grupo.items.map((k, i) => ({
+            id: `${w.id}-${i}`,
+            label: k.label,
+            value: fmtValorMetrica(k.value, k.iva),
+            delta: k.delta,
+            dir: k.dir,
+          }))}
+          linkLabel={link?.label}
+          onLink={link?.go}
+          editing={editing}
+          onRemove={remove}
+        />
+      );
+    }
+
+    if (w.tipo === 'indicadores_traslado' || w.viz === 'tiles' || w.metricaId === 'indicadores_traslado') {
+      const tiles = resolverMetrica('indicadores_traslado', ctxW);
+      if (tiles.kind !== 'tiles') return null;
+      return (
+        <WidgetTiles
+          titulo={titulo}
+          items={tiles.items}
+          gridW={w.layout.w}
+          editing={editing}
+          onRemove={remove}
+        />
+      );
+    }
+
+    // Reports del repositorio: número / serie / torta según viz + metricaId
+    const data = resolverParaViz(w.metricaId, w.viz, ctxW);
+
+    if (w.viz === 'barras' || w.viz === 'linea') {
+      if (data.kind !== 'serie') {
+        return (
+          <div className={styles.panelBox} style={{ padding: 16, height: '100%' }}>
+            <ErrorState variant="empty" compact message="Este report no admite gráfico de serie." />
+          </div>
+        );
+      }
+      const esTiempo = entradaCatalogo(w.metricaId)?.ejeX === 'tiempo';
+      if (w.viz === 'linea') {
+        return (
+          <WidgetLinea
+            titulo={titulo}
+            puntos={data.puntos}
+            total={data.total}
+            degradado={Boolean(w.opts?.degradado)}
+            editing={editing}
+            onRemove={remove}
+          />
+        );
+      }
+      return (
+        <WidgetBarras
+          titulo={titulo}
+          puntos={data.puntos}
+          total={data.total}
+          rango={esTiempo ? (w.opts?.rango ?? rango) : undefined}
+          onRango={esTiempo ? (r) => {
+            if (editing) {
+              setWidgets(widgets.map((x) =>
+                x.id === w.id ? { ...x, opts: { ...x.opts, rango: r } } : x,
+              ));
+            } else {
+              setRango(r);
+            }
+          } : undefined}
+          degradado={Boolean(w.opts?.degradado)}
+          editing={editing}
+          onRemove={remove}
+        />
+      );
+    }
+
+    if (w.viz === 'donut') {
+      if (data.kind !== 'donut') {
+        return (
+          <div className={styles.panelBox} style={{ padding: 16, height: '100%' }}>
+            <ErrorState variant="empty" compact message="Este report no admite torta." />
+          </div>
+        );
+      }
+      return (
+        <WidgetDonut
+          titulo={titulo ?? data.label}
+          slices={data.slices}
+          editing={editing}
+          onRemove={remove}
+        />
+      );
+    }
+
+    if (data.kind === 'numero') {
+      return (
+        <WidgetKpiNumero
+          titulo={titulo}
+          value={fmtValorMetrica(data.value, data.iva)}
+          label={data.label}
+          delta={w.viz === 'numero_delta' || data.delta ? data.delta : undefined}
+          dir={data.dir}
+          editing={editing}
+          onRemove={remove}
+        />
+      );
+    }
+
+    return (
+      <div className={styles.panelBox} style={{ padding: 16, height: '100%' }}>
+        <ErrorState variant="empty" compact message="Widget no disponible." />
+      </div>
+    );
+  };
+
+  if (cargando || !hydrated) {
     return (
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
         <CardsSkeleton cards={2} />
@@ -172,271 +422,83 @@ export function GeneralDashboard() {
   }
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingRight: 4 }}>
-      <div className={styles.flotaHero}>
-        <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flex: 'none' }}>
-            <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
-              <Icon name="event" size="sm" />
-            </span>
-            <span style={{ flex: 1, fontSize: 13, fontWeight: 700 }}>Próximas citas</span>
-            <span style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>
-              Hoy · {m.trasladosHoy} · {citas.length} en agenda
-            </span>
-          </div>
+    <div className={styles.dashRoot}>
+      <DashboardToolbar
+        dashboards={snapshot.dashboards}
+        activeId={activeDashboard.id}
+        editing={editing}
+        dirty={dirty}
+        onSelect={(id) => {
+          persist(marcarUltimoDashboard(snapshot, id));
+        }}
+        onEdit={() => {
+          setDraft(structuredClone(activeDashboard));
+          setEditing(true);
+        }}
+        onSave={() => {
+          if (!draft) return;
+          persist(upsertDashboard(snapshot, draft));
+          setEditing(false);
+          setDraft(null);
+          setAddOpen(false);
+        }}
+        onDiscard={() => {
+          setEditing(false);
+          setDraft(null);
+          setAddOpen(false);
+        }}
+        onAddWidget={() => {
+          if (!editing) {
+            setDraft(structuredClone(activeDashboard));
+            setEditing(true);
+          }
+          setAddOpen(true);
+        }}
+        onDuplicate={() => {
+          const next = duplicarDashboard(snapshot, activeDashboard.id);
+          persist(next);
+        }}
+        onRename={() => {
+          const nombre = window.prompt('Nombre del dashboard', activeDashboard.nombre);
+          if (!nombre?.trim()) return;
+          persist(upsertDashboard(snapshot, { ...activeDashboard, nombre: nombre.trim() }));
+        }}
+        onDelete={() => {
+          if (!window.confirm('¿Eliminar este dashboard?')) return;
+          persist(eliminarDashboard(snapshot, activeDashboard.id));
+        }}
+        onReset={() => {
+          if (!window.confirm('¿Restablecer el layout a la plantilla?')) return;
+          persist(resetDashboardAPlantilla(snapshot, activeDashboard.id));
+        }}
+        onNuevo={() => {
+          const base = dashboardDesdePlantilla('operacion', {
+            id: `usr-${Date.now().toString(36)}`,
+            sistema: false,
+            nombre: 'Mi dashboard',
+          });
+          const nombre = window.prompt('Nombre del nuevo dashboard', base.nombre);
+          if (!nombre?.trim()) return;
+          persist(upsertDashboard(snapshot, { ...base, nombre: nombre.trim() }));
+        }}
+      />
 
-          {proxima && (proxima.fecha || proxima.fechaPropuesta) ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 10, background: 'var(--mecanu-neutral-25)', marginBottom: 12, flex: 'none' }}>
-              <div style={{ textAlign: 'center', lineHeight: 1 }}>
-                <div style={{ fontSize: 26, fontWeight: 800 }}>{(proxima.fecha ?? proxima.fechaPropuesta)!.getDate()}</div>
-                <div style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--mecanu-neutral-300)' }}>
-                  {(proxima.fecha ?? proxima.fechaPropuesta)!.toLocaleDateString('es-ES', { month: 'short' })}
-                </div>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {etiquetaVehiculo(vehiculo(proxima.vehiculoId))} · {nombreCliente1(cliente(proxima.clienteId)?.nombre ?? null)}
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-                  {proxima.franja ?? proxima.franjaPropuesta ?? 'Pendiente de agendar'}
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }}>
-            {citas.map((c) => {
-              const f = c.fecha ?? c.fechaPropuesta;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => seleccionar({ kind: 'ruta', id: c.id }, 'ficha')}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', border: 'none',
-                    borderBottom: '1px solid var(--mecanu-border-subtle)', background: 'none', cursor: 'pointer', textAlign: 'left',
-                  }}
-                >
-                  <span style={{ flex: 'none', fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)', width: 46 }}>
-                    {f ? fmtDia(f) : '—'}
-                  </span>
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {etiquetaVehiculo(vehiculo(c.vehiculoId))}
-                    </span>
-                    <span style={{ display: 'block', fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-                      {c.descripcionServicio}
-                    </span>
-                  </span>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{f ? fmtHora(f) : '—'}</span>
-                </button>
-              );
-            })}
-            {citas.length === 0 ? (
-              <ErrorState variant="empty" compact title="Sin citas" message="No hay traslados agendados hoy ni en los próximos días." />
-            ) : null}
-          </div>
-        </section>
-
-        <section className={styles.panelBox} style={{ padding: 12, display: 'flex', flexDirection: 'column', minHeight: 0, gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px 0', flex: 'none' }}>
-            <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
-              <Icon name="map" size="sm" />
-            </span>
-            <span style={{ flex: 1, fontSize: 13, fontWeight: 700 }}>Flota alrededor del taller</span>
-            <span style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>
-              {marcadores.filter((x) => x.estado === 'en_ruta').length} en ruta ·{' '}
-              {marcadores.filter((x) => x.estado === 'en_taller').length} en taller
-            </span>
-          </div>
-          <div style={{ flex: 1, minHeight: 480 }}>
-            <FlotaMapa
-              marcadores={marcadores}
-              tallerFallback={vistaLocal.taller}
-              onAbrirRuta={(rutaId) => seleccionar({ kind: 'ruta', id: rutaId }, 'ficha')}
-            />
-          </div>
-          <p style={{ margin: 0, padding: '0 6px 2px', fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
-            Solo autos en ruta o en taller. Varios en el mismo sitio se agrupan; clic abre la ficha.
-          </p>
-        </section>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(280px,0.8fr)', gap: 16, alignItems: 'stretch' }}>
-        <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
-              <Icon name="view_kanban" size="sm" />
-            </span>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>Tareas</span>
-            <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-              {tareasPendientesN === 0
-                ? 'Nada pendiente. El pipeline está en Tablero.'
-                : `${tareasPendientesN} ${tareasPendientesN === 1 ? 'hueco' : 'huecos'} por cerrar.`}
-            </span>
-            <button
-              type="button"
-              className={styles.linkBtn}
-              style={{ fontSize: 12, fontWeight: 700 }}
-              onClick={() => irA('tablero', 'tareas')}
-            >
-              Abrir tablero
-            </button>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 8 }}>
-            {COLUMNAS_TAREA.map((col) => (
-              <button
-                key={col.id}
-                type="button"
-                onClick={() => irA('tablero', 'tareas')}
-                style={{
-                  display: 'flex', flexDirection: 'column', gap: 4, padding: 12, borderRadius: 10, textAlign: 'left',
-                  border: '1px solid var(--mecanu-border)', background: 'var(--mecanu-neutral-25)', cursor: 'pointer', font: 'inherit',
-                }}
-              >
-                <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--mecanu-text-secondary-light)' }}>
-                  {col.label}
-                </span>
-                <span style={{ fontSize: 22, fontWeight: 800, lineHeight: '26px' }}>{pipelineTareas[col.id].length}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'center' }}>
-          <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>Resumen rápido</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {[
-              { label: 'En taller', value: String(m.enTaller) },
-              { label: 'En ruta', value: String(m.enRuta) },
-              { label: 'Prospectos', value: String(m.prospectos) },
-              { label: 'Facturado', value: fmtDinero(m.facturado, true), iva: true },
-            ].map((x) => (
-              <div key={x.label} style={{ padding: 12, borderRadius: 10, background: 'var(--mecanu-neutral-25)' }}>
-                <div style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>{x.label}</div>
-                <div style={{ fontSize: 18, fontWeight: 800 }}>
-                  {'iva' in x && x.iva ? <ImporteIva texto={x.value} /> : x.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-
-      <section className={styles.panelBox} style={{ padding: 18, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
-            <Icon name="bar_chart" size="sm" />
-          </span>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700 }}>Servicios de traslado</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontSize: 20, fontWeight: 800 }}>{totalGrafica}</span>
-              <span style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-                en {rango === '7d' ? 'los últimos 7 días' : 'el último mes'}
-              </span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {(['7d', '1m'] as const).map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRango(r)}
-                className={styles.ghostBtn}
-                style={{ background: rango === r ? 'var(--mecanu-neutral-25)' : undefined }}
-              >
-                {r === '7d' ? '7 días' : '1 mes'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, minHeight: 160 }}>
-          {barras.map((b, i) => (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-text-secondary-light)' }}>{b.valor}</span>
-              <div
-                style={{
-                  width: '100%', height: `${Math.max(4, (b.valor / maxBarra) * 140)}px`,
-                  borderRadius: '6px 6px 2px 2px', background: 'var(--mecanu-electric-600)',
-                }}
-              />
-              <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>{b.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 16, paddingBottom: 8 }}>
-        <section className={styles.panelBox} style={{ padding: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
-              <Icon name="speed" size="sm" />
-            </span>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>Indicadores de traslado</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12 }}>
-            {[
-              { icon: 'route', label: 'Distancia promedio', valor: '14,2 km' },
-              { icon: 'alt_route', label: 'Kilómetros recorridos', valor: `${kmRecorridos.toLocaleString('es-ES', { maximumFractionDigits: 0 })} km` },
-              { icon: 'star', label: 'Calificación promedio', valor: califMedia.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) },
-            ].map((k) => (
-              <div key={k.label} style={{ padding: 12, borderRadius: 10, background: 'var(--mecanu-neutral-25)' }}>
-                <Icon name={k.icon} size="sm" />
-                <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)', marginTop: 4 }}>{k.label}</div>
-                <div style={{ fontSize: 17, fontWeight: 700 }}>{k.valor}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className={styles.panelBox} style={{ padding: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <span style={{ display: 'flex', width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
-              <Icon name="leaderboard" size="sm" />
-            </span>
-            <span style={{ flex: 1, fontSize: 13, fontWeight: 700 }}>Ranking</span>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {(['conductor', 'cliente'] as const).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRank(r)}
-                  className={styles.ghostBtn}
-                  style={{ background: rank === r ? 'var(--mecanu-neutral-25)' : undefined }}
-                >
-                  {r === 'conductor' ? 'Conductor' : 'Cliente'}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            {ranking.map((r, i) => (
-              <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
-                <span style={{ width: 18, fontSize: 12, fontWeight: 800, color: 'var(--mecanu-neutral-300)' }}>{i + 1}</span>
-                <span
-                  style={{
-                    display: 'flex', width: 28, height: 28, alignItems: 'center', justifyContent: 'center',
-                    borderRadius: '50%', background: 'var(--mecanu-electric-100)', fontSize: 11, fontWeight: 800,
-                    color: 'var(--mecanu-emerald-800)',
-                  }}
-                >
-                  {iniciales(r.nombre)}
-                </span>
-                <span style={{ flex: 1, minWidth: 0, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nombre}</span>
-                {r.calif ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-                    <Icon name="star" size="sm" filled />
-                    {r.calif}
-                  </span>
-                ) : null}
-                <span style={{ fontSize: 13, fontWeight: 700 }}>{r.valor}</span>
-              </div>
-            ))}
-            {ranking.length === 0 ? <ErrorState variant="empty" compact message="Sin datos suficientes para el ranking." /> : null}
-          </div>
-        </section>
+      <div className={styles.dashBody}>
+        {widgets.length === 0 ? (
+          <ErrorState
+            variant="empty"
+            title="Dashboard vacío"
+            message={editing ? 'Añade un widget desde el panel lateral.' : 'Edita el dashboard para añadir widgets.'}
+          />
+        ) : (
+          <DashboardGrid
+            widgets={widgets}
+            editing={editing}
+            onWidgetsChange={setWidgets}
+            renderWidget={renderWidget}
+          />
+        )}
+        <AddWidgetPanel open={addOpen && editing} onClose={() => setAddOpen(false)} onAdd={onAddWidget} />
       </div>
 
       <Eyebrow style={{ paddingBottom: 8 }}>
