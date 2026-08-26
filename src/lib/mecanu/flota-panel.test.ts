@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  construirVistaFlota, posSemillaConductor, proximasCitas, textoUltimaVez,
+  construirVistaFlota, esEstadoFlotaMapa, posSemillaConductor, proximasCitas, textoUltimaVez,
   type CitaRutaInput,
 } from './flota-panel';
 
@@ -56,21 +56,52 @@ describe('textoUltimaVez', () => {
   });
 });
 
+describe('esEstadoFlotaMapa', () => {
+  it('solo en_ruta y en_taller', () => {
+    expect(esEstadoFlotaMapa('en_ruta')).toBe(true);
+    expect(esEstadoFlotaMapa('en_taller')).toBe(true);
+    expect(esEstadoFlotaMapa('agendado')).toBe(false);
+  });
+});
+
 describe('construirVistaFlota', () => {
+  const tallerDir = 'Carrer de Numància 105, Nau 3, 08029 Barcelona';
+  const tallerCoords = { lat: 41.3836, lng: 2.1381 };
+
   it('prioriza GPS de tramo; en ruta sin GPS también aparece', () => {
-    const taller = { lat: 41.3836, lng: 2.1381 };
-    const seed = posSemillaConductor('d1', taller);
+    const seed = posSemillaConductor('d1', tallerCoords);
     const vista = construirVistaFlota({
-      tallerDireccion: 'Carrer de Numància 105, Nau 3, 08029 Barcelona',
+      tallerDireccion: tallerDir,
       tallerNombre: 'Talleres Rodríguez',
       ahora: new Date('2026-08-26T12:00:00'),
-      conductores: [
-        { id: 'd1', nombre: 'Javier Molina', proceso: 'activo' },
-        { id: 'd2', nombre: 'Ana Torres', proceso: 'activo' },
-        { id: 'd5', nombre: 'Sergio', proceso: 'documentos_pendientes' },
+      rutas: [
+        {
+          id: 'TR-1',
+          estado: 'en_ruta',
+          conductorId: 'd1',
+          vehiculoLabel: '4521 KTM · Seat León',
+          conductorNombre: 'Javier Molina',
+          direccionCard: 'Carrer de Muntaner 340',
+        },
+        {
+          id: 'TR-2',
+          estado: 'en_ruta',
+          conductorId: 'd2',
+          vehiculoLabel: '1234 ABC · VW Golf',
+          conductorNombre: 'Ana Torres',
+          direccionCard: null,
+        },
+        {
+          id: 'TR-x',
+          estado: 'agendado',
+          conductorId: 'd5',
+          vehiculoLabel: 'Ignorado',
+          conductorNombre: 'Sergio',
+          direccionCard: null,
+        },
       ],
-      conductorIdsActivos: ['d1', 'd2'],
       tramos: [{
+        rutaId: 'TR-1',
         conductorId: 'd1',
         estado: 'en_curso',
         posLat: 41.39,
@@ -78,27 +109,75 @@ describe('construirVistaFlota', () => {
         posActualizadaEn: new Date('2026-08-26T11:59:30'),
       }],
     });
-    expect(vista.marcadores[0]?.kind).toBe('taller');
-    const d1 = vista.marcadores.find((m) => m.id === 'd1');
+    expect(vista.marcadores.some((m) => m.id === 'taller')).toBe(false);
+    const d1 = vista.marcadores.find((m) => m.rutaId === 'TR-1');
     expect(d1?.lat).toBe(41.39);
     expect(d1?.lng).toBe(2.15);
     expect(d1?.enVivo).toBe(true);
+    expect(d1?.estado).toBe('en_ruta');
     expect(d1?.lat).not.toBe(seed.lat);
-    const d2 = vista.marcadores.find((m) => m.id === 'd2');
+    const d2 = vista.marcadores.find((m) => m.rutaId === 'TR-2');
     expect(d2?.ultimaVezLabel).toBe('En ruta');
-    expect(vista.marcadores.some((m) => m.id === 'd5')).toBe(false);
+    expect(vista.marcadores.some((m) => m.rutaId === 'TR-x')).toBe(false);
+    expect(vista.marcadores).toHaveLength(2);
   });
 
-  it('no pinta conductores sin servicio en ruta ni GPS', () => {
+  it('en_taller cae en coords del taller (varios → mismo punto para cluster)', () => {
     const vista = construirVistaFlota({
-      tallerDireccion: 'Carrer de Numància 105, Nau 3, 08029 Barcelona',
+      tallerDireccion: tallerDir,
       tallerNombre: 'Talleres Rodríguez',
-      conductores: [
-        { id: 'd1', nombre: 'Javier', proceso: 'activo' },
-        { id: 'd6', nombre: 'Externo', proceso: 'activo', red: 'Externo Mecanu' },
+      rutas: [
+        {
+          id: 'TR-a',
+          estado: 'en_taller',
+          conductorId: null,
+          vehiculoLabel: '1111 AAA',
+          conductorNombre: null,
+          direccionCard: null,
+        },
+        {
+          id: 'TR-b',
+          estado: 'en_taller',
+          conductorId: 'd1',
+          vehiculoLabel: '2222 BBB',
+          conductorNombre: 'Javier',
+          direccionCard: null,
+        },
       ],
-      conductorIdsActivos: [],
     });
-    expect(vista.marcadores.every((m) => m.kind === 'taller')).toBe(true);
+    expect(vista.marcadores).toHaveLength(2);
+    for (const m of vista.marcadores) {
+      expect(m.estado).toBe('en_taller');
+      expect(m.lat).toBeCloseTo(tallerCoords.lat, 4);
+      expect(m.lng).toBeCloseTo(tallerCoords.lng, 4);
+      expect(m.ultimaVezLabel).toBe('En taller');
+      expect(m.direccion).toContain('Numància');
+    }
+  });
+
+  it('no pinta agendados ni otras rutas', () => {
+    const vista = construirVistaFlota({
+      tallerDireccion: tallerDir,
+      tallerNombre: 'Talleres Rodríguez',
+      rutas: [
+        {
+          id: 'TR-1',
+          estado: 'agendado',
+          conductorId: 'd1',
+          vehiculoLabel: 'X',
+          conductorNombre: 'Javier',
+          direccionCard: null,
+        },
+        {
+          id: 'TR-2',
+          estado: 'completado',
+          conductorId: 'd2',
+          vehiculoLabel: 'Y',
+          conductorNombre: null,
+          direccionCard: null,
+        },
+      ],
+    });
+    expect(vista.marcadores).toHaveLength(0);
   });
 });

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
-import { construirVistaFlota, conductorIdsEnServicioTaller } from '@/lib/mecanu/flota-panel';
-import { TALLER } from '@/lib/mecanu/mecanu-data';
+import {
+  construirVistaFlota,
+  esEstadoFlotaMapa,
+  type RutaFlotaInput,
+} from '@/lib/mecanu/flota-panel';
+import { etiquetaVehiculo, TALLER } from '@/lib/mecanu/mecanu-data';
 import { repo } from '@/lib/mecanu/repo';
 import { createSupabaseServerAuth } from '@/lib/supabase/auth-server';
 import { ensurePerfilPanel } from '@/lib/supabase/ensure-panel-perfil';
@@ -12,8 +16,8 @@ export const revalidate = 0;
 const SIN_CACHE = { 'Cache-Control': 'no-store' } as const;
 
 /**
- * GET /api/v1/panel/flota — taller + conductores de ESTE taller con señal
- * o asignados a un servicio abierto (no toda la red Mecanu).
+ * GET /api/v1/panel/flota — autos en_ruta o en_taller del taller
+ * (marcadores para el mapa del General).
  */
 export async function GET() {
   try {
@@ -30,22 +34,45 @@ export async function GET() {
       }
     }
 
-    const [conductores, rutas] = await Promise.all([
+    const [conductores, rutas, vehiculos] = await Promise.all([
       repo.listConductores(),
       repo.listRutasVista(),
+      repo.listVehiculos(),
     ]);
 
-    const rutasAbiertas = rutas.filter((r) => r.estado === 'en_ruta');
+    const conductorById = new Map(conductores.map((c) => [c.id, c]));
+    const vehiculoById = new Map(vehiculos.map((v) => [v.id, v]));
+
+    const activas = rutas.filter((r) => esEstadoFlotaMapa(r.estado));
     const tramos = (await Promise.all(
-      rutasAbiertas.map((r) => repo.listTramosDeRuta(r.id)),
+      activas.map((r) => repo.listTramosDeRuta(r.id)),
     )).flat();
+
+    const rutasFlota: RutaFlotaInput[] = activas.map((r) => {
+      const v = r.vehiculoId ? vehiculoById.get(r.vehiculoId) : null;
+      const c = r.conductorId ? conductorById.get(r.conductorId) : null;
+      const vehiculoLabel = v
+        ? `${v.matricula} · ${etiquetaVehiculo(v)}`
+        : (r.matriculaLead ? `${r.matriculaLead} · ${r.id}` : r.id);
+      const direccionCard = r.estado === 'en_taller'
+        ? TALLER.direccion
+        : (r.direccionOrigen ?? r.direccion ?? TALLER.direccion);
+      return {
+        id: r.id,
+        estado: r.estado,
+        conductorId: r.conductorId,
+        vehiculoLabel,
+        conductorNombre: c?.nombre ?? null,
+        direccionCard,
+      };
+    });
 
     const vista = construirVistaFlota({
       tallerDireccion: TALLER.direccion,
       tallerNombre: TALLER.nombre,
+      rutas: rutasFlota,
       conductores,
       tramos,
-      conductorIdsActivos: conductorIdsEnServicioTaller(rutas),
       ahora: new Date(),
     });
 

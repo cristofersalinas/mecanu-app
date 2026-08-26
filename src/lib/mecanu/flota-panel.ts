@@ -1,6 +1,6 @@
 /**
  * Vista flota del panel General: próximas citas + marcadores del mapa
- * (taller + conductores con última ubicación).
+ * (autos en_ruta o en_taller).
  */
 
 import { coordsDesdeCatalogo, type Coords } from './geocode';
@@ -17,18 +17,28 @@ export type CitaRutaInput = {
   fechaPropuesta?: Date | string | null;
 };
 
+export type EstadoFlotaMapa = 'en_ruta' | 'en_taller';
+
 export type MarcadorFlota = {
   id: string;
-  kind: 'taller' | 'conductor';
+  /** Siempre la ruta: un pin = un auto en servicio. */
+  rutaId: string;
+  estado: EstadoFlotaMapa;
+  /** Título corto en mapa / card (matrícula · modelo). */
   label: string;
+  vehiculoLabel: string;
+  conductorLabel: string | null;
+  /** Dirección mostrada en la ficha. */
+  direccion: string;
   lat: number;
   lng: number;
-  /** ISO o Date de la última vez vista la app / GPS */
   actualizadaEn: Date | null;
-  /** true si el ping es reciente (< 2 min) */
+  /** true si el ping GPS es reciente (< 2 min) */
   enVivo: boolean;
-  /** Texto tipo Find My: «Ahora», «hace 12 min», «Ayer 18:40» */
+  /** Texto tipo Find My: «Ahora», «En ruta», «En taller»… */
   ultimaVezLabel: string;
+  /** Street View u otra foto; null → placeholder en UI. */
+  fotoUrl: string | null;
 };
 
 export type VistaFlota = {
@@ -36,10 +46,24 @@ export type VistaFlota = {
   marcadores: MarcadorFlota[];
 };
 
+export type RutaFlotaInput = {
+  id: string;
+  estado: string;
+  conductorId: string | null;
+  vehiculoLabel: string;
+  conductorNombre: string | null;
+  /** Dirección de card (origen / taller / destino según convenga al caller). */
+  direccionCard: string | null;
+};
+
 function asTime(v: Date | string | null | undefined): number | null {
   if (v == null) return null;
   const t = v instanceof Date ? v.getTime() : new Date(v).getTime();
   return Number.isNaN(t) ? null : t;
+}
+
+export function esEstadoFlotaMapa(estado: string): estado is EstadoFlotaMapa {
+  return estado === 'en_ruta' || estado === 'en_taller';
 }
 
 /** Texto relativo estilo «encontrar» / compartir ubicación. */
@@ -104,8 +128,8 @@ export function proximasCitas<T extends CitaRutaInput>(
 }
 
 /**
- * Conductores con vehículo en movimiento del taller (en_ruta).
- * No incluye agendado/en_taller: el mapa es flota en calle, no agenda.
+ * Conductores con ruta activa en el mapa (en_ruta o en_taller).
+ * Útil para filtrar listados; el mapa usa `construirVistaFlota` por ruta.
  */
 export function conductorIdsEnServicioTaller(
   rutas: { estado: string; conductorId?: string | null }[],
@@ -113,10 +137,11 @@ export function conductorIdsEnServicioTaller(
   const ids = new Set<string>();
   for (const r of rutas) {
     if (!r.conductorId) continue;
-    if (r.estado === 'en_ruta') ids.add(r.conductorId);
+    if (esEstadoFlotaMapa(r.estado)) ids.add(r.conductorId);
   }
   return [...ids];
 }
+
 export function posSemillaConductor(conductorId: string, taller: Coords): Coords {
   let h = 0;
   for (let i = 0; i < conductorId.length; i++) h = (h * 31 + conductorId.charCodeAt(i)) >>> 0;
@@ -127,9 +152,9 @@ export function posSemillaConductor(conductorId: string, taller: Coords): Coords
   return { lat: taller.lat + dLat, lng: taller.lng + dLng };
 }
 
-function edadAproxEnRutaMs(conductorId: string): number {
+function edadAproxEnRutaMs(seed: string): number {
   let h = 0;
-  for (let i = 0; i < conductorId.length; i++) h = (h * 17 + conductorId.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 17 + seed.charCodeAt(i)) >>> 0;
   /* Entre 1 y 25 min: parece un viaje en curso sin ping fresco */
   return 60_000 + (h % 25) * 60_000;
 }
@@ -145,18 +170,19 @@ export type PosicionConductorInput = {
   posActualizadaEn?: Date | string | null;
 };
 
+type LivePos = { lat: number; lng: number; en: Date };
+
 /**
- * Taller + conductores de ESTE taller en servicio en_ruta (GPS real o aprox.)
- * o con la app abierta en vivo. No pinta agendados ni la red entera.
+ * Marcadores de autos en_ruta / en_taller (uno por ruta).
+ * Sin pin fijo del taller: los de en_taller caen en sus coords.
  */
 export function construirVistaFlota(opts: {
   tallerDireccion: string;
   tallerNombre: string;
-  /** Conductores ya filtrados al taller (taller_id). */
-  conductores: PosicionConductorInput[];
-  tramos?: Pick<Tramo, 'conductorId' | 'estado' | 'posLat' | 'posLng' | 'posActualizadaEn'>[];
-  /** Conductores en_ruta del taller. */
-  conductorIdsActivos?: string[];
+  rutas: RutaFlotaInput[];
+  /** Posiciones GPS por conductor (fallback si el tramo no trae ping). */
+  conductores?: PosicionConductorInput[];
+  tramos?: Pick<Tramo, 'rutaId' | 'conductorId' | 'estado' | 'posLat' | 'posLng' | 'posActualizadaEn'>[];
   ahora?: Date;
 }): VistaFlota {
   const ahora = opts.ahora ?? new Date();
@@ -167,84 +193,97 @@ export function construirVistaFlota(opts: {
     direccion: opts.tallerDireccion,
   };
 
-  const enRuta = new Set(opts.conductorIdsActivos ?? []);
+  const liveByRuta = new Map<string, LivePos>();
+  const liveByConductor = new Map<string, LivePos>();
   for (const t of opts.tramos ?? []) {
-    if (t.conductorId && t.estado === 'en_curso') enRuta.add(t.conductorId);
-  }
-
-  const liveByConductor = new Map<string, { lat: number; lng: number; en: Date }>();
-  for (const t of opts.tramos ?? []) {
-    if (!t.conductorId || t.posLat == null || t.posLng == null) continue;
+    if (t.posLat == null || t.posLng == null) continue;
     if (t.estado !== 'en_curso') continue;
     const en = t.posActualizadaEn
       ? (t.posActualizadaEn instanceof Date ? t.posActualizadaEn : new Date(t.posActualizadaEn))
       : ahora;
     if (Number.isNaN(en.getTime())) continue;
-    const prev = liveByConductor.get(t.conductorId);
-    if (!prev || en.getTime() > prev.en.getTime()) {
-      liveByConductor.set(t.conductorId, { lat: t.posLat, lng: t.posLng, en });
+    const pos = { lat: t.posLat, lng: t.posLng, en };
+    const prevR = liveByRuta.get(t.rutaId);
+    if (!prevR || en.getTime() > prevR.en.getTime()) liveByRuta.set(t.rutaId, pos);
+    if (t.conductorId) {
+      const prevC = liveByConductor.get(t.conductorId);
+      if (!prevC || en.getTime() > prevC.en.getTime()) liveByConductor.set(t.conductorId, pos);
     }
   }
 
-  const marcadores: MarcadorFlota[] = [
-    {
-      id: 'taller',
-      kind: 'taller',
-      label: taller.label,
-      lat: taller.lat,
-      lng: taller.lng,
-      actualizadaEn: null,
-      enVivo: false,
-      ultimaVezLabel: 'Taller',
-    },
-  ];
+  const conductorById = new Map((opts.conductores ?? []).map((c) => [c.id, c]));
+  const marcadores: MarcadorFlota[] = [];
 
-  for (const c of opts.conductores) {
-    if (c.proceso === 'documentos_pendientes') continue;
-    const live = liveByConductor.get(c.id);
-    const enServicio = enRuta.has(c.id);
+  for (const r of opts.rutas) {
+    if (!esEstadoFlotaMapa(r.estado)) continue;
+
+    const vehiculoLabel = r.vehiculoLabel.trim() || r.id;
+    const conductorLabel = r.conductorNombre
+      ? r.conductorNombre.split(/\s+/).slice(0, 2).join(' ')
+      : null;
+
     let lat: number;
     let lng: number;
     let actualizadaEn: Date | null;
-    let etiquetaFija: string | null = null;
+    let ultimaVezLabel: string;
+    let enVivo: boolean;
 
-    if (live) {
-      lat = live.lat;
-      lng = live.lng;
-      actualizadaEn = live.en;
-    } else if (c.posLat != null && c.posLng != null) {
-      const raw = c.posActualizadaEn;
-      actualizadaEn = raw
-        ? (raw instanceof Date ? raw : new Date(raw))
-        : null;
-      if (actualizadaEn && Number.isNaN(actualizadaEn.getTime())) actualizadaEn = null;
-      const age = actualizadaEn ? ahora.getTime() - actualizadaEn.getTime() : Infinity;
-      const reciente = age >= 0 && age < EN_VIVO_MS;
-      if (!enServicio && !reciente) continue;
-      lat = c.posLat;
-      lng = c.posLng;
-    } else if (enServicio) {
-      /* Servicio en ruta sin ping: aproximación cerca del taller para ver flota. */
-      const seed = posSemillaConductor(c.id, tallerCoords);
-      lat = seed.lat;
-      lng = seed.lng;
-      actualizadaEn = new Date(ahora.getTime() - edadAproxEnRutaMs(c.id));
-      etiquetaFija = 'En ruta';
+    if (r.estado === 'en_taller') {
+      lat = tallerCoords.lat;
+      lng = tallerCoords.lng;
+      actualizadaEn = null;
+      ultimaVezLabel = 'En taller';
+      enVivo = false;
     } else {
-      continue;
+      const live = liveByRuta.get(r.id)
+        ?? (r.conductorId ? liveByConductor.get(r.conductorId) : undefined);
+      const c = r.conductorId ? conductorById.get(r.conductorId) : undefined;
+
+      if (live) {
+        lat = live.lat;
+        lng = live.lng;
+        actualizadaEn = live.en;
+        const age = ahora.getTime() - live.en.getTime();
+        enVivo = age >= 0 && age < EN_VIVO_MS;
+        ultimaVezLabel = textoUltimaVez(actualizadaEn, ahora);
+      } else if (c?.posLat != null && c.posLng != null) {
+        const raw = c.posActualizadaEn;
+        actualizadaEn = raw
+          ? (raw instanceof Date ? raw : new Date(raw))
+          : null;
+        if (actualizadaEn && Number.isNaN(actualizadaEn.getTime())) actualizadaEn = null;
+        lat = c.posLat;
+        lng = c.posLng;
+        const age = actualizadaEn ? ahora.getTime() - actualizadaEn.getTime() : Infinity;
+        enVivo = age >= 0 && age < EN_VIVO_MS;
+        ultimaVezLabel = textoUltimaVez(actualizadaEn, ahora);
+      } else {
+        const seedId = r.conductorId ?? r.id;
+        const seed = posSemillaConductor(seedId, tallerCoords);
+        lat = seed.lat;
+        lng = seed.lng;
+        actualizadaEn = new Date(ahora.getTime() - edadAproxEnRutaMs(seedId));
+        ultimaVezLabel = 'En ruta';
+        enVivo = false;
+      }
     }
 
-    const age = actualizadaEn ? ahora.getTime() - actualizadaEn.getTime() : Infinity;
-    const enVivo = !etiquetaFija && age >= 0 && age < EN_VIVO_MS;
+    const direccion = (r.direccionCard?.trim() || taller.direccion);
+
     marcadores.push({
-      id: c.id,
-      kind: 'conductor',
-      label: c.nombre.split(/\s+/).slice(0, 2).join(' '),
+      id: r.id,
+      rutaId: r.id,
+      estado: r.estado,
+      label: vehiculoLabel,
+      vehiculoLabel,
+      conductorLabel,
+      direccion,
       lat,
       lng,
       actualizadaEn,
       enVivo,
-      ultimaVezLabel: etiquetaFija ?? textoUltimaVez(actualizadaEn, ahora),
+      ultimaVezLabel,
+      fotoUrl: null,
     });
   }
 

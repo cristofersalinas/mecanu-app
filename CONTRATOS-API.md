@@ -225,6 +225,31 @@ Destacados / upsell / subuso → `#csx`. Body:
 `{ "tipo": "paquete_semanal" | "destacados" | "upsell" | "subuso" }`.
 Ver `docs/SLACK-CSX.md`.
 
+### `GET /api/v1/panel/flota`
+Marcadores del mapa General: solo rutas `en_ruta` o `en_taller`. Sin pin
+fijo del taller (los de `en_taller` usan sus coords). Auth de panel si no es demo.
+```json
+// Response 200
+{
+  "taller": { "lat": 41.38, "lng": 2.13, "label": "…", "direccion": "…" },
+  "marcadores": [{
+    "id": "TR-1042",
+    "rutaId": "TR-1042",
+    "estado": "en_ruta",
+    "label": "4521 KTM · Seat León",
+    "vehiculoLabel": "4521 KTM · Seat León",
+    "conductorLabel": "Javier Molina",
+    "direccion": "Carrer de Muntaner 340…",
+    "lat": 41.39,
+    "lng": 2.15,
+    "actualizadaEn": "2026-08-26T12:00:00.000Z",
+    "enVivo": true,
+    "ultimaVezLabel": "Ahora",
+    "fotoUrl": null
+  }]
+}
+```
+
 ### `GET /api/v1/panel/snapshot`
 Hidrata el panel (rutas, campañas, clientes, vehículos, conductores, servicios).
 Con Supabase configurado (sin demo) exige sesión.

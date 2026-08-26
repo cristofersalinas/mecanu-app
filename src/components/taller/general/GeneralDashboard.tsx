@@ -15,7 +15,7 @@ import { useCarga, useAhora } from '../ui/useCarga';
 import { COLUMNAS_TAREA } from '@/lib/mecanu/pipeline-tareas';
 import { metricasGeneralesRutas } from '@/lib/mecanu/kpis-panel';
 import {
-  construirVistaFlota, conductorIdsEnServicioTaller, proximasCitas, type MarcadorFlota,
+  construirVistaFlota, esEstadoFlotaMapa, proximasCitas, type MarcadorFlota, type RutaFlotaInput,
 } from '@/lib/mecanu/flota-panel';
 import { supabasePanelActivo, FETCH_SNAPSHOT } from '../hidratar-panel';
 import styles from '../panel.module.css';
@@ -29,6 +29,29 @@ const DIA_MS = 86400000;
 
 function iniciales(nombre: string): string {
   return nombre.split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+}
+
+function rutasFlotaDesdePanel(
+  rutas: ReturnType<typeof usePanel>['rutas'],
+): RutaFlotaInput[] {
+  return rutas.filter((r) => esEstadoFlotaMapa(r.estado)).map((r) => {
+    const v = vehiculo(r.vehiculoId);
+    const c = r.conductorId ? conductor(r.conductorId) : null;
+    const vehiculoLabel = v
+      ? `${v.matricula} · ${etiquetaVehiculo(v)}`
+      : (r.matriculaLead ? `${r.matriculaLead} · ${r.id}` : r.id);
+    const direccionCard = r.estado === 'en_taller'
+      ? TALLER.direccion
+      : (r.direccionOrigen ?? r.direccion ?? TALLER.direccion);
+    return {
+      id: r.id,
+      estado: r.estado,
+      conductorId: r.conductorId,
+      vehiculoLabel,
+      conductorNombre: c?.nombre ?? null,
+      direccionCard,
+    };
+  });
 }
 
 export function GeneralDashboard() {
@@ -46,17 +69,20 @@ export function GeneralDashboard() {
 
   const proxima = citas[0] ?? null;
 
-  const idsActivos = useMemo(() => conductorIdsEnServicioTaller(rutas), [rutas]);
-
   const vistaLocal = useMemo(
     () => construirVistaFlota({
       tallerDireccion: TALLER.direccion,
       tallerNombre: TALLER.nombre,
-      conductores: CONDUCTORES,
-      conductorIdsActivos: idsActivos,
+      rutas: rutasFlotaDesdePanel(rutas),
+      conductores: CONDUCTORES.map((c) => ({
+        id: c.id,
+        nombre: c.nombre,
+        proceso: c.proceso,
+        red: c.red,
+      })),
       ahora: new Date(ahora),
     }),
-    [ahora, idsActivos],
+    [ahora, rutas],
   );
 
   useEffect(() => {
@@ -219,15 +245,19 @@ export function GeneralDashboard() {
             </span>
             <span style={{ flex: 1, fontSize: 13, fontWeight: 700 }}>Flota alrededor del taller</span>
             <span style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>
-              {marcadores.filter((x) => x.kind === 'conductor' && x.enVivo).length} en vivo ·{' '}
-              {marcadores.filter((x) => x.kind === 'conductor').length} conductores
+              {marcadores.filter((x) => x.estado === 'en_ruta').length} en ruta ·{' '}
+              {marcadores.filter((x) => x.estado === 'en_taller').length} en taller
             </span>
           </div>
           <div style={{ flex: 1, minHeight: 480 }}>
-            <FlotaMapa marcadores={marcadores} />
+            <FlotaMapa
+              marcadores={marcadores}
+              tallerFallback={vistaLocal.taller}
+              onAbrirRuta={(rutaId) => seleccionar({ kind: 'ruta', id: rutaId }, 'ficha')}
+            />
           </div>
           <p style={{ margin: 0, padding: '0 6px 2px', fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
-            El zoom encaja el taller y los conductores con servicio en ruta (GPS real o última vista).
+            Solo autos en ruta o en taller. Varios en el mismo sitio se agrupan; clic abre la ficha.
           </p>
         </section>
       </div>
