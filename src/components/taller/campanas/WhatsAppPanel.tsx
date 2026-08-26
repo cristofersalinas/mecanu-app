@@ -9,7 +9,7 @@ import { esModoDemo } from '@/lib/entorno';
 import {
   CampanaItem, ERRORES, ESTADO_MENSAJE, ETIQUETA_ORIGEN, MAX_CUERPO, MENSAJE, MensajeWa,
   PRESUPUESTO_META, RESPUESTAS_DEMO, asegurarLinkTokenRuta, cliente, detalleHallazgo, enviar, estadoVentana, e164, fmtDia,
-  fmtDinero, fmtReloj, fmtTel, fromISO, payloadRecordatorio, payloadSeguimiento, payloadTexto, rangoFecha, renderMensaje,
+  fmtDinero, fmtReloj, fromISO, payloadRecordatorio, payloadSeguimiento, payloadTexto, rangoFecha, renderMensaje,
   renderMensajeCotizacion, toISO, valoresOportunidad, vehiculo,
 } from '../data';
 import { usePanel } from '../store';
@@ -48,7 +48,6 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
   const mensajes = canal.mensajes;
   const modoInicial = modoContactoOferta({ estadoCampana: campana?.estado ?? '', mensajes });
   const contacto = campana ? cliente(campana.clienteId) : null;
-  const veh = campana ? vehiculo(campana.vehiculoId) : null;
   const deberCampanaInit = p.deberActivo?.entidadKind === 'campana' && p.deberActivo.entidadId === campanaId
     ? p.deberActivo
     : null;
@@ -168,12 +167,25 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
   const perfil = perfilSidebarDeCampana(campana, {
     optIn,
     ventanaAbierta: ventana.abierta,
+    ventanaEtiqueta: ventana.etiqueta,
+    ventanaDetalle: ventana.detalle,
     deber: deberCampana,
   });
 
   const cerrarSidebar = () => {
     if (deberCampana) p.volverDeDeber();
     else onCerrar();
+  };
+
+  const abrirBandejaWa = () => {
+    if (!contacto?.telefono) return;
+    try {
+      sessionStorage.setItem('mecanu.wa.focusTel', contacto.telefono);
+    } catch {
+      /* */
+    }
+    onCerrar();
+    p.irA('whatsapp');
   };
 
   const enviarProactivo = async () => {
@@ -274,6 +286,11 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
         descripcionTarea={perfil.descripcionTarea}
         pills={perfil.pills}
         onCerrar={cerrarSidebar}
+        accionSecundaria={contacto?.telefono ? {
+          label: 'Abrir bandeja',
+          title: 'Abre el hilo de este número en WhatsApp (bandeja del taller), fuera del contexto de la campaña.',
+          onClick: abrirBandejaWa,
+        } : null}
       />
 
       <div style={{ padding: '0 16px' }}>
@@ -516,42 +533,13 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
         </div>
       ) : (
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--mecanu-neutral-25)' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>
-                {contacto?.nombre ?? 'Cliente'}
-                {veh ? (
-                  <span style={{ fontWeight: 500, color: 'var(--mecanu-text-secondary-light)' }}>
-                    {' · '}
-                    {veh.marca} {veh.modelo}
-                  </span>
-                ) : null}
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>
-                {contacto ? fmtTel(contacto.telefono) : 'Sin teléfono'} · {ventana.etiqueta}
-              </div>
+          {esModoDemo() ? (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 16px 0' }}>
+              <button type="button" className={styles.linkBtn} onClick={simularRespuesta}>
+                Simular respuesta
+              </button>
             </div>
-            {contacto?.telefono ? (
-              <Button
-                kind="secondary"
-                size="compact"
-                onClick={() => {
-                  try {
-                    sessionStorage.setItem('mecanu.wa.focusTel', contacto.telefono);
-                  } catch {
-                    /* */
-                  }
-                  onCerrar();
-                  p.irA('whatsapp');
-                }}
-              >
-                Chat personal
-              </Button>
-            ) : null}
-            {esModoDemo() ? (
-              <button type="button" className={styles.linkBtn} onClick={simularRespuesta}>Simular respuesta</button>
-            ) : null}
-          </div>
+          ) : null}
           {modo === 'responder' && sugerido ? (
             <div style={{ padding: '8px 16px', fontSize: 12, color: 'var(--mecanu-text-secondary-light)', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
               Respuesta sugerida. Edítala si hace falta.

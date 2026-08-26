@@ -73,8 +73,8 @@ export function CampanasView() {
   }
 
   return (
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, minWidth: 0 }}>
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ flex: 1, minHeight: 0, position: 'relative', minWidth: 0 }}>
+      <div style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, minHeight: 0 }}>
         <div className="mcn-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
           {kpis.map((k) => (
             <MetricsCard
@@ -176,15 +176,17 @@ export function CampanasView() {
       </div>
 
       {abierta ? (
-        <WhatsAppPanel
-          key={abierta}
-          campanaId={abierta}
-          onCerrar={() => {
-            setAbierta(null);
-            if (p.deberActivo) p.volverDeDeber();
-            else p.limpiarDeber();
-          }}
-        />
+        <div className={styles.sidebarCompactOverlay} data-sidebar-compact>
+          <WhatsAppPanel
+            key={abierta}
+            campanaId={abierta}
+            onCerrar={() => {
+              setAbierta(null);
+              if (p.deberActivo) p.volverDeDeber();
+              else p.limpiarDeber();
+            }}
+          />
+        </div>
       ) : null}
     </div>
   );

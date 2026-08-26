@@ -45,7 +45,13 @@ export function perfilSidebarDeRuta(
 
 export function perfilSidebarDeCampana(
   campana: Campana,
-  opts: { optIn: 'IN' | 'OUT'; ventanaAbierta: boolean; deber?: DeberTaller | null },
+  opts: {
+    optIn: 'IN' | 'OUT';
+    ventanaAbierta: boolean;
+    ventanaEtiqueta?: string;
+    ventanaDetalle?: string;
+    deber?: DeberTaller | null;
+  },
 ): PerfilSidebar {
   const v = vehiculo(campana.vehiculoId);
   const c = cliente(campana.clienteId);

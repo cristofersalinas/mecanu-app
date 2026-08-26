@@ -116,8 +116,8 @@ export function TareasView() {
   }
 
   return (
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, minWidth: 0 }}>
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
+    <div style={{ flex: 1, minHeight: 0, position: 'relative', minWidth: 0 }}>
+      <div style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, minHeight: 0 }}>
       <div className="mcn-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
         {kpis.map((k) => (
           <MetricsCard key={k.id} value={k.value} label={k.label} />
@@ -235,13 +235,17 @@ export function TareasView() {
       />
       </div>
 
-      {sidebarRutaDeber ? <SidePanel /> : null}
-      {campanaDeberId ? (
-        <WhatsAppPanel
-          key={`${campanaDeberId}-${p.deberActivo?.id ?? ''}`}
-          campanaId={campanaDeberId}
-          onCerrar={() => p.volverDeDeber()}
-        />
+      {sidebarRutaDeber || campanaDeberId ? (
+        <div className={styles.sidebarCompactOverlay} data-sidebar-compact>
+          {sidebarRutaDeber ? <SidePanel /> : null}
+          {campanaDeberId ? (
+            <WhatsAppPanel
+              key={`${campanaDeberId}-${p.deberActivo?.id ?? ''}`}
+              campanaId={campanaDeberId}
+              onCerrar={() => p.volverDeDeber()}
+            />
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

@@ -73,6 +73,37 @@
   min-height: 0;
   width: 400px;
 }
+
+/*
+  Overlay: la ficha flota sobre métricas + pipeline sin estrechar el layout
+  (si va en flex, las cards de métricas hacen reflow con auto-fit).
+*/
+.sidebarCompactOverlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+  max-width: calc(100% - 12px);
+  padding: 0;
+  pointer-events: none;
+}
+.sidebarCompactOverlay > .sidebarCompact {
+  pointer-events: auto;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  box-shadow: -8px 0 28px rgba(15, 23, 42, 0.12);
+}
+/* Inset del dock global (padding del área dense). */
+.sidebarCompactOverlayDock {
+  top: 14px;
+  right: 24px;
+  bottom: 16px;
+}
 .colCollapsed { animation: mcnColToCollapsed 520ms cubic-bezier(.22, 1, .36, 1); }
 .colExpanded { animation: mcnColToExpanded 520ms cubic-bezier(.22, 1, .36, 1); }
 /* Solo el cuerpo: si la cabecera también anima opacity, las cards se pintan

@@ -256,7 +256,10 @@ function Shell({ navMinimizadoInicial }: { navMinimizadoInicial: boolean }) {
           </div>
 
           {sidebarGlobalVisible ? (
-            <div className={styles.sidebarCompactDock} data-sidebar-compact>
+            <div
+              className={`${styles.sidebarCompactOverlay} ${styles.sidebarCompactOverlayDock}`}
+              data-sidebar-compact
+            >
               <SidePanel />
             </div>
           ) : null}

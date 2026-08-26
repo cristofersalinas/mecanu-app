@@ -73,7 +73,14 @@ const CICLO_PILL: Record<CicloVidaCliente, string> = {
 /** Campaña / WhatsApp: presupuesto, ciclo de vida, opt-in y ventana 24 h. */
 export function pillsDeCampana(
   campana: Campana,
-  opts: { optIn: 'IN' | 'OUT'; ventanaAbierta: boolean; cicloVida?: CicloVidaCliente | null },
+  opts: {
+    optIn: 'IN' | 'OUT';
+    ventanaAbierta: boolean;
+    /** Etiqueta viva (p. ej. «Ventana abierta · quedan 23 h»). */
+    ventanaEtiqueta?: string;
+    ventanaDetalle?: string;
+    cicloVida?: CicloVidaCliente | null;
+  },
 ): PillFicha[] {
   const meta = PRESUPUESTO_META[campana.estado];
   const pills: PillFicha[] = [];
@@ -107,9 +114,10 @@ export function pillsDeCampana(
 
   pills.push({
     id: 'ventana-wa',
-    label: opts.ventanaAbierta ? 'Ventana 24 h abierta' : 'Ventana cerrada',
+    label: opts.ventanaEtiqueta
+      ?? (opts.ventanaAbierta ? 'Ventana 24 h abierta' : 'Ventana cerrada'),
     color: opts.ventanaAbierta ? colorPillEstado('info') : colorPillEstado('neutral'),
-    title: 'Ventana de mensajería WhatsApp',
+    title: opts.ventanaDetalle ?? 'Ventana de mensajería WhatsApp (Cloud API)',
   });
 
   return pills;

@@ -14,6 +14,12 @@ export interface SidebarPerfilHeaderProps {
   pills: PillFicha[];
   onCerrar: () => void;
   onExpandir?: () => void;
+  /** Acción secundaria junto a cerrar (p. ej. abrir bandeja WA). */
+  accionSecundaria?: {
+    label: string;
+    title?: string;
+    onClick: () => void;
+  } | null;
 }
 
 const filaSecundaria = {
@@ -43,6 +49,7 @@ export function SidebarPerfilHeader({
   pills,
   onCerrar,
   onExpandir,
+  accionSecundaria,
 }: SidebarPerfilHeaderProps) {
   return (
     <header style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 16px 10px', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
@@ -58,6 +65,17 @@ export function SidebarPerfilHeader({
           ) : null}
         </div>
         <div className={styles.fichaHeaderActions}>
+          {accionSecundaria ? (
+            <button
+              type="button"
+              className={styles.linkBtn}
+              title={accionSecundaria.title}
+              onClick={accionSecundaria.onClick}
+              style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}
+            >
+              {accionSecundaria.label}
+            </button>
+          ) : null}
           {onExpandir ? (
             <button
               type="button"
