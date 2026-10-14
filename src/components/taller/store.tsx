@@ -363,8 +363,8 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelado = false;
     const supabase = supabasePanelActivo();
-    if (supabase) setCargandoDatos(true);
     (async () => {
+      if (supabase) setCargandoDatos(true);
       try {
         const res = await fetch('/api/v1/panel/snapshot');
         if (!res.ok) throw new Error(`snapshot ${res.status}`);
