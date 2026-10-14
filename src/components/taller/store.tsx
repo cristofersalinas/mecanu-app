@@ -235,6 +235,7 @@ interface PanelStore {
   reabrirTareaPipeline: (id: string) => void;
   canalesWa: Record<string, CanalWa>;
   setMensajesWa: (campanaId: string, mensajes: MensajeWa[] | ((prev: MensajeWa[]) => MensajeWa[])) => void;
+  setCanalWa: (campanaId: string, canal: CanalWa) => void;
 
   notas: Record<string, Nota[]>;
   addNota: (entidadId: string, texto: string) => void;
@@ -338,39 +339,6 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [fuenteDatos, setFuenteDatos] = useState<'mock' | 'supabase'>('mock');
   const [cargandoDatos, setCargandoDatos] = useState(false);
 
-  useEffect(() => {
-    if (!supabasePanelActivo()) return;
-    let cancelado = false;
-    setCargandoDatos(true);
-    (async () => {
-      try {
-        const res = await fetch('/api/v1/panel/snapshot');
-        if (!res.ok) throw new Error(`snapshot ${res.status}`);
-        const raw = await res.json();
-        if (cancelado) return;
-        const rutas = revivirFechas(raw.rutas ?? []) as RutaVista[];
-        const campanas = revivirFechas(raw.campanas ?? []) as Campana[];
-        const clientes = revivirFechas(raw.clientes ?? []) as Cliente[];
-        const vehiculos = revivirFechas(raw.vehiculos ?? []) as Vehiculo[];
-        const conductores = revivirFechas(raw.conductores ?? []) as Conductor[];
-        const servicios = revivirFechas(raw.servicios ?? []) as Servicio[];
-        reemplazarArray(CLIENTES, clientes);
-        reemplazarArray(VEHICULOS, vehiculos);
-        reemplazarArray(CONDUCTORES, conductores);
-        reemplazarArray(SERVICIOS, servicios);
-        setRutasBase(rutas);
-        setCampanasBase(campanas);
-        setFuenteDatos('supabase');
-        setCondCfgState(condCfgInicial());
-      } catch (e) {
-        console.warn('[panel] no se pudo hidratar desde Supabase, sigo con mock', e);
-      } finally {
-        if (!cancelado) setCargandoDatos(false);
-      }
-    })();
-    return () => { cancelado = true; };
-  }, []);
-
   const [seleccion, setSeleccion] = useState<Seleccion | null>(null);
   const [modoFicha, setModoFicha] = useState<'panel' | 'ficha'>('panel');
   const [deberActivo, setDeberActivo] = useState<DeberTaller | null>(null);
@@ -391,6 +359,45 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [condCfg, setCondCfgState] = useState<Record<string, CondCfg>>(condCfgInicial);
   const [conductoresExtra, setConductoresExtra] = useState<{ id: string; nombre: string; telefono: string }[]>([]);
   const [conductoresEliminados, setConductoresEliminados] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelado = false;
+    const supabase = supabasePanelActivo();
+    (async () => {
+      if (supabase) setCargandoDatos(true);
+      try {
+        const res = await fetch('/api/v1/panel/snapshot');
+        if (!res.ok) throw new Error(`snapshot ${res.status}`);
+        const raw = await res.json();
+        if (cancelado) return;
+        if (raw.canalesWa) {
+          setCanalesWa(revivirFechas(raw.canalesWa) as Record<string, CanalWa>);
+        }
+        if (!supabase) return;
+        const rutas = revivirFechas(raw.rutas ?? []) as RutaVista[];
+        const campanas = revivirFechas(raw.campanas ?? []) as Campana[];
+        const clientes = revivirFechas(raw.clientes ?? []) as Cliente[];
+        const vehiculos = revivirFechas(raw.vehiculos ?? []) as Vehiculo[];
+        const conductores = revivirFechas(raw.conductores ?? []) as Conductor[];
+        const servicios = revivirFechas(raw.servicios ?? []) as Servicio[];
+        reemplazarArray(CLIENTES, clientes);
+        reemplazarArray(VEHICULOS, vehiculos);
+        reemplazarArray(CONDUCTORES, conductores);
+        reemplazarArray(SERVICIOS, servicios);
+        setRutasBase(rutas);
+        setCampanasBase(campanas);
+        setFuenteDatos('supabase');
+        setCondCfgState(condCfgInicial());
+      } catch (e) {
+        if (supabase) {
+          console.warn('[panel] no se pudo hidratar desde Supabase, sigo con mock', e);
+        }
+      } finally {
+        if (!cancelado && supabase) setCargandoDatos(false);
+      }
+    })();
+    return () => { cancelado = true; };
+  }, []);
 
   const [sucursales, setSucursales] = useState<Sucursal[]>(SUCURSALES_INICIALES);
   const [perfil, setPerfil] = useState<Perfil>({
@@ -532,6 +539,10 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setCanalWa = useCallback((campanaId: string, canal: CanalWa) => {
+    setCanalesWa((prev) => ({ ...prev, [campanaId]: canal }));
+  }, []);
+
   const marcarDeberHecho = useCallback((entidadKind: DeberTaller['entidadKind'], entidadId: string, tipos: TipoDeberTaller[]) => {
     if (!deberActivo) return false;
     if (deberActivo.entidadKind !== entidadKind || deberActivo.entidadId !== entidadId) return false;
@@ -562,6 +573,7 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       reemplazarArray(SERVICIOS, servicios);
       setRutasBase(rutas);
       setCampanasBase(campanas);
+      if (raw.canalesWa) setCanalesWa(revivirFechas(raw.canalesWa) as Record<string, CanalWa>);
       setRutasNuevas([]);
       setOverlays({});
       setCampOverlays({});
@@ -883,14 +895,14 @@ export function PanelProvider({ children }: { children: ReactNode }) {
 
   const setCondCfg = useCallback((id: string, cfg: Partial<CondCfg>) => {
     setCondCfgState((c) => ({ ...c, [id]: { ...c[id], ...cfg } }));
-  }, []);
+  }, [setCondCfgState]);
 
   const crearConductor = useCallback((nombre: string, telefono: string, cfg: CondCfg) => {
     const id = nextId('d');
     setConductoresExtra((cs) => [...cs, { id, nombre, telefono }]);
     setCondCfgState((c) => ({ ...c, [id]: cfg }));
     toast(`Conductor ${nombre} creado.`);
-  }, [toast]);
+  }, [toast, setCondCfgState]);
 
   const eliminarConductor = useCallback((id: string) => {
     setConductoresEliminados((e) => [...e, id]);
@@ -961,7 +973,7 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     seleccion, modoFicha, seleccionar, setModoFicha,
     deberActivo, abrirDeber, limpiarDeber, volverDeDeber,
     pipelineTareas, tareasPendientesN, moverTareaPipeline, reabrirTareaPipeline,
-    canalesWa, setMensajesWa,
+    canalesWa, setMensajesWa, setCanalWa,
     notas, addNota, tareas, toggleTarea, addTarea,
     agendarRuta, cancelarRuta, avanzarSubestadoEnRuta, setEstadoRuta, toggleTagManual, asignarConductor,
     avanzarCampana, rechazarCampana, marcarCampanaEnviada, crearRutaDesdeCampana,

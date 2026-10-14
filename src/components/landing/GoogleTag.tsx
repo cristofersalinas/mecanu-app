@@ -102,10 +102,12 @@ export function GoogleTag({
 
   useEffect(() => {
     if (!cargarGtm || !rutaPublica) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset al cambiar ruta/consent
       setContextoListo(false);
       return;
     }
     emitirContextoDispositivo();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- GTM listo tras contexto
     setContextoListo(true);
   }, [cargarGtm, rutaPublica, consent?.analitica, consent?.publicidad]);
 

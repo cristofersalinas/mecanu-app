@@ -24,9 +24,9 @@
  * El mock de hoy hace (3) y (4) pero no (1)/(2) porque no hay base de datos.
  */
 import type {
-  Actividad, AutomatizacionEjecucion, Campana, Cliente, Conductor, Inspeccion, Log, Parada, Presupuesto,
-  ProcesoConductor, Ruta, RutaVista, Servicio, Solicitud, TagRuta, Tramo, UsuarioBackoffice, Vehiculo,
-  EstadoUsuarioBackoffice,
+  Actividad, AutomatizacionEjecucion, Campana, CanalWa, Cliente, Conductor, Inspeccion, Log, MensajeWa,
+  Parada, Presupuesto, ProcesoConductor, Ruta, RutaVista, Servicio, Solicitud, TagRuta, Tramo,
+  UsuarioBackoffice, Vehiculo, EstadoUsuarioBackoffice, EstadoMensajeWa,
 } from '../types';
 import type { SnapshotBackoffice } from '../backoffice';
 
@@ -146,6 +146,27 @@ export interface AgendarRutaInput {
   conductorId: string | null;
 }
 
+export interface EnviarMensajeWaInput {
+  campanaId: string;
+  tipo: 'recordatorio' | 'seguimiento' | 'text';
+  seleccion: string[];
+  overrides?: { nombre?: string; fecha?: string };
+  cuerpo?: string;
+}
+
+export interface EnviarMensajeWaResult {
+  canal: CanalWa;
+  mensaje: MensajeWa;
+  campana: Campana;
+}
+
+export interface RegistrarMensajeEntranteInput {
+  telefonoE164: string;
+  wamid: string;
+  texto: string;
+  ts: Date;
+}
+
 /* ==============================================================
    La interfaz
    ============================================================== */
@@ -182,6 +203,13 @@ export interface MecanuRepo {
   getPresupuesto(id: string): Promise<Presupuesto | null>;
   listCampanas(): Promise<Campana[]>;
   getCampana(id: string): Promise<Campana | null>;
+
+  /* ---------- WhatsApp (campañas) ---------- */
+  listCanalesWa(): Promise<Record<string, CanalWa>>;
+  getCanalWa(campanaId: string): Promise<CanalWa>;
+  enviarMensajeWa(input: EnviarMensajeWaInput): Promise<EnviarMensajeWaResult>;
+  actualizarEstadoMensajeWa(wamid: string, estado: EstadoMensajeWa, errorCode?: number): Promise<void>;
+  registrarMensajeEntranteWa(input: RegistrarMensajeEntranteInput): Promise<{ campanaId: string; canal: CanalWa } | null>;
 
   /* ---------- Lecturas: inspecciones ---------- */
   listInspeccionesDeRuta(rutaId: string): Promise<Inspeccion[]>;

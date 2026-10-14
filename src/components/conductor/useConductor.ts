@@ -226,8 +226,8 @@ export function useConductor(opts: OpcionesConductor = {}) {
     if (!montado) return;
     if (process.env.NEXT_PUBLIC_MECANU_USE_SUPABASE !== '1') return;
     let cancelado = false;
-    setHidrandoSupabase(true);
     (async () => {
+      setHidrandoSupabase(true);
       try {
         const res = await fetch(`/api/v1/conductor/snapshot?conductorId=${encodeURIComponent(MI_ID)}`);
         if (!res.ok) throw new Error(`snapshot ${res.status}`);

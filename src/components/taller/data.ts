@@ -477,10 +477,6 @@ export const detalleHallazgo = w.detalleHallazgo as (o: Campana, it: CampanaItem
   fotos: { url: string; label: string }[];
   detalles: { label: string; valor: string; servicioId?: string }[];
 };
-export const enviar = w.enviar as (
-  payload: unknown,
-  opts?: { forzarError?: number; onEstado?: (id: string, estado: string) => void },
-) => Promise<{ messages: { id: string }[] }>;
 export const payloadRecordatorio = w.payloadRecordatorio as (to: string, valores: ValoresMensaje) => unknown;
 export const payloadSeguimiento = w.payloadSeguimiento as (to: string, valores: ValoresMensaje, cuerpo: string) => unknown;
 export const payloadTexto = w.payloadTexto as (to: string, body: string) => unknown;

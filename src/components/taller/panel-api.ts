@@ -47,4 +47,20 @@ export const panelApi = {
   estadoCampana(campanaId: string, estado: string) {
     return postJson(`/api/v1/panel/campanas/${encodeURIComponent(campanaId)}/estado`, { estado }, 'camp-estado');
   },
+  enviarWhatsApp(campanaId: string, body: {
+    tipo: 'recordatorio' | 'seguimiento' | 'text';
+    seleccion: string[];
+    overrides?: { nombre?: string; fecha?: string };
+    cuerpo?: string;
+  }) {
+    return postJson<{
+      canal: { optIn: 'IN' | 'OUT'; mensajes: unknown[] };
+      mensaje: unknown;
+      campana: { id: string; estado: string; presupuesto: { estado: string } };
+    }>(
+      `/api/v1/panel/campanas/${encodeURIComponent(campanaId)}/whatsapp/enviar`,
+      body,
+      'wa-enviar',
+    );
+  },
 };
