@@ -28,6 +28,17 @@ const ANALYTICA = [
   "https://vitals.vercel-insights.com",
 ].join(" ");
 
+/** Google Ads + Meta Pixel. Solo se piden a la red con consentimiento de publicidad. */
+const PUBLICIDAD = [
+  "https://www.googleadservices.com",
+  "https://googleads.g.doubleclick.net",
+  "https://*.doubleclick.net",
+  "https://*.googlesyndication.com",
+  "https://connect.facebook.net",
+  "https://www.facebook.com",
+  "https://*.facebook.com",
+].join(" ");
+
 const MAPA = [
   "https://*.basemaps.cartocdn.com",
   "https://demotiles.maplibre.org",
@@ -42,13 +53,13 @@ export function contentSecurityPolicy(opts: { desarrollo: boolean }): string {
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${evalDev} ${ANALYTICA}`,
+    `script-src 'self' 'unsafe-inline'${evalDev} ${ANALYTICA} ${PUBLICIDAD}`,
     `style-src 'self' 'unsafe-inline' ${FUENTES}`,
     `font-src 'self' data: ${FUENTES}`,
-    `img-src 'self' data: blob: ${ANALYTICA} ${MAPA}`,
-    `connect-src 'self' ${ANALYTICA} ${MAPA} ${SENTRY}`,
+    `img-src 'self' data: blob: ${ANALYTICA} ${PUBLICIDAD} ${MAPA}`,
+    `connect-src 'self' ${ANALYTICA} ${PUBLICIDAD} ${MAPA} ${SENTRY}`,
     "worker-src 'self' blob:",
-    "frame-src https://www.googletagmanager.com",
+    "frame-src https://www.googletagmanager.com https://www.facebook.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

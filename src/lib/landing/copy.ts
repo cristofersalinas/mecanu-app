@@ -18,7 +18,6 @@ export type LandingCopy = {
     solucion: string;
     recursos: string;
     productos: string;
-    login: string;
     cta: string;
     langLabel: string;
   };
@@ -30,6 +29,7 @@ export type LandingCopy = {
     subtext: string;
     primary: string;
     secondary: string;
+    /** Alt de la foto del hero. */
     photoAlt: string;
   };
   logosAria: string;
@@ -42,6 +42,16 @@ export type LandingCopy = {
     details: string;
     talk: string;
     comingSoon: string;
+    resetAria: string;
+    zoomInAria: string;
+    zoomOutAria: string;
+  };
+  faq: {
+    eyebrow: string;
+    heading: string;
+    more: string;
+    less: string;
+    links: { href: string; label: string }[];
   };
   statsAria: string;
   stats: { numero: string; valor: string; etiqueta: string; texto: string; enlace?: string }[];
@@ -94,6 +104,8 @@ export type LandingCopy = {
     accesibilidad: string;
     cumplimientoTitulo: string;
     cumplimientoTexto: string;
+    comparativas: string;
+    comparativaLinks: { href: string; label: string }[];
   };
   errors: {
     notFound: { kicker: string; headline: string; subtext: string; cta: string };
@@ -106,6 +118,15 @@ export type LandingCopy = {
     rechazar: string;
     gestionar: string;
     configurar: string;
+    guardar: string;
+    esencialesTitulo: string;
+    esencialesCuerpo: string;
+    analiticaTitulo: string;
+    analiticaCuerpo: string;
+    publicidadTitulo: string;
+    publicidadCuerpo: string;
+    coreEtiqueta: string;
+    siempreActivas: string;
   };
   contacto: {
     eyebrow: string;
@@ -165,7 +186,6 @@ const es: LandingCopy = {
     solucion: "Solución",
     recursos: "Recursos",
     productos: "Productos",
-    login: "Entrar",
     cta: "Hablar con Mecanu",
     langLabel: "Idioma",
   },
@@ -183,9 +203,9 @@ const es: LandingCopy = {
     headline: "Tu taller no para cuando los coches se mueven.",
     subtext:
       "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones con clientes.",
-    primary: "Ver cómo funciona",
-    secondary: "Hablar con nosotros",
-    photoAlt: "Volvo recorriendo una calle estrecha al atardecer",
+    primary: "Hablar con nosotros",
+    secondary: "Ver cómo funciona",
+    photoAlt: "Volvo blanco visto desde arriba en una calle urbana",
   },
   logosAria: "Logos de talleres clientes de referencia",
   map: {
@@ -200,6 +220,9 @@ const es: LandingCopy = {
     details: "Detalles",
     talk: "Hablar con Mecanu",
     comingSoon: "Próximamente en esta ciudad.",
+    resetAria: "Volver a la vista de ciudad",
+    zoomInAria: "Acercar mapa",
+    zoomOutAria: "Alejar mapa",
   },
   statsAria: "Resultados de Mecanu",
   stats: [
@@ -255,8 +278,9 @@ const es: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "¿Pico de trabajo?",
-    subtext: "Tu capacidad puede crecer sin ampliar la nave.",
+    heading: "¿Tu taller ocupado por autos listos?",
+    subtext:
+      "Crece sin ampliar la nave: despacha al instante los coches listos y entrégalos en puerta, con una experiencia que se nota.",
     cta: "Pide apoyo a Mecanu",
     photoAlt: "Coche clásico partido en collage vintage.",
   },
@@ -329,6 +353,24 @@ const es: LandingCopy = {
       },
     ],
   },
+  faq: {
+    eyebrow: "MECANU / PREGUNTAS FRECUENTES",
+    heading: "Preguntas frecuentes",
+    more: "Ver más",
+    less: "Ver menos",
+    links: [
+      { href: "/madrid", label: "Mecanu en Madrid" },
+      { href: "/barcelona", label: "Mecanu en Barcelona" },
+      { href: "/para-talleres", label: "Cómo funciona para tu taller" },
+      { href: "/alternativa-grua", label: "Comparado con una grúa" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Comparado con un mecánico a domicilio" },
+      { href: "/itv-para-talleres", label: "ITV para talleres" },
+      { href: "/software-taller", label: "Software de taller" },
+      { href: "/mantenimiento-marcas", label: "Mantenimiento por marca" },
+      { href: "/cliente-no-recoge-coche", label: "Cliente no recoge el coche" },
+      { href: "/blog", label: "Blog de operaciones" },
+    ],
+  },
   footer: {
     tagline: "Logística B2B para talleres que quieren seguir reparando.",
     contacto: "Contacto",
@@ -353,7 +395,18 @@ const es: LandingCopy = {
     terminos: "Términos",
     accesibilidad: "Accesibilidad",
     cumplimientoTitulo: "Cumplimiento UE",
-    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sin cookies de analítica hasta que digas que sí.",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
+    comparativas: "Comparativas",
+    comparativaLinks: [
+      { href: "/alternativa-grua", label: "Grúa o conductor" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Mecánico a domicilio" },
+      { href: "/taller-oficial-o-multimarca", label: "Oficial o multimarca" },
+      { href: "/capacidad-taller", label: "Capacidad del taller" },
+      { href: "/itv-para-talleres", label: "ITV para talleres" },
+      { href: "/software-taller", label: "Software de taller" },
+      { href: "/mantenimiento-marcas", label: "Mantenimiento por marca" },
+      { href: "/cliente-no-recoge-coche", label: "Cliente no recoge el coche" },
+    ],
   },
   errors: {
     notFound: {
@@ -373,11 +426,22 @@ const es: LandingCopy = {
   consent: {
     titulo: "Cookies en Mecanu",
     cuerpo:
-      "Si nos lo permites, usamos Google Analytics y Microsoft Clarity para saber qué páginas se leen y cómo se usa la web. Puedes decir que no y la web funciona igual. Detalle en /cookies.",
-    aceptar: "Aceptar",
-    rechazar: "Rechazar",
-    gestionar: "Más info",
-    configurar: "Configurar cookies",
+      "Las esenciales van siempre (idioma, seguridad). Si nos dejas, medimos páginas y dispositivo — si entras con iPhone, qué lees — al estilo de Google Analytics. La publicidad (Google Ads y Meta) es aparte. Puedes denegar y la web funciona igual.",
+    aceptar: "Aceptar todas",
+    rechazar: "Solo esenciales",
+    gestionar: "Política",
+    configurar: "Configurar",
+    guardar: "Guardar selección",
+    esencialesTitulo: "Esenciales",
+    esencialesCuerpo: "Idioma, seguridad y recordar tu elección. Sin ellas la web no funciona.",
+    analiticaTitulo: "Analítica",
+    analiticaCuerpo:
+      "Páginas que visitas, dispositivo (iPhone, Android, ordenador) e idioma. Google Analytics 4, Clarity y Vercel. Es la medición del negocio.",
+    publicidadTitulo: "Publicidad",
+    publicidadCuerpo:
+      "Google Ads y Meta (Facebook/Instagram). Eventos PageView, ViewContent y Lead para saber si una campaña sirve. Apagado = cero píxeles de anuncios.",
+    coreEtiqueta: "Medición",
+    siempreActivas: "Siempre activas",
   },
   contacto: {
     eyebrow: "EMPIEZA AQUÍ",
@@ -479,7 +543,6 @@ const ca: LandingCopy = {
     solucion: "Solució",
     recursos: "Recursos",
     productos: "Productes",
-    login: "Entrar",
     cta: "Parlar amb Mecanu",
     langLabel: "Idioma",
   },
@@ -497,9 +560,9 @@ const ca: LandingCopy = {
     headline: "El teu taller no s'atura quan els cotxes es mouen.",
     subtext:
       "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions amb clients.",
-    primary: "Veure com funciona",
-    secondary: "Parlar amb nosaltres",
-    photoAlt: "Volvo recorrent un carrer estret al capvespre",
+    primary: "Parlar amb nosaltres",
+    secondary: "Veure com funciona",
+    photoAlt: "Volvo blanc vist des de dalt en un carrer urbà",
   },
   logosAria: "Logotips de tallers clients de referència",
   map: {
@@ -514,6 +577,9 @@ const ca: LandingCopy = {
     details: "Detalls",
     talk: "Parlar amb Mecanu",
     comingSoon: "Pròximament en aquesta ciutat.",
+    resetAria: "Tornar a la vista de ciutat",
+    zoomInAria: "Apropar el mapa",
+    zoomOutAria: "Allunyar el mapa",
   },
   statsAria: "Resultats de Mecanu",
   stats: [
@@ -569,8 +635,9 @@ const ca: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "Pic de feina?",
-    subtext: "La teva capacitat pot créixer sense ampliar la nau.",
+    heading: "El teu taller ple de cotxes a punt?",
+    subtext:
+      "Creix sense ampliar la nau: despacha a l'instant els cotxes a punt i lliura'ls a la porta, amb una experiència que es nota.",
     cta: "Demana suport a Mecanu",
     photoAlt: "Cotxe clàssic partit en collage vintage.",
   },
@@ -643,6 +710,24 @@ const ca: LandingCopy = {
       },
     ],
   },
+  faq: {
+    eyebrow: "MECANU / PREGUNTES FREQÜENTS",
+    heading: "Preguntes freqüents",
+    more: "Veure més",
+    less: "Veure menys",
+    links: [
+      { href: "/madrid", label: "Mecanu a Madrid" },
+      { href: "/barcelona", label: "Mecanu a Barcelona" },
+      { href: "/para-talleres", label: "Com funciona per al teu taller" },
+      { href: "/alternativa-grua", label: "Comparat amb una grua" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Comparat amb un mecànic a domicili" },
+      { href: "/itv-para-talleres", label: "ITV per a tallers" },
+      { href: "/software-taller", label: "Programari de taller" },
+      { href: "/mantenimiento-marcas", label: "Manteniment per marca" },
+      { href: "/cliente-no-recoge-coche", label: "El client no recull el cotxe" },
+      { href: "/blog", label: "Blog d'operacions" },
+    ],
+  },
   footer: {
     tagline: "Logística B2B per a tallers que volen seguir reparant.",
     contacto: "Contacte",
@@ -667,7 +752,18 @@ const ca: LandingCopy = {
     terminos: "Termes",
     accesibilidad: "Accessibilitat",
     cumplimientoTitulo: "Compliment UE",
-    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sense galetes d'analítica fins que diguis que sí.",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
+    comparativas: "Comparatives",
+    comparativaLinks: [
+      { href: "/alternativa-grua", label: "Grua o conductor" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Mecànic a domicili" },
+      { href: "/taller-oficial-o-multimarca", label: "Oficial o multimarca" },
+      { href: "/capacidad-taller", label: "Capacitat del taller" },
+      { href: "/itv-para-talleres", label: "ITV per a tallers" },
+      { href: "/software-taller", label: "Programari de taller" },
+      { href: "/mantenimiento-marcas", label: "Manteniment per marca" },
+      { href: "/cliente-no-recoge-coche", label: "El client no recull el cotxe" },
+    ],
   },
   errors: {
     notFound: {
@@ -687,11 +783,22 @@ const ca: LandingCopy = {
   consent: {
     titulo: "Galetes a Mecanu",
     cuerpo:
-      "Si ens ho permets, fem servir Google Analytics i Microsoft Clarity per saber quines pàgines es llegeixen i com s'usa el web. Pots dir que no i el web funciona igual. Detall a /cookies.",
-    aceptar: "Acceptar",
-    rechazar: "Rebutjar",
-    gestionar: "Més info",
-    configurar: "Configurar galetes",
+      "Les essencials van sempre (idioma, seguretat). Si ens ho deixes, mesurem pàgines i dispositiu — si entres amb iPhone, què llegeixes — a l'estil de Google Analytics. La publicitat (Google Ads i Meta) va a part. Pots denegar i el web funciona igual.",
+    aceptar: "Acceptar-les totes",
+    rechazar: "Només essencials",
+    gestionar: "Política",
+    configurar: "Configurar",
+    guardar: "Desar la selecció",
+    esencialesTitulo: "Essencials",
+    esencialesCuerpo: "Idioma, seguretat i recordar la teva tria. Sense elles el web no funciona.",
+    analiticaTitulo: "Analítica",
+    analiticaCuerpo:
+      "Pàgines que visites, dispositiu (iPhone, Android, ordinador) i idioma. Google Analytics 4, Clarity i Vercel. És la mesura del negoci.",
+    publicidadTitulo: "Publicitat",
+    publicidadCuerpo:
+      "Google Ads i Meta (Facebook/Instagram). Esdeveniments PageView, ViewContent i Lead per saber si una campanya serveix. Apagat = zero píxels d'anuncis.",
+    coreEtiqueta: "Mesura",
+    siempreActivas: "Sempre actives",
   },
   contacto: {
     eyebrow: "COMENÇA AQUÍ",
@@ -793,7 +900,6 @@ const en: LandingCopy = {
     solucion: "Solution",
     recursos: "Resources",
     productos: "Products",
-    login: "Log in",
     cta: "Talk to Mecanu",
     langLabel: "Language",
   },
@@ -811,9 +917,9 @@ const en: LandingCopy = {
     headline: "Your shop never stops when cars move.",
     subtext:
       "Send cars where you need them, free the shop, and look after the customer. Every run under control. No friction with customers.",
-    primary: "See how it works",
-    secondary: "Talk to us",
-    photoAlt: "Volvo on a narrow street at dusk",
+    primary: "Talk to us",
+    secondary: "See how it works",
+    photoAlt: "White Volvo seen from above on an urban street",
   },
   logosAria: "Shop logos",
   map: {
@@ -828,6 +934,9 @@ const en: LandingCopy = {
     details: "Details",
     talk: "Talk to Mecanu",
     comingSoon: "Coming soon in this city.",
+    resetAria: "Back to the city view",
+    zoomInAria: "Zoom in",
+    zoomOutAria: "Zoom out",
   },
   statsAria: "What Mecanu does",
   stats: [
@@ -879,8 +988,9 @@ const en: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "Workload spike?",
-    subtext: "Grow capacity without a bigger shop.",
+    heading: "Shop packed with cars ready to go?",
+    subtext:
+      "Grow without a bigger bay: dispatch ready cars right away and deliver to the door—an experience customers notice.",
     cta: "Bring Mecanu in",
     photoAlt: "Classic car split in vintage collage.",
   },
@@ -953,6 +1063,24 @@ const en: LandingCopy = {
       },
     ],
   },
+  faq: {
+    eyebrow: "MECANU / FAQ",
+    heading: "Frequently asked questions",
+    more: "Show more",
+    less: "Show less",
+    links: [
+      { href: "/madrid", label: "Mecanu in Madrid" },
+      { href: "/barcelona", label: "Mecanu in Barcelona" },
+      { href: "/para-talleres", label: "How it works for your shop" },
+      { href: "/alternativa-grua", label: "Compared with a tow truck" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Compared with a mobile mechanic" },
+      { href: "/itv-para-talleres", label: "ITV for workshops" },
+      { href: "/software-taller", label: "Workshop software" },
+      { href: "/mantenimiento-marcas", label: "Service by brand" },
+      { href: "/cliente-no-recoge-coche", label: "Customer doesn't collect the car" },
+      { href: "/blog", label: "Operations blog" },
+    ],
+  },
   footer: {
     tagline: "Logistics for shops that keep repairing.",
     contacto: "Contact",
@@ -977,7 +1105,18 @@ const en: LandingCopy = {
     terminos: "Terms",
     accesibilidad: "Accessibility",
     cumplimientoTitulo: "EU compliance",
-    cumplimientoTexto: "GDPR · ePrivacy · LSSI-CE — no analytics cookies until you say yes.",
+    cumplimientoTexto: "GDPR · ePrivacy · LSSI-CE",
+    comparativas: "Comparisons",
+    comparativaLinks: [
+      { href: "/alternativa-grua", label: "Tow truck or driver" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Mobile mechanic" },
+      { href: "/taller-oficial-o-multimarca", label: "Dealer or independent" },
+      { href: "/capacidad-taller", label: "Shop capacity" },
+      { href: "/itv-para-talleres", label: "ITV for workshops" },
+      { href: "/software-taller", label: "Workshop software" },
+      { href: "/mantenimiento-marcas", label: "Service by brand" },
+      { href: "/cliente-no-recoge-coche", label: "Customer doesn't collect the car" },
+    ],
   },
   errors: {
     notFound: {
@@ -997,11 +1136,22 @@ const en: LandingCopy = {
   consent: {
     titulo: "Cookies at Mecanu",
     cuerpo:
-      "If you let us, we use Google Analytics and Microsoft Clarity to see which pages get read and how the site is used. You can say no and the site still works. Details at /cookies.",
-    aceptar: "Accept",
-    rechazar: "Reject",
-    gestionar: "More info",
-    configurar: "Cookie settings",
+      "Essential cookies always run (language, security). If you allow it, we measure pages and device — iPhone or not, what you read — the Google Analytics way. Ads (Google Ads and Meta) are separate. You can deny them and the site still works.",
+    aceptar: "Accept all",
+    rechazar: "Essentials only",
+    gestionar: "Policy",
+    configurar: "Customize",
+    guardar: "Save choices",
+    esencialesTitulo: "Essential",
+    esencialesCuerpo: "Language, security and remembering your choice. The site needs them to work.",
+    analiticaTitulo: "Analytics",
+    analiticaCuerpo:
+      "Pages you visit, device (iPhone, Android, desktop) and language. Google Analytics 4, Clarity and Vercel. This is the business measurement.",
+    publicidadTitulo: "Advertising",
+    publicidadCuerpo:
+      "Google Ads and Meta (Facebook/Instagram). PageView, ViewContent and Lead events so campaigns are not a black box. Off = no ad pixels.",
+    coreEtiqueta: "Measurement",
+    siempreActivas: "Always on",
   },
   contacto: {
     eyebrow: "GET STARTED",
@@ -1103,7 +1253,6 @@ const pt: LandingCopy = {
     solucion: "Solução",
     recursos: "Recursos",
     productos: "Produtos",
-    login: "Entrar",
     cta: "Falar com Mecanu",
     langLabel: "Idioma",
   },
@@ -1121,9 +1270,9 @@ const pt: LandingCopy = {
     headline: "A tua oficina não para quando os carros se movem.",
     subtext:
       "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito com clientes.",
-    primary: "Ver como funciona",
-    secondary: "Falar connosco",
-    photoAlt: "Volvo numa rua estreita ao entardecer",
+    primary: "Falar connosco",
+    secondary: "Ver como funciona",
+    photoAlt: "Volvo branco visto de cima numa rua urbana",
   },
   logosAria: "Logótipos de oficinas",
   map: {
@@ -1138,6 +1287,9 @@ const pt: LandingCopy = {
     details: "Detalhes",
     talk: "Falar com Mecanu",
     comingSoon: "Brevemente nesta cidade.",
+    resetAria: "Voltar à vista da cidade",
+    zoomInAria: "Aproximar o mapa",
+    zoomOutAria: "Afastar o mapa",
   },
   statsAria: "O que a Mecanu faz",
   stats: [
@@ -1189,8 +1341,9 @@ const pt: LandingCopy = {
     ],
   },
   hiring: {
-    heading: "Pico de trabalho?",
-    subtext: "Aumenta a capacidade sem alargar a oficina.",
+    heading: "Oficina cheia de carros prontos?",
+    subtext:
+      "Cresce sem alargar a oficina: despacha já os carros prontos e entrega à porta, com uma experiência que se nota.",
     cta: "Chama a Mecanu",
     photoAlt: "Carro clássico partido em collage vintage.",
   },
@@ -1263,6 +1416,24 @@ const pt: LandingCopy = {
       },
     ],
   },
+  faq: {
+    eyebrow: "MECANU / PERGUNTAS FREQUENTES",
+    heading: "Perguntas frequentes",
+    more: "Ver mais",
+    less: "Ver menos",
+    links: [
+      { href: "/madrid", label: "Mecanu em Madrid" },
+      { href: "/barcelona", label: "Mecanu em Barcelona" },
+      { href: "/para-talleres", label: "Como funciona para a tua oficina" },
+      { href: "/alternativa-grua", label: "Comparado com um reboque" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Comparado com um mecânico ao domicílio" },
+      { href: "/itv-para-talleres", label: "Inspeção para oficinas" },
+      { href: "/software-taller", label: "Software de oficina" },
+      { href: "/mantenimiento-marcas", label: "Manutenção por marca" },
+      { href: "/cliente-no-recoge-coche", label: "O cliente não levanta o carro" },
+      { href: "/blog", label: "Blog de operações" },
+    ],
+  },
   footer: {
     tagline: "Logística para oficinas que querem continuar a reparar.",
     contacto: "Contacto",
@@ -1287,7 +1458,18 @@ const pt: LandingCopy = {
     terminos: "Termos",
     accesibilidad: "Acessibilidade",
     cumplimientoTitulo: "Cumprimento UE",
-    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE — sem cookies de analítica até dizeres que sim.",
+    cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
+    comparativas: "Comparações",
+    comparativaLinks: [
+      { href: "/alternativa-grua", label: "Reboque ou condutor" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Mecânico ao domicílio" },
+      { href: "/taller-oficial-o-multimarca", label: "Oficial ou multimarca" },
+      { href: "/capacidad-taller", label: "Capacidade da oficina" },
+      { href: "/itv-para-talleres", label: "Inspeção para oficinas" },
+      { href: "/software-taller", label: "Software de oficina" },
+      { href: "/mantenimiento-marcas", label: "Manutenção por marca" },
+      { href: "/cliente-no-recoge-coche", label: "O cliente não levanta o carro" },
+    ],
   },
   errors: {
     notFound: {
@@ -1307,11 +1489,22 @@ const pt: LandingCopy = {
   consent: {
     titulo: "Cookies na Mecanu",
     cuerpo:
-      "Se nos autorizares, usamos o Google Analytics e o Microsoft Clarity para saber que páginas são lidas e como o site é usado. Podes dizer que não e o site funciona na mesma. Detalhe em /cookies.",
-    aceptar: "Aceitar",
-    rechazar: "Rejeitar",
-    gestionar: "Mais info",
-    configurar: "Configurar cookies",
+      "As essenciais estão sempre ligadas (idioma, segurança). Se nos deixares, medimos páginas e dispositivo — se entras com iPhone, o que lês — ao estilo do Google Analytics. A publicidade (Google Ads e Meta) é à parte. Podes recusar e o site funciona na mesma.",
+    aceptar: "Aceitar todas",
+    rechazar: "Só essenciais",
+    gestionar: "Política",
+    configurar: "Configurar",
+    guardar: "Guardar seleção",
+    esencialesTitulo: "Essenciais",
+    esencialesCuerpo: "Idioma, segurança e lembrar a tua escolha. Sem elas o site não funciona.",
+    analiticaTitulo: "Analítica",
+    analiticaCuerpo:
+      "Páginas que visitas, dispositivo (iPhone, Android, computador) e idioma. Google Analytics 4, Clarity e Vercel. É a medição do negócio.",
+    publicidadTitulo: "Publicidade",
+    publicidadCuerpo:
+      "Google Ads e Meta (Facebook/Instagram). Eventos PageView, ViewContent e Lead para saber se uma campanha serve. Desligado = zero píxeis de anúncios.",
+    coreEtiqueta: "Medição",
+    siempreActivas: "Sempre ativas",
   },
   contacto: {
     eyebrow: "COMEÇA AQUI",

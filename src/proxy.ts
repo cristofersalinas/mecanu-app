@@ -62,6 +62,19 @@ function esAppProtegida(pathname: string) {
   );
 }
 
+/** Borra la cookie del A/B retirado para que nadie se quede en la foto antigua. */
+function sinCookieHeroAb(request: NextRequest, response: NextResponse): NextResponse {
+  if (request.cookies.has("mecanu_hero_ab")) {
+    response.cookies.set("mecanu_hero_ab", "", {
+      maxAge: 0,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.VERCEL === "1",
+    });
+  }
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const requestHeaders = new Headers(request.headers);
@@ -84,7 +97,7 @@ export async function proxy(request: NextRequest) {
         secure: process.env.VERCEL === "1",
       });
       respuesta.headers.set("Cache-Control", "private, no-store");
-      return respuesta;
+      return sinCookieHeroAb(request, respuesta);
     }
   }
 
@@ -126,8 +139,11 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (tocaSupabase) return sesionRes;
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  if (tocaSupabase) return sinCookieHeroAb(request, sesionRes);
+  return sinCookieHeroAb(
+    request,
+    NextResponse.next({ request: { headers: requestHeaders } }),
+  );
 }
 
 export const config = {

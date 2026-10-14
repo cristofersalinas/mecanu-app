@@ -9,9 +9,16 @@ import MadridMap from "@/components/landing/MadridMap";
 import { JsonLd } from "@/components/landing/JsonLd";
 import { getPost } from "@/lib/blog/data";
 import { copyFor } from "@/lib/landing/copy";
-import { FAQ_LANDING } from "@/lib/landing/faq";
+import { faqFor } from "@/lib/landing/faq";
 import { type Locale, pathFor, contactoPathFor } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
+
+/** Foto única del hero. Recorte: `.heroPhotoVolvo` en landing.module.css. */
+const HERO_FOTO = {
+  src: "/landing/hero-volvo.jpg" as const,
+  width: 800,
+  height: 600,
+};
 
 // Instanciado a nivel de módulo para que next/font no re-evalúe en cada render
 const interTight = Inter_Tight({
@@ -63,13 +70,14 @@ const RESOURCE_POSTS = [
 ] as const;
 
 
-export function LandingPage({ locale }: { locale: Locale }) {
+export async function LandingPage({ locale }: { locale: Locale }) {
   const copy = copyFor(locale);
   const ctaHref = contactoPathFor(locale);
+  const faq = faqFor(locale);
 
   return (
     <main className={`${styles.page} ${interTight.variable}`}>
-      <JsonLd />
+      <JsonLd faq={faq} />
       <div className={styles.pageRail}>
         <LandingHeader locale={locale} copy={copy.nav} productos={copy.productos} />
 
@@ -84,20 +92,20 @@ export function LandingPage({ locale }: { locale: Locale }) {
             <h1 className={styles.headline}>{copy.hero.headline}</h1>
             <p className={styles.subtext}>{copy.hero.subtext}</p>
             <div className={styles.actions}>
-              <a className={styles.btnPrimary} href="#como-funciona">{copy.hero.primary}</a>
-              <a className={styles.btnSecondary} href={ctaHref}>{copy.hero.secondary}</a>
+              <a className={styles.btnPrimary} href={ctaHref}>{copy.hero.primary}</a>
+              <a className={styles.btnSecondary} href="#como-funciona">{copy.hero.secondary}</a>
             </div>
           </div>
 
           <div className={styles.heroVisual}>
             <Image
-              className={`${styles.heroPhoto} ${styles.heroPhotoCalle}`}
-              src="/landing/hero-calle.jpg"
+              className={`${styles.heroPhoto} ${styles.heroPhotoVolvo}`}
+              src={HERO_FOTO.src}
               alt={copy.hero.photoAlt}
-              width={900}
-              height={600}
+              width={HERO_FOTO.width}
+              height={HERO_FOTO.height}
               priority
-              quality={85}
+              unoptimized
             />
           </div>
         </section>
@@ -138,15 +146,28 @@ export function LandingPage({ locale }: { locale: Locale }) {
           </div>
         </section>
 
-        <section className={styles.hiringCta} id="flota">
-          <div className={styles.ctaSection}>
-            <div className={styles.ctaText}>
-              <h2 className={styles.ctaHeading}>{copy.hiring.heading}</h2>
-              <p className={styles.ctaSubtext}>{copy.hiring.subtext}</p>
+        <section className={styles.ctaGrid} id="contacto">
+          <div className={styles.ctaLeft}>
+            <p className={styles.eyebrow}>{copy.close.eyebrow}</p>
+            <h2 className={styles.heading}>{copy.close.heading}</h2>
+            <p className={styles.subtext}>{copy.close.subtext}</p>
+            <div className={styles.actions}>
+              <a className={styles.btnPrimary} href={ctaHref}>{copy.close.primary}</a>
+              <a className={styles.btnSecondary} href="#como-funciona">{copy.close.secondary}</a>
             </div>
-            <div className={styles.ctaButtonWrapper}>
-              <a className={styles.ctaButton} href={ctaHref}>{copy.hiring.cta}</a>
-            </div>
+          </div>
+          <div className={styles.ctaRight}>
+            <p className={styles.featuresLabel}>{copy.close.featuresLabel}</p>
+            <ul className={styles.featureList}>
+              {copy.close.beneficios.map((beneficio) => (
+                <li className={styles.featureItem} key={beneficio.texto}>
+                  <span className={styles.featureIcon} aria-hidden="true">
+                    <Icon name={beneficio.icono} size="sm" />
+                  </span>
+                  <span>{beneficio.texto}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
@@ -182,62 +203,42 @@ export function LandingPage({ locale }: { locale: Locale }) {
           })}
         </section>
 
-        <section className={styles.ctaGrid} id="contacto">
-          <div className={styles.ctaLeft}>
-            <p className={styles.eyebrow}>{copy.close.eyebrow}</p>
-            <h2 className={styles.heading}>{copy.close.heading}</h2>
-            <p className={styles.subtext}>{copy.close.subtext}</p>
-            <div className={styles.actions}>
-              <a className={styles.btnPrimary} href={ctaHref}>{copy.close.primary}</a>
-              <a className={styles.btnSecondary} href="#como-funciona">{copy.close.secondary}</a>
+        <section className={styles.hiringCta} id="flota">
+          <div className={styles.ctaSection}>
+            <div className={styles.ctaText}>
+              <h2 className={styles.ctaHeading}>{copy.hiring.heading}</h2>
+              <p className={styles.ctaSubtext}>{copy.hiring.subtext}</p>
             </div>
-          </div>
-          <div className={styles.ctaRight}>
-            <p className={styles.featuresLabel}>{copy.close.featuresLabel}</p>
-            <ul className={styles.featureList}>
-              {copy.close.beneficios.map((beneficio) => (
-                <li className={styles.featureItem} key={beneficio.texto}>
-                  <span className={styles.featureIcon} aria-hidden="true">
-                    <Icon name={beneficio.icono} size="sm" />
-                  </span>
-                  <span>{beneficio.texto}</span>
-                </li>
-              ))}
-            </ul>
+            <div className={styles.ctaButtonWrapper}>
+              <a className={styles.ctaButton} href={ctaHref}>{copy.hiring.cta}</a>
+            </div>
           </div>
         </section>
 
         <section className={styles.faqSection} id="preguntas">
           <div className={styles.sectionHeader}>
-            <p className={styles.eyebrow}>MECANU / PREGUNTAS FRECUENTES</p>
-            <h2 className={styles.headline}>Preguntas frecuentes</h2>
+            <p className={styles.eyebrow}>{copy.faq.eyebrow}</p>
+            <h2 className={styles.headline}>{copy.faq.heading}</h2>
           </div>
           <input id="faq-expand" type="checkbox" className={styles.faqToggle} />
           <div className={styles.faqClamp}>
             <div className={styles.faqWrap}>
-              {FAQ_LANDING.map((item) => (
+              {faq.map((item) => (
                 <details className={styles.faqItem} key={item.q}>
                   <summary>{item.q}</summary>
                   <p className={styles.faqAnswer}>{item.a}</p>
                 </details>
               ))}
               <div className={styles.faqLinks}>
-                <Link href="/madrid">Mecanu en Madrid</Link>
-                <Link href="/barcelona">Mecanu en Barcelona</Link>
-                <Link href="/para-talleres">Cómo funciona para tu taller</Link>
-                <Link href="/alternativa-grua">Comparado con una grúa</Link>
-                <Link href="/alternativa-mecanico-a-domicilio">Comparado con un mecánico a domicilio</Link>
-                <Link href="/itv-para-talleres">ITV para talleres</Link>
-                <Link href="/software-taller">Software de taller</Link>
-                <Link href="/mantenimiento-marcas">Mantenimiento por marca</Link>
-                <Link href="/cliente-no-recoge-coche">Cliente no recoge el coche</Link>
-                <Link href="/blog">Blog de operaciones</Link>
+                {copy.faq.links.map((enlace) => (
+                  <Link href={enlace.href} key={enlace.href}>{enlace.label}</Link>
+                ))}
               </div>
             </div>
           </div>
           <label className={styles.faqToggleLabel} htmlFor="faq-expand">
-            <span className={styles.faqToggleMore}>Ver más</span>
-            <span className={styles.faqToggleLess}>Ver menos</span>
+            <span className={styles.faqToggleMore}>{copy.faq.more}</span>
+            <span className={styles.faqToggleLess}>{copy.faq.less}</span>
           </label>
         </section>
 
@@ -313,15 +314,10 @@ export function LandingPage({ locale }: { locale: Locale }) {
               <a className={styles.fLink} href="#inicio">{copy.footer.arriba}</a>
             </div>
             <div className={styles.footerCol}>
-              <p className={styles.colLabel}>Comparativas</p>
-              <Link className={styles.fLink} href="/alternativa-grua">Grúa o conductor</Link>
-              <Link className={styles.fLink} href="/alternativa-mecanico-a-domicilio">Mecánico a domicilio</Link>
-              <Link className={styles.fLink} href="/taller-oficial-o-multimarca">Oficial o multimarca</Link>
-              <Link className={styles.fLink} href="/capacidad-taller">Capacidad del taller</Link>
-              <Link className={styles.fLink} href="/itv-para-talleres">ITV para talleres</Link>
-              <Link className={styles.fLink} href="/software-taller">Software de taller</Link>
-              <Link className={styles.fLink} href="/mantenimiento-marcas">Mantenimiento por marca</Link>
-              <Link className={styles.fLink} href="/cliente-no-recoge-coche">Cliente no recoge el coche</Link>
+              <p className={styles.colLabel}>{copy.footer.comparativas}</p>
+              {copy.footer.comparativaLinks.map((enlace) => (
+                <Link className={styles.fLink} href={enlace.href} key={enlace.href}>{enlace.label}</Link>
+              ))}
             </div>
           </div>
           <div className={styles.footerCompliance} aria-label={copy.footer.cumplimientoTitulo}>
