@@ -149,17 +149,17 @@ const softwareApp = {
   screenshot: `${SITE}/landing/stat-tablero.png`,
 };
 
-// Generado desde la misma fuente que el FAQ visible de la landing. Google exige
-// que coincidan; si divergen, trata el marcado como incumplimiento.
-const faqPage = {
-  "@type": "FAQPage",
-  "@id": `${SITE}/#faq`,
-  mainEntity: FAQ_LANDING.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+function faqPageDe(items: readonly FaqItem[]) {
+  return {
+    "@type": "FAQPage",
+    "@id": `${SITE}/#faq`,
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
+}
 
 const localBusinesses = [
   {
@@ -222,9 +222,8 @@ const itemList = {
   })),
 };
 
-const graph = [founder, organization, website, softwareApp, faqPage, itemList];
-
-export function JsonLd() {
+export function JsonLd({ faq = FAQ_LANDING }: { faq?: readonly FaqItem[] } = {}) {
+  const graph = [founder, organization, website, softwareApp, faqPageDe(faq), itemList];
   return (
     <script
       type="application/ld+json"
