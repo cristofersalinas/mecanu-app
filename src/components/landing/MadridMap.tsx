@@ -12,6 +12,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Icon } from "@/components/ds/Icon";
 import styles from "@/app/landing.module.css";
 import type { LandingCopy } from "@/lib/landing/copy";
+import { tilesCartoRaster } from "@/lib/maps/carto-tiles";
 import {
   CIUDAD_INICIAL,
   CIUDADES_MAPA,
@@ -29,11 +30,7 @@ const MAP_STYLE: StyleSpecification = {
   sources: {
     osm: {
       type: "raster",
-      tiles: [
-        "https://a.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
-        "https://b.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
-        "https://c.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
-      ],
+      tiles: tilesCartoRaster("light_nolabels"),
       tileSize: 256,
       attribution: "© OpenStreetMap © CARTO",
     },
@@ -786,7 +783,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
           <button
             type="button"
             className={styles.mapResetBtn}
-            aria-label="Volver a la vista de ciudad"
+            aria-label={copy.resetAria}
             onClick={() => {
               const map = mapRef.current;
               if (!map) return;
@@ -802,7 +799,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
             <button
               type="button"
               className={styles.mapZoomBtn}
-              aria-label="Acercar mapa"
+              aria-label={copy.zoomInAria}
               onClick={acercarMapa}
             >
               +
@@ -810,7 +807,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
             <button
               type="button"
               className={styles.mapZoomBtn}
-              aria-label="Alejar mapa"
+              aria-label={copy.zoomOutAria}
               onClick={alejarMapa}
             >
               −

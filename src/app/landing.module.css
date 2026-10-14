@@ -1,3 +1,9 @@
+/* El recorte horizontal va en el documento. Si vive en `.page`, el
+   header sticky tiembla 1px al hacer scroll (escritorio y móvil). */
+:global(html):has(.page) {
+  overflow-x: clip;
+}
+
 .page {
   --ink: #0f0f0f;
   --body: #374151;
@@ -13,7 +19,6 @@
   min-height: 100dvh;
   position: relative;
   isolation: isolate;
-  overflow-x: clip;
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
   background: var(--paper);
@@ -83,7 +88,6 @@
   position: relative;
 }
 
-.navGrid::after,
 .logoBand::after,
 .mapSection::after,
 .useCasesGrid::after,
@@ -120,7 +124,9 @@
   min-height: var(--nav-h);
   padding-top: env(safe-area-inset-top);
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, .96);
+  /* Opaco: con transparencia el contenido que pasa por debajo
+     hace que la barra parezca temblar. */
+  background: var(--paper);
 }
 
 .navOpen {
@@ -381,6 +387,9 @@
   flex-direction: column;
   justify-content: center;
   min-width: 0;
+  /* La cuadrícula de 1px se redibuja en píxeles fraccionarios al
+     hacer scroll y la parte de arriba tirita. Una capa propia la mueve entera. */
+  transform: translateZ(0);
   padding: 2.5rem 2.5rem 2.5rem 2rem;
   border-right: 1px solid var(--line);
   background-color: var(--paper);
@@ -735,6 +744,7 @@
   display: flex;
   align-items: center;
   animation: marquee 60s linear infinite;
+  will-change: transform;
 }
 
 @keyframes marquee {
