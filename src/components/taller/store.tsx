@@ -346,6 +346,20 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [pipelineEstado, setPipelineEstado] = useState(PIPELINE_TAREAS_VACIO);
   const [canalesWa, setCanalesWa] = useState<Record<string, CanalWa>>(() => ({ ...CANALES_SEED }));
 
+  const [notas, setNotas] = useState<Record<string, Nota[]>>({});
+  const [tareas, setTareas] = useState<Record<string, Tarea[]>>({
+    'TR-1043': [
+      { id: 'TK-1', nombre: 'Confirmar fecha de la vuelta con el cliente', fecha: at(12, 0, 1), hecha: false },
+    ],
+    'TR-1054': [
+      { id: 'TK-2', nombre: 'Reclamar respuesta al presupuesto enviado', fecha: at(10, 0, -2), hecha: false },
+    ],
+  });
+
+  const [condCfg, setCondCfgState] = useState<Record<string, CondCfg>>(condCfgInicial);
+  const [conductoresExtra, setConductoresExtra] = useState<{ id: string; nombre: string; telefono: string }[]>([]);
+  const [conductoresEliminados, setConductoresEliminados] = useState<string[]>([]);
+
   useEffect(() => {
     let cancelado = false;
     const supabase = supabasePanelActivo();
@@ -384,20 +398,6 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     })();
     return () => { cancelado = true; };
   }, []);
-
-  const [notas, setNotas] = useState<Record<string, Nota[]>>({});
-  const [tareas, setTareas] = useState<Record<string, Tarea[]>>({
-    'TR-1043': [
-      { id: 'TK-1', nombre: 'Confirmar fecha de la vuelta con el cliente', fecha: at(12, 0, 1), hecha: false },
-    ],
-    'TR-1054': [
-      { id: 'TK-2', nombre: 'Reclamar respuesta al presupuesto enviado', fecha: at(10, 0, -2), hecha: false },
-    ],
-  });
-
-  const [condCfg, setCondCfgState] = useState<Record<string, CondCfg>>(condCfgInicial);
-  const [conductoresExtra, setConductoresExtra] = useState<{ id: string; nombre: string; telefono: string }[]>([]);
-  const [conductoresEliminados, setConductoresEliminados] = useState<string[]>([]);
 
   const [sucursales, setSucursales] = useState<Sucursal[]>(SUCURSALES_INICIALES);
   const [perfil, setPerfil] = useState<Perfil>({
@@ -895,14 +895,14 @@ export function PanelProvider({ children }: { children: ReactNode }) {
 
   const setCondCfg = useCallback((id: string, cfg: Partial<CondCfg>) => {
     setCondCfgState((c) => ({ ...c, [id]: { ...c[id], ...cfg } }));
-  }, []);
+  }, [setCondCfgState]);
 
   const crearConductor = useCallback((nombre: string, telefono: string, cfg: CondCfg) => {
     const id = nextId('d');
     setConductoresExtra((cs) => [...cs, { id, nombre, telefono }]);
     setCondCfgState((c) => ({ ...c, [id]: cfg }));
     toast(`Conductor ${nombre} creado.`);
-  }, [toast]);
+  }, [toast, setCondCfgState]);
 
   const eliminarConductor = useCallback((id: string) => {
     setConductoresEliminados((e) => [...e, id]);
