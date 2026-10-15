@@ -29,11 +29,10 @@
 }
 
 .gameHint {
-  font-size: 0.65rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   color: #aaaaaa;
-  font-family: "Courier New", monospace;
   margin: 0;
 }
 

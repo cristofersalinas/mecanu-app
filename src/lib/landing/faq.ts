@@ -42,8 +42,8 @@ export const FAQ_LANDING: readonly FaqItem[] = [
     a: "No. Mecanu es una aplicación web: se abre desde el ordenador de recepción o desde una tablet, sin instalar nada. Los conductores usan su propio móvil para documentar el traslado con fotos.",
   },
   {
-    q: "¿Para qué tamaño de taller tiene sentido?",
-    a: "Funciona mejor en talleres de 3 a 30 empleados con flujo constante de vehículos de cliente. Si reparas solo flotas propias o eres un concesionario con logística interna, probablemente no lo necesitas.",
+    q: "¿Para qué talleres está pensado?",
+    a: "Para el taller mecánico que traslada coches de sus clientes, con sus propios conductores o con la flota de Mecanu. El contrato es con el taller, no con el particular.",
   },
   {
     q: "¿Cuánto tarda un traslado?",
@@ -55,7 +55,7 @@ export const FAQ_LANDING: readonly FaqItem[] = [
   },
   {
     q: "¿Sustituye Mecanu al software de gestión, el tempario o el escáner?",
-    a: "No. El DMS, GT Motive, Audatex, Autel, Launch o Bosch siguen siendo tuyos. Mecanu no hace recambios, facturación ni diagnosis: solo mueve el coche entre el cliente y la nave.",
+    a: "No. Facturación, recambios y diagnosis siguen en tu programa. Mecanu es la logística del traslado y la lectura del coche: el check-in y el check-out dejan foto, estado del componente y el servicio que conviene ofrecer para que el cliente vuelva.",
   },
   {
     q: "¿Sirve para clientes de Volkswagen, BMW, Audi o Mercedes?",

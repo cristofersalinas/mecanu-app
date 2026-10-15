@@ -1,10 +1,6 @@
 import { DEFAULT_LOCALE, type Locale } from "./locales";
 
-export type LandingMapCityId =
-  | "madrid"
-  | "barcelona"
-  | "londres"
-  | "zurich";
+export type LandingMapCityId = "madrid" | "barcelona";
 
 export type LandingCopy = {
   meta: { title: string; description: string };
@@ -20,6 +16,9 @@ export type LandingCopy = {
     productos: string;
     cta: string;
     langLabel: string;
+    como: string;
+    cobertura: string;
+    preguntas: string;
   };
   productos: { label: string; href: string }[];
   hero: {
@@ -33,6 +32,7 @@ export type LandingCopy = {
     photoAlt: string;
   };
   logosAria: string;
+  logosLabel: string;
   map: {
     /** Plantilla, no función: `{city}` lo sustituye el cliente. El copy cruza
      *  la frontera servidor→cliente y una función no es serializable. */
@@ -54,7 +54,17 @@ export type LandingCopy = {
     links: { href: string; label: string }[];
   };
   statsAria: string;
-  stats: { numero: string; valor: string; etiqueta: string; texto: string; enlace?: string }[];
+  stats?: { numero: string; valor: string; etiqueta: string; texto: string; enlace?: string }[];
+  specsAria: string;
+  specs: {
+    eyebrow: string;
+    heading: string;
+    items: { valor: string; etiqueta: string }[];
+  };
+  faq: {
+    eyebrow: string;
+    heading: string;
+  };
   hiw: {
     eyebrow: string;
     heading: string;
@@ -154,7 +164,7 @@ export type LandingCopy = {
       };
       ciudad: {
         pregunta: string;
-        opciones: [string, string, string, string, string, string];
+        opciones: [string, string, string];
       };
       volumen: {
         pregunta: string;
@@ -172,9 +182,9 @@ export type LandingCopy = {
 
 const es: LandingCopy = {
   meta: {
-    title: "Mecanu | Recogida y entrega de coches para talleres mecánicos",
+    title: "Mecanu | Logística de coches para talleres mecánicos",
     description:
-      "Mecanu coordina la recogida y entrega de vehículos para talleres mecánicos en Madrid, Barcelona, Londres y más. Conductores verificados, ventanas de 1 hora, seguro incluido. Sin grúas caras.",
+      "Plataforma logística para talleres. Recoge y entrega con la flota del taller o la de Mecanu. El seguro de traslado se añade si lo quieres.",
   },
   nav: {
     homeAria: "Mecanu, inicio",
@@ -188,168 +198,193 @@ const es: LandingCopy = {
     productos: "Productos",
     cta: "Hablar con Mecanu",
     langLabel: "Idioma",
+    como: "Cómo funciona",
+    cobertura: "Cobertura",
+    preguntas: "Preguntas",
   },
   productos: [
     { label: "Logística", href: "#solucion" },
-    { label: "Seguros", href: "#cobertura" },
-    { label: "Marketplace", href: "#contacto" },
-    { label: "Flota externa", href: "#flota" },
-    { label: "Ecommerce", href: "#contacto" },
-    { label: "Atención de cliente", href: "#contacto" },
+    { label: "Flota propia", href: "#solucion" },
+    { label: "Flota externa", href: "#solucion" },
+    { label: "Seguro de traslado", href: "#cobertura" },
+    { label: "Seguimiento", href: "#solucion" },
+    { label: "Frente a la grúa", href: "#solucion" },
   ],
   hero: {
     kicker: "",
-    kickerBrand: "LOGÍSTICA AUTOMOTRIZ",
-    headline: "Tu taller no para cuando los coches se mueven.",
+    kickerBrand: "Madrid y Barcelona",
+    headline: "El cliente no tiene que ir al taller.",
     subtext:
-      "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones con clientes.",
+      "Recoges y entregas con tus conductores o con los de Mecanu. Más barato que una grúa, con el coche georreferenciado en tiempo real y control de cada entrega.",
     primary: "Hablar con nosotros",
     secondary: "Ver cómo funciona",
     photoAlt: "Volvo blanco visto desde arriba en una calle urbana",
   },
-  logosAria: "Logos de talleres clientes de referencia",
+  logosAria: "Aseguradoras",
+  logosLabel: "Cobertura con",
   map: {
     sectionAria: "Mapa de talleres en {city}",
     citySwitchAria: "Ciudad del mapa",
     ciudades: {
       madrid: "Madrid",
       barcelona: "Barcelona",
-      londres: "Londres",
-      zurich: "Zúrich",
     },
     details: "Detalles",
     talk: "Hablar con Mecanu",
-    comingSoon: "Próximamente en esta ciudad.",
-    resetAria: "Volver a la vista de ciudad",
-    zoomInAria: "Acercar mapa",
-    zoomOutAria: "Alejar mapa",
+    comingSoon: "Recogida y entrega en el área metropolitana.",
   },
   statsAria: "Resultados de Mecanu",
+  specsAria: "Rendimiento y especificaciones de Mecanu",
+  specs: {
+    eyebrow: "Rendimiento",
+    heading: "Lo que cambia en tu taller",
+    items: [
+      {
+        valor: "7 días",
+        etiqueta: "Cuadrando con quien no puede ir",
+      },
+      {
+        valor: "4 días",
+        etiqueta: "El coche listo ocupando plaza",
+      },
+      {
+        valor: "1 grúa",
+        etiqueta: "Un camión por coche. Nosotros, una flota",
+      },
+      {
+        valor: "En vivo",
+        etiqueta: "Ves dónde va cada conductor",
+      },
+      {
+        valor: "Seguro",
+        etiqueta: "De traslado, si el taller lo añade",
+      },
+      {
+        valor: "Predicción",
+        etiqueta: "El siguiente servicio, desde el check-in",
+      },
+    ],
+  },
+  faq: {
+    eyebrow: "Preguntas frecuentes",
+    heading: "Preguntas frecuentes",
+  },
   stats: [
     {
       numero: "01",
       valor: "7 días",
-      etiqueta: "SIN ESPERAR AL CLIENTE",
+      etiqueta: "En coordinar la entrega",
       texto:
-        "Se acabó quedar una semana coordinando cuándo trae el coche. Recogida en puerta con ventana de 1 h.",
+        "Quien no puede ir al taller —por trabajo o por lo que sea— alarga el cuadre hasta una semana. Recoges y entregas en una ventana de una hora.",
       enlace: "Ver cómo funciona",
     },
     {
       numero: "02",
-      valor: "50%",
-      etiqueta: "MENOS QUE UNA GRÚA",
+      valor: "4 días",
+      etiqueta: "Con el coche listo parado",
       texto:
-        "Más barato, asegurado y disponible el mismo día en traslados urbanos con coche circulando.",
+        "El trabajo está hecho y el coche sigue en la plaza. Lo devuelves y liberas el sitio.",
       enlace: "Ver cómo funciona",
     },
     {
       numero: "03",
-      valor: "12-30%",
-      etiqueta: "MÁS ROTACIÓN DE COCHES",
+      valor: "Flota",
+      etiqueta: "No un camión por coche",
       texto:
-        "Más vehículos entran y salen el mismo día: recoges, reparas y entregas sin que el coche ocupe plaza de más. Más capacidad sin ampliar la nave.",
+        "Una grúa mueve un coche cada vez. Tus conductores o los de Mecanu llevan el coche del cliente, con más hueco y más barato.",
     },
   ],
   hiw: {
-    eyebrow: "OPERACIÓN",
+    eyebrow: "Operación",
     heading: "Cómo funciona",
     cta: "Hablar con Mecanu →",
     subtext:
-      "Tres pasos para pasar de la llamada del cliente a una entrega registrada, sin perder el hilo del traslado.",
+      "De la llamada del cliente a una entrega que ves en el mapa.",
     pasos: [
       {
         numero: "01",
-        titulo: "Indica dónde está el coche",
+        titulo: "El taller abre el traslado",
         texto:
-          "Elige cliente, taller, fecha y ventana. El traslado queda registrado desde el primer momento.",
+          "Con tus conductores o con los de Mecanu. Dirección y ventana de una hora. El seguro de traslado, solo si lo añades.",
       },
       {
         numero: "02",
-        titulo: "Mecanu coordina la ruta",
+        titulo: "Ves dónde va",
         texto:
-          "Los conductores gestionan todo el traslado, desde la inspección hasta la entrega, con geolocalización en tiempo real.",
+          "Cada conductor lleva la app. El coche se sigue en tiempo real, georreferenciado, y queda la rutina de entregas a domicilio.",
       },
       {
         numero: "03",
-        titulo: "Entrega y vuelve a producir",
+        titulo: "El taller sigue",
         texto:
-          "El cliente recibe avisos desde la comodidad de su casa o trabajo, y el taller queda libre para seguir operando.",
+          "La plaza queda libre. La inteligencia del check-in predice el siguiente servicio y el cliente vuelve.",
       },
     ],
   },
   hiring: {
-    heading: "¿Tu taller ocupado por autos listos?",
+    heading: "¿El coche listo sigue en la plaza?",
     subtext:
-      "Crece sin ampliar la nave: despacha al instante los coches listos y entrégalos en puerta, con una experiencia que se nota.",
+      "Hasta cuatro días esperando a quien no puede pasar. Lo devuelves y el taller sigue.",
     cta: "Pide apoyo a Mecanu",
     photoAlt: "Coche clásico partido en collage vintage.",
   },
   news: {
-    eyebrow: "MECANU / IDEAS PARA EL TALLER",
+    eyebrow: "Ideas para el taller",
     heading: "Ideas para modernizar tu taller",
     cta: "Ver todas →",
     read: "Leer →",
     items: [
       {
-        categoria: "EXPERIENCIA",
+        categoria: "Experiencia",
         titulo: "El cliente se acostumbró al delivery y los talleres no se quedan atrás",
         icono: "schedule",
         visual: "articleWindow",
       },
       {
-        categoria: "GUÍA",
+        categoria: "Guía",
         titulo: "Cómo liberar una plaza cuando el coche ya está terminado",
         icono: "garage",
         visual: "articleWorkshop",
       },
       {
-        categoria: "MECANU",
-        titulo: "Flota externa para absorber picos sin perder el control",
+        categoria: "Mecanu",
+        titulo: "Flota del taller o flota de Mecanu, en la misma plataforma",
         icono: "local_shipping",
         visual: "articleFleet",
       },
     ],
   },
   close: {
-    eyebrow: "PONLO EN MARCHA",
-    heading: "Si tus clientes no pueden ir al taller por falta de tiempo.",
-    subtext:
-      "Despacha vehículos donde los necesites, libera espacio en tu taller y ofrece una experiencia a tus clientes, con control de cada traslado. Sin fricciones con clientes.",
+    eyebrow: "Contacto",
+    heading: "Ofrece la recogida sin miedo.",
+    subtext: "Dinos cómo mueves los coches hoy. Te llamamos y lo vemos con un traslado.",
     primary: "Hablar con Mecanu",
     secondary: "Ver cómo funciona",
-    featuresLabel: "LO QUE OBTIENES",
+    featuresLabel: "Beneficios",
     beneficios: [
       {
         icono: "door_front",
-        texto: "Se acabó esperar 7 días: el coche se recoge en su puerta.",
+        texto: "Se acabó cuadrar hasta 7 días con quien no puede ir.",
       },
       {
         icono: "home_work",
-        texto: "El cliente se queda en casa. Tú recuperas plaza.",
+        texto: "El coche listo no se queda hasta 4 días en la plaza.",
       },
       {
-        icono: "savings",
-        texto: "Más barato y más disponible que una grúa.",
-      },
-      {
-        icono: "chat",
-        texto: "Automatiza la atención al cliente con inteligencia artificial.",
+        icono: "local_shipping",
+        texto: "Más barato y con más hueco que una grúa: una flota, no un camión por coche.",
       },
       {
         icono: "verified_user",
-        texto: "Flota externa con seguro. Si pasa algo, lo cubre Mecanu.",
+        texto: "Ves dónde va cada conductor. El seguro de traslado, si lo quieres.",
       },
       {
-        icono: "policy",
-        texto: "RC flexible: para el taller o por traslado.",
+        icono: "my_location",
+        texto: "Seguimiento en tiempo real, georreferenciado, desde la app.",
       },
       {
-        icono: "photo_camera",
-        texto: "Check-in visual: hasta 20 puntos.",
-      },
-      {
-        icono: "auto_awesome",
-        texto: "Predicción de próximos servicios y avisos al cliente.",
+        icono: "chat",
+        texto: "Inteligencia del check-in: predice el siguiente servicio.",
       },
     ],
   },
@@ -372,7 +407,7 @@ const es: LandingCopy = {
     ],
   },
   footer: {
-    tagline: "Logística B2B para talleres que quieren seguir reparando.",
+    tagline: "Logística con control. El coche a la vista. El taller crece.",
     contacto: "Contacto",
     producto: "Producto",
     solucion: "La solución",
@@ -444,9 +479,9 @@ const es: LandingCopy = {
     siempreActivas: "Siempre activas",
   },
   contacto: {
-    eyebrow: "EMPIEZA AQUÍ",
-    heading: "Cuéntanos un poco sobre tu taller.",
-    subtext: "Son solo unos minutos. Nos ayuda a preparar la conversación.",
+    eyebrow: "Empieza aquí",
+    heading: "Cuatro datos y te llamamos.",
+    subtext: "Nombre, teléfono, ciudad y cuántos coches mueves.",
     aceptar: "Aceptar",
     enviar: "Enviar",
     anterior: "Anterior",
@@ -470,27 +505,27 @@ const es: LandingCopy = {
       },
       objetivo: {
         pregunta: "¿Qué quieres **hacer**?",
-        opciones: ["Digitalizar mi taller actual", "Abrir un nuevo taller"],
+        opciones: ["Usar a mis conductores", "Usar la flota de Mecanu"],
       },
 
       uso: {
         pregunta: "¿Qué **problema quieres resolver** con Mecanu?",
         aviso: "Selecciona hasta 3 opciones.",
         opciones: [
-          "Despachar autos a domicilio",
-          "Retirar autos del cliente",
-          "Ofrecer mejor experiencia al cliente",
-          "Contratar conductores externos",
-          "Seguro de responsabilidad civil",
-          "Automatizar la atención al cliente",
-          "Tener página web para el taller",
-          "Ofrecer crédito a mis clientes",
-          "Fidelizar clientes y repetir visitas",
+          "Recoger coches en casa del cliente",
+          "Entregar coches cuando están listos",
+          "Ordenar los traslados de mis conductores",
+          "Cubrir picos con la flota externa",
+          "Seguro de traslado",
+          "Registrar el coche en cada viaje",
+          "Detectar el siguiente servicio",
+          "Avisar al cliente para que vuelva",
+          "Ver el estado de cada traslado",
         ],
       },
       ciudad: {
         pregunta: "¿En qué **ciudad** está tu taller?",
-        opciones: ["Madrid", "Barcelona", "Valencia", "Bilbao", "Sevilla", "Otra"],
+        opciones: ["Madrid", "Barcelona", "Otra"],
       },
       volumen: {
         pregunta: "¿Cuántos **coches atiendes** normalmente al mes?",
@@ -531,7 +566,7 @@ const ca: LandingCopy = {
   meta: {
     title: "Mecanu | Recollida i lliurament de cotxes per a tallers mecànics",
     description:
-      "Mecanu coordina la recollida i lliurament de vehicles per a tallers mecànics a Barcelona, Madrid i més. Conductors verificats, finestres d'1 hora, assegurança inclosa. Sense grues cares.",
+      "Mecanu recull i torna el cotxe del client per a tallers a Madrid i Barcelona. Franja d'1 hora, conductor verificat, assegurança de responsabilitat civil.",
   },
   nav: {
     homeAria: "Mecanu, inici",
@@ -545,70 +580,104 @@ const ca: LandingCopy = {
     productos: "Productes",
     cta: "Parlar amb Mecanu",
     langLabel: "Idioma",
+    como: "Com funciona",
+    cobertura: "Cobertura",
+    preguntas: "Preguntes",
   },
   productos: [
     { label: "Logística", href: "#solucion" },
-    { label: "Assegurances", href: "#cobertura" },
-    { label: "Marketplace", href: "#contacto" },
-    { label: "Flota externa", href: "#flota" },
-    { label: "Ecommerce", href: "#contacto" },
-    { label: "Atenció al client", href: "#contacto" },
+    { label: "Flota pròpia", href: "#solucion" },
+    { label: "Flota externa", href: "#solucion" },
+    { label: "Assegurança de trasllat", href: "#cobertura" },
+    { label: "Check-in", href: "#solucion" },
+    { label: "Clients que tornen", href: "#contacto" },
   ],
   hero: {
     kicker: "",
-    kickerBrand: "LOGÍSTICA AUTOMOTIVA",
-    headline: "El teu taller no s'atura quan els cotxes es mouen.",
+    kickerBrand: "Madrid i Barcelona",
+    headline: "Trasllada cotxes amb la teva flota o amb la nostra.",
     subtext:
-      "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions amb clients.",
+      "Plataforma de logística per a tallers. Assegurança de trasllat a cada viatge, i un check-in visual que converteix cada cotxe en el següent servei.",
     primary: "Parlar amb nosaltres",
     secondary: "Veure com funciona",
     photoAlt: "Volvo blanc vist des de dalt en un carrer urbà",
   },
-  logosAria: "Logotips de tallers clients de referència",
+  logosAria: "Asseguradores",
+  logosLabel: "Cobertura amb",
   map: {
     sectionAria: "Mapa de tallers a {city}",
     citySwitchAria: "Ciutat del mapa",
     ciudades: {
       madrid: "Madrid",
       barcelona: "Barcelona",
-      londres: "Londres",
-      zurich: "Zuric",
     },
     details: "Detalls",
     talk: "Parlar amb Mecanu",
-    comingSoon: "Pròximament en aquesta ciutat.",
-    resetAria: "Tornar a la vista de ciutat",
-    zoomInAria: "Apropar el mapa",
-    zoomOutAria: "Allunyar el mapa",
+    comingSoon: "Recollida i lliurament a l'àrea metropolitana.",
   },
   statsAria: "Resultats de Mecanu",
+  specsAria: "Rendiment i especificacions de Mecanu",
+  specs: {
+    eyebrow: "Rendiment",
+    heading: "Logística i el següent servei",
+    items: [
+      {
+        valor: "2 flotes",
+        etiqueta: "La del taller o la de Mecanu",
+      },
+      {
+        valor: "1 hora",
+        etiqueta: "Franja de recollida i lliurament",
+      },
+      {
+        valor: "Assegurança",
+        etiqueta: "De trasllat, a cada viatge",
+      },
+      {
+        valor: "Check-in",
+        etiqueta: "Foto, estat i registre",
+      },
+      {
+        valor: "Check-out",
+        etiqueta: "El mateix control en lliurar",
+      },
+      {
+        valor: "Tornada",
+        etiqueta: "Avisos i següent servei",
+      },
+    ],
+  },
+  faq: {
+    eyebrow: "Preguntes freqüents",
+    heading: "Preguntes freqüents",
+  },
   stats: [
     {
       numero: "01",
-      valor: "7 dies",
-      etiqueta: "SENSE ESPERAR EL CLIENT",
+      valor: "Pròpia",
+      etiqueta: "Flota del taller",
       texto:
-        "S'ha acabat quedar una setmana coordinant quan porta el cotxe. Recollida a la porta amb franja d'1 h.",
+        "Els teus conductors fan servir la plataforma logística: rutes, franja i check-in. L'assegurança de trasllat és opcional.",
       enlace: "Veure com funciona",
     },
     {
       numero: "02",
-      valor: "50%",
-      etiqueta: "MENYS QUE UNA GRUA",
+      valor: "Externa",
+      etiqueta: "Flota de Mecanu",
       texto:
-        "Més barat, assegurat i disponible el mateix dia en trasllats urbans amb cotxe circulant.",
+        "Quan no arribes, el trasllat el fa un conductor de Mecanu. L'assegurança de trasllat, només si l'afegeixes.",
       enlace: "Veure com funciona",
     },
     {
       numero: "03",
-      valor: "12-30%",
-      etiqueta: "MÉS ROTACIÓ DE COTXES",
+      valor: "Check-in",
+      etiqueta: "El client torna",
       texto:
-        "Més vehicles entren i surten el mateix dia: reculls, reparés i lliures sense que el cotxe ocupi plaça de més. Més capacitat sense ampliar la nau.",
+        "Foto, estat del component i registre. D'aquí surten l'avís, el següent servei i la tornada al taller.",
     },
   ],
   hiw: {
-    eyebrow: "OPERACIÓ",
+    eyebrow: "Operació",
     heading: "Com funciona",
     cta: "Parlar amb Mecanu →",
     subtext:
@@ -642,25 +711,25 @@ const ca: LandingCopy = {
     photoAlt: "Cotxe clàssic partit en collage vintage.",
   },
   news: {
-    eyebrow: "MECANU / IDEES PER AL TALLER",
+    eyebrow: "Idees per al taller",
     heading: "Idees per modernitzar el teu taller",
     cta: "Veure-les totes →",
     read: "Llegir →",
     items: [
       {
-        categoria: "EXPERIÈNCIA",
+        categoria: "Experiència",
         titulo: "El client s'ha acostumat al delivery i els tallers no es queden enrere",
         icono: "schedule",
         visual: "articleWindow",
       },
       {
-        categoria: "GUIA",
+        categoria: "Guia",
         titulo: "Com alliberar una plaça quan el cotxe ja està acabat",
         icono: "garage",
         visual: "articleWorkshop",
       },
       {
-        categoria: "MECANU",
+        categoria: "Mecanu",
         titulo: "Flota externa per absorbir pics sense perdre el control",
         icono: "local_shipping",
         visual: "articleFleet",
@@ -668,13 +737,12 @@ const ca: LandingCopy = {
     ],
   },
   close: {
-    eyebrow: "POSA-HO EN MARXA",
-    heading: "Si els teus clients no poden anar al taller per falta de temps.",
-    subtext:
-      "Despatxa vehicles on els necessitis, allibera espai al teu taller i ofereix una experiència als teus clients, amb control de cada trasllat. Sense friccions amb clients.",
+    eyebrow: "Contacte",
+    heading: "El client no ha d'anar al taller.",
+    subtext: "Digues on és el taller. Et truquem i ho veiem amb un trasllat real.",
     primary: "Parlar amb Mecanu",
     secondary: "Veure com funciona",
-    featuresLabel: "QUÈ HI GUANYES",
+    featuresLabel: "Beneficis",
     beneficios: [
       {
         icono: "door_front",
@@ -689,24 +757,16 @@ const ca: LandingCopy = {
         texto: "Més barat i més disponible que una grua.",
       },
       {
-        icono: "chat",
-        texto: "Automatitza l'atenció al client amb intel·ligència artificial.",
-      },
-      {
         icono: "verified_user",
-        texto: "Flota externa amb assegurança. Si passa res, ho cobreix Mecanu.",
-      },
-      {
-        icono: "policy",
-        texto: "RC flexible: per al taller o per trasllat.",
+        texto: "Flota externa amb assegurança i RC flexible, per al taller o per trasllat.",
       },
       {
         icono: "photo_camera",
         texto: "Check-in visual: fins a 20 punts.",
       },
       {
-        icono: "auto_awesome",
-        texto: "Predicció de pròxims serveis i avisos al client.",
+        icono: "chat",
+        texto: "Automatitza l'atenció i els avisos de pròxims serveis.",
       },
     ],
   },
@@ -801,9 +861,9 @@ const ca: LandingCopy = {
     siempreActivas: "Sempre actives",
   },
   contacto: {
-    eyebrow: "COMENÇA AQUÍ",
-    heading: "Explica'ns una mica el teu taller.",
-    subtext: "Són uns minuts. Ens ajuda a preparar la conversa.",
+    eyebrow: "Comença aquí",
+    heading: "Quatre dades i et truquem.",
+    subtext: "Nom, telèfon, ciutat i quants cotxes mous.",
     aceptar: "Acceptar",
     enviar: "Enviar",
     anterior: "Anterior",
@@ -847,7 +907,7 @@ const ca: LandingCopy = {
       },
       ciudad: {
         pregunta: "En quina **ciutat** és el teu taller?",
-        opciones: ["Madrid", "Barcelona", "València", "Bilbao", "Sevilla", "Altra"],
+        opciones: ["Madrid", "Barcelona", "Altra"],
       },
       volumen: {
         pregunta: "Quants **cotxes atens** normalment al mes?",
@@ -888,7 +948,7 @@ const en: LandingCopy = {
   meta: {
     title: "Mecanu | Car Collection & Delivery Service for Auto Repair Shops",
     description:
-      "Mecanu coordinates vehicle collection and delivery for auto repair workshops in London, Madrid, Barcelona and more. Verified drivers, 1-hour windows, insurance included. No expensive recovery trucks.",
+      "Mecanu collects and returns the customer's car for shops in Madrid and Barcelona. A 1-hour window, a verified driver and liability cover.",
   },
   nav: {
     homeAria: "Mecanu, home",
@@ -902,70 +962,104 @@ const en: LandingCopy = {
     productos: "Products",
     cta: "Talk to Mecanu",
     langLabel: "Language",
+    como: "How it works",
+    cobertura: "Coverage",
+    preguntas: "Questions",
   },
   productos: [
     { label: "Logistics", href: "#solucion" },
-    { label: "Insurance", href: "#cobertura" },
-    { label: "Marketplace", href: "#contacto" },
-    { label: "External fleet", href: "#flota" },
-    { label: "Ecommerce", href: "#contacto" },
-    { label: "Customer service", href: "#contacto" },
+    { label: "Own fleet", href: "#solucion" },
+    { label: "External fleet", href: "#solucion" },
+    { label: "Transit cover", href: "#cobertura" },
+    { label: "Check-in", href: "#solucion" },
+    { label: "Customers who return", href: "#contacto" },
   ],
   hero: {
     kicker: "",
-    kickerBrand: "AUTOMOTIVE LOGISTICS",
-    headline: "Your shop never stops when cars move.",
+    kickerBrand: "Madrid and Barcelona",
+    headline: "Move cars with your drivers or with ours.",
     subtext:
-      "Send cars where you need them, free the shop, and look after the customer. Every run under control. No friction with customers.",
+      "A logistics platform for workshops. Pickup and delivery with your drivers or Mecanu's. Transit cover only if you add it.",
     primary: "Talk to us",
     secondary: "See how it works",
     photoAlt: "White Volvo seen from above on an urban street",
   },
-  logosAria: "Shop logos",
+  logosAria: "Insurers",
+  logosLabel: "Covered with",
   map: {
     sectionAria: "Shops in {city}",
     citySwitchAria: "City",
     ciudades: {
       madrid: "Madrid",
       barcelona: "Barcelona",
-      londres: "London",
-      zurich: "Zurich",
     },
     details: "Details",
     talk: "Talk to Mecanu",
-    comingSoon: "Coming soon in this city.",
-    resetAria: "Back to the city view",
-    zoomInAria: "Zoom in",
-    zoomOutAria: "Zoom out",
+    comingSoon: "Pickup and delivery across the metro area.",
   },
   statsAria: "What Mecanu does",
+  specsAria: "Mecanu performance and specifications",
+  specs: {
+    eyebrow: "Performance",
+    heading: "Logistics and the next job",
+    items: [
+      {
+        valor: "2 fleets",
+        etiqueta: "The workshop's or Mecanu's",
+      },
+      {
+        valor: "1 hour",
+        etiqueta: "Pickup and delivery window",
+      },
+      {
+        valor: "Cover",
+        etiqueta: "Transit insurance, only if the workshop adds it",
+      },
+      {
+        valor: "Check-in",
+        etiqueta: "Photo, condition and record",
+      },
+      {
+        valor: "Check-out",
+        etiqueta: "The same check on handover",
+      },
+      {
+        valor: "Return",
+        etiqueta: "Reminders and the next job",
+      },
+    ],
+  },
+  faq: {
+    eyebrow: "Frequently asked questions",
+    heading: "Frequently asked questions",
+  },
   stats: [
     {
       numero: "01",
-      valor: "7 days",
-      etiqueta: "NO WAITING ON THE CUSTOMER",
+      valor: "Own",
+      etiqueta: "Workshop drivers",
       texto:
-        "No more spending a week lining up when they can bring the car. Door collection in a 1 h window.",
+        "Your drivers use the platform: routes, window, check-in and transit cover.",
       enlace: "See how it works",
     },
     {
       numero: "02",
-      valor: "50%",
-      etiqueta: "LESS THAN A TOW TRUCK",
+      valor: "External",
+      etiqueta: "Mecanu drivers",
       texto:
-        "Cheaper, insured and available the same day for urban runs when the car still drives.",
+        "When you can't cover it, a Mecanu driver runs the car. Transit cover is part of the run.",
       enlace: "See how it works",
     },
     {
       numero: "03",
-      valor: "12-30%",
-      etiqueta: "MORE VEHICLE TURNOVER",
+      valor: "Check-in",
+      etiqueta: "The customer comes back",
       texto:
-        "More cars in and out the same day: pick up, repair and return without a finished car tying up a bay. More capacity without expanding the shop.",
+        "Photo, component condition and a record. That feeds the reminder, the next job and the return visit.",
     },
   ],
   hiw: {
-    eyebrow: "OPS",
+    eyebrow: "Operations",
     heading: "How it works",
     cta: "Talk to Mecanu →",
     subtext: "Three steps from the call to a signed delivery. The run never goes missing.",
@@ -995,25 +1089,25 @@ const en: LandingCopy = {
     photoAlt: "Classic car split in vintage collage.",
   },
   news: {
-    eyebrow: "MECANU / IDEAS FOR THE SHOP",
+    eyebrow: "Ideas for the shop",
     heading: "Ideas to modernize your shop",
     cta: "See all →",
     read: "Read →",
     items: [
       {
-        categoria: "EXPERIENCE",
+        categoria: "Experience",
         titulo: "Customers got used to delivery. Shops aren't staying behind.",
         icono: "schedule",
         visual: "articleWindow",
       },
       {
-        categoria: "GUIDE",
+        categoria: "Guide",
         titulo: "How to free a bay when the car is done",
         icono: "garage",
         visual: "articleWorkshop",
       },
       {
-        categoria: "MECANU",
+        categoria: "Mecanu",
         titulo: "External fleet for peaks, without losing control",
         icono: "local_shipping",
         visual: "articleFleet",
@@ -1021,13 +1115,12 @@ const en: LandingCopy = {
     ],
   },
   close: {
-    eyebrow: "GET IT RUNNING",
-    heading: "When customers have no time to come in.",
-    subtext:
-      "Send cars where you need them, free the shop, and look after the customer. Every run under control. No friction with customers.",
+    eyebrow: "Contact",
+    heading: "The customer doesn't have to come to the shop.",
+    subtext: "Tell us where the shop is. We'll call and look at a real transfer.",
     primary: "Talk to Mecanu",
     secondary: "See how it works",
-    featuresLabel: "WHAT YOU GET",
+    featuresLabel: "Benefits",
     beneficios: [
       {
         icono: "door_front",
@@ -1042,24 +1135,16 @@ const en: LandingCopy = {
         texto: "Cheaper and more available than a recovery truck.",
       },
       {
-        icono: "chat",
-        texto: "Automate customer care with AI.",
-      },
-      {
         icono: "verified_user",
-        texto: "Insured external fleet. If something happens, Mecanu covers it.",
-      },
-      {
-        icono: "policy",
-        texto: "Flexible liability: for the shop or per transfer.",
+        texto: "Insured external fleet and flexible liability, for the shop or per transfer.",
       },
       {
         icono: "photo_camera",
         texto: "Visual check-in: up to 20 points.",
       },
       {
-        icono: "auto_awesome",
-        texto: "Upcoming-service prediction and client alerts.",
+        icono: "chat",
+        texto: "Automate customer care and upcoming-service alerts.",
       },
     ],
   },
@@ -1154,9 +1239,9 @@ const en: LandingCopy = {
     siempreActivas: "Always on",
   },
   contacto: {
-    eyebrow: "GET STARTED",
-    heading: "Tell us a bit about your shop.",
-    subtext: "Just a few minutes. Helps us prepare the conversation.",
+    eyebrow: "Get started",
+    heading: "Four details and we'll call.",
+    subtext: "Name, phone, city and how many cars you move.",
     aceptar: "OK",
     enviar: "Submit",
     anterior: "Back",
@@ -1200,7 +1285,7 @@ const en: LandingCopy = {
       },
       ciudad: {
         pregunta: "What **city** is your shop in?",
-        opciones: ["Madrid", "Barcelona", "Valencia", "Bilbao", "Seville", "Other"],
+        opciones: ["Madrid", "Barcelona", "Other"],
       },
       volumen: {
         pregunta: "How many **cars do you normally service** per month?",
@@ -1241,7 +1326,7 @@ const pt: LandingCopy = {
   meta: {
     title: "Mecanu | Recolha e entrega de veículos para oficinas mecânicas",
     description:
-      "Mecanu coordena a recolha e entrega de veículos para oficinas em Lisboa, Madrid, Barcelona e mais. Condutores verificados, janelas de 1 hora, seguro incluído. Sem reboques caros.",
+      "A Mecanu recolhe e devolve o carro do cliente para oficinas em Madrid e Barcelona. Janela de 1 hora, condutor verificado, seguro de responsabilidade civil.",
   },
   nav: {
     homeAria: "Mecanu, início",
@@ -1255,70 +1340,104 @@ const pt: LandingCopy = {
     productos: "Produtos",
     cta: "Falar com Mecanu",
     langLabel: "Idioma",
+    como: "Como funciona",
+    cobertura: "Cobertura",
+    preguntas: "Perguntas",
   },
   productos: [
     { label: "Logística", href: "#solucion" },
-    { label: "Seguros", href: "#cobertura" },
-    { label: "Marketplace", href: "#contacto" },
-    { label: "Frota externa", href: "#flota" },
-    { label: "Ecommerce", href: "#contacto" },
-    { label: "Apoio ao cliente", href: "#contacto" },
+    { label: "Frota própria", href: "#solucion" },
+    { label: "Frota externa", href: "#solucion" },
+    { label: "Seguro de traslado", href: "#cobertura" },
+    { label: "Check-in", href: "#solucion" },
+    { label: "Clientes que voltam", href: "#contacto" },
   ],
   hero: {
     kicker: "",
-    kickerBrand: "LOGÍSTICA AUTOMOTIVA",
-    headline: "A tua oficina não para quando os carros se movem.",
+    kickerBrand: "Madrid e Barcelona",
+    headline: "Leva carros com a tua frota ou com a nossa.",
     subtext:
-      "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito com clientes.",
+      "Plataforma logística para oficinas. Recolha e entrega com a tua frota ou a da Mecanu. O seguro de traslado acrescenta-se se o quiseres.",
     primary: "Falar connosco",
     secondary: "Ver como funciona",
     photoAlt: "Volvo branco visto de cima numa rua urbana",
   },
-  logosAria: "Logótipos de oficinas",
+  logosAria: "Seguradoras",
+  logosLabel: "Cobertura com",
   map: {
     sectionAria: "Oficinas em {city}",
     citySwitchAria: "Cidade",
     ciudades: {
       madrid: "Madrid",
       barcelona: "Barcelona",
-      londres: "Londres",
-      zurich: "Zurique",
     },
     details: "Detalhes",
     talk: "Falar com Mecanu",
-    comingSoon: "Brevemente nesta cidade.",
-    resetAria: "Voltar à vista da cidade",
-    zoomInAria: "Aproximar o mapa",
-    zoomOutAria: "Afastar o mapa",
+    comingSoon: "Recolha e entrega na área metropolitana.",
   },
   statsAria: "O que a Mecanu faz",
+  specsAria: "Rendimento e especificações da Mecanu",
+  specs: {
+    eyebrow: "Rendimento",
+    heading: "O que muda na tua oficina",
+    items: [
+      {
+        valor: "1 hora",
+        etiqueta: "Janela de recolha e entrega",
+      },
+      {
+        valor: "7 dias",
+        etiqueta: "Antecipação de entrada na oficina",
+      },
+      {
+        valor: "-50%",
+        etiqueta: "Custo face a um reboque urbano",
+      },
+      {
+        valor: "12–30%",
+        etiqueta: "Maior rotação de viaturas na oficina",
+      },
+      {
+        valor: "20 pontos",
+        etiqueta: "Check-in visual com foto e assinatura",
+      },
+      {
+        valor: "100%",
+        etiqueta: "Cobertura RC em custódia e trajeto",
+      },
+    ],
+  },
+  faq: {
+    eyebrow: "Perguntas frequentes",
+    heading: "Perguntas frequentes",
+  },
   stats: [
     {
       numero: "01",
-      valor: "7 dias",
-      etiqueta: "SEM ESPERAR PELO CLIENTE",
+      valor: "Própria",
+      etiqueta: "Frota da oficina",
       texto:
-        "Acabou ficar uma semana a combinar quando o cliente traz o carro. Recolha à porta com janela de 1 h.",
+        "Os teus condutores usam a plataforma logística: rotas, janela e check-in. O seguro de traslado é opcional.",
       enlace: "Ver como funciona",
     },
     {
       numero: "02",
-      valor: "50%",
-      etiqueta: "MENOS QUE UM REBOQUE",
+      valor: "Externa",
+      etiqueta: "Frota da Mecanu",
       texto:
-        "Mais barato, com seguro e disponível no mesmo dia em deslocações urbanas com carro a circular.",
+        "Quando não chegas, a viagem fica com um condutor da Mecanu. O seguro de traslado só se o acrescentares.",
       enlace: "Ver como funciona",
     },
     {
       numero: "03",
-      valor: "12-30%",
-      etiqueta: "MAIS ROTAÇÃO DE VIATURAS",
+      valor: "Check-in",
+      etiqueta: "O cliente volta",
       texto:
-        "Mais viaturas entram e saem no mesmo dia: recolhes, reparas e entregas sem o carro ocupar lugar a mais. Mais capacidade sem ampliar a oficina.",
+        "Foto, estado do componente e registo. Daí saem o aviso, o serviço seguinte e a volta à oficina.",
     },
   ],
   hiw: {
-    eyebrow: "OPERAÇÃO",
+    eyebrow: "Operação",
     heading: "Como funciona",
     cta: "Falar com Mecanu →",
     subtext: "Três passos da chamada à entrega assinada. A recolha não se perde.",
@@ -1348,25 +1467,25 @@ const pt: LandingCopy = {
     photoAlt: "Carro clássico partido em collage vintage.",
   },
   news: {
-    eyebrow: "MECANU / IDEIAS PARA A OFICINA",
+    eyebrow: "Ideias para a oficina",
     heading: "Ideias para modernizar a tua oficina",
     cta: "Ver todas →",
     read: "Ler →",
     items: [
       {
-        categoria: "EXPERIÊNCIA",
+        categoria: "Experiência",
         titulo: "O cliente habituou-se ao delivery e as oficinas não ficam atrás",
         icono: "schedule",
         visual: "articleWindow",
       },
       {
-        categoria: "GUIA",
+        categoria: "Guia",
         titulo: "Como libertar um lugar quando o carro já está pronto",
         icono: "garage",
         visual: "articleWorkshop",
       },
       {
-        categoria: "MECANU",
+        categoria: "Mecanu",
         titulo: "Frota externa para picos, sem perder o controlo",
         icono: "local_shipping",
         visual: "articleFleet",
@@ -1374,13 +1493,12 @@ const pt: LandingCopy = {
     ],
   },
   close: {
-    eyebrow: "PÕE ISTO A ANDAR",
-    heading: "Quando o cliente não tem tempo de ir à oficina.",
-    subtext:
-      "Envia os carros para onde precisares, liberta a oficina e cuida do cliente. Cada recolha controlada. Sem atrito com clientes.",
+    eyebrow: "Contacto",
+    heading: "O cliente não tem de ir à oficina.",
+    subtext: "Diz-nos onde fica a oficina. Ligamos e vemos isto com uma recolha real.",
     primary: "Falar com Mecanu",
     secondary: "Ver como funciona",
-    featuresLabel: "O QUE OBTÉNS",
+    featuresLabel: "Benefícios",
     beneficios: [
       {
         icono: "door_front",
@@ -1395,24 +1513,16 @@ const pt: LandingCopy = {
         texto: "Mais barato e mais disponível do que um reboque.",
       },
       {
-        icono: "chat",
-        texto: "Automatiza o atendimento ao cliente com inteligência artificial.",
-      },
-      {
         icono: "verified_user",
-        texto: "Frota externa com seguro. Se acontecer algo, a Mecanu cobre.",
-      },
-      {
-        icono: "policy",
-        texto: "RC flexível: para a oficina ou por recolha.",
+        texto: "Frota externa com seguro e RC flexível, para a oficina ou por recolha.",
       },
       {
         icono: "photo_camera",
         texto: "Check-in visual: até 20 pontos.",
       },
       {
-        icono: "auto_awesome",
-        texto: "Predição dos próximos serviços e avisos ao cliente.",
+        icono: "chat",
+        texto: "Automatiza o atendimento e os avisos dos próximos serviços.",
       },
     ],
   },
@@ -1507,9 +1617,9 @@ const pt: LandingCopy = {
     siempreActivas: "Sempre ativas",
   },
   contacto: {
-    eyebrow: "COMEÇA AQUI",
-    heading: "Conta-nos um pouco sobre a tua oficina.",
-    subtext: "São apenas alguns minutos. Ajuda-nos a preparar a conversa.",
+    eyebrow: "Começa aqui",
+    heading: "Quatro dados e ligamos.",
+    subtext: "Nome, telefone, cidade e quantos carros moves.",
     aceptar: "Aceitar",
     enviar: "Enviar",
     anterior: "Anterior",
@@ -1553,7 +1663,7 @@ const pt: LandingCopy = {
       },
       ciudad: {
         pregunta: "Em que **cidade** está a tua oficina?",
-        opciones: ["Madrid", "Barcelona", "Valencia", "Bilbao", "Sevilha", "Outra"],
+        opciones: ["Madrid", "Barcelona", "Outra"],
       },
       volumen: {
         pregunta: "Quantos **carros atende** normalmente por mês?",

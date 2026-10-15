@@ -41,7 +41,7 @@ const INITIAL: Answers = {
   canal: "",
 };
 
-const TOTAL_STEPS = 11;
+const TOTAL_STEPS = 4;
 
 function renderPregunta(template: string, nombre: string): React.ReactNode {
   const parts = template.split(/\*\*(.*?)\*\*/g);
@@ -135,7 +135,14 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
     setSending(true);
     setError(null);
     try {
-      const payload = { ...answers, ...overrides, aceptaPrivacidad: true as const };
+      const payload = {
+        nombre: (overrides?.nombre ?? answers.nombre).trim(),
+        paisCodigo: overrides?.paisCodigo ?? answers.paisCodigo,
+        telefono: overrides?.telefono ?? answers.telefono,
+        ciudad: overrides?.ciudad ?? answers.ciudad,
+        volumen: overrides?.volumen ?? answers.volumen,
+        aceptaPrivacidad: true as const,
+      };
       const res = await fetch("/api/v1/contacto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -226,83 +233,14 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           </div>
         )}
 
-        {/* Paso 2 — Apellido */}
-        {step === 2 && (
-          <div className={styles.stepWrap}>
-            <StepIndex step={2} />
-            <label className={styles.pregunta} htmlFor="cf-apellido">
-              {renderPregunta(p.apellido.pregunta, answers.nombre)}
-            </label>
-            <input
-              id="cf-apellido"
-              ref={inputRef as React.RefObject<HTMLInputElement>}
-              className={styles.input}
-              type="text"
-              autoComplete="family-name"
-              value={answers.apellido}
-              onChange={(e) => set("apellido", e.target.value)}
-              onKeyDown={(e) => handleKey(e, answers.apellido.trim().length > 0)}
-              autoFocus
-            />
-            <div className={styles.actions}>
-              <button
-                className={styles.btnPrimary}
-                type="button"
-                disabled={!answers.apellido.trim()}
-                onClick={advance}
-              >
-                {copy.aceptar}
-              </button>
-              <button className={styles.btnBack} type="button" onClick={back}>
-                {copy.anterior}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 3 — Email */}
-        {step === 3 && (
-          <div className={styles.stepWrap}>
-            <StepIndex step={3} />
-            <label className={styles.pregunta} htmlFor="cf-email">
-              {renderPregunta(p.email.pregunta, answers.nombre)}
-            </label>
-            <p className={styles.aviso}>{p.email.aviso}</p>
-            <input
-              id="cf-email"
-              ref={inputRef as React.RefObject<HTMLInputElement>}
-              className={styles.input}
-              type="email"
-              autoComplete="email"
-              value={answers.email}
-              onChange={(e) => set("email", e.target.value)}
-              onKeyDown={(e) => handleKey(e, /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(answers.email))}
-              autoFocus
-            />
-            <div className={styles.actions}>
-              <button
-                className={styles.btnPrimary}
-                type="button"
-                disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(answers.email)}
-                onClick={advance}
-              >
-                {copy.aceptar}
-              </button>
-              <button className={styles.btnBack} type="button" onClick={back}>
-                {copy.anterior}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 4 — Teléfono */}
-        {step === 4 && (() => {
+        {/* Paso 2 — Teléfono */}
+        {step === 2 && (() => {
           const pais: PhoneCountry = PHONE_COUNTRIES.find(c => c.code === answers.paisCodigo) ?? DEFAULT_COUNTRY;
           const digits = answers.telefono.replace(/\D/g, "");
           const valid = digits.length >= pais.minLen;
           return (
             <div className={styles.stepWrap}>
-              <StepIndex step={4} />
+              <StepIndex step={2} />
               <label className={styles.pregunta} htmlFor="cf-telefono">
                 {renderPregunta(p.telefono.pregunta, answers.nombre)}
               </label>
@@ -355,89 +293,10 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           );
         })()}
 
-        {/* Paso 5 — Objetivo */}
-        {step === 5 && (
+        {/* Paso 3 — Ciudad */}
+        {step === 3 && (
           <div className={styles.stepWrap}>
-            <StepIndex step={5} />
-            <p className={styles.pregunta}>
-              {renderPregunta(p.objetivo.pregunta, answers.nombre)}
-            </p>
-            <div className={styles.pills}>
-              {p.objetivo.opciones.map((op, i) => (
-                <button
-                  key={op}
-                  type="button"
-                  className={`${styles.pill} ${answers.objetivo === op ? styles.pillSelected : ""}`}
-                  onClick={() => {
-                    set("objetivo", op);
-                    setTimeout(advance, 120);
-                  }}
-                >
-                  <span className={styles.pillLetter}>{String.fromCharCode(65 + i)}</span>
-                  {op}
-                </button>
-              ))}
-            </div>
-            <div className={styles.actions}>
-              <button className={styles.btnBack} type="button" onClick={back}>
-                {copy.anterior}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 6 — Uso (selección múltiple, máx. 3) */}
-        {step === 6 && (
-          <div className={styles.stepWrap}>
-            <StepIndex step={6} />
-            <p className={styles.pregunta}>
-              {renderPregunta(p.uso.pregunta, answers.nombre)}
-            </p>
-            <p className={styles.aviso}>{p.uso.aviso}</p>
-            <div className={styles.pills}>
-              {p.uso.opciones.map((op) => {
-                const seleccionado = answers.uso.includes(op);
-                const lleno = answers.uso.length >= 3 && !seleccionado;
-                return (
-                  <button
-                    key={op}
-                    type="button"
-                    disabled={lleno}
-                    className={`${styles.pill} ${seleccionado ? styles.pillSelected : ""} ${lleno ? styles.pillDisabled : ""}`}
-                    onClick={() => {
-                      const prev = answers.uso;
-                      const next = seleccionado
-                        ? prev.filter((v) => v !== op)
-                        : [...prev, op];
-                      setAnswers((a) => ({ ...a, uso: next }));
-                    }}
-                  >
-                    <span className={styles.pillCheck}>{seleccionado ? "✓" : ""}</span>
-                    {op}
-                  </button>
-                );
-              })}
-            </div>
-            <div className={styles.actions}>
-              <button
-                className={styles.btnPrimary}
-                type="button"
-                disabled={answers.uso.length === 0}
-                onClick={advance}
-              >
-                {copy.aceptar}
-              </button>
-              <button className={styles.btnBack} type="button" onClick={back}>
-                {copy.anterior}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 7 — Ciudad */}
-        {step === 7 && (
-          <div className={styles.stepWrap}>
-            <StepIndex step={7} />
+            <StepIndex step={3} />
             <label className={styles.pregunta} htmlFor="cf-ciudad">
               {renderPregunta(p.ciudad.pregunta, answers.nombre)}
             </label>
@@ -472,10 +331,10 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           </div>
         )}
 
-        {/* Paso 8 — Volumen (rangos) */}
-        {step === 8 && (
+        {/* Paso 4 — Volumen + privacidad */}
+        {step === 4 && (
           <div className={styles.stepWrap}>
-            <StepIndex step={8} />
+            <StepIndex step={4} />
             <p className={styles.pregunta}>
               {renderPregunta(p.volumen.pregunta, answers.nombre)}
             </p>
@@ -486,94 +345,13 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
                   key={op}
                   type="button"
                   className={`${styles.pill} ${answers.volumen === op ? styles.pillSelected : ""}`}
-                  onClick={() => {
-                    set("volumen", op);
-                    setTimeout(advance, 120);
-                  }}
+                  onClick={() => set("volumen", op)}
                 >
                   <span className={styles.pillLetter}>{String.fromCharCode(65 + i)}</span>
                   {op}
                 </button>
               ))}
             </div>
-            <div className={styles.actions}>
-              <button className={styles.btnBack} type="button" onClick={back}>
-                {copy.anterior}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 9 — Nombre del negocio */}
-        {step === 9 && (
-          <div className={styles.stepWrap}>
-            <StepIndex step={9} />
-            <label className={styles.pregunta} htmlFor="cf-negocio">
-              {renderPregunta(p.negocio.pregunta, answers.nombre)}
-            </label>
-            <input
-              id="cf-negocio"
-              ref={inputRef as React.RefObject<HTMLInputElement>}
-              className={styles.input}
-              type="text"
-              placeholder={p.negocio.placeholder}
-              value={answers.negocio}
-              onChange={(e) => set("negocio", e.target.value)}
-              onKeyDown={(e) => handleKey(e, answers.negocio.trim().length > 0)}
-              autoFocus
-            />
-            <div className={styles.actions}>
-              <button
-                className={styles.btnPrimary}
-                type="button"
-                disabled={!answers.negocio.trim()}
-                onClick={advance}
-              >
-                {copy.aceptar}
-              </button>
-              <button className={styles.btnBack} type="button" onClick={back}>
-                {copy.anterior}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 10 — Canal de origen */}
-        {step === 10 && (
-          <div className={styles.stepWrap}>
-            <StepIndex step={10} />
-            <p className={styles.pregunta}>
-              {renderPregunta(p.canal.pregunta, answers.nombre)}
-            </p>
-            <div className={styles.pills}>
-              {p.canal.opciones.map((op, i) => (
-                <button
-                  key={op}
-                  type="button"
-                  className={`${styles.pill} ${answers.canal === op ? styles.pillSelected : ""}`}
-                  onClick={() => {
-                    set("canal", op);
-                    setTimeout(advance, 120);
-                  }}
-                >
-                  <span className={styles.pillLetter}>{String.fromCharCode(65 + i)}</span>
-                  {op}
-                </button>
-              ))}
-            </div>
-            <div className={styles.actions}>
-              <button className={styles.btnBack} type="button" onClick={back}>
-                {copy.anterior}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 11 — Privacidad + envío */}
-        {step === 11 && (
-          <div className={styles.stepWrap}>
-            <StepIndex step={11} />
-            <p className={styles.pregunta}>Último paso.</p>
             <label className={styles.privacyCheck}>
               <input
                 type="checkbox"
@@ -595,7 +373,7 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
               <button
                 className={styles.btnPrimary}
                 type="button"
-                disabled={sending || !aceptaPrivacidad}
+                disabled={sending || !answers.volumen || !aceptaPrivacidad}
                 onClick={() => submit()}
               >
                 {sending ? "…" : copy.enviar}

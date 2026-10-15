@@ -5,7 +5,10 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { copyFor } from "@/lib/landing/copy";
 import { analiticaHabilitada, CONSENT_DEFAULT } from "@/lib/landing/analytics";
 import { GoogleTag } from "@/components/landing/GoogleTag";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
 // Nota: headers() eliminado del layout raíz para permitir que todas las rutas
 // sean cacheables. El lang se setea via HtmlLangPatch en layouts de segmento
 // (/ca, /en, /pt). El consent se lee en el cliente desde GoogleTag.
@@ -38,7 +41,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   // aplica HtmlLangPatch en el cliente. GoogleTag no pinta el banner hasta
   // hidratar y leer `mecanu_consent` (evita flash si ya aceptaste).
   return (
-    <html lang="es" className={`h-full antialiased ${plusJakartaSans.variable}`}>
+    <html lang="es" suppressHydrationWarning className={cn("h-full", "antialiased", plusJakartaSans.variable)}>
       <head>
         {/* Preconnect: resuelve DNS y establece la conexión antes de que el navegador la necesite */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -63,8 +66,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         ) : null}
       </head>
       <body className="min-h-full flex flex-col">
-        {children}
-        <GoogleTag copy={copyFor("es").consent} cookieInicial="" />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+          <GoogleTag copy={copyFor("es").consent} cookieInicial="" />
+        </ThemeProvider>
       </body>
     </html>
   );
