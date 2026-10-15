@@ -10,6 +10,7 @@ import { ProgressBar } from '@/components/ds/ProgressBar';
 import { StatusTimeline } from '@/components/ds/StatusTimeline';
 import { TimeWindow } from '@/components/ds/TimeWindow';
 import { esModoDemo } from '@/lib/entorno';
+import { urlSeguimientoRuta } from '@/lib/mecanu/whatsapp-contexto';
 import {
   CONDUCTORES, CLIENTES, LOG_TIPOS, ONBOARDING_META, ORDEN_ONBOARDING, ORIGEN_LINEA, PRESUPUESTO_META,
   SUBESTADO, TRIGGERS, VENTANA_MODOS, actividadDeRuta, conductor, contactosDeVehiculo, fmtDia, fmtDiaHora,
@@ -70,6 +71,7 @@ export function RecordDrawer() {
 
   const pasos = ruta ? pasosDeRuta(ruta.id) : [];
   const pasoActual = ruta ? pasoActualDeRuta(ruta) : 0;
+  const linkCliente = ruta?.linkToken ? urlSeguimientoRuta(ruta.linkToken) : null;
 
   const tabs: { id: TabId; label: string; bloqueada?: boolean }[] = [
     { id: 'resumen', label: 'Resumen' },
@@ -323,18 +325,18 @@ export function RecordDrawer() {
                       <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)', marginBottom: 8 }}>
                         {SUBESTADO[`prospectos.${ruta.subestado}`]?.desc ?? 'Sin fecha agendada.'}
                       </div>
-                      {ruta.linkToken ? (
+                      {linkCliente ? (
                         <>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                             <span style={{ flex: 1, fontSize: 12, fontFamily: 'monospace' }}>
-                              mecanu.es/a/{ruta.linkToken}
+                              {linkCliente}
                             </span>
                             <Button
                               kind="secondary"
                               size="compact"
                               icon="content_copy"
                               onClick={() => {
-                                void navigator.clipboard?.writeText(`https://mecanu.es/a/${ruta.linkToken}`);
+                                void navigator.clipboard?.writeText(linkCliente);
                                 p.toast('Link copiado al portapapeles.');
                               }}
                             >

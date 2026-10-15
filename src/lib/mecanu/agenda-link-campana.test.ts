@@ -22,9 +22,9 @@ import {
 describe('agenda-link-campana', () => {
   it('arma token, url y mensaje', () => {
     expect(tokenAgendaCampana('CP-12')).toBe('ag-cp-12');
-    expect(urlAgendaAutogestion('ag-cp-12')).toBe('https://mecanu.com/a/ag-cp-12');
-    expect(mensajeLinkAgenda({ nombre: 'Diego', url: 'https://mecanu.com/a/x' })).toMatch(/Diego/);
-    expect(mensajeLinkAgenda({ nombre: 'Diego', url: 'https://mecanu.com/a/x' })).toMatch(/https:\/\/mecanu.com\/a\/x/);
+    expect(urlAgendaAutogestion('ag-cp-12')).toBe('https://mecanu.com/s/ag-cp-12');
+    expect(mensajeLinkAgenda({ nombre: 'Diego', url: 'https://mecanu.com/s/x' })).toMatch(/Diego/);
+    expect(mensajeLinkAgenda({ nombre: 'Diego', url: 'https://mecanu.com/s/x' })).toMatch(/https:\/\/mecanu.com\/s\/x/);
   });
 
   it('identifica deberes de agenda', () => {

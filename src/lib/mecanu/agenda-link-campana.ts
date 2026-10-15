@@ -39,8 +39,9 @@ export function tokenAgendaCampana(campanaId: string): string {
   return `ag-${campanaId.toLowerCase().replace(/[^a-z0-9-]/g, '')}`;
 }
 
+/** Misma URL pública que `urlSeguimientoRuta`: portal canónico `/s/{token}`. */
 export function urlAgendaAutogestion(token: string, origin = 'https://mecanu.com'): string {
-  return `${origin.replace(/\/$/, '')}/a/${encodeURIComponent(token)}`;
+  return `${origin.replace(/\/$/, '')}/s/${encodeURIComponent(token.trim())}`;
 }
 
 export function mensajeLinkAgenda(opts: { nombre: string; url: string }): string {
