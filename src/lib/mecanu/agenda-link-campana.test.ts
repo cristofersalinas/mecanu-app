@@ -51,12 +51,12 @@ describe('agenda-link-campana', () => {
   });
 
   it('suma 3 h laborales y salta el fin de semana', () => {
-    // Viernes 16:00 → 1 h el viernes + 2 h el lunes = lunes 11:00
+    // Jornada Lun–Vie 09:00–18:00: viernes 16:00 → 2 h el viernes + 1 h el lunes = lunes 10:00
     const viernes = new Date(2026, 7, 21, 16, 0, 0); // ago 2026, viernes
     expect(viernes.getDay()).toBe(5);
     const due = sumarHorasLaborales(viernes, HORAS_NUDGE_AGENDA_LABORALES);
     expect(due.getDay()).toBe(1);
-    expect(due.getHours()).toBe(11);
+    expect(due.getHours()).toBe(10);
     expect(due.getMinutes()).toBe(0);
   });
 
