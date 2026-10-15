@@ -4,6 +4,7 @@
  */
 
 import { coordsDesdeCatalogo, type Coords } from './geocode';
+import { urlFotoVehiculo } from './foto-vehiculo';
 import type { Conductor, Tramo } from './types';
 
 const DIA_MS = 86400000;
@@ -37,7 +38,10 @@ export type MarcadorFlota = {
   enVivo: boolean;
   /** Texto tipo Find My: «Ahora», «En ruta», «En taller»… */
   ultimaVezLabel: string;
-  /** Street View u otra foto; null → placeholder en UI. */
+  /** Marca y modelo del vehículo, si el panel ya los tiene. */
+  marca: string | null;
+  modelo: string | null;
+  /** Foto del modelo; null si no hay marca y modelo. */
   fotoUrl: string | null;
 };
 
@@ -54,6 +58,9 @@ export type RutaFlotaInput = {
   conductorNombre: string | null;
   /** Dirección de card (origen / taller / destino según convenga al caller). */
   direccionCard: string | null;
+  /** Del vehículo. Sin dato, null: no se inventa. */
+  marca?: string | null;
+  modelo?: string | null;
 };
 
 function asTime(v: Date | string | null | undefined): number | null {
@@ -269,6 +276,8 @@ export function construirVistaFlota(opts: {
     }
 
     const direccion = (r.direccionCard?.trim() || taller.direccion);
+    const marca = r.marca?.trim() || null;
+    const modelo = r.modelo?.trim() || null;
 
     marcadores.push({
       id: r.id,
@@ -283,7 +292,9 @@ export function construirVistaFlota(opts: {
       actualizadaEn,
       enVivo,
       ultimaVezLabel,
-      fotoUrl: null,
+      marca,
+      modelo,
+      fotoUrl: urlFotoVehiculo({ marca, modelo }),
     });
   }
 

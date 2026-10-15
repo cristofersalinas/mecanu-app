@@ -64,6 +64,8 @@ export async function GET() {
         vehiculoLabel,
         conductorNombre: c?.nombre ?? null,
         direccionCard,
+        marca: v?.marca ?? null,
+        modelo: v?.modelo ?? null,
       };
     });
 

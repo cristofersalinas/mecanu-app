@@ -180,4 +180,41 @@ describe('construirVistaFlota', () => {
     });
     expect(vista.marcadores).toHaveLength(0);
   });
+
+  it('copia marca y modelo del vehículo; sin dato no inventa foto', () => {
+    const vista = construirVistaFlota({
+      tallerDireccion: tallerDir,
+      tallerNombre: 'Talleres Rodríguez',
+      rutas: [
+        {
+          id: 'TR-foto',
+          estado: 'en_taller',
+          conductorId: null,
+          vehiculoLabel: '4521 KTM · Seat León',
+          conductorNombre: null,
+          direccionCard: null,
+          marca: 'Seat',
+          modelo: 'Leon',
+        },
+        {
+          id: 'TR-sin',
+          estado: 'en_taller',
+          conductorId: null,
+          vehiculoLabel: '0000 AAA',
+          conductorNombre: null,
+          direccionCard: null,
+          marca: '  ',
+          modelo: null,
+        },
+      ],
+    });
+    const con = vista.marcadores.find((m) => m.rutaId === 'TR-foto');
+    expect(con?.marca).toBe('Seat');
+    expect(con?.modelo).toBe('Leon');
+    expect(con?.fotoUrl).toBe('/api/v1/vehicle-photo?marca=Seat&modelo=Leon&v=wiki2');
+    const sin = vista.marcadores.find((m) => m.rutaId === 'TR-sin');
+    expect(sin?.marca).toBeNull();
+    expect(sin?.modelo).toBeNull();
+    expect(sin?.fotoUrl).toBeNull();
+  });
 });
