@@ -1,0 +1,20 @@
+{
+  "name": "mecanu-video",
+  "private": true,
+  "scripts": {
+    "dev": "remotion studio --port=3030",
+    "still": "remotion still src/index.ts PlataformaTaller"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.372",
+    "@remotion/google-fonts": "^4.0.372",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "^4.0.372"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}

@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Reference material from the Claude Design handoff, not shipped app code.
     "_source/**",
+    // Vídeo interno de Remotion: proyecto aparte, no entra en el lint de la app.
+    "video/**",
   ]),
 ]);
 

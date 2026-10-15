@@ -51,3 +51,8 @@ supabase/.temp/
 
 # Auth de WhatsApp Web (Baileys). Nunca commitear.
 .whatsapp-sesiones/
+
+# Vídeo interno (Remotion). Se instala y se ve en local; no entra en el CI de la app.
+video/node_modules/
+video/out/
+video/.remotion/
