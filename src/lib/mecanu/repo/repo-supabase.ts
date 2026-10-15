@@ -739,13 +739,12 @@ export const supabaseRepo: MecanuRepo = {
     if (accion === 'aceptar' && indices.length === 0) {
       throw new Error('Selecciona al menos una línea');
     }
-    // En Postgres aún no recortamos líneas por índice; solo cerramos el estado.
+    // campanas no tiene columna estado. El de la cotización vive en presupuestos.
+    // Los índices no recortan líneas: CONTRATOS-API.md no pide ese POST.
     await this.cambiarEstadoPresupuesto({
       presupuestoId: oferta.presupuesto.id,
       estado,
     });
-    const { error } = await sb().from('campanas').update({ estado }).eq('id', oferta.id);
-    throwPg(error, 'campana estado cliente');
     return { campanaId: oferta.id, estado };
   },
 

@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as supabaseServer from '@/lib/supabase/server';
+import { supabaseRepo } from './repo/repo-supabase';
 import {
   checkinPublico,
   construirSeguimientoPublico,
@@ -14,7 +16,7 @@ import {
   tramosPublicos,
   ventanaPublica,
 } from './seguimiento-ruta';
-import type { Actividad, Inspeccion, Presupuesto, RutaVista, Tramo } from './types';
+import type { Actividad, Campana, Inspeccion, Presupuesto, RutaVista, Tramo } from './types';
 
 describe('seguimiento-ruta', () => {
   it('título público usa subestado en ruta sin repetir «En ruta»', () => {
@@ -263,5 +265,105 @@ describe('seguimiento-ruta', () => {
     );
     expect(tramos[0]?.origenDireccion).toContain('Provença');
     expect(tramos[0]?.destinoDireccion).toContain('Numància');
+  });
+});
+
+type EscrituraPg = { tabla: string; payload: Record<string, unknown> };
+
+function clienteQueAnota(escrituras: EscrituraPg[]) {
+  return {
+    from(tabla: string) {
+      let op = '';
+      let payload: Record<string, unknown> | null = null;
+      const builder = {
+        select() {
+          op = 'select';
+          return builder;
+        },
+        update(next: Record<string, unknown>) {
+          op = 'update';
+          payload = next;
+          return builder;
+        },
+        eq() {
+          return builder;
+        },
+        order() {
+          return builder;
+        },
+        limit() {
+          return builder;
+        },
+        maybeSingle() {
+          return Promise.resolve({
+            data: tabla === 'presupuestos'
+              ? {
+                id: 'PR-3003',
+                campana_id: 'OP-3003',
+                modo: 'detallado',
+                estado: 'aceptada',
+                iva_incluido: true,
+                total: 160,
+              }
+              : null,
+            error: null,
+          });
+        },
+        then(
+          onFulfilled: (v: { data: unknown; error: null }) => unknown,
+          onRejected?: (e: unknown) => unknown,
+        ) {
+          if (op === 'update' && payload) escrituras.push({ tabla, payload });
+          const data = tabla === 'presupuesto_lineas' ? [] : null;
+          return Promise.resolve({ data, error: null }).then(onFulfilled, onRejected);
+        },
+      };
+      return builder;
+    },
+  };
+}
+
+describe('supabase: respuesta del cliente al presupuesto', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('aceptar con índices no escribe campanas.estado y deja presupuestos.estado en aceptada', async () => {
+    const escrituras: EscrituraPg[] = [];
+    vi.spyOn(supabaseServer, 'getSupabaseServer').mockReturnValue(
+      clienteQueAnota(escrituras) as unknown as NonNullable<
+        ReturnType<typeof supabaseServer.getSupabaseServer>
+      >,
+    );
+    vi.spyOn(supabaseRepo, 'listRutasVista').mockResolvedValue([
+      { id: 'TR-1041', linkToken: 'token-test-1041' } as RutaVista,
+    ]);
+    vi.spyOn(supabaseRepo, 'listCampanas').mockResolvedValue([
+      {
+        id: 'OP-3003',
+        rutaOrigenId: 'TR-1041',
+        estado: 'enviada',
+        origenAutomatico: true,
+        presupuesto: {
+          id: 'PR-3003',
+          estado: 'enviada',
+          total: 160,
+          lineas: [
+            { descripcion: 'Servicio A', importe: 100, origen: 'inspeccion', servicioTemparioId: 'SV-01' },
+            { descripcion: 'Servicio B', importe: 60, origen: 'inspeccion', servicioTemparioId: 'SV-08' },
+          ],
+        },
+      } as Campana,
+    ]);
+
+    const out = await supabaseRepo.responderPresupuestoSeguimiento({
+      token: 'token-test-1041',
+      accion: 'aceptar',
+      indices: [0],
+    });
+
+    expect(out).toEqual({ campanaId: 'OP-3003', estado: 'aceptada' });
+    expect(escrituras.some((e) => e.tabla === 'campanas' && 'estado' in e.payload)).toBe(false);
+    expect(escrituras).toContainEqual({ tabla: 'presupuestos', payload: { estado: 'aceptada' } });
   });
 });
