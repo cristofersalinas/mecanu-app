@@ -512,6 +512,70 @@ function clienteSoloToken(tokenEsperado: string) {
   };
 }
 
+const FILA_CON_COCHE = {
+  ...FILA_OTRO,
+  vehiculo_id: 'v-otro',
+};
+
+function clienteConFicha(consultas: { tabla: string; col: string; val: unknown }[]) {
+  return {
+    from(tabla: string) {
+      const eqs: { col: string; val: unknown }[] = [];
+      const builder = {
+        select() {
+          return builder;
+        },
+        eq(col: string, val: unknown) {
+          eqs.push({ col, val });
+          consultas.push({ tabla, col, val });
+          return builder;
+        },
+        order() {
+          return builder;
+        },
+        limit() {
+          return builder;
+        },
+        maybeSingle() {
+          const token = eqs.find((e) => e.col === 'link_token')?.val;
+          const id = eqs.find((e) => e.col === 'id')?.val;
+          if (tabla === 'rutas' && token === 'token-otro') return Promise.resolve({ data: FILA_CON_COCHE, error: null });
+          if (tabla === 'vehiculos' && id === 'v-otro') {
+            return Promise.resolve({
+              data: { id: 'v-otro', marca: 'Seat', modelo: 'León', anio: 2019, matricula: '1234 BCD', km: 40000 },
+              error: null,
+            });
+          }
+          if (tabla === 'vehiculos' && id === 'v-ajeno') {
+            return Promise.resolve({
+              data: { id: 'v-ajeno', marca: 'Audi', modelo: 'A3', anio: 2020, matricula: '9999 ZZZ', km: 1 },
+              error: null,
+            });
+          }
+          if (tabla === 'conductores' && id === 'd-otro') {
+            return Promise.resolve({ data: { id: 'd-otro', nombre: 'Luis Pérez' }, error: null });
+          }
+          if (tabla === 'conductores' && id === 'd-ajeno') {
+            return Promise.resolve({ data: { id: 'd-ajeno', nombre: 'Ana Ajena' }, error: null });
+          }
+          return Promise.resolve({ data: null, error: null });
+        },
+        then(
+          onFulfilled: (v: { data: unknown; error: null }) => unknown,
+          onRejected?: (e: unknown) => unknown,
+        ) {
+          const rutaId = eqs.find((e) => e.col === 'ruta_id')?.val;
+          const data = tabla === 'traslados' && rutaId === 'TR-OTRO'
+            ? [{ conductor_id: 'd-otro', estado: 'en_curso', orden: 1 }]
+            : [];
+          return Promise.resolve({ data, error: null }).then(onFulfilled, onRejected);
+        },
+      };
+      return builder;
+    },
+  };
+}
+
 describe('página /s/{token} sin sesión de taller', () => {
   const envPrev = {
     flag: process.env.MECANU_USE_SUPABASE,
@@ -536,10 +600,11 @@ describe('página /s/{token} sin sesión de taller', () => {
     vi.spyOn(authServer, 'getPerfilSesion').mockRejectedValue(new Error('sin sesión'));
   }
 
-  it('abre el viaje del token sin cookie de taller y no el mock de otro', async () => {
+  it('abre el viaje del token sin cookie de taller, con su matrícula y su conductor, y no los de otro taller', async () => {
     activarSupabaseSinSesion();
+    const consultas: { tabla: string; col: string; val: unknown }[] = [];
     vi.spyOn(supabaseServer, 'getSupabaseServer').mockReturnValue(
-      clienteSoloToken('token-otro') as unknown as NonNullable<
+      clienteConFicha(consultas) as unknown as NonNullable<
         ReturnType<typeof supabaseServer.getSupabaseServer>
       >,
     );
@@ -548,8 +613,13 @@ describe('página /s/{token} sin sesión de taller', () => {
       params: Promise.resolve({ token: 'token-otro' }),
       searchParams: Promise.resolve({}),
     });
-    const data = (el as { props: { data: { rutaId: string } | null } }).props.data;
+    const data = (el as { props: { data: { rutaId: string; vehiculoLabel: string; conductorLabel: string | null } | null } }).props.data;
     expect(data?.rutaId).toBe('TR-OTRO');
+    expect(data?.vehiculoLabel).toBe('Seat León · 1234 BCD');
+    expect(data?.conductorLabel).toBe('Luis P.');
+    expect(data?.vehiculoLabel).not.toContain('9999 ZZZ');
+    expect(data?.conductorLabel).not.toContain('Ana');
+    expect(consultas.some((c) => c.val === 'taller-rodriguez' || c.val === 'v-ajeno' || c.val === 'd-ajeno')).toBe(false);
     expect(authServer.getPerfilSesion).not.toHaveBeenCalled();
   });
 

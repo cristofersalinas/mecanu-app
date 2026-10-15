@@ -102,6 +102,58 @@ async function cargarPresupuesto(id: string | null | undefined): Promise<Presupu
   );
 }
 
+function conductorDelViaje(rows: { conductor_id?: unknown; estado?: unknown; orden?: unknown }[]): string | null {
+  const tramos = rows.map((r) => ({
+    conductorId: r.conductor_id == null ? null : String(r.conductor_id),
+    estado: String(r.estado ?? ''),
+    orden: Number(r.orden ?? 0),
+  }));
+  const activos = tramos
+    .filter((t) => t.estado === 'en_curso' || t.estado === 'agendado')
+    .sort((a, b) => a.orden - b.orden);
+  const tramo = activos[0] ?? [...tramos].sort((a, b) => a.orden - b.orden)[0];
+  return tramo?.conductorId ?? null;
+}
+
+/** Coche y conductor del viaje de ese token. No lista el taller. */
+export async function cocheYConductorPorToken(token: string): Promise<{
+  vehiculo: Vehiculo | null;
+  conductor: Conductor | null;
+}> {
+  const vacio = { vehiculo: null, conductor: null };
+  const t = token.trim();
+  if (!t) return vacio;
+  const client = sb();
+  const { data: ruta, error } = await client
+    .from('rutas')
+    .select('id, vehiculo_id')
+    .eq('link_token', t)
+    .maybeSingle();
+  throwPg(error, 'ficha token');
+  if (!ruta) return vacio;
+
+  const vehiculoP = ruta.vehiculo_id
+    ? client.from('vehiculos').select('*').eq('id', String(ruta.vehiculo_id)).maybeSingle()
+    : Promise.resolve({ data: null, error: null as { message: string } | null });
+  const tramosP = client
+    .from('traslados')
+    .select('conductor_id, estado, orden')
+    .eq('ruta_id', String(ruta.id));
+  const [vehiculoRes, tramosRes] = await Promise.all([vehiculoP, tramosP]);
+  throwPg(vehiculoRes.error, 'vehiculo token');
+  throwPg(tramosRes.error, 'tramos token');
+  const vehiculo = vehiculoRes.data ? mapVehiculo(vehiculoRes.data) : null;
+  const conductorId = conductorDelViaje(tramosRes.data ?? []);
+  if (!conductorId) return { vehiculo, conductor: null };
+  const { data: cond, error: ec } = await client
+    .from('conductores')
+    .select('*')
+    .eq('id', conductorId)
+    .maybeSingle();
+  throwPg(ec, 'conductor token');
+  return { vehiculo, conductor: cond ? mapConductor(cond) : null };
+}
+
 export async function rutaVistaPorLinkToken(token: string): Promise<RutaVista | null> {
   const t = token.trim();
   if (!t) return null;

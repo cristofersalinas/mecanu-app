@@ -2,7 +2,11 @@ import type { Metadata } from 'next';
 import { SeguimientoRutaView } from '@/components/seguimiento/SeguimientoRutaView';
 import { repo } from '@/lib/mecanu/repo';
 import { mockRepo } from '@/lib/mecanu/repo/repo-mock';
-import { campanasDeRutaPublica, rutaVistaPorLinkToken } from '@/lib/mecanu/repo/repo-supabase';
+import {
+  campanasDeRutaPublica,
+  cocheYConductorPorToken,
+  rutaVistaPorLinkToken,
+} from '@/lib/mecanu/repo/repo-supabase';
 import {
   campanaOfertaDeRuta,
   construirSeguimientoPublico,
@@ -77,10 +81,15 @@ async function armar(
   fuente: typeof repo,
   ruta: RutaVista,
   campanaOferta: Carga['campanaOferta'],
+  ficha?: { vehiculo: Vehiculo | null; conductor: Conductor | null },
 ): Promise<Carga> {
   const [vehiculo, conductor, tramos, paradas, actividad, inspecciones, presupuesto] = await Promise.all([
-    ruta.vehiculoId ? silencio(fuente.getVehiculo(ruta.vehiculoId)) : Promise.resolve(null),
-    ruta.conductorId ? silencio(fuente.getConductor(ruta.conductorId)) : Promise.resolve(null),
+    ficha
+      ? Promise.resolve(ficha.vehiculo)
+      : (ruta.vehiculoId ? silencio(fuente.getVehiculo(ruta.vehiculoId)) : Promise.resolve(null)),
+    ficha
+      ? Promise.resolve(ficha.conductor)
+      : (ruta.conductorId ? silencio(fuente.getConductor(ruta.conductorId)) : Promise.resolve(null)),
     fuente.listTramosDeRuta(ruta.id),
     fuente.listParadasDeRuta(ruta.id),
     fuente.listActividadDeRuta(ruta.id),
@@ -125,8 +134,11 @@ async function cargarPorToken(token: string): Promise<Carga> {
   }
   if (!ruta) return CARGA_VACIA;
   try {
-    const campanas = await campanasDeRutaPublica(ruta.id);
-    return await armar(repo, ruta, campanaOfertaDeRuta(campanas, ruta.id));
+    const [campanas, ficha] = await Promise.all([
+      campanasDeRutaPublica(ruta.id),
+      cocheYConductorPorToken(token),
+    ]);
+    return await armar(repo, ruta, campanaOfertaDeRuta(campanas, ruta.id), ficha);
   } catch {
     return { ...CARGA_VACIA, ruta };
   }
