@@ -66,7 +66,7 @@ const PIN_ICON_SIZE = 0.92; /* −20 % vs 1.15 */
 const CONDUCTOR_ICON_SIZE = 0.52; /* −50 % vs 1.05 */
 const FLOTA_ICON_ID = 'flota-conductor';
 
-function coleccionVacia(): GeoJSON.FeatureCollection {
+function coleccionVacia(): GeoJSON.FeatureCollection<GeoJSON.Point> {
   return { type: 'FeatureCollection', features: [] };
 }
 
