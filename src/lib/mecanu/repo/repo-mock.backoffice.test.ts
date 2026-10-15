@@ -93,6 +93,33 @@ describe('backoffice: actor de sesión, no u-dueno en perfiles.id', () => {
     expect(supabase).not.toHaveBeenCalled();
   });
 
+  it('transicionar un usuario no escribe perfiles.id si el id no es uuid', async () => {
+    const consultas: { tabla: string; col: string; val: unknown }[] = [];
+    vi.spyOn(authServer, 'getPerfilSesion').mockResolvedValue({
+      id: ACTOR_UUID,
+      email: 'dueno@mecanu.com',
+      nombre: 'Dueño',
+      rol: 'dueno',
+      tallerId: 'taller-a',
+      conductorId: null,
+      documento: null,
+    });
+    const supabase = vi.spyOn(supabaseServer, 'getSupabaseServer').mockReturnValue(
+      clientePerfil(consultas, ACTOR_UUID) as unknown as NonNullable<
+        ReturnType<typeof supabaseServer.getSupabaseServer>
+      >,
+    );
+
+    await expect(supabaseRepo.transicionarUsuarioBackoffice('u-dueno', 'u-otro', 'suspendido'))
+      .rejects.toThrow(/no encontrado/);
+    expect(supabase).not.toHaveBeenCalled();
+    expect(consultas.some((c) => c.val === 'u-otro' || c.val === 'u-dueno')).toBe(false);
+
+    await supabaseRepo.transicionarUsuarioBackoffice('u-dueno', ACTOR_UUID, 'suspendido');
+    expect(consultas).toContainEqual({ tabla: 'perfiles', col: 'id', val: ACTOR_UUID });
+    expect(consultas.some((c) => c.tabla === 'perfiles' && c.col === 'id' && c.val === 'u-dueno')).toBe(false);
+  });
+
   it('invitar, transicionar y automatizaciones no consultan perfiles.id = u-dueno', async () => {
     const consultas: { tabla: string; col: string; val: unknown }[] = [];
     vi.spyOn(authServer, 'getPerfilSesion').mockResolvedValue({

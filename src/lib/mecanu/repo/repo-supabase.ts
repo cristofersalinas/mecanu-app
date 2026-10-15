@@ -1172,7 +1172,7 @@ export const supabaseRepo: MecanuRepo = {
         nombre: draft.nombre,
       },
     });
-    if (authErr || !created.user) {
+    if (authErr || !created.user || !UUID_ACTOR.test(created.user.id)) {
       throw new Error(authErr?.message ?? 'No se pudo crear el usuario Auth');
     }
     const { error } = await client.from('perfiles').upsert({
@@ -1191,7 +1191,9 @@ export const supabaseRepo: MecanuRepo = {
   },
   async transicionarUsuarioBackoffice(actorId, usuarioId, hacia: EstadoUsuarioBackoffice) {
     const id = await idDeActor(actorId);
-    if (!id) return mockRepo.transicionarUsuarioBackoffice(actorId, usuarioId, hacia);
+    if (!id || !UUID_ACTOR.test(usuarioId)) {
+      return mockRepo.transicionarUsuarioBackoffice(actorId, usuarioId, hacia);
+    }
     const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'gestionar_usuarios')) {
       throw new Error('Sin permiso');
