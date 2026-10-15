@@ -61,10 +61,6 @@ export type LandingCopy = {
     heading: string;
     items: { valor: string; etiqueta: string }[];
   };
-  faq: {
-    eyebrow: string;
-    heading: string;
-  };
   hiw: {
     eyebrow: string;
     heading: string;
@@ -232,6 +228,9 @@ const es: LandingCopy = {
     details: "Detalles",
     talk: "Hablar con Mecanu",
     comingSoon: "Recogida y entrega en el área metropolitana.",
+    resetAria: "Volver a la vista de ciudad",
+    zoomInAria: "Acercar el mapa",
+    zoomOutAria: "Alejar el mapa",
   },
   statsAria: "Resultados de Mecanu",
   specsAria: "Rendimiento y especificaciones de Mecanu",
@@ -264,10 +263,6 @@ const es: LandingCopy = {
         etiqueta: "El siguiente servicio, desde el check-in",
       },
     ],
-  },
-  faq: {
-    eyebrow: "Preguntas frecuentes",
-    heading: "Preguntas frecuentes",
   },
   stats: [
     {
@@ -614,6 +609,9 @@ const ca: LandingCopy = {
     details: "Detalls",
     talk: "Parlar amb Mecanu",
     comingSoon: "Recollida i lliurament a l'àrea metropolitana.",
+    resetAria: "Tornar a la vista de ciutat",
+    zoomInAria: "Apropar el mapa",
+    zoomOutAria: "Allunyar el mapa",
   },
   statsAria: "Resultats de Mecanu",
   specsAria: "Rendiment i especificacions de Mecanu",
@@ -646,10 +644,6 @@ const ca: LandingCopy = {
         etiqueta: "Avisos i següent servei",
       },
     ],
-  },
-  faq: {
-    eyebrow: "Preguntes freqüents",
-    heading: "Preguntes freqüents",
   },
   stats: [
     {
@@ -996,6 +990,9 @@ const en: LandingCopy = {
     details: "Details",
     talk: "Talk to Mecanu",
     comingSoon: "Pickup and delivery across the metro area.",
+    resetAria: "Back to the city view",
+    zoomInAria: "Zoom in",
+    zoomOutAria: "Zoom out",
   },
   statsAria: "What Mecanu does",
   specsAria: "Mecanu performance and specifications",
@@ -1028,10 +1025,6 @@ const en: LandingCopy = {
         etiqueta: "Reminders and the next job",
       },
     ],
-  },
-  faq: {
-    eyebrow: "Frequently asked questions",
-    heading: "Frequently asked questions",
   },
   stats: [
     {
@@ -1374,6 +1367,9 @@ const pt: LandingCopy = {
     details: "Detalhes",
     talk: "Falar com Mecanu",
     comingSoon: "Recolha e entrega na área metropolitana.",
+    resetAria: "Voltar à vista da cidade",
+    zoomInAria: "Aproximar o mapa",
+    zoomOutAria: "Afastar o mapa",
   },
   statsAria: "O que a Mecanu faz",
   specsAria: "Rendimento e especificações da Mecanu",
@@ -1406,10 +1402,6 @@ const pt: LandingCopy = {
         etiqueta: "Cobertura RC em custódia e trajeto",
       },
     ],
-  },
-  faq: {
-    eyebrow: "Perguntas frequentes",
-    heading: "Perguntas frequentes",
   },
   stats: [
     {
