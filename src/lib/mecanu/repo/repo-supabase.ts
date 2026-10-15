@@ -6,6 +6,7 @@
  * APIs y Server Actions que usen `repo` sí pueden apuntar aquí.
  */
 import { getPerfilSesion } from '@/lib/supabase/auth-server';
+import { mockRepo } from './repo-mock';
 import { getSupabaseServer } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { crearRutaDesdeCampana as construirRutaDesdeCampana } from '../crear-ruta-desde-campana';
@@ -1198,7 +1199,14 @@ export const supabaseRepo: MecanuRepo = {
     return next;
   },
   async getBackofficeSnapshot(actorId, ahora = new Date()) {
-    const actor = await this.getUsuarioBackoffice(actorId);
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    let id = uuid.test(actorId) ? actorId : '';
+    if (!id) {
+      const perfil = await getPerfilSesion();
+      if (perfil?.id && uuid.test(perfil.id)) id = perfil.id;
+    }
+    if (!id) return mockRepo.getBackofficeSnapshot(actorId, ahora);
+    const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'ver_backoffice')) throw new Error('No puedes entrar al backoffice');
     const [rutas, conductores, solicitudes, usuarios, campanas, tramosRaw, logsRaw] = await Promise.all([
       this.listRutasVista(),
@@ -1217,7 +1225,7 @@ export const supabaseRepo: MecanuRepo = {
     const mundo = mundoDesde(
       rutas, tramos, logs, campanas, presupuestos, conductores, solicitudes, usuarios, ahora,
     );
-    return buildSnapshot(mundo, actorId);
+    return buildSnapshot(mundo, id);
   },
   async ejecutarAutomatizacionesBackoffice(actorId, ahora = new Date()) {
     const actor = await this.getUsuarioBackoffice(actorId);
