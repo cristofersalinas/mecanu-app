@@ -3,35 +3,48 @@ import Link from "next/link";
 import { Logo } from "@/components/ds/Logo";
 import { BreadcrumbJsonLd, FaqJsonLd, HowToJsonLd } from "@/components/landing/JsonLd";
 import type { FaqItem } from "@/lib/landing/faq";
+import { ogImageUrl } from "@/lib/landing/og";
 
 export const dynamic = "force-static";
+
+const OG = ogImageUrl("para-talleres");
 
 export const metadata: Metadata = {
   title: "Logística de vehículos para talleres mecánicos — Mecanu",
   description:
-    "Mecanu es la plataforma de logística para talleres mecánicos que coordina la recogida y entrega de coches de clientes. Conductores verificados, seguro, trazabilidad y panel de control. Sin inversión fija.",
+    "Plataforma logística para talleres: flota propia o flota de Mecanu, seguimiento en tiempo real. Madrid y Barcelona. El seguro de traslado es opcional.",
   keywords: [
     "logística vehículos talleres mecánicos",
-    "software gestión taller recogidas",
     "conductor externo para taller mecánico",
     "recogida entrega coches taller",
     "liberar plazas taller mecánico",
     "traslado vehículos clientes taller",
-    "panel gestión taller digital",
-    "mejor software taller mecánico España",
     "taller mecánico sin que el cliente vaya",
-    "experiencia cliente taller mecánico",
     "Mecanu para talleres",
-    "logística automotriz B2B España",
   ].join(", "),
   alternates: { canonical: "https://mecanu.com/para-talleres" },
   openGraph: {
+    type: "website",
     title: "Logística de vehículos para talleres mecánicos — Mecanu",
     description:
-      "Mecanu coordina recogidas, traslados y entregas de coches para talleres. Conductores verificados, seguro incluido.",
+      "Plataforma logística. Flota del taller o flota de Mecanu. Seguro de traslado opcional. Madrid y Barcelona.",
     url: "https://mecanu.com/para-talleres",
     siteName: "Mecanu",
-    images: [{ url: "https://mecanu.com/og-image.png", width: 1200, height: 630 }],
+    images: [
+      {
+        url: OG,
+        width: 1200,
+        height: 630,
+        alt: "Cómo funciona Mecanu para tu taller",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Logística de vehículos para talleres mecánicos — Mecanu",
+    description:
+      "Flota propia o de Mecanu. Seguro de traslado opcional. Madrid y Barcelona.",
+    images: [OG],
   },
 };
 
@@ -43,7 +56,7 @@ const FAQ: readonly FaqItem[] = [
   },
   {
     q: "¿Qué pasa si el conductor tiene un accidente con el coche del cliente?",
-    a: "Cada traslado de Mecanu incluye cobertura de responsabilidad civil para el vehículo en tránsito. El taller no asume el riesgo del desplazamiento.",
+    a: "El seguro de traslado es un añadido. Si el taller lo contrata, cubre el viaje lo haga un conductor del taller o uno de Mecanu.",
   },
   {
     q: "¿En qué ciudades está disponible Mecanu?",
@@ -62,8 +75,8 @@ export default function ParaTalleresPage() {
         url="https://mecanu.com/para-talleres"
         steps={[
           { name: "Crear el traslado", text: "En el panel se indica dirección, ventana de una hora y destino (taller, domicilio o estación de ITV)." },
-          { name: "Asignar conductor", text: "Mecanu asigna un conductor verificado disponible en la zona. El taller no llama a una lista de autónomos." },
-          { name: "Recoger y documentar", text: "El conductor fotografía el estado del vehículo al recoger las llaves. La cobertura de responsabilidad civil está activa en ese momento." },
+          { name: "Elegir flota", text: "El taller asigna a uno de sus conductores o pide la flota externa de Mecanu." },
+          { name: "Recoger y documentar", text: "Quien conduce hace el check-in: foto, estado del componente y registro. Si el taller añadió el seguro de traslado, está activo en ese momento." },
           { name: "Entregar en destino", text: "El coche llega al taller o al cliente. Nueva ronda de fotos y registro en el panel. La plaza o el cliente quedan resueltos el mismo día." },
         ]}
       />
@@ -87,7 +100,7 @@ export default function ParaTalleresPage() {
         </h1>
 
         <p style={{ fontSize: "1.15rem", lineHeight: 1.75, color: "#333", marginBottom: "2rem" }}>
-          Mecanu es la plataforma que coordina la recogida y entrega de coches de clientes para talleres mecánicos. El taller gana capacidad productiva, mejora la experiencia del cliente y no necesita contratar conductores propios ni comprar furgonetas.
+          Mecanu es la plataforma logística con la que el taller traslada coches de sus clientes, con sus conductores o con los de Mecanu. El check-in y el check-out dejan el siguiente servicio. El seguro de traslado se añade solo si el taller lo quiere.
         </p>
 
         <h2 style={{ fontSize: "1.35rem", fontWeight: 700, letterSpacing: "-.03em", marginTop: "2.5rem", marginBottom: ".75rem" }}>
@@ -103,10 +116,10 @@ export default function ParaTalleresPage() {
         <ul style={{ fontSize: "1.05rem", lineHeight: 1.8, paddingLeft: "1.5rem", marginBottom: "2rem", color: "#222" }}>
           <li><strong>Más plazas disponibles</strong>: el coche terminado no espera en la nave. Se devuelve al cliente el mismo día y la plaza queda libre.</li>
           <li><strong>Menos llamadas de coordinación</strong>: el cliente recibe actualizaciones automáticas del estado del traslado. El taller no tiene que gestionar la logística manualmente.</li>
-          <li><strong>Conductores verificados sin contratación fija</strong>: Mecanu provee conductores bajo demanda. El taller no asume costes fijos ni responsabilidades laborales adicionales.</li>
-          <li><strong>Seguro en cada traslado</strong>: cobertura de responsabilidad civil específica para el vehículo en movimiento. El taller queda cubierto frente a incidencias durante el desplazamiento.</li>
-          <li><strong>Trazabilidad completa</strong>: fotos, estado y registro de cada paso desde el panel. El taller puede ver en tiempo real dónde está cada coche.</li>
-          <li><strong>Escala sin inversión</strong>: el taller usa Mecanu cuando lo necesita. En picos de trabajo puede aumentar el volumen de traslados sin contratar ni ampliar la instalación.</li>
+          <li><strong>Flota propia</strong>: tus conductores usan el software de logística. Rutas, ventana, check-in y check-out.</li>
+          <li><strong>Flota externa</strong>: cuando no llegas, el traslado lo hace un conductor de Mecanu.</li>
+          <li><strong>Seguro de traslado</strong>: es un añadido. No va en todos los viajes.</li>
+          <li><strong>El cliente vuelve</strong>: foto, estado del componente y registro alimentan el aviso y el siguiente servicio.</li>
         </ul>
 
         <h2 style={{ fontSize: "1.35rem", fontWeight: 700, letterSpacing: "-.03em", marginTop: "2.5rem", marginBottom: ".75rem" }}>
@@ -114,8 +127,8 @@ export default function ParaTalleresPage() {
         </h2>
         <ol style={{ fontSize: "1.05rem", lineHeight: 1.8, paddingLeft: "1.5rem", marginBottom: "2rem", color: "#222" }}>
           <li><strong>Crear el traslado.</strong> En el panel se indica dirección, ventana de una hora y destino (taller, domicilio o estación de ITV).</li>
-          <li><strong>Asignar conductor.</strong> Mecanu asigna un conductor verificado disponible en la zona. El taller no llama a una lista de autónomos.</li>
-          <li><strong>Recoger y documentar.</strong> El conductor fotografía el estado del vehículo al recoger las llaves. La cobertura de responsabilidad civil está activa en ese momento.</li>
+          <li><strong>Elegir flota.</strong> Asignas a uno de tus conductores o pides la flota externa de Mecanu.</li>
+          <li><strong>Recoger y documentar.</strong> Check-in: foto, estado del componente y registro. El seguro de traslado, solo si el taller lo añadió.</li>
           <li><strong>Entregar en destino.</strong> El coche llega al taller o al cliente. Nueva ronda de fotos y registro en el panel. La plaza o el cliente quedan resueltos el mismo día.</li>
         </ol>
 
@@ -123,7 +136,7 @@ export default function ParaTalleresPage() {
           Para qué tipo de taller es Mecanu
         </h2>
         <p style={{ fontSize: "1.05rem", lineHeight: 1.75, color: "#222", marginBottom: "2rem" }}>
-          Mecanu funciona mejor para talleres mecánicos con entre 3 y 30 empleados, en ciudades medianas o grandes de España, que tienen flujo regular de vehículos de clientes y quieren ofrecer recogida a domicilio o mejorar la rotación de plazas. No es para talleres que reparan únicamente coches propios (flotas) ni para concesionarios con infraestructura logística propia.
+          Para el taller que traslada coches de sus clientes. Puedes operar solo con tus conductores, solo con la flota de Mecanu, o con las dos. Flota propia quiere decir tus conductores en la plataforma, no una flota de vehículos en mantenimiento.
         </p>
 
         <h2 style={{ fontSize: "1.35rem", fontWeight: 700, letterSpacing: "-.03em", marginTop: "2.5rem", marginBottom: ".75rem" }}>
@@ -144,7 +157,7 @@ export default function ParaTalleresPage() {
             ¿Qué pasa si el conductor tiene un accidente con el coche del cliente?
           </summary>
           <p style={{ fontSize: "1rem", lineHeight: 1.7, color: "#444", marginTop: ".5rem" }}>
-            Cada traslado de Mecanu incluye cobertura de responsabilidad civil para el vehículo en tránsito. El taller no asume el riesgo del desplazamiento.
+            El seguro de traslado es un añadido. Si el taller lo contrata, cubre el viaje lo haga un conductor del taller o uno de Mecanu.
           </p>
         </details>
 

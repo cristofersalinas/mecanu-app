@@ -2,37 +2,48 @@ import type { Metadata } from "next";
 import { SeoPage, FaqBlock } from "@/components/landing/SeoPage";
 import { BreadcrumbJsonLd, FaqJsonLd } from "@/components/landing/JsonLd";
 import type { FaqItem } from "@/lib/landing/faq";
+import { ogImageUrl } from "@/lib/landing/og";
 
 export const dynamic = "force-static";
 
 const URL = "https://mecanu.com/capacidad-taller";
+const OG = ogImageUrl("capacidad-taller");
 
 export const metadata: Metadata = {
-  title: "Cómo aumentar la capacidad de un taller sin ampliar la nave — Mecanu",
+  title: "Capacidad del taller: el coche listo ocupa plaza — Mecanu",
   description:
-    "Los coches terminados que esperan al cliente bloquean plazas y limitan la facturación. Cómo medir la rotación real de tu taller y liberar capacidad sin obra ni contratar más gente.",
+    "Hasta 4 días con el coche listo ocupando plaza. Libera capacidad devolviendo el coche sin ampliar la nave. Plataforma logística en Madrid y Barcelona. Seguro de traslado opcional.",
   keywords: [
     "aumentar capacidad taller mecánico",
-    "rentabilidad taller mecánico",
-    "cómo aumentar facturación taller",
-    "rotación plazas taller",
-    "gestión taller mecánico",
-    "productividad taller mecánico",
-    "cuántos coches puede atender un taller",
-    "optimizar espacio taller mecánico",
-    "coches aparcados taller cliente no recoge",
     "liberar plaza taller mecánico",
-    "más clientes taller mecánico",
+    "coches aparcados taller cliente no recoge",
+    "optimizar espacio taller mecánico",
     "organización taller mecánico",
+    "cliente no recoge el coche del taller",
   ].join(", "),
   alternates: { canonical: URL },
   openGraph: {
-    title: "Cómo aumentar la capacidad de un taller sin ampliar la nave — Mecanu",
+    type: "website",
+    title: "Capacidad del taller: el coche listo ocupa plaza — Mecanu",
     description:
-      "Cómo medir la rotación real de tu taller y liberar capacidad sin obra ni contratar más gente.",
+      "Hasta 4 días con el coche listo ocupando plaza. Plataforma logística en Madrid y Barcelona. Seguro de traslado opcional.",
     url: URL,
     siteName: "Mecanu",
-    images: [{ url: "https://mecanu.com/og-image.png", width: 1200, height: 630 }],
+    images: [
+      {
+        url: OG,
+        width: 1200,
+        height: 630,
+        alt: "Capacidad del taller — Mecanu",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Capacidad del taller: el coche listo ocupa plaza — Mecanu",
+    description:
+      "Hasta 4 días con el coche listo ocupando plaza. Plataforma logística. Madrid y Barcelona.",
+    images: [OG],
   },
 };
 
@@ -143,8 +154,8 @@ export default function CapacidadTallerPage() {
           cliente sin cobertura específica para ese uso.
         </p>
         <p>
-          Mecanu lo cubre bajo demanda: conductores verificados, seguro de responsabilidad civil
-          incluido en cada traslado, ventanas horarias de una hora y seguimiento en tiempo real desde
+          Mecanu es la plataforma logística: conductores verificados, seguro de traslado opcional
+          si el taller lo añade, ventanas horarias de una hora y seguimiento en tiempo real desde
           un panel web. Sin coste fijo, sin contratar y sin comprar vehículos — el taller paga por
           traslado realizado.
         </p>

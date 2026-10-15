@@ -32,10 +32,13 @@ describe("contentSecurityPolicy", () => {
     expect(prod).toContain("frame-ancestors 'none'");
   });
 
-  it("deja pasar los iframes de bandeja y setup de Kapso", () => {
+  it("deja pasar GTM, Facebook y los iframes de Kapso", () => {
+    expect(prod).toContain("https://www.googletagmanager.com");
+    expect(prod).toContain("https://www.facebook.com");
     expect(prod).toContain("https://inbox.kapso.ai");
     expect(prod).toContain("https://app.kapso.ai");
     expect(prod).toContain("frame-src");
+    expect(prod).toContain("frame-ancestors 'none'");
   });
 
   it("unsafe-eval solo en desarrollo", () => {

@@ -28,13 +28,22 @@ import type { MundoBackoffice } from '../backoffice';
 import type {
   AsignarConductorInput, CambiarEstadoPresupuestoInput, CambiarSubestadoTramoInput,
   CancelarRutaInput, CheckinInput, ConfirmacionInput, CrearRutaDesdeCampanaInput,
-  EntregaInput, HallazgoCampanaInput, IncidenciaInput, MecanuRepo,
-  ReasignarConductorInput, SolicitudInput, AgendarRutaInput,
+  EntregaInput, EnviarMensajeWaInput, EnviarMensajeWaResult, HallazgoCampanaInput,
+  IncidenciaInput, MecanuRepo, ReasignarConductorInput, RegistrarMensajeEntranteInput,
+  SolicitudInput, AgendarRutaInput,
   GpsPingInput, UbicacionConductorInput,
 } from './repo';
 import { construirUbicacionSeguimiento } from '../ubicacion-seguimiento';
 import { campanaOfertaDeRuta, rutaPorLinkToken } from '../seguimiento-ruta';
 import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '../transicion-en-ruta';
+import {
+  actualizarEstadoMensajeMemoria, getCanalWaMemoria, listCanalesWaMemoria,
+  registrarEntranteMemoria, upsertMensajeCanal,
+} from './whatsapp-memoria';
+import {
+  construirEnvioWa, despacharPorKapso, mensajeSalienteEnviado, mensajeSalientePendiente,
+  telefonoClienteCampana,
+} from '../whatsapp-service';
 
 /** Trail en memoria (mock): no se rehidrata entre procesos. */
 const TRAIL_MOCK: { trasladoId: string; lat: number; lng: number; ts: string }[] = [];
@@ -658,5 +667,44 @@ export const mockRepo: MecanuRepo = {
     if (!puede(actor.rol, 'ejecutar_automatizaciones')) throw new Error('No puedes ejecutar automatizaciones');
     const mundo = mundoAhora(ahora ?? new Date());
     return aplicarAutomatizaciones(mundo, proponerAutomatizaciones(mundo));
+  },
+
+  async listCanalesWa() {
+    return listCanalesWaMemoria();
+  },
+
+  async getCanalWa(campanaId) {
+    return getCanalWaMemoria(campanaId);
+  },
+
+  async enviarMensajeWa(input: EnviarMensajeWaInput): Promise<EnviarMensajeWaResult> {
+    const campana = m.campana(input.campanaId);
+    if (!campana) throw new Error(`Campaña ${input.campanaId} no encontrada`);
+    const canal = getCanalWaMemoria(input.campanaId);
+    const telefonoDigits = telefonoClienteCampana(campana);
+    const { cuerpo, payload, tipoMensaje } = construirEnvioWa(campana, canal, input, telefonoDigits);
+    const localId = `wa-local-${Date.now()}`;
+    upsertMensajeCanal(input.campanaId, mensajeSalientePendiente(localId, tipoMensaje, cuerpo));
+    const wamid = await despacharPorKapso(payload);
+    const mensaje = mensajeSalienteEnviado(wamid, tipoMensaje, cuerpo);
+    const canalActualizado = upsertMensajeCanal(input.campanaId, mensaje);
+    if (input.tipo === 'recordatorio' && campana.estado !== 'enviada') {
+      const p = m.presupuesto(campana.presupuesto.id);
+      if (p) {
+        p.estado = 'enviada';
+        p.actualizado = new Date();
+        campana.estado = 'enviada';
+        campana.presupuesto.estado = 'enviada';
+      }
+    }
+    return { canal: canalActualizado, mensaje, campana };
+  },
+
+  async actualizarEstadoMensajeWa(wamid, estado, errorCode) {
+    actualizarEstadoMensajeMemoria(wamid, estado, errorCode);
+  },
+
+  async registrarMensajeEntranteWa(input: RegistrarMensajeEntranteInput) {
+    return registrarEntranteMemoria(m.CAMPANAS, input);
   },
 };

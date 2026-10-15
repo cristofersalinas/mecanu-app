@@ -42,6 +42,16 @@ export type LandingCopy = {
     details: string;
     talk: string;
     comingSoon: string;
+    resetAria: string;
+    zoomInAria: string;
+    zoomOutAria: string;
+  };
+  faq: {
+    eyebrow: string;
+    heading: string;
+    more: string;
+    less: string;
+    links: { href: string; label: string }[];
   };
   statsAria: string;
   stats: { numero: string; valor: string; etiqueta: string; texto: string; enlace?: string }[];
@@ -94,6 +104,8 @@ export type LandingCopy = {
     accesibilidad: string;
     cumplimientoTitulo: string;
     cumplimientoTexto: string;
+    comparativas: string;
+    comparativaLinks: { href: string; label: string }[];
   };
   errors: {
     notFound: { kicker: string; headline: string; subtext: string; cta: string };
@@ -208,6 +220,9 @@ const es: LandingCopy = {
     details: "Detalles",
     talk: "Hablar con Mecanu",
     comingSoon: "Próximamente en esta ciudad.",
+    resetAria: "Volver a la vista de ciudad",
+    zoomInAria: "Acercar mapa",
+    zoomOutAria: "Alejar mapa",
   },
   statsAria: "Resultados de Mecanu",
   stats: [
@@ -338,6 +353,24 @@ const es: LandingCopy = {
       },
     ],
   },
+  faq: {
+    eyebrow: "MECANU / PREGUNTAS FRECUENTES",
+    heading: "Preguntas frecuentes",
+    more: "Ver más",
+    less: "Ver menos",
+    links: [
+      { href: "/madrid", label: "Mecanu en Madrid" },
+      { href: "/barcelona", label: "Mecanu en Barcelona" },
+      { href: "/para-talleres", label: "Cómo funciona para tu taller" },
+      { href: "/alternativa-grua", label: "Comparado con una grúa" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Comparado con un mecánico a domicilio" },
+      { href: "/itv-para-talleres", label: "ITV para talleres" },
+      { href: "/software-taller", label: "Software de taller" },
+      { href: "/mantenimiento-marcas", label: "Mantenimiento por marca" },
+      { href: "/cliente-no-recoge-coche", label: "Cliente no recoge el coche" },
+      { href: "/blog", label: "Blog de operaciones" },
+    ],
+  },
   footer: {
     tagline: "Logística B2B para talleres que quieren seguir reparando.",
     contacto: "Contacto",
@@ -363,6 +396,17 @@ const es: LandingCopy = {
     accesibilidad: "Accesibilidad",
     cumplimientoTitulo: "Cumplimiento UE",
     cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
+    comparativas: "Comparativas",
+    comparativaLinks: [
+      { href: "/alternativa-grua", label: "Grúa o conductor" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Mecánico a domicilio" },
+      { href: "/taller-oficial-o-multimarca", label: "Oficial o multimarca" },
+      { href: "/capacidad-taller", label: "Capacidad del taller" },
+      { href: "/itv-para-talleres", label: "ITV para talleres" },
+      { href: "/software-taller", label: "Software de taller" },
+      { href: "/mantenimiento-marcas", label: "Mantenimiento por marca" },
+      { href: "/cliente-no-recoge-coche", label: "Cliente no recoge el coche" },
+    ],
   },
   errors: {
     notFound: {
@@ -533,6 +577,9 @@ const ca: LandingCopy = {
     details: "Detalls",
     talk: "Parlar amb Mecanu",
     comingSoon: "Pròximament en aquesta ciutat.",
+    resetAria: "Tornar a la vista de ciutat",
+    zoomInAria: "Apropar el mapa",
+    zoomOutAria: "Allunyar el mapa",
   },
   statsAria: "Resultats de Mecanu",
   stats: [
@@ -663,6 +710,24 @@ const ca: LandingCopy = {
       },
     ],
   },
+  faq: {
+    eyebrow: "MECANU / PREGUNTES FREQÜENTS",
+    heading: "Preguntes freqüents",
+    more: "Veure més",
+    less: "Veure menys",
+    links: [
+      { href: "/madrid", label: "Mecanu a Madrid" },
+      { href: "/barcelona", label: "Mecanu a Barcelona" },
+      { href: "/para-talleres", label: "Com funciona per al teu taller" },
+      { href: "/alternativa-grua", label: "Comparat amb una grua" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Comparat amb un mecànic a domicili" },
+      { href: "/itv-para-talleres", label: "ITV per a tallers" },
+      { href: "/software-taller", label: "Programari de taller" },
+      { href: "/mantenimiento-marcas", label: "Manteniment per marca" },
+      { href: "/cliente-no-recoge-coche", label: "El client no recull el cotxe" },
+      { href: "/blog", label: "Blog d'operacions" },
+    ],
+  },
   footer: {
     tagline: "Logística B2B per a tallers que volen seguir reparant.",
     contacto: "Contacte",
@@ -688,6 +753,17 @@ const ca: LandingCopy = {
     accesibilidad: "Accessibilitat",
     cumplimientoTitulo: "Compliment UE",
     cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
+    comparativas: "Comparatives",
+    comparativaLinks: [
+      { href: "/alternativa-grua", label: "Grua o conductor" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Mecànic a domicili" },
+      { href: "/taller-oficial-o-multimarca", label: "Oficial o multimarca" },
+      { href: "/capacidad-taller", label: "Capacitat del taller" },
+      { href: "/itv-para-talleres", label: "ITV per a tallers" },
+      { href: "/software-taller", label: "Programari de taller" },
+      { href: "/mantenimiento-marcas", label: "Manteniment per marca" },
+      { href: "/cliente-no-recoge-coche", label: "El client no recull el cotxe" },
+    ],
   },
   errors: {
     notFound: {
@@ -858,6 +934,9 @@ const en: LandingCopy = {
     details: "Details",
     talk: "Talk to Mecanu",
     comingSoon: "Coming soon in this city.",
+    resetAria: "Back to the city view",
+    zoomInAria: "Zoom in",
+    zoomOutAria: "Zoom out",
   },
   statsAria: "What Mecanu does",
   stats: [
@@ -984,6 +1063,24 @@ const en: LandingCopy = {
       },
     ],
   },
+  faq: {
+    eyebrow: "MECANU / FAQ",
+    heading: "Frequently asked questions",
+    more: "Show more",
+    less: "Show less",
+    links: [
+      { href: "/madrid", label: "Mecanu in Madrid" },
+      { href: "/barcelona", label: "Mecanu in Barcelona" },
+      { href: "/para-talleres", label: "How it works for your shop" },
+      { href: "/alternativa-grua", label: "Compared with a tow truck" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Compared with a mobile mechanic" },
+      { href: "/itv-para-talleres", label: "ITV for workshops" },
+      { href: "/software-taller", label: "Workshop software" },
+      { href: "/mantenimiento-marcas", label: "Service by brand" },
+      { href: "/cliente-no-recoge-coche", label: "Customer doesn't collect the car" },
+      { href: "/blog", label: "Operations blog" },
+    ],
+  },
   footer: {
     tagline: "Logistics for shops that keep repairing.",
     contacto: "Contact",
@@ -1009,6 +1106,17 @@ const en: LandingCopy = {
     accesibilidad: "Accessibility",
     cumplimientoTitulo: "EU compliance",
     cumplimientoTexto: "GDPR · ePrivacy · LSSI-CE",
+    comparativas: "Comparisons",
+    comparativaLinks: [
+      { href: "/alternativa-grua", label: "Tow truck or driver" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Mobile mechanic" },
+      { href: "/taller-oficial-o-multimarca", label: "Dealer or independent" },
+      { href: "/capacidad-taller", label: "Shop capacity" },
+      { href: "/itv-para-talleres", label: "ITV for workshops" },
+      { href: "/software-taller", label: "Workshop software" },
+      { href: "/mantenimiento-marcas", label: "Service by brand" },
+      { href: "/cliente-no-recoge-coche", label: "Customer doesn't collect the car" },
+    ],
   },
   errors: {
     notFound: {
@@ -1179,6 +1287,9 @@ const pt: LandingCopy = {
     details: "Detalhes",
     talk: "Falar com Mecanu",
     comingSoon: "Brevemente nesta cidade.",
+    resetAria: "Voltar à vista da cidade",
+    zoomInAria: "Aproximar o mapa",
+    zoomOutAria: "Afastar o mapa",
   },
   statsAria: "O que a Mecanu faz",
   stats: [
@@ -1305,6 +1416,24 @@ const pt: LandingCopy = {
       },
     ],
   },
+  faq: {
+    eyebrow: "MECANU / PERGUNTAS FREQUENTES",
+    heading: "Perguntas frequentes",
+    more: "Ver mais",
+    less: "Ver menos",
+    links: [
+      { href: "/madrid", label: "Mecanu em Madrid" },
+      { href: "/barcelona", label: "Mecanu em Barcelona" },
+      { href: "/para-talleres", label: "Como funciona para a tua oficina" },
+      { href: "/alternativa-grua", label: "Comparado com um reboque" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Comparado com um mecânico ao domicílio" },
+      { href: "/itv-para-talleres", label: "Inspeção para oficinas" },
+      { href: "/software-taller", label: "Software de oficina" },
+      { href: "/mantenimiento-marcas", label: "Manutenção por marca" },
+      { href: "/cliente-no-recoge-coche", label: "O cliente não levanta o carro" },
+      { href: "/blog", label: "Blog de operações" },
+    ],
+  },
   footer: {
     tagline: "Logística para oficinas que querem continuar a reparar.",
     contacto: "Contacto",
@@ -1330,6 +1459,17 @@ const pt: LandingCopy = {
     accesibilidad: "Acessibilidade",
     cumplimientoTitulo: "Cumprimento UE",
     cumplimientoTexto: "RGPD · ePrivacy · LSSI-CE",
+    comparativas: "Comparações",
+    comparativaLinks: [
+      { href: "/alternativa-grua", label: "Reboque ou condutor" },
+      { href: "/alternativa-mecanico-a-domicilio", label: "Mecânico ao domicílio" },
+      { href: "/taller-oficial-o-multimarca", label: "Oficial ou multimarca" },
+      { href: "/capacidad-taller", label: "Capacidade da oficina" },
+      { href: "/itv-para-talleres", label: "Inspeção para oficinas" },
+      { href: "/software-taller", label: "Software de oficina" },
+      { href: "/mantenimiento-marcas", label: "Manutenção por marca" },
+      { href: "/cliente-no-recoge-coche", label: "O cliente não levanta o carro" },
+    ],
   },
   errors: {
     notFound: {

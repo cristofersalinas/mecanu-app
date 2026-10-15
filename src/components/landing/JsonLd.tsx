@@ -26,7 +26,7 @@ const founder = {
   worksFor: { "@id": `${SITE}/#organization` },
   description: "Emprendedor por afición, vocación y profesión. Fundador de Mecanu.",
   knowsAbout: [
-    "Logística automotriz",
+    "Logística para talleres mecánicos",
     "Talleres mecánicos",
     "Operaciones B2B",
     "Producto digital",
@@ -49,7 +49,7 @@ const organization = {
   },
   image: `${SITE}/og-image.png`,
   description:
-    "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos. Fundada en Chile en 2022 y relanzada en España en 2024, coordina la recogida, traslado y entrega de coches de clientes con conductores externos verificados, seguro de responsabilidad civil incluido y panel de control en tiempo real. Opera en Madrid y Barcelona.",
+    "Mecanu es la plataforma logística con la que un taller recoge y entrega coches, con sus conductores o con los de Mecanu. Seguimiento en tiempo real. El seguro de traslado es opcional. Fundada en Chile en 2022 y relanzada en España en 2024. Opera en Madrid y Barcelona.",
   foundingDate: "2022",
   foundingLocation: {
     "@type": "Place",
@@ -61,8 +61,6 @@ const organization = {
     { "@type": "City", name: "Madrid", "@id": "https://www.wikidata.org/wiki/Q2807" },
     { "@type": "City", name: "Barcelona", "@id": "https://www.wikidata.org/wiki/Q1492" },
     { "@type": "AdministrativeArea", name: "España" },
-    { "@type": "City", name: "London" },
-    { "@type": "City", name: "São Paulo" },
   ],
   knowsAbout: [
     "Logística de vehículos para talleres mecánicos",
@@ -135,31 +133,31 @@ const softwareApp = {
     description: "Solicita una demo gratuita",
   },
   description:
-    "Panel de gestión de traslados de vehículos para talleres mecánicos. Recogida y entrega a domicilio, conductores verificados, seguro de RC flexible, inspección visual y CRM con WhatsApp.",
+    "Plataforma logística de coches para talleres. Flota propia o flota externa, seguimiento en tiempo real y seguro de traslado opcional.",
   featureList: [
     "Recogida del coche en la puerta del cliente, sin esperar días a coordinar",
     "Más barato y más disponible que una grúa cuando el coche circula",
-    "Flota externa verificada con seguro: el trayecto lo cubre Mecanu",
-    "Seguro de responsabilidad civil flexible: para el taller o por traslado",
-    "Check-in con inspección visual de hasta 20 puntos",
-    "CRM con WhatsApp para automatizar la atención al cliente",
-    "Predicción inteligente de próximos servicios y avisos al cliente",
+    "Flota del taller o flota de Mecanu, mismo panel",
+    "Seguro de traslado opcional: solo si el taller lo añade",
+    "Check-in y check-out con foto y estado del componente",
+    "Seguimiento georreferenciado en tiempo real",
+    "Avisos y siguiente servicio a partir del check-in",
     "El cliente se queda en casa o en el trabajo; el taller recupera plaza",
   ],
   screenshot: `${SITE}/landing/stat-tablero.png`,
 };
 
-// Generado desde la misma fuente que el FAQ visible de la landing. Google exige
-// que coincidan; si divergen, trata el marcado como incumplimiento.
-const faqPage = {
-  "@type": "FAQPage",
-  "@id": `${SITE}/#faq`,
-  mainEntity: FAQ_LANDING.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+function faqPageDe(items: readonly FaqItem[]) {
+  return {
+    "@type": "FAQPage",
+    "@id": `${SITE}/#faq`,
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
+}
 
 const localBusinesses = [
   {
@@ -169,7 +167,8 @@ const localBusinesses = [
     addressCountry: "ES",
     lat: 40.4168,
     lng: -3.7038,
-    keywords: "taller mecánico Madrid, grúa coches Madrid, mecánico a domicilio Madrid, recogida coches Madrid, escáner automotriz Madrid",
+    keywords:
+      "recogida coches talleres Madrid, logística vehículos Madrid, alternativa grúa taller Madrid, taller mecánico Madrid",
   },
   {
     city: "Barcelona",
@@ -178,16 +177,8 @@ const localBusinesses = [
     addressCountry: "ES",
     lat: 41.3851,
     lng: 2.1734,
-    keywords: "taller mecánico Barcelona, grúa coches Barcelona, mecánico a domicilio Barcelona, recogida coches Barcelona, escáner automotriz Barcelona, taller Barcelona, servicio automotriz Barcelona",
-  },
-  {
-    city: "London",
-    postalCode: "EC1A 1BB",
-    addressRegion: "England",
-    addressCountry: "GB",
-    lat: 51.5074,
-    lng: -0.1278,
-    keywords: "auto repair London, car collection delivery London, vehicle logistics London, best mechanic London",
+    keywords:
+      "recogida coches talleres Barcelona, logística vehículos Barcelona, alternativa grúa taller Barcelona, taller mecánico Barcelona",
   },
 ];
 
@@ -222,9 +213,8 @@ const itemList = {
   })),
 };
 
-const graph = [founder, organization, website, softwareApp, faqPage, itemList];
-
-export function JsonLd() {
+export function JsonLd({ faq = FAQ_LANDING }: { faq?: readonly FaqItem[] } = {}) {
+  const graph = [founder, organization, website, softwareApp, faqPageDe(faq), itemList];
   return (
     <script
       type="application/ld+json"
@@ -263,9 +253,10 @@ export function BlogPostJsonLd({
     dateModified: publishedAt,
     image: image.startsWith("http") ? image : `${SITE}${image}`,
     author: {
-      "@type": "Person",
-      name: authorName,
-      url: `${SITE}/blog/author/${authorName.toLowerCase().split(" ")[0]}`,
+      "@type": "Organization",
+      name: authorName === "Mecanu" ? "Mecanu" : authorName,
+      url: SITE,
+      "@id": `${SITE}/#organization`,
     },
     publisher: {
       "@id": `${SITE}/#organization`,

@@ -9,7 +9,7 @@ import MadridMap from "@/components/landing/MadridMap";
 import { JsonLd } from "@/components/landing/JsonLd";
 import { getPost } from "@/lib/blog/data";
 import { copyFor } from "@/lib/landing/copy";
-import { FAQ_LANDING } from "@/lib/landing/faq";
+import { faqFor } from "@/lib/landing/faq";
 import { type Locale, pathFor, contactoPathFor } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
 
@@ -73,10 +73,11 @@ const RESOURCE_POSTS = [
 export async function LandingPage({ locale }: { locale: Locale }) {
   const copy = copyFor(locale);
   const ctaHref = contactoPathFor(locale);
+  const faq = faqFor(locale);
 
   return (
     <main className={`${styles.page} ${interTight.variable}`}>
-      <JsonLd />
+      <JsonLd faq={faq} />
       <div className={styles.pageRail}>
         <LandingHeader locale={locale} copy={copy.nav} productos={copy.productos} />
 
@@ -216,35 +217,28 @@ export async function LandingPage({ locale }: { locale: Locale }) {
 
         <section className={styles.faqSection} id="preguntas">
           <div className={styles.sectionHeader}>
-            <p className={styles.eyebrow}>MECANU / PREGUNTAS FRECUENTES</p>
-            <h2 className={styles.headline}>Preguntas frecuentes</h2>
+            <p className={styles.eyebrow}>{copy.faq.eyebrow}</p>
+            <h2 className={styles.headline}>{copy.faq.heading}</h2>
           </div>
           <input id="faq-expand" type="checkbox" className={styles.faqToggle} />
           <div className={styles.faqClamp}>
             <div className={styles.faqWrap}>
-              {FAQ_LANDING.map((item) => (
+              {faq.map((item) => (
                 <details className={styles.faqItem} key={item.q}>
                   <summary>{item.q}</summary>
                   <p className={styles.faqAnswer}>{item.a}</p>
                 </details>
               ))}
               <div className={styles.faqLinks}>
-                <Link href="/madrid">Mecanu en Madrid</Link>
-                <Link href="/barcelona">Mecanu en Barcelona</Link>
-                <Link href="/para-talleres">Cómo funciona para tu taller</Link>
-                <Link href="/alternativa-grua">Comparado con una grúa</Link>
-                <Link href="/alternativa-mecanico-a-domicilio">Comparado con un mecánico a domicilio</Link>
-                <Link href="/itv-para-talleres">ITV para talleres</Link>
-                <Link href="/software-taller">Software de taller</Link>
-                <Link href="/mantenimiento-marcas">Mantenimiento por marca</Link>
-                <Link href="/cliente-no-recoge-coche">Cliente no recoge el coche</Link>
-                <Link href="/blog">Blog de operaciones</Link>
+                {copy.faq.links.map((enlace) => (
+                  <Link href={enlace.href} key={enlace.href}>{enlace.label}</Link>
+                ))}
               </div>
             </div>
           </div>
           <label className={styles.faqToggleLabel} htmlFor="faq-expand">
-            <span className={styles.faqToggleMore}>Ver más</span>
-            <span className={styles.faqToggleLess}>Ver menos</span>
+            <span className={styles.faqToggleMore}>{copy.faq.more}</span>
+            <span className={styles.faqToggleLess}>{copy.faq.less}</span>
           </label>
         </section>
 
@@ -320,15 +314,10 @@ export async function LandingPage({ locale }: { locale: Locale }) {
               <a className={styles.fLink} href="#inicio">{copy.footer.arriba}</a>
             </div>
             <div className={styles.footerCol}>
-              <p className={styles.colLabel}>Comparativas</p>
-              <Link className={styles.fLink} href="/alternativa-grua">Grúa o conductor</Link>
-              <Link className={styles.fLink} href="/alternativa-mecanico-a-domicilio">Mecánico a domicilio</Link>
-              <Link className={styles.fLink} href="/taller-oficial-o-multimarca">Oficial o multimarca</Link>
-              <Link className={styles.fLink} href="/capacidad-taller">Capacidad del taller</Link>
-              <Link className={styles.fLink} href="/itv-para-talleres">ITV para talleres</Link>
-              <Link className={styles.fLink} href="/software-taller">Software de taller</Link>
-              <Link className={styles.fLink} href="/mantenimiento-marcas">Mantenimiento por marca</Link>
-              <Link className={styles.fLink} href="/cliente-no-recoge-coche">Cliente no recoge el coche</Link>
+              <p className={styles.colLabel}>{copy.footer.comparativas}</p>
+              {copy.footer.comparativaLinks.map((enlace) => (
+                <Link className={styles.fLink} href={enlace.href} key={enlace.href}>{enlace.label}</Link>
+              ))}
             </div>
           </div>
           <div className={styles.footerCompliance} aria-label={copy.footer.cumplimientoTitulo}>

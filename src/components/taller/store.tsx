@@ -256,6 +256,7 @@ interface PanelStore {
   agendaLinkDe: (campanaId: string) => AgendaLinkCampana | null;
   canalesWa: Record<string, CanalWa>;
   setMensajesWa: (campanaId: string, mensajes: MensajeWa[] | ((prev: MensajeWa[]) => MensajeWa[])) => void;
+  setCanalWa: (campanaId: string, canal: CanalWa) => void;
 
   notas: Record<string, Nota[]>;
   addNota: (entidadId: string, texto: string) => void;
@@ -392,52 +393,6 @@ export function PanelProvider({
   const ahoraMs = useAhora();
   const ahoraRef = useMemo(() => new Date(ahoraMs), [ahoraMs]);
 
-  useEffect(() => {
-    if (!supabasePanelActivo()) return;
-    let cancelado = false;
-    (async () => {
-      setCargandoDatos(true);
-      try {
-        const [snapRes, kanbanRes] = await Promise.all([
-          fetch('/api/v1/panel/snapshot', FETCH_SNAPSHOT),
-          fetch('/api/v1/panel/kanban', FETCH_SNAPSHOT),
-        ]);
-        if (!snapRes.ok) throw new Error(`snapshot ${snapRes.status}`);
-        const raw = await snapRes.json();
-        if (cancelado) return;
-        const rutas = revivirFechas(raw.rutas ?? []) as RutaVista[];
-        if (kanbanRes.ok) {
-          const kb = (await kanbanRes.json()) as {
-            rutas?: { id: string; estado: RutaVista['estado']; subestado: RutaVista['subestado'] }[];
-          };
-          const porId = new Map((kb.rutas ?? []).map((r) => [r.id, r]));
-          for (let i = 0; i < rutas.length; i++) {
-            const u = porId.get(rutas[i]!.id);
-            if (u) rutas[i] = { ...rutas[i]!, estado: u.estado, subestado: u.subestado };
-          }
-        }
-        const campanas = revivirFechas(raw.campanas ?? []) as Campana[];
-        const clientes = revivirFechas(raw.clientes ?? []) as Cliente[];
-        const vehiculos = revivirFechas(raw.vehiculos ?? []) as Vehiculo[];
-        const conductores = revivirFechas(raw.conductores ?? []) as Conductor[];
-        const servicios = revivirFechas(raw.servicios ?? []) as Servicio[];
-        reemplazarArray(CLIENTES, clientes);
-        reemplazarArray(VEHICULOS, vehiculos);
-        reemplazarArray(CONDUCTORES, conductores);
-        reemplazarArray(SERVICIOS, servicios);
-        setRutasBase(rutas);
-        setCampanasBase(campanas);
-        setFuenteDatos('supabase');
-        setCondCfgState(condCfgInicial());
-      } catch (e) {
-        console.warn('[panel] no se pudo hidratar desde Supabase, sigo con mock', e);
-      } finally {
-        if (!cancelado) setCargandoDatos(false);
-      }
-    })();
-    return () => { cancelado = true; };
-  }, []);
-
   const [seleccion, setSeleccion] = useState<Seleccion | null>(() => inicial?.seleccion ?? null);
   const [modoFicha, setModoFicha] = useState<'panel' | 'ficha'>(() => inicial?.modoFicha ?? 'panel');
   const [filtrosUrl, setFiltrosUrlState] = useState<Record<string, string>>(() => inicial?.filtros ?? {});
@@ -460,6 +415,45 @@ export function PanelProvider({
 
   const [conductoresExtra, setConductoresExtra] = useState<{ id: string; nombre: string; telefono: string }[]>([]);
   const [conductoresEliminados, setConductoresEliminados] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelado = false;
+    const supabase = supabasePanelActivo();
+    (async () => {
+      if (supabase) setCargandoDatos(true);
+      try {
+        const res = await fetch('/api/v1/panel/snapshot');
+        if (!res.ok) throw new Error(`snapshot ${res.status}`);
+        const raw = await res.json();
+        if (cancelado) return;
+        if (raw.canalesWa) {
+          setCanalesWa(revivirFechas(raw.canalesWa) as Record<string, CanalWa>);
+        }
+        if (!supabase) return;
+        const rutas = revivirFechas(raw.rutas ?? []) as RutaVista[];
+        const campanas = revivirFechas(raw.campanas ?? []) as Campana[];
+        const clientes = revivirFechas(raw.clientes ?? []) as Cliente[];
+        const vehiculos = revivirFechas(raw.vehiculos ?? []) as Vehiculo[];
+        const conductores = revivirFechas(raw.conductores ?? []) as Conductor[];
+        const servicios = revivirFechas(raw.servicios ?? []) as Servicio[];
+        reemplazarArray(CLIENTES, clientes);
+        reemplazarArray(VEHICULOS, vehiculos);
+        reemplazarArray(CONDUCTORES, conductores);
+        reemplazarArray(SERVICIOS, servicios);
+        setRutasBase(rutas);
+        setCampanasBase(campanas);
+        setFuenteDatos('supabase');
+        setCondCfgState(condCfgInicial());
+      } catch (e) {
+        if (supabase) {
+          console.warn('[panel] no se pudo hidratar desde Supabase, sigo con mock', e);
+        }
+      } finally {
+        if (!cancelado && supabase) setCargandoDatos(false);
+      }
+    })();
+    return () => { cancelado = true; };
+  }, []);
 
   const [sucursales, setSucursales] = useState<Sucursal[]>(SUCURSALES_INICIALES);
   const [perfil, setPerfil] = useState<Perfil>({
@@ -719,6 +713,10 @@ export function PanelProvider({
     });
   }, []);
 
+  const setCanalWa = useCallback((campanaId: string, canal: CanalWa) => {
+    setCanalesWa((prev) => ({ ...prev, [campanaId]: canal }));
+  }, []);
+
   const marcarDeberHecho = useCallback((entidadKind: DeberTaller['entidadKind'], entidadId: string, tipos: TipoDeberTaller[]) => {
     if (!deberActivo) return false;
     if (deberActivo.entidadKind !== entidadKind || deberActivo.entidadId !== entidadId) return false;
@@ -752,6 +750,7 @@ export function PanelProvider({
       reemplazarArray(SERVICIOS, servicios);
       setRutasBase(rutas);
       setCampanasBase(campanas);
+      if (raw.canalesWa) setCanalesWa(revivirFechas(raw.canalesWa) as Record<string, CanalWa>);
       setRutasNuevas((prev) => prev.filter((r) => !rutas.some((s) => s.id === r.id)));
       setOverlays((prev) => {
         const next: Record<string, Partial<RutaVista>> = {};
@@ -1290,7 +1289,7 @@ export function PanelProvider({
     pipelineTareas, tareasPendientesN, moverTareaPipeline, cancelarTareaPipeline, reabrirTareaPipeline,
     tareaResaltadaId, limpiarTareaResaltada,
     registrarLinkAgendaEnviado, registrarAyudaAgendaEnviada, agendaLinkDe,
-    canalesWa, setMensajesWa,
+    canalesWa, setMensajesWa, setCanalWa,
     notas, addNota, tareas, toggleTarea, addTarea,
     agendarRuta, cancelarRuta, avanzarSubestadoEnRuta, setEstadoRuta, toggleTagManual, asignarConductor,
     avanzarCampana, rechazarCampana, marcarCampanaEnviada, crearRutaDesdeCampana,

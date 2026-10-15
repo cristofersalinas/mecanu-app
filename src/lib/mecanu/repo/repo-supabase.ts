@@ -23,11 +23,18 @@ import type {
 import type {
   AsignarConductorInput, CambiarEstadoPresupuestoInput, CambiarSubestadoTramoInput,
   CancelarRutaInput, CheckinInput, ConfirmacionInput, CrearRutaDesdeCampanaInput,
-  EntregaInput, HallazgoCampanaInput, IncidenciaInput, MecanuRepo,
-  ReasignarConductorInput, SolicitudInput, AgendarRutaInput,
-  GpsPingInput,
-  UbicacionConductorInput,
+  EntregaInput, EnviarMensajeWaInput, EnviarMensajeWaResult, HallazgoCampanaInput,
+  IncidenciaInput, MecanuRepo, ReasignarConductorInput, RegistrarMensajeEntranteInput,
+  SolicitudInput, AgendarRutaInput,
+  GpsPingInput, UbicacionConductorInput,
 } from './repo';
+import {
+  actualizarEstadoMensajeSb, getCanalWaSb, guardarMensajeSb, listCanalesWaSb, registrarEntranteSb,
+} from './whatsapp-supabase';
+import {
+  construirEnvioWa, despacharPorKapso, mensajeSalienteEnviado, mensajeSalientePendiente,
+  telefonoClienteCampana,
+} from '../whatsapp-service';
 import {
   construirVista, mapCampana, mapCampanaItem, mapCliente, mapConductor, mapLog, mapParada, mapPerfilAUsuario,
   mapPresupuesto, mapRuta, mapServicio, mapSolicitud, mapTramo, mapVehiculo,
@@ -1267,5 +1274,53 @@ export const supabaseRepo: MecanuRepo = {
       ahora,
     );
     return aplicarAutomatizaciones(mundo, proponerAutomatizaciones(mundo));
+  },
+
+  async listCanalesWa() {
+    return listCanalesWaSb(sb());
+  },
+
+  async getCanalWa(campanaId) {
+    return getCanalWaSb(sb(), campanaId);
+  },
+
+  async enviarMensajeWa(input: EnviarMensajeWaInput): Promise<EnviarMensajeWaResult> {
+    const campana = await supabaseRepo.getCampana(input.campanaId);
+    if (!campana) throw new Error(`Campaña ${input.campanaId} no encontrada`);
+    const canal = await getCanalWaSb(sb(), input.campanaId);
+    const telefonoDigits = telefonoClienteCampana(campana);
+    const telefonoE164 = `+${telefonoDigits}`;
+    const { cuerpo, payload, tipoMensaje } = construirEnvioWa(campana, canal, input, telefonoDigits);
+
+    const { data: meta } = await sb().from('campanas').select('taller_id').eq('id', input.campanaId).maybeSingle();
+    const tallerId = meta?.taller_id ? String(meta.taller_id) : await tallerDeSesion();
+
+    const localId = `wa-local-${Date.now()}`;
+    await guardarMensajeSb(sb(), input.campanaId, tallerId, telefonoE164,
+      mensajeSalientePendiente(localId, tipoMensaje, cuerpo));
+
+    const wamid = await despacharPorKapso(payload);
+    const mensaje = mensajeSalienteEnviado(wamid, tipoMensaje, cuerpo);
+    const canalActualizado = await guardarMensajeSb(sb(), input.campanaId, tallerId, telefonoE164, mensaje);
+
+    if (input.tipo === 'recordatorio' && campana.estado !== 'enviada') {
+      await supabaseRepo.cambiarEstadoPresupuesto({
+        presupuestoId: campana.presupuesto.id,
+        estado: 'enviada',
+      });
+    }
+
+    const campanaActualizada = await supabaseRepo.getCampana(input.campanaId);
+    if (!campanaActualizada) throw new Error(`Campaña ${input.campanaId} no encontrada tras envío`);
+    return { canal: canalActualizado, mensaje, campana: campanaActualizada };
+  },
+
+  async actualizarEstadoMensajeWa(wamid, estado, errorCode) {
+    await actualizarEstadoMensajeSb(sb(), wamid, estado, errorCode);
+  },
+
+  async registrarMensajeEntranteWa(input: RegistrarMensajeEntranteInput) {
+    const campanas = await supabaseRepo.listCampanas();
+    return registrarEntranteSb(sb(), campanas, input);
   },
 };
