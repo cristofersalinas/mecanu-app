@@ -117,7 +117,7 @@ export function kpisTareas(
 
 /** Resumen de rutas para General (alineado con kpisTraslados / analitica). */
 export function metricasGeneralesRutas(
-  rutas: Pick<RutaVista, 'estado' | 'fecha' | 'importe'>[],
+  rutas: RutaVista[],
   ahora: Date,
 ) {
   const facturado = rutas

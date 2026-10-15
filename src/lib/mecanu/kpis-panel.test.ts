@@ -80,8 +80,10 @@ describe('kpis-panel', () => {
         campanaId: 'CMP-1',
         vehiculoId: null,
         rutaOrigenId: null,
+        rutaGeneradaId: null,
         modo: 'detallado',
         estado: 'nueva',
+        ivaIncluido: true,
         lineas: [],
         total: 250,
         creado: ahora,
@@ -107,11 +109,11 @@ describe('kpis-panel', () => {
       zona: 'ventana' as const,
       hintNudge: '',
     };
-    const card = (id: string, urgencia: 'ahora' | 'normal' = 'normal'): TareaKanban => ({
+    const card = (id: string, urgencia: 'ahora' | 'hoy' = 'hoy'): TareaKanban => ({
       id,
-      deber: { ...deber, urgencia },
+      deber: { ...deber, id, urgencia },
       columna: 'pendiente',
-      cancelacion: null,
+      arrastrable: true,
     });
     const porColumna = {
       pendiente: [card('1', 'ahora'), card('2')],
