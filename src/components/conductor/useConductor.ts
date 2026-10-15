@@ -62,6 +62,7 @@ import {
   postConCola,
   flushColaPendiente,
   escrituraOk,
+  tomarRechazosFlush,
   type ResultadoEscritura,
 } from './escritura-api';
 import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '@/lib/mecanu/transicion-en-ruta';
@@ -432,6 +433,23 @@ export function useConductor(opts: OpcionesConductor = {}) {
     toast('Todo sincronizado con el taller');
   }, [toast]);
 
+  const aplicarFlush = useCallback((quedan: number, opts?: {
+    vacio?: 'sincronizado' | 'quedar';
+    siQuedan?: (n: number) => void;
+  }) => {
+    const rechazos = tomarRechazosFlush();
+    if (rechazos.length) {
+      toast(rechazos.map((r) => r.mensaje).join(' · '));
+    }
+    if (quedan === 0) {
+      if (rechazos.length || opts?.vacio === 'quedar') patch({ queue: 0, sync: 'synced' });
+      else sincronizado();
+      return;
+    }
+    patch({ queue: quedan, sync: 'synced' });
+    if (!rechazos.length) opts?.siQuedan?.(quedan);
+  }, [patch, sincronizado, toast]);
+
   const toggleOnline = useCallback(() => {
     const st = ref.current;
     if (st.online) {
@@ -441,11 +459,10 @@ export function useConductor(opts: OpcionesConductor = {}) {
     patch({ online: true, sync: st.queue > 0 ? 'syncing' : 'synced' });
     if (st.queue > 0) {
       void flushColaPendiente().then((quedan) => {
-        if (quedan === 0) sincronizado();
-        else patch({ queue: quedan, sync: 'synced' });
+        aplicarFlush(quedan);
       });
     }
-  }, [patch, sincronizado]);
+  }, [patch, aplicarFlush]);
 
   /** Solo marca bytes locales (fotos/vídeo). No mete basura en la cola. */
   const encolar = useCallback(
@@ -467,14 +484,13 @@ export function useConductor(opts: OpcionesConductor = {}) {
     }
     patch({ sync: 'syncing' });
     void flushColaPendiente().then((quedan) => {
-      if (quedan === 0) {
-        sincronizado();
-        return;
-      }
-      patch({ queue: quedan, sync: 'synced' });
-      toast(`${quedan} cambio(s) siguen sin llegar. Prueba otra vez.`);
+      aplicarFlush(quedan, {
+        siQuedan: (n) => {
+          toast(`${n} cambio(s) siguen sin llegar. Prueba otra vez.`);
+        },
+      });
     });
-  }, [patch, sincronizado, toast]);
+  }, [patch, aplicarFlush, toast]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -493,23 +509,18 @@ export function useConductor(opts: OpcionesConductor = {}) {
       /* Con red y cola residual: reenvía sin fingir offline. */
       patch({ queue: items.length, sync: 'syncing' });
       void flushColaPendiente().then((quedan) => {
-        if (quedan === 0) {
-          patch({ queue: 0, sync: 'synced' });
-          return;
-        }
-        patch({ queue: quedan, sync: 'synced' });
+        aplicarFlush(quedan, { vacio: 'quedar' });
       });
     }, 0);
     return () => window.clearTimeout(t);
-  }, [patch]);
+  }, [patch, aplicarFlush]);
 
   useEffect(() => {
     const onOnline = () => {
       if (ref.current.queue > 0) {
         patch({ online: true, sync: 'syncing' });
         void flushColaPendiente().then((quedan) => {
-          if (quedan === 0) sincronizado();
-          else patch({ queue: quedan, sync: 'synced' });
+          aplicarFlush(quedan);
         });
       } else {
         patch({ online: true, sync: 'synced' });
@@ -517,7 +528,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
     };
     window.addEventListener('online', onOnline);
     return () => window.removeEventListener('online', onOnline);
-  }, [patch, sincronizado]);
+  }, [patch, aplicarFlush]);
 
   const log = useCallback(
     (tid: string, tipo: TipoLog, texto: string) => {
@@ -1223,15 +1234,16 @@ export function useConductor(opts: OpcionesConductor = {}) {
     };
     const tid = wiz.tid;
     const vehiculoId = j.vehiculoId;
+    const avisosHallazgo: Promise<ResultadoEscritura>[] = [];
     const postHallazgo = (body: Record<string, unknown>, prefijo: string) => {
-      void postConCola({
+      avisosHallazgo.push(postConCola({
         url: '/api/v1/campanas/hallazgos',
         prefijoClave: `${prefijo}-${tid}`,
         body: { rutaId: j.rutaId, trasladoId: tid, ...body },
         online: ref.current.online,
         tipoCola: 'hallazgo',
         onCola: marcarCola,
-      });
+      }));
     };
     if (motivoItv) {
       postHallazgo(
@@ -1279,7 +1291,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
           }),
         );
       }
-      const rs = await Promise.all(escrituras);
+      const [rs, rsHallazgo] = await Promise.all([Promise.all(escrituras), Promise.all(avisosHallazgo)]);
       if (!rojos.length) {
         const sub = await enviarSubestado(tid, 'en_transito');
         const todosOk = rs.every(escrituraOk) && escrituraOk(sub);
@@ -1297,6 +1309,8 @@ export function useConductor(opts: OpcionesConductor = {}) {
         const err = rs.find((x) => x.tipo === 'error');
         if (err) ackTaller(err);
       }
+      const motivos = rsHallazgo.flatMap((r) => (r.tipo === 'error' ? [r.mensaje] : []));
+      if (motivos.length) toast(motivos.join(' · '));
     })();
     patch((prev) => ({
       checkins: {

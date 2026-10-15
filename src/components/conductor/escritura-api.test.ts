@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { COLA_STORAGE_KEY, escribirCola, leerCola } from '@/lib/mecanu/cola-offline';
-import { flushColaPendiente, postConCola } from '@/components/conductor/escritura-api';
+import { flushColaPendiente, postConCola, tomarRechazosFlush } from '@/components/conductor/escritura-api';
 
 function memoria(): { store: Record<string, string>; api: Storage } {
   const store: Record<string, string> = {};
@@ -19,6 +19,7 @@ function memoria(): { store: Record<string, string>; api: Storage } {
 
 describe('postConCola / flushCola', () => {
   afterEach(() => {
+    tomarRechazosFlush();
     vi.unstubAllGlobals();
   });
 
@@ -169,5 +170,66 @@ describe('postConCola / flushCola', () => {
     const quedan = await flushColaPendiente(api);
     expect(quedan).toBe(0);
     expect(api.getItem(COLA_STORAGE_KEY)).toBeNull();
+  });
+
+  it('un 422 enseña el motivo y un 409 sigue en la cola con la misma clave', async () => {
+    const { api } = memoria();
+    escribirCola(
+      [
+        {
+          id: 'q-422',
+          tipo: 'hallazgo',
+          creado: '2026-08-20T10:00:00Z',
+          payload: {
+            url: '/api/v1/campanas/hallazgos',
+            body: { rutaId: 'TR-1056', trasladoId: 'TS-1056-1', testigo: 'presion', nivel: 3 },
+          },
+          idempotencyKey: 'hallazgo-presion-TS-1056-1:misma',
+        },
+      ],
+      api,
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response(JSON.stringify({ error: { code: 'validation_error', message: 'nivel: demasiado bajo' } }), {
+          status: 422,
+        }),
+      ),
+    );
+    const quedan422 = await flushColaPendiente(api);
+    expect(quedan422).toBe(0);
+    expect(leerCola(api)).toEqual([]);
+    expect(tomarRechazosFlush()).toEqual([
+      {
+        status: 422,
+        mensaje: 'nivel: demasiado bajo',
+        idempotencyKey: 'hallazgo-presion-TS-1056-1:misma',
+      },
+    ]);
+
+    escribirCola(
+      [
+        {
+          id: 'q-409',
+          tipo: 'hallazgo',
+          creado: '2026-08-20T10:01:00Z',
+          payload: { url: '/api/v1/campanas/hallazgos', body: { rutaId: 'TR-1056' } },
+          idempotencyKey: 'hallazgo-otra:misma',
+        },
+      ],
+      api,
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ error: { message: 'conflicto' } }), { status: 409 })),
+    );
+    const quedan409 = await flushColaPendiente(api);
+    expect(quedan409).toBe(1);
+    expect(tomarRechazosFlush()).toEqual([]);
+    const cola = leerCola(api);
+    expect(cola).toHaveLength(1);
+    expect(cola[0]?.idempotencyKey).toBe('hallazgo-otra:misma');
+    expect(cola[0]?.tipo).toBe('hallazgo');
   });
 });

@@ -4,13 +4,32 @@ import { avisarPanelTrasEscritura } from '@/lib/mecanu/panel-realtime';
 
 /**
  * ok — el taller ya lo tiene.
- * cola — sin red / 5xx / 429; se reintenta la misma tarea.
- * error — 4xx permanente (validación, not found); NO encolar (reintentar no arregla).
+ * cola — sin red, 5xx, 429 u otro 4xx que CONTRATOS-API.md no lista como rechazo.
+ *        Se reintenta la misma tarea, con la misma clave.
+ * error — 400, 422 o 404 (contrato): se enseña `error.message` y no se reencola.
  */
 export type ResultadoEscritura =
   | { tipo: 'ok' }
   | { tipo: 'cola' }
   | { tipo: 'error'; mensaje: string };
+
+/** 400, 422 y 404 tal como los escribe CONTRATOS-API.md. */
+const RECHAZO_DEFINITIVO = new Set([400, 422, 404]);
+
+export type RechazoCola = {
+  status: number;
+  mensaje: string;
+  idempotencyKey?: string;
+};
+
+let rechazosPendientes: RechazoCola[] = [];
+
+/** Motivos del último flush (400/422/404). Vacía la lista. */
+export function tomarRechazosFlush(): RechazoCola[] {
+  const list = rechazosPendientes;
+  rechazosPendientes = [];
+  return list;
+}
 
 type PayloadCola = {
   url: string;
@@ -49,9 +68,8 @@ async function mensajeDeRespuesta(res: Response): Promise<string> {
   return `Error ${res.status}`;
 }
 
-/** 4xx salvo 429: el servidor rechazó la tarea; reencolar no ayuda. */
-function esRechazoPermanente(status: number): boolean {
-  return status >= 400 && status < 500 && status !== 429;
+function esRechazoDefinitivo(status: number): boolean {
+  return RECHAZO_DEFINITIVO.has(status);
 }
 
 /** Reenvía la cola real. Devuelve cuántos quedan pendientes. */
@@ -59,6 +77,7 @@ export async function flushColaPendiente(
   storage: StorageLike | null | undefined = typeof window === 'undefined' ? null : window.localStorage,
 ): Promise<number> {
   const items = leerCola(storage);
+  rechazosPendientes = [];
   if (!items.length) {
     escribirCola([], storage);
     return 0;
@@ -80,8 +99,12 @@ export async function flushColaPendiente(
         huboOk = true;
         continue;
       }
-      if (esRechazoPermanente(res.status)) {
-        /* Descarta: no tiene sentido reintentar una validación fallida. */
+      if (esRechazoDefinitivo(res.status)) {
+        rechazosPendientes.push({
+          status: res.status,
+          mensaje: await mensajeDeRespuesta(res),
+          idempotencyKey: item.idempotencyKey,
+        });
         continue;
       }
       restantes.push(item);
@@ -137,7 +160,7 @@ export async function postConCola(opts: {
       opts.onCola(leerCola(st).length);
       return { tipo: 'ok' };
     }
-    if (esRechazoPermanente(res.status)) {
+    if (esRechazoDefinitivo(res.status)) {
       return { tipo: 'error', mensaje: await mensajeDeRespuesta(res) };
     }
     encolar();
