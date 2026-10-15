@@ -122,4 +122,29 @@ describe('HTTP: POST check-in sin inspección previa', () => {
     const lista = await mockRepo.listInspeccionesDeRuta(RUTA_ID);
     expect(lista.some((i) => i.id === inspeccion.id && i.km === 19840)).toBe(true);
   });
+
+  it('una ruta sin vehículo deja matrícula y modelo en Sin dato', async () => {
+    const res = await mockRepo.checkin({
+      trasladoId: 'TS-1052-1',
+      km: 0,
+      combustible: 'Sin dato',
+      combustiblePct: 0,
+      limpieza: 'Sin dato',
+      fotos: [
+        { slot: 'frontal', url: 'https://example.test/frontal.jpg' },
+        { slot: 'trasera', url: 'https://example.test/trasera.jpg' },
+        { slot: 'izq', url: 'https://example.test/izq.jpg' },
+        { slot: 'der', url: 'https://example.test/der.jpg' },
+      ],
+      videoUrl: null,
+      testigos: {},
+      itemsInspeccion: {},
+      ruedas: {},
+      nota: null,
+      notaVozUrl: null,
+      firmaConductor: null,
+    });
+    expect(res.inspeccion.vehiculo.matricula).toBe('Sin dato');
+    expect(res.inspeccion.vehiculo.modelo).toBe('Sin dato');
+  });
 });

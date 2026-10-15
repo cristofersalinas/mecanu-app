@@ -128,7 +128,7 @@ let inspeccionSeq = 0;
 
 function inspeccionDeCheckin(t: Tramo, evidencia: Omit<CheckinInput, 'trasladoId'>): Inspeccion {
   const ruta = m.ruta(t.rutaId);
-  const vehiculo = ruta ? m.vehiculo(ruta.vehiculoId) : null;
+  const vehiculo = ruta?.vehiculoId ? m.vehiculo(ruta.vehiculoId) : null;
   const conductor = t.conductorId ? m.conductor(t.conductorId) : null;
   const fecha = new Date();
   return {
