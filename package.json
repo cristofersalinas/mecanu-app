@@ -23,7 +23,10 @@
     "db:seed:full": "npx tsx scripts/seed-mock-full.ts",
     "db:seed:avance": "node scripts/seed-escenario-avance.mjs",
     "db:bootstrap": "node scripts/bootstrap-demo-taller.mjs",
-    "wa:bridge": "node --experimental-strip-types scripts/whatsapp-sesion-bridge.ts"
+    "wa:bridge": "node --experimental-strip-types scripts/whatsapp-sesion-bridge.ts",
+    "video": "npm --prefix remotion run studio -- --port=3002",
+    "video:render": "npm --prefix remotion run render",
+    "video:snapshot-css": "node remotion/scripts/snapshot-ds.mjs"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.15",

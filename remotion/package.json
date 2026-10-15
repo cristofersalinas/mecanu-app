@@ -1,0 +1,25 @@
+{
+  "name": "mecanu-lanzamiento",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Video de lanzamiento Mecanu (Remotion)",
+  "scripts": {
+    "studio": "remotion studio",
+    "preview": "remotion preview",
+    "render": "remotion render Lanzamiento out/mecanu-lanzamiento.mp4",
+    "still": "remotion still Lanzamiento out/frame.png"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.361",
+    "@remotion/google-fonts": "4.0.361",
+    "@remotion/media-utils": "4.0.361",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.361"
+  },
+  "devDependencies": {
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "typescript": "5.8.2"
+  }
+}
