@@ -49,7 +49,7 @@ const organization = {
   },
   image: `${SITE}/og-image.png`,
   description:
-    "Mecanu es la plataforma logística con la que un taller recoge y entrega coches, con sus conductores o con los de Mecanu. Seguimiento en tiempo real. El seguro de traslado es opcional. Fundada en Chile en 2022 y relanzada en España en 2024. Opera en Madrid y Barcelona.",
+    "Mecanu es la plataforma logística con la que un taller traslada coches, con sus conductores o con los de Mecanu. El seguro de traslado es un añadido. Fundada en Chile en 2022 y relanzada en España en 2024. Opera en Madrid y Barcelona.",
   foundingDate: "2022",
   foundingLocation: {
     "@type": "Place",
@@ -135,14 +135,12 @@ const softwareApp = {
   description:
     "Plataforma logística de coches para talleres. Flota propia o flota externa, seguimiento en tiempo real y seguro de traslado opcional.",
   featureList: [
-    "Recogida del coche en la puerta del cliente, sin esperar días a coordinar",
-    "Más barato y más disponible que una grúa cuando el coche circula",
-    "Flota del taller o flota de Mecanu, mismo panel",
-    "Seguro de traslado opcional: solo si el taller lo añade",
-    "Check-in y check-out con foto y estado del componente",
-    "Seguimiento georreferenciado en tiempo real",
-    "Avisos y siguiente servicio a partir del check-in",
-    "El cliente se queda en casa o en el trabajo; el taller recupera plaza",
+    "Traslado con la flota del taller o con la flota de Mecanu",
+    "Seguro de traslado opcional, si el taller lo añade",
+    "Check-in y check-out: foto, estado del componente y registro",
+    "Cada servicio detectado es una oportunidad para el taller",
+    "Avisos, siguiente servicio y vuelta del cliente",
+    "Panel con el estado de cada traslado",
   ],
   screenshot: `${SITE}/landing/stat-tablero.png`,
 };
@@ -356,7 +354,7 @@ export function AboutPageJsonLd({ url }: { url: string }) {
     url,
     name: "Qué es Mecanu",
     description:
-      "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Coordina la recogida del coche en casa del cliente, el traslado al taller y la devolución cuando la reparación está terminada, con conductores verificados y seguro de responsabilidad civil incluido. Opera en Madrid y Barcelona.",
+      "Mecanu es la plataforma logística con la que un taller traslada coches, con sus conductores o con los de Mecanu. El seguro de traslado se añade solo si el taller lo quiere.",
     inLanguage: "es-ES",
     isPartOf: { "@id": `${SITE}/#website` },
     about: { "@id": `${SITE}/#organization` },

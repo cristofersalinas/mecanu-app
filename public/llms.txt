@@ -1,26 +1,25 @@
 # Mecanu
 
-> Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Coordina la recogida del coche en casa del cliente, el traslado al taller y la devolución cuando la reparación está terminada, con conductores verificados y seguro de responsabilidad civil incluido en cada trayecto. Opera en Madrid y Barcelona.
+> Mecanu es la plataforma logística con la que un taller recoge y devuelve el coche del cliente —con sus conductores o con los de Mecanu— más barato y con más hueco que una grúa, y con el coche a la vista. El seguro de traslado se añade solo si el taller lo quiere. El cliente que no puede ir alarga el cuadre hasta 7 días. El coche listo ocupa plaza hasta 4 días. Opera en Madrid y Barcelona. Fuente: docs/PROPUESTA-VALOR.md.
 
 ## Definición precisa
 
 Mecanu vende a talleres mecánicos, no a conductores particulares. El taller es quien contrata y decide cuándo usar el servicio.
 
 Qué hace:
-- Recoge el coche del cliente del taller en su domicilio o punto acordado, sin que el taller espere días a coordinar la visita.
-- Lo traslada al taller con un conductor verificado al volante (no en plataforma).
-- Documenta el estado del vehículo con un check-in de inspección visual (hasta 20 puntos) y fotos al recoger y al entregar.
-- Lo devuelve al cliente cuando la reparación está terminada, liberando la plaza del taller.
-- Cubre cada traslado con responsabilidad civil para el vehículo en tránsito. El seguro de RC es flexible: para el taller o por traslado. La flota externa va asegurada; si ocurre un incidente en el trayecto, lo cubre Mecanu.
-- Automatiza parte de la atención al cliente con CRM y WhatsApp, y envía avisos de próximos servicios a partir de lo visto en la inspección.
-- Muestra al taller el estado de cada traslado en tiempo real desde un panel web.
-- Es más barato y más disponible que una grúa cuando el coche puede circular: no hace falta agendar el camión con días de antelación. Si el coche no arranca, sigue haciendo falta una grúa.
+- Traslada coches de los clientes del taller: recogida, taller y devolución, en ventana de una hora.
+- Flota propia: los conductores son del taller y Mecanu es el software de logística.
+- Flota externa: los conductores son de Mecanu, cuando el taller no llega con los suyos.
+- Ofrece seguro de traslado como añadido, solo si el taller lo contrata.
+- Check-in y check-out visual enfocado en servicios: foto, registro y estado del componente. Lo hace quien conduce, sea del taller o de Mecanu.
+- Con ese registro calcula, proyecta, avisa y propone el siguiente servicio para que el cliente vuelva.
+- Muestra al taller el estado de cada traslado desde el panel.
 
 Qué NO hace:
 - No repara coches. No es un taller ni un servicio de mecánica a domicilio.
 - No es asistencia en carretera. Para un coche que no circula hace falta una grúa.
-- No es un DMS: no hace tempario, recambios, facturación ni diagnosis (Autel, Launch, Bosch, GT Motive, Audatex siguen siendo del taller).
-- No es taller oficial de Volkswagen, BMW, Audi, Mercedes ni ninguna marca.
+- No es un marketplace ni una tienda. No vende recambios, crédito ni la web del taller.
+- No es un DMS: no hace tempario, recambios, facturación ni diagnosis.
 - No vende a conductores particulares.
 
 ## Problema que resuelve
@@ -42,11 +41,11 @@ Madrid y Barcelona, incluidas áreas metropolitanas, radio máximo de 40 km desd
 
 ## Cliente objetivo
 
-Talleres mecánicos independientes y cadenas multimarca de 3 a 30 empleados con flujo constante de vehículos de clientes particulares. No está pensado para talleres que solo atienden flotas propias ni para concesionarios con logística interna.
+Talleres mecánicos que trasladan coches de sus clientes, con conductores propios, con la flota de Mecanu, o con las dos. Flota propia significa conductores del taller, no una flota de vehículos en mantenimiento.
 
 ## Modelo de precio
 
-Pago por traslado realizado. Sin cuota fija ni compromiso de volumen. No requiere contratar conductores, dar de alta personal ni adquirir vehículos.
+Con flota propia, el taller usa el software. Con flota externa, Mecanu pone el conductor. El seguro de traslado es un añadido. Las cifras no se publican hasta que estén en docs/PROPUESTA-VALOR.md.
 
 ## Historia
 

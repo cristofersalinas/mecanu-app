@@ -12,11 +12,9 @@ import styles from "@/app/landing.module.css";
 export function LandingHeader({
   locale,
   copy,
-  productos,
 }: {
   locale: Locale;
   copy: LandingCopy["nav"];
-  productos: LandingCopy["productos"];
 }) {
   const [abierto, setAbierto] = useState(false);
   const menuId = useId();
@@ -54,19 +52,9 @@ export function LandingHeader({
         </Link>
 
         <nav className={styles.links} aria-label={copy.mainAria}>
-          <a className={styles.link} href="#inicio">{copy.inicio}</a>
-          <a className={styles.link} href="#solucion">{copy.solucion}</a>
-          <a className={styles.link} href="#recursos">{copy.recursos}</a>
-          <details className={styles.dropdown}>
-            <summary className={`${styles.link} ${styles.dropdownToggle}`}>
-              {copy.productos} <Icon name="expand_more" size="sm" />
-            </summary>
-            <div className={styles.dropdownMenu}>
-              {productos.map((producto) => (
-                <a href={producto.href} key={producto.label}>{producto.label}</a>
-              ))}
-            </div>
-          </details>
+          <a className={styles.link} href="#como-funciona">{copy.como}</a>
+          <a className={styles.link} href="#cobertura">{copy.cobertura}</a>
+          <a className={styles.link} href="#preguntas">{copy.preguntas}</a>
         </nav>
 
         <div className={styles.navEnd}>
@@ -95,20 +83,9 @@ export function LandingHeader({
             onClick={cerrar}
           />
           <nav id={menuId} className={styles.mobileNav} aria-label={copy.mobileAria}>
-            <a className={styles.mobileLink} href="#inicio" onClick={cerrar}>{copy.inicio}</a>
-            <a className={styles.mobileLink} href="#solucion" onClick={cerrar}>{copy.solucion}</a>
-            <a className={styles.mobileLink} href="#recursos" onClick={cerrar}>{copy.recursos}</a>
-            <p className={styles.mobileGroupLabel}>{copy.productos}</p>
-            {productos.map((producto) => (
-              <a
-                className={styles.mobileLink}
-                href={producto.href}
-                key={producto.label}
-                onClick={cerrar}
-              >
-                {producto.label}
-              </a>
-            ))}
+            <a className={styles.mobileLink} href="#como-funciona" onClick={cerrar}>{copy.como}</a>
+            <a className={styles.mobileLink} href="#cobertura" onClick={cerrar}>{copy.cobertura}</a>
+            <a className={styles.mobileLink} href="#preguntas" onClick={cerrar}>{copy.preguntas}</a>
           </nav>
         </>
       ) : null}

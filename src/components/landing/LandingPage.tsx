@@ -10,7 +10,7 @@ import { JsonLd } from "@/components/landing/JsonLd";
 import { getPost } from "@/lib/blog/data";
 import { copyFor } from "@/lib/landing/copy";
 import { faqFor } from "@/lib/landing/faq";
-import { type Locale, pathFor, contactoPathFor } from "@/lib/landing/locales";
+import { type Locale, contactoPathFor } from "@/lib/landing/locales";
 import styles from "@/app/landing.module.css";
 
 /** Foto única del hero. Recorte: `.heroPhotoVolvo` en landing.module.css. */
@@ -28,40 +28,17 @@ const interTight = Inter_Tight({
   display: "swap",
 });
 
-const clientLogos = [
-  { name: "Norex", mark: "N", variant: "logoNorex" },
-  { name: "AutoRío", mark: "◒", variant: "logoAutorio" },
-  { name: "Motria", mark: "M", variant: "logoMotria" },
-  { name: "Vektor", mark: "⌁", variant: "logoVektor" },
-  { name: "Tallería", mark: "T", variant: "logoTalleria" },
-  { name: "Rueda Norte", mark: "↗", variant: "logoRueda" },
-] as const;
-
-const STAT_FOTOS = {
-  tablero: {
-    src: "/landing/stat-tablero.png",
-    alt: "Tablero de un coche en circulación durante un traslado coordinado por Mecanu",
-    zoom: 1.2,
-    x: "50%",
-    y: "50%",
-  },
-  volante: {
-    src: "/landing/stat-volante.png",
-    alt: "Conductor verificado de Mecanu al volante del coche de un cliente del taller",
-    zoom: 1.3,
-    x: "50%",
-    y: "50%",
-  },
-  malla: {
-    src: "/landing/stat-malla.png",
-    alt: "Detalle de la parrilla de un vehículo entregado en el taller",
-    zoom: 1.3,
-    x: "50%",
-    y: "55%",
-  },
-};
-
-const STAT_PHOTO = [STAT_FOTOS.tablero, STAT_FOTOS.volante, STAT_FOTOS.malla] as const;
+type LogoCarrusel =
+  | { kind: "text"; name: string; mark: string; variant: keyof typeof styles }
+  | {
+      kind: "img";
+      name: string;
+      src: string;
+      width: number;
+      height: number;
+      /** AXA es más alto (barra diagonal); el resto alinea con el wordmark. */
+      tall?: boolean;
+    };
 
 const RESOURCE_POSTS = [
   getPost("tu-taller-tambien-puede-entregar-como-un-delivery"),
@@ -69,6 +46,13 @@ const RESOURCE_POSTS = [
   getPost("conductores-externos-para-talleres"),
 ] as const;
 
+/** Aseguradoras, de mayor a menor. Un solo tono (marca de agua). */
+const clientLogos: LogoCarrusel[] = [
+  { kind: "img", name: "Mapfre", src: "/landing/logos/mapfre.png", width: 138, height: 21 },
+  { kind: "img", name: "Allianz", src: "/landing/logos/allianz.png", width: 120, height: 22 },
+  { kind: "img", name: "AXA", src: "/landing/logos/axa.svg", width: 34, height: 34, tall: true },
+  { kind: "img", name: "Zurich", src: "/landing/logos/zurich.png", width: 124, height: 22 },
+];
 
 export async function LandingPage({ locale }: { locale: Locale }) {
   const copy = copyFor(locale);
@@ -79,7 +63,7 @@ export async function LandingPage({ locale }: { locale: Locale }) {
     <main className={`${styles.page} ${interTight.variable}`}>
       <JsonLd faq={faq} />
       <div className={styles.pageRail}>
-        <LandingHeader locale={locale} copy={copy.nav} productos={copy.productos} />
+        <LandingHeader locale={locale} copy={copy.nav} />
 
         <section className={styles.heroGrid} id="inicio">
           <div className={styles.heroText}>
@@ -93,7 +77,6 @@ export async function LandingPage({ locale }: { locale: Locale }) {
             <p className={styles.subtext}>{copy.hero.subtext}</p>
             <div className={styles.actions}>
               <a className={styles.btnPrimary} href={ctaHref}>{copy.hero.primary}</a>
-              <a className={styles.btnSecondary} href="#como-funciona">{copy.hero.secondary}</a>
             </div>
           </div>
 
@@ -110,29 +93,41 @@ export async function LandingPage({ locale }: { locale: Locale }) {
           </div>
         </section>
 
-        <section className={styles.logoBand} aria-label={copy.logosAria}>
+        <section className={styles.logoBand} id="cobertura" aria-label={copy.logosAria}>
+          <p className={styles.logoBandLabel}>{copy.logosLabel}</p>
           <div className={styles.marqueeInner}>
             <div className={styles.track}>
-              {[...clientLogos, ...clientLogos].map((cliente, index) => (
-                <div className={styles.logoItem} key={`${cliente.name}-${index}`} aria-label={cliente.name}>
-                  <span className={`${styles.logoMark} ${styles[cliente.variant]}`}>
-                    <i>{cliente.mark}</i>{cliente.name}
-                  </span>
+              {[...clientLogos, ...clientLogos].map((logo, index) => (
+                <div className={styles.logoItem} key={`${logo.name}-${index}`} aria-label={logo.name}>
+                  {logo.kind === "img" ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- assets locales monocromos en marquee
+                    <img
+                      className={logo.tall ? `${styles.logoImg} ${styles.logoImgTall}` : styles.logoImg}
+                      src={logo.src}
+                      alt=""
+                      width={logo.width}
+                      height={logo.height}
+                      decoding="async"
+                    />
+                  ) : (
+                    <span className={`${styles.logoMark} ${styles[logo.variant]}`}>
+                      <i>{logo.mark}</i>
+                      {logo.name}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <MadridMap copy={copy.map} />
-
         <section className={styles.hiwGrid} id="como-funciona">
           <div className={styles.hiwHeader}>
-            <p className={styles.eyebrow}>{copy.hiw.eyebrow}</p>
-            <div className={styles.headingRow}>
-              <h2 className={styles.heading}>{copy.hiw.heading}</h2>
+            <div className={styles.eyebrowRow}>
+              <p className={styles.eyebrow}>{copy.hiw.eyebrow}</p>
               <a className={styles.linkCta} href={ctaHref}>{copy.hiw.cta}</a>
             </div>
+            <h2 className={styles.heading}>{copy.hiw.heading}</h2>
             <p className={styles.subtext}>{copy.hiw.subtext}</p>
           </div>
           <div className={styles.stepsRow}>
@@ -146,6 +141,8 @@ export async function LandingPage({ locale }: { locale: Locale }) {
           </div>
         </section>
 
+        <MadridMap copy={copy.map} />
+
         <section className={styles.ctaGrid} id="contacto">
           <div className={styles.ctaLeft}>
             <p className={styles.eyebrow}>{copy.close.eyebrow}</p>
@@ -153,11 +150,10 @@ export async function LandingPage({ locale }: { locale: Locale }) {
             <p className={styles.subtext}>{copy.close.subtext}</p>
             <div className={styles.actions}>
               <a className={styles.btnPrimary} href={ctaHref}>{copy.close.primary}</a>
-              <a className={styles.btnSecondary} href="#como-funciona">{copy.close.secondary}</a>
             </div>
           </div>
-          <div className={styles.ctaRight}>
-            <p className={styles.featuresLabel}>{copy.close.featuresLabel}</p>
+          <div className={styles.ctaRight} aria-labelledby="lo-que-obtienes">
+            <p className={styles.featuresLabel} id="lo-que-obtienes">{copy.close.featuresLabel}</p>
             <ul className={styles.featureList}>
               {copy.close.beneficios.map((beneficio) => (
                 <li className={styles.featureItem} key={beneficio.texto}>
@@ -171,54 +167,25 @@ export async function LandingPage({ locale }: { locale: Locale }) {
           </div>
         </section>
 
-        <section className={styles.useCasesGrid} id="solucion" aria-label={copy.statsAria}>
-          {copy.stats.map((metrica, i) => {
-            const foto = STAT_PHOTO[i];
-            return (
-              <article className={styles.statCell} key={metrica.numero}>
-                <div className={styles.statImageWrap}>
-                  <Image
-                    className={styles.statPhoto}
-                    src={foto.src}
-                    alt={foto.alt}
-                    width={480}
-                    height={360}
-                    quality={80}
-                    style={{
-                      objectPosition: `${foto.x} ${foto.y}`,
-                      transform: `scale(${foto.zoom})`,
-                      transformOrigin: `${foto.x} ${foto.y}`,
-                    }}
-                  />
-                </div>
-                <span className={styles.statIndex}>{metrica.numero}</span>
-                <h2 className={styles.statValue}>{metrica.valor}</h2>
-                <p className={styles.statLabel}>{metrica.etiqueta}</p>
-                <p className={styles.statDesc}>{metrica.texto}</p>
-                {metrica.enlace ? (
-                  <a className={styles.statLink} href="#como-funciona">{metrica.enlace} →</a>
-                ) : null}
-              </article>
-            );
-          })}
-        </section>
-
-        <section className={styles.hiringCta} id="flota">
-          <div className={styles.ctaSection}>
-            <div className={styles.ctaText}>
-              <h2 className={styles.ctaHeading}>{copy.hiring.heading}</h2>
-              <p className={styles.ctaSubtext}>{copy.hiring.subtext}</p>
-            </div>
-            <div className={styles.ctaButtonWrapper}>
-              <a className={styles.ctaButton} href={ctaHref}>{copy.hiring.cta}</a>
-            </div>
+        <section className={styles.specsSection} id="solucion" aria-label={copy.specsAria}>
+          <div className={styles.specsHeader}>
+            <p className={styles.eyebrow}>{copy.specs.eyebrow}</p>
+            <h2 className={styles.heading}>{copy.specs.heading}</h2>
+          </div>
+          <div className={styles.specsGrid}>
+            {copy.specs.items.map((spec) => (
+              <div className={styles.specCell} key={spec.etiqueta}>
+                <span className={styles.specValue}>{spec.valor}</span>
+                <span className={styles.specLabel}>{spec.etiqueta}</span>
+              </div>
+            ))}
           </div>
         </section>
 
         <section className={styles.faqSection} id="preguntas">
           <div className={styles.sectionHeader}>
             <p className={styles.eyebrow}>{copy.faq.eyebrow}</p>
-            <h2 className={styles.headline}>{copy.faq.heading}</h2>
+            <h2 className={styles.heading}>{copy.faq.heading}</h2>
           </div>
           <input id="faq-expand" type="checkbox" className={styles.faqToggle} />
           <div className={styles.faqClamp}>
@@ -246,7 +213,7 @@ export async function LandingPage({ locale }: { locale: Locale }) {
           <div className={styles.sectionHeader}>
             <p className={styles.eyebrow}>{copy.news.eyebrow}</p>
             <div className={styles.headingRow}>
-              <h2 className={styles.headline}>{copy.news.heading}</h2>
+              <h2 className={styles.heading}>{copy.news.heading}</h2>
               <Link className={styles.linkCta} href="/blog">{copy.news.cta}</Link>
             </div>
           </div>
@@ -288,7 +255,7 @@ export async function LandingPage({ locale }: { locale: Locale }) {
           </div>
         </section>
 
-        <footer className={styles.footerGrid} id="cobertura">
+        <footer className={styles.footerGrid}>
           <div className={styles.footerTop}>
             <div className={styles.footerBrand}>
               <Logo variant="dark" height={19} />

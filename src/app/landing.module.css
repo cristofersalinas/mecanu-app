@@ -80,6 +80,7 @@
 .navGrid,
 .logoBand,
 .mapSection,
+.specsSection,
 .useCasesGrid,
 .useCasesSection,
 .hiwGrid,
@@ -90,6 +91,7 @@
 
 .logoBand::after,
 .mapSection::after,
+.specsSection::after,
 .useCasesGrid::after,
 .useCasesSection::after,
 .hiwGrid::after,
@@ -107,6 +109,7 @@
 }
 
 .heroGrid,
+.specsSection,
 .useCasesGrid,
 .hiwGrid,
 .hiringCta,
@@ -359,10 +362,9 @@
 .mobileGroupLabel {
   margin: .85rem 0 .15rem;
   color: var(--faint);
-  font-family: "Courier New", Courier, monospace;
-  font-size: .58rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
+  font-size: .68rem;
+  font-weight: 500;
+  letter-spacing: .02em;
 }
 
 .mobileCta {
@@ -378,7 +380,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 545px;
-  max-height: 595px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -404,38 +405,26 @@
   width: fit-content;
   display: inline-flex;
   align-items: center;
-  gap: .4rem;
-  margin: 0 0 1.5rem;
-  padding: .28rem .55rem;
-  border: 1px solid rgba(15, 15, 15, .06);
-  border-radius: 3px;
-  background: rgba(229, 229, 229, .35);
-}
-
-.backedByText,
-.backedByLogo,
-.eyebrow,
-.statIndex,
-.statLabel,
-.cardDate,
-.featuresLabel,
-.colLabel,
-.scenePanelLabel {
-  font-family: "Courier New", Courier, monospace;
+  gap: .35rem;
+  margin: 0 0 1.15rem;
 }
 
 .backedByText {
   color: var(--muted);
-  font-size: .58rem;
+  font-size: .75rem;
   font-weight: 500;
-  letter-spacing: .15em;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  line-height: 1.2;
 }
 
 .backedByLogo {
-  color: var(--ink);
-  font-size: .57rem;
-  font-weight: 700;
-  letter-spacing: .05em;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  line-height: 1.2;
 }
 
 .headline,
@@ -671,8 +660,9 @@
 .scenePanelLabel {
   margin-bottom: .65rem;
   color: rgba(255, 255, 255, .55);
-  font-size: .55rem;
-  letter-spacing: .1em;
+  font-size: .68rem;
+  font-weight: 500;
+  letter-spacing: .02em;
 }
 
 .scenePanel strong {
@@ -684,8 +674,7 @@
 .scenePanel small {
   margin-top: .3rem;
   color: rgba(255, 255, 255, .58);
-  font-family: "Courier New", Courier, monospace;
-  font-size: .58rem;
+  font-size: .68rem;
 }
 
 .sceneProgress {
@@ -707,8 +696,7 @@
   gap: .6rem;
   margin-top: auto;
   color: rgba(255, 255, 255, .65);
-  font-family: "Courier New", Courier, monospace;
-  font-size: .54rem;
+  font-size: .65rem;
 }
 
 .scenePanelFooter span {
@@ -722,20 +710,53 @@
   top: 1rem;
   right: 1rem;
   color: rgba(15, 15, 15, .52);
-  font-family: "Courier New", Courier, monospace;
-  font-size: .58rem;
-  letter-spacing: .12em;
+  font-size: .68rem;
+  font-weight: 500;
+  letter-spacing: .02em;
 }
 
 .logoBand {
+  position: relative;
+  z-index: 2;
   height: 74px;
   overflow: hidden;
   border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  background: var(--paper);
+}
+
+.logoBandLabel {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 2rem 0 2rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6b7280;
+  white-space: nowrap;
 }
 
 .marqueeInner {
+  flex: 1;
+  min-width: 0;
   height: 74px;
   overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 72px,
+    black calc(100% - 64px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 72px,
+    black calc(100% - 64px),
+    transparent 100%
+  );
 }
 
 .track {
@@ -767,7 +788,7 @@
   align-items: center;
   gap: .35rem;
   color: #6b7280;
-  opacity: .55;
+  opacity: .38;
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: -.06em;
@@ -775,8 +796,27 @@
   transition: opacity .2s;
 }
 
-.logoItem:hover .logoMark {
-  opacity: 1;
+.logoImg {
+  display: block;
+  width: auto;
+  height: 22px;
+  max-width: 150px;
+  object-fit: contain;
+  object-position: center;
+  opacity: .38;
+  transition: opacity .2s;
+}
+
+/* AXA: placa cuadrada; un poco más grande para que se lea el wordmark. */
+.logoImgTall {
+  width: 34px;
+  height: 34px;
+  max-width: 34px;
+}
+
+.logoItem:hover .logoMark,
+.logoItem:hover .logoImg {
+  opacity: .72;
 }
 
 .logoMark i {
@@ -809,7 +849,7 @@
 }
 
 .logoMotria i {
-  color: var(--accent);
+  color: inherit;
 }
 
 .logoVektor {
@@ -828,7 +868,7 @@
 }
 
 .logoRueda i {
-  color: var(--accent);
+  color: inherit;
 }
 
 .mapSection {
@@ -1316,83 +1356,172 @@
   background: rgba(15, 15, 15, .42);
 }
 
-.useCasesGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.specsSection {
+  position: relative;
   border-bottom: 1px solid var(--line);
 }
 
-.statCell {
-  min-width: 0;
-  padding: 2.5rem 2rem;
+.specsHeader {
+  padding: 3rem 2rem 2.5rem;
+}
+
+.specsHeader .eyebrow {
+  margin: 0 0 1.25rem;
+}
+
+.specsHeader .heading {
+  margin: 0;
+  color: var(--ink);
+}
+
+.specsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line);
+}
+
+.specCell {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  padding: 2rem;
   border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+  cursor: default;
+  transition: background-color .15s ease;
+}
+
+.specCell:nth-child(3n) {
+  border-right: none;
+}
+
+.specCell:nth-child(n+4) {
+  border-bottom: none;
+}
+
+.specValue {
+  font-family: var(--landing-font), "Inter Tight", sans-serif;
+  font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -.02em;
+  line-height: 1.1;
+  transition: color .15s ease;
+}
+
+.specCell:hover .specValue {
+  color: var(--accent);
+}
+
+.specLabel {
+  margin: 0;
+  color: var(--muted);
+  font-size: .8125rem;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: -.01em;
+}
+
+.useCasesGrid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--line);
+  overflow: visible;
+}
+
+.statCell {
+  position: relative;
+  z-index: 0;
+  min-width: 0;
+  padding: 1.75rem 1.75rem;
+  border-right: 1px solid var(--line);
+  outline: none;
+  transition: background-color .15s ease, z-index 0s;
+}
+
+.statCell:hover,
+.statCell:focus-within {
+  z-index: 2;
+  background: #fff;
 }
 
 .statCell:last-child {
   border-right: 0;
 }
 
-.statImageWrap {
-  --stat-photo-h: 168px;
-  display: flex;
-  justify-content: center;
-  overflow: hidden;
-  height: calc(var(--stat-photo-h) * 1.15);
-  margin-bottom: calc(1.25rem - var(--stat-photo-h) * 0.15);
-}
-
-.statPhoto {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.statIndex {
-  display: block;
-  margin-bottom: 1.1rem;
-  color: var(--line-dark);
-  font-size: .68rem;
-  letter-spacing: .1em;
-}
-
 .statValue {
-  margin: 0 0 .3rem;
+  margin: 0 0 .4rem;
   color: var(--ink);
-  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-size: clamp(1.85rem, 3.2vw, 2.4rem);
   font-weight: 500;
-  letter-spacing: -.02em;
-  line-height: 1.1;
+  letter-spacing: -.03em;
+  line-height: 1.05;
 }
 
 .statLabel {
-  margin: 0 0 .9rem;
-  color: var(--accent);
-  font-size: .7rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
+  margin: 0;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .02em;
+  line-height: 1.35;
+}
+
+/* Cubre la métrica al hover; la fila sigue compacta. */
+.statDetail {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  padding: 1.25rem 1.75rem;
+  background: #fff;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .16s ease, visibility 0s linear .16s;
+}
+
+.statDetailInner {
+  overflow: hidden;
+}
+
+.statCell:hover .statDetail,
+.statCell:focus-within .statDetail {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity .16s ease, visibility 0s;
 }
 
 .statDesc {
-  max-width: 290px;
+  max-width: 22rem;
   margin: 0;
   color: var(--muted);
-  font-size: .875rem;
-  line-height: 1.55;
+  font-size: .8125rem;
+  line-height: 1.5;
 }
 
 .statLink,
 .readLink,
 .linkCta,
 .footerCtaLink {
-  color: var(--accent);
-  font-size: .875rem;
+  color: var(--ink);
+  font-size: .8125rem;
   font-weight: 500;
   transition: opacity .15s, color .15s;
 }
 
 .statLink {
   display: inline-block;
-  margin-top: .9rem;
+  margin-top: .55rem;
+}
+
+.statLink:hover {
+  color: var(--accent);
 }
 
 .hiwGrid {
@@ -1406,8 +1535,23 @@
 .eyebrow {
   margin: 0 0 1.25rem;
   color: var(--muted);
-  font-size: .68rem;
-  letter-spacing: .1em;
+  font-size: .75rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.eyebrowRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin: 0 0 1.25rem;
+}
+
+.eyebrowRow .eyebrow {
+  margin: 0;
 }
 
 .headingRow {
@@ -1454,9 +1598,9 @@
   display: block;
   margin-bottom: 1.4rem;
   color: var(--faint);
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1.36rem;
-  letter-spacing: .1em;
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: -.01em;
 }
 
 .stepTitle {
@@ -1571,14 +1715,15 @@
   display: flex;
   flex-direction: column;
   gap: .5rem;
-  padding: 2.5rem 2rem;
+  padding: 3rem 2rem 2.5rem;
 }
 
 .sectionHeader .eyebrow {
-  margin: 0;
+  margin: 0 0 1.25rem;
 }
 
-.sectionHeader .headline {
+.sectionHeader .headline,
+.sectionHeader .heading {
   margin: 0;
   font-size: clamp(2rem, 3.5vw, 3rem);
 }
@@ -1840,8 +1985,9 @@
 .cardDate {
   margin: 0;
   color: var(--faint);
-  font-size: .68rem;
-  letter-spacing: .1em;
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
 
@@ -1896,9 +2042,12 @@
 
 .featuresLabel {
   margin: 0;
-  color: var(--faint);
-  font-size: .68rem;
-  letter-spacing: .1em;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  line-height: 1.2;
 }
 
 .featureList {
@@ -2004,9 +2153,9 @@
 .colLabel {
   margin: 0 0 .45rem;
   color: var(--faint);
-  font-size: .68rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .01em;
 }
 
 .fLink {
@@ -2039,12 +2188,11 @@
 .complianceBadge {
   display: inline-flex;
   align-items: center;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   color: var(--body, #374151);
-  border: 1px solid color-mix(in srgb, var(--body, #374151) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--body, #374151) 22%, transparent);
   padding: 0.28rem 0.5rem;
   line-height: 1;
 }
@@ -2098,8 +2246,7 @@
 .copyright {
   margin-left: auto;
   color: var(--faint);
-  font-family: "Courier New", Courier, monospace;
-  font-size: .68rem;
+  font-size: .72rem;
   text-align: right;
 }
 
@@ -2266,11 +2413,7 @@
       calc(545px * 0.88 + 545px * 0.12 * ((100vw - 720px) / 480px)),
       545px
     );
-    max-height: clamp(
-      calc(595px * 0.88),
-      calc(595px * 0.88 + 595px * 0.12 * ((100vw - 720px) / 480px)),
-      595px
-    );
+    max-height: none;
   }
 
   .heroText .subtext {
@@ -2469,6 +2612,28 @@
   .track,
   .logoItem {
     height: 54px;
+  }
+
+  .logoBandLabel {
+    padding: 0 1rem 0 1.25rem;
+    font-size: .68rem;
+  }
+
+  .marqueeInner {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 44px,
+      black calc(100% - 36px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 44px,
+      black calc(100% - 36px),
+      transparent 100%
+    );
   }
 
   .logoItem {
@@ -2681,22 +2846,40 @@
     bottom: var(--map-control-bottom);
   }
 
+  .specsHeader {
+    padding: 2.25rem 1.25rem 1.5rem;
+  }
+
+  .specsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .specCell {
+    padding: 1.5rem 1.25rem;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .specCell:last-child {
+    border-bottom: none;
+  }
+
   .useCasesGrid {
     grid-template-columns: 1fr;
   }
 
   .statCell {
-    padding: 1.75rem 1.25rem;
+    padding: 1.5rem 1.25rem;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
 
-  .statCell:last-child {
-    border-bottom: 0;
+  .statDetail {
+    padding: 1.15rem 1.25rem;
   }
 
-  .statImageWrap {
-    --stat-photo-h: 120px;
+  .statCell:last-child {
+    border-bottom: 0;
   }
 
   .statDesc {
@@ -2746,6 +2929,9 @@
     padding: 2.25rem 1.25rem 1.5rem;
   }
 
+  .hiwHeader .heading,
+  .specsHeader .heading,
+  .sectionHeader .heading,
   .sectionHeader .headline {
     font-size: clamp(1.75rem, 7vw, 2.35rem);
   }

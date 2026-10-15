@@ -10,7 +10,7 @@ const URL = "https://mecanu.com/que-es-mecanu";
 export const metadata: Metadata = {
   title: "Qué es Mecanu: definición, funcionamiento y cobertura",
   description:
-    "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos en España. Qué hace, qué no hace, cómo funciona, en qué ciudades opera y quién la fundó.",
+    "Mecanu es la plataforma logística con la que un taller traslada coches, con sus conductores o con los de Mecanu. El seguro de traslado es opcional.",
   keywords: [
     "qué es Mecanu",
     "Mecanu definición",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Qué es Mecanu: definición, funcionamiento y cobertura",
     description:
-      "Plataforma B2B de logística de vehículos para talleres mecánicos en España. Qué hace, cómo funciona y dónde opera.",
+      "Plataforma logística para talleres: flota propia o externa, seguimiento en tiempo real y seguro de traslado opcional.",
     url: URL,
     siteName: "Mecanu",
     images: [{ url: "https://mecanu.com/og-image.png", width: 1200, height: 630 }],
@@ -42,7 +42,7 @@ export default function QueEsMecanuPage() {
       <SeoPage
         breadcrumb="Qué es Mecanu"
         title="Qué es Mecanu"
-        lede="Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos. Coordina la recogida del coche en casa del cliente, el traslado al taller y la devolución cuando la reparación está terminada, con conductores verificados y seguro de responsabilidad civil incluido en cada trayecto."
+        lede="Mecanu es la plataforma logística con la que un taller recoge y devuelve el coche del cliente, con sus conductores o con los de Mecanu. Más barato y con más hueco que una grúa, con el viaje georreferenciado en tiempo real. El seguro de traslado se añade solo si el taller lo quiere."
         ctaText="¿Quieres ver si encaja con tu taller?"
         related={[
           { href: "/para-talleres", label: "Cómo funciona para tu taller" },
@@ -53,20 +53,20 @@ export default function QueEsMecanuPage() {
       >
         <h2>Definición</h2>
         <p>
-          Mecanu es una empresa española de tecnología aplicada a la logística de vehículos. Su cliente
-          es el taller mecánico, no el conductor particular. El taller usa Mecanu para mover los coches
-          de sus clientes sin que estos tengan que desplazarse, y para liberar plazas cuando un coche
-          ya está reparado.
+          Mecanu es una plataforma de logística de coches para talleres mecánicos. El contrato es con
+          el taller, no con el particular. El taller traslada con sus propios conductores o con la
+          flota de Mecanu. El check-in y el check-out alimentan los avisos y el siguiente servicio,
+          para que el cliente vuelva.
         </p>
 
         <h2>Qué hace Mecanu</h2>
         <ul>
-          <li>Recoge el coche del cliente en su domicilio o en el punto acordado.</li>
-          <li>Lo traslada al taller con un conductor verificado al volante.</li>
-          <li>Documenta el estado del vehículo con fotos al recoger y al entregar.</li>
-          <li>Lo devuelve al cliente cuando la reparación está terminada.</li>
-          <li>Cubre cada traslado con responsabilidad civil para el vehículo en tránsito.</li>
-          <li>Muestra al taller el estado de cada traslado en tiempo real desde un panel web.</li>
+          <li>Traslada el coche con la flota del taller o con la flota externa de Mecanu.</li>
+          <li>Recoge, lleva al taller y devuelve, en una ventana de una hora.</li>
+          <li>Puede añadir seguro de traslado. No va incluido en todos los viajes.</li>
+          <li>Registra check-in y check-out: foto, estado del componente y el servicio que se ve.</li>
+          <li>Proyecta avisos, venta del siguiente servicio y la vuelta del cliente.</li>
+          <li>Muestra al taller el estado de cada traslado desde el panel.</li>
         </ul>
 
         <h2>Qué no hace Mecanu</h2>
@@ -80,18 +80,18 @@ export default function QueEsMecanuPage() {
             siniestros. Para un coche que no circula hace falta una grúa.
           </li>
           <li>
-            <strong>No vende a conductores particulares.</strong> El contrato es con el taller, que es
-            quien decide cuándo usar el servicio.
+            <strong>No es un marketplace ni una tienda.</strong> No vende recambios, crédito ni la
+            web del taller. El contrato es con el taller.
           </li>
         </ul>
 
         <h2>Cómo funciona, paso a paso</h2>
         <ol>
-          <li>El taller crea el traslado en el panel indicando dirección, ventana horaria y destino.</li>
-          <li>Mecanu asigna un conductor verificado disponible en la zona.</li>
-          <li>El conductor recoge el coche y registra su estado con fotografías.</li>
-          <li>El coche llega al taller y la reparación sigue el curso normal.</li>
-          <li>Al terminar, el mismo servicio devuelve el coche al cliente.</li>
+          <li>El taller abre el traslado y elige flota propia o flota externa.</li>
+          <li>Quien conduce hace el check-in: foto, estado del componente y registro.</li>
+          <li>El coche llega al taller. La reparación la hace el taller, no Mecanu.</li>
+          <li>En la entrega, el check-out repite el chequeo.</li>
+          <li>La plataforma avisa y deja preparado el siguiente servicio.</li>
         </ol>
         <p>
           Las ventanas horarias son siempre rangos de una hora, nunca horas exactas. Si no hay una
@@ -110,16 +110,15 @@ export default function QueEsMecanuPage() {
 
         <h2>Para qué talleres está pensado</h2>
         <p>
-          Talleres mecánicos independientes y cadenas multimarca de entre 3 y 30 empleados, con flujo
-          constante de vehículos de clientes particulares. No está pensado para talleres que solo
-          atienden flotas propias ni para concesionarios con logística interna ya montada.
+          Talleres mecánicos que trasladan coches de sus clientes. Da igual que los conductores sean
+          del taller o de Mecanu: la plataforma sirve para las dos flotas.
         </p>
 
         <h2>Modelo de precio</h2>
         <p>
-          El taller paga por traslado realizado. No hay cuota fija ni compromiso de volumen: en
-          semanas de poca actividad no hay coste. Tampoco requiere contratar conductores, dar de alta
-          personal ni adquirir vehículos.
+          Con flota propia, el taller usa el software de logística. Con flota externa, Mecanu pone
+          el conductor. El seguro de traslado se contrata aparte, si el taller lo quiere. Las cifras no se publican
+          aquí hasta que estén fijadas en el material de negocio.
         </p>
 
         <h2>Historia y equipo</h2>

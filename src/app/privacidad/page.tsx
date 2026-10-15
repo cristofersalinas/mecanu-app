@@ -77,10 +77,10 @@ export default function PrivacidadPage() {
           legítimo de mostrar el idioma correcto (art. 6.1.f) + preferencia posterior.
         </li>
         <li>
-          <strong>Formulario de talleres (/contacto).</strong> Nombre, apellidos, email, teléfono,
-          datos del taller y respuestas del cuestionario. Finalidad: contactarte para valorar si
-          Mecanu encaja. Base: medidas precontractuales / consentimiento al enviar (art. 6.1.b y
-          6.1.a). Encargados: Google Sheets, Resend y Slack.
+          <strong>Formulario de talleres (/contacto).</strong> Nombre, teléfono, ciudad y volumen
+          de coches. Finalidad: contactarte para valorar si Mecanu encaja. Base: medidas
+          precontractuales / consentimiento al enviar (art. 6.1.b y 6.1.a). Encargados: Google
+          Sheets, Resend y Slack.
         </li>
         <li>
           <strong>Formulario ITV a domicilio.</strong> Nombre, teléfono, ciudad, fecha, estado ITV
