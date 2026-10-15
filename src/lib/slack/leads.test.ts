@@ -49,6 +49,32 @@ describe("textoLeadContacto", () => {
     expect(t).not.toContain("ES 600");
     expect(t).toContain("<https://wa.me/34600111222|Abrir chat>");
   });
+
+  it("marca el origen mapa como Postular taller", () => {
+    const t = textoLeadContacto({
+      nombre: "Luis",
+      telefono: "600111222",
+      paisCodigo: "ES",
+      ciudad: "Barcelona",
+      volumen: "Sin indicar",
+      negocio: "Taller Norte",
+      canal: "mapa",
+    });
+    expect(t).toContain("*Postular taller* — mapa");
+    expect(t).not.toContain("*Habla con Mecanu*");
+  });
+
+  it("marca abandono del wizard", () => {
+    const t = textoLeadContacto({
+      nombre: "Ana",
+      telefono: "600111222",
+      paisCodigo: "ES",
+      ciudad: "Madrid",
+      volumen: "Sin indicar",
+      canal: "abandono",
+    });
+    expect(t).toContain("*Formulario incompleto* — abandono 1 h");
+  });
 });
 
 describe("textoLeadItv", () => {

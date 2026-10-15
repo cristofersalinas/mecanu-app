@@ -141,16 +141,17 @@ export async function LandingPage({ locale }: { locale: Locale }) {
           </div>
         </section>
 
-        <MadridMap copy={copy.map} />
+        <div className={styles.mapIntro}>
+          <h2 className={styles.heading}>{copy.map.heading}</h2>
+          <p className={styles.subtext}>{copy.map.subtext}</p>
+        </div>
+        <MadridMap copy={copy.map} contactoHref={ctaHref} />
 
         <section className={styles.ctaGrid} id="contacto">
-          <div className={styles.ctaLeft}>
+          <div className={styles.ctaLeftTop}>
             <p className={styles.eyebrow}>{copy.close.eyebrow}</p>
             <h2 className={styles.heading}>{copy.close.heading}</h2>
             <p className={styles.subtext}>{copy.close.subtext}</p>
-            <div className={styles.actions}>
-              <a className={styles.btnPrimary} href={ctaHref}>{copy.close.primary}</a>
-            </div>
           </div>
           <div className={styles.ctaRight} aria-labelledby="lo-que-obtienes">
             <p className={styles.featuresLabel} id="lo-que-obtienes">{copy.close.featuresLabel}</p>
@@ -164,6 +165,9 @@ export async function LandingPage({ locale }: { locale: Locale }) {
                 </li>
               ))}
             </ul>
+          </div>
+          <div className={styles.ctaLeftActions}>
+            <a className={styles.btnPrimary} href={ctaHref}>{copy.close.primary}</a>
           </div>
         </section>
 

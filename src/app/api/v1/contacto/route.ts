@@ -1,26 +1,23 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { google } from "googleapis";
-import { Resend } from "resend";
-import { avisarLead } from "@/lib/slack/notify";
-import {
-  enlaceWhatsApp,
-  telefonoConPrefijo,
-  textoLeadContacto,
-} from "@/lib/slack/leads";
+import { marcarBorradorCompletado } from "@/lib/landing/contacto-borrador";
+import { notificarLeadContacto } from "@/lib/landing/contacto-notify";
+import { telefonoConPrefijo } from "@/lib/slack/leads";
 
 const schema = z.object({
   nombre: z.string().min(1),
-  apellido: z.string().min(1),
-  email: z.email(),
+  apellido: z.string().optional().default(""),
+  email: z.union([z.literal(""), z.email()]).optional().default(""),
   paisCodigo: z.string().min(2).max(4).optional(),
   telefono: z.string().min(6),
-  objetivo: z.string().min(1),
-  uso: z.array(z.string()).min(1).max(3),
+  objetivo: z.string().optional().default(""),
+  uso: z.array(z.string()).max(3).optional().default([]),
   ciudad: z.string().min(1),
   volumen: z.string().min(1),
-  negocio: z.string().min(1),
-  canal: z.string().min(1),
+  negocio: z.string().optional().default(""),
+  canal: z.string().optional().default(""),
+  clientId: z.string().min(8).max(80).optional(),
   /** RGPD: el envío exige aceptación explícita de la política. */
   aceptaPrivacidad: z.literal(true),
 });
@@ -69,56 +66,6 @@ async function appendToSheet(data: z.infer<typeof schema>) {
   });
 }
 
-async function sendNotificationEmail(data: z.infer<typeof schema>) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return;
-
-  const resend = new Resend(apiKey);
-
-  const telefono = telefonoConPrefijo(data.paisCodigo, data.telefono);
-  const wa = enlaceWhatsApp(data.paisCodigo, data.telefono);
-
-  const rows = [
-    ["Nombre", `${data.nombre} ${data.apellido}`],
-    ["Email", data.email],
-    ["Teléfono", telefono],
-    ...(wa ? [["WhatsApp", wa] as [string, string]] : []),
-    ["Objetivo", data.objetivo],
-    ["Uso previsto", data.uso.join(", ")],
-    ["Ciudad", data.ciudad],
-    ["Vehículos/mes", data.volumen],
-    ["Nombre del taller", data.negocio],
-    ["Canal de origen", data.canal],
-  ];
-
-  const tableRows = rows
-    .map(
-      ([label, value]) =>
-        `<tr><td style="padding:6px 12px;font-weight:600;color:#374151;white-space:nowrap;">${label}</td><td style="padding:6px 12px;color:#0f0f0f;">${value}</td></tr>`
-    )
-    .join("");
-
-  await resend.emails.send({
-    from: "Mecanu Formulario <formulario@mecanu.com>",
-    to: "cris@mecanu.com",
-    subject: `Nueva solicitud de taller — ${data.nombre} ${data.apellido} (${data.negocio})`,
-    html: `
-      <div style="font-family:'Inter Tight',Inter,sans-serif;max-width:600px;margin:0 auto;background:#fff;padding:32px;">
-        <div style="margin-bottom:24px;">
-          <span style="font-size:18px;font-weight:700;color:#0f0f0f;">Mecanu</span>
-        </div>
-        <h2 style="font-size:20px;font-weight:700;color:#0f0f0f;margin:0 0 20px;">Nueva solicitud de taller</h2>
-        <table style="width:100%;border-collapse:collapse;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden;">
-          <tbody>${tableRows}</tbody>
-        </table>
-        <p style="margin-top:24px;font-size:12px;color:#9ca3af;">
-          Enviado el ${new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" })}
-        </p>
-      </div>
-    `,
-  });
-}
-
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -134,20 +81,35 @@ export async function POST(request: Request) {
 
   const data = result.data;
 
-  const [sheetsError, emailError, slackError] = await Promise.allSettled([
+  try {
+    await notificarLeadContacto({
+      nombre: data.nombre,
+      apellido: data.apellido,
+      email: data.email,
+      paisCodigo: data.paisCodigo,
+      telefono: data.telefono,
+      objetivo: data.objetivo,
+      uso: data.uso,
+      ciudad: data.ciudad,
+      volumen: data.volumen,
+      negocio: data.negocio,
+      canal: data.canal,
+    });
+  } catch (emailError) {
+    console.error("[contacto] Resend error:", emailError);
+    return NextResponse.json({ error: "email_failed" }, { status: 502 });
+  }
+
+  const [sheetsError, borradorError] = await Promise.allSettled([
     appendToSheet(data),
-    sendNotificationEmail(data),
-    avisarLead(textoLeadContacto(data)),
+    data.clientId ? marcarBorradorCompletado(data.clientId) : Promise.resolve(),
   ]);
 
   if (sheetsError.status === "rejected") {
     console.error("[contacto] Google Sheets error:", sheetsError.reason);
   }
-  if (emailError.status === "rejected") {
-    console.error("[contacto] Resend error:", emailError.reason);
-  }
-  if (slackError.status === "rejected") {
-    console.error("[contacto] Slack error:", slackError.reason);
+  if (borradorError.status === "rejected") {
+    console.error("[contacto] borrador complete:", borradorError.reason);
   }
 
   return NextResponse.json({ ok: true });
