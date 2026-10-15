@@ -1,0 +1,7 @@
+:root {
+  --mecanu-radius-100: 4px;   /* inputs, tags pequeños */
+  --mecanu-radius-200: 8px;   /* botones, cards pequeñas */
+  --mecanu-radius-300: 12px;  /* cards, modales */
+  --mecanu-radius-400: 16px;  /* superficies grandes, bottom sheets */
+  --mecanu-radius-full: 999px; /* pills, avatares, badges */
+}
