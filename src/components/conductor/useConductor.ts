@@ -53,7 +53,6 @@ import {
 } from './selectors';
 import { motivoOfertaItv, nivelHallazgoItv } from '@/lib/mecanu/oferta-itv';
 import { escribirCola, leerCola, vaciarCola } from '@/lib/mecanu/cola-offline';
-import { nuevaClaveIdempotencia } from '@/lib/mecanu/idempotency';
 import {
   combustiblePct,
   tipoSolicitudApi,
@@ -1225,16 +1224,13 @@ export function useConductor(opts: OpcionesConductor = {}) {
     const tid = wiz.tid;
     const vehiculoId = j.vehiculoId;
     const postHallazgo = (body: Record<string, unknown>, prefijo: string) => {
-      const key = nuevaClaveIdempotencia(`${prefijo}-${tid}`);
-      void fetch('/api/v1/campanas/hallazgos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Idempotency-Key': key,
-        },
-        body: JSON.stringify({ rutaId: j.rutaId, trasladoId: tid, ...body }),
-      }).catch(() => {
-        /* Offline: el sello local ya ocurrió; P16 cubre reintentar la cola. */
+      void postConCola({
+        url: '/api/v1/campanas/hallazgos',
+        prefijoClave: `${prefijo}-${tid}`,
+        body: { rutaId: j.rutaId, trasladoId: tid, ...body },
+        online: ref.current.online,
+        tipoCola: 'hallazgo',
+        onCola: marcarCola,
       });
     };
     if (motivoItv) {

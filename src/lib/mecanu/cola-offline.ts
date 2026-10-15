@@ -14,6 +14,7 @@ export const TIPOS_COLA_ACCION = new Set([
   'subestado',
   'entrega',
   'checkin',
+  'hallazgo',
   'km',
   'asignar',
   'confirmacion',
