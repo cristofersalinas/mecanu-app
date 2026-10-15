@@ -512,6 +512,41 @@ describe('supabase: taller de la sesión', () => {
     })).rejects.toThrow('Tramo TS-B no encontrado');
     expect(escrituras).toEqual([]);
   });
+
+  it('la sesión del taller A no agenda ni reasigna la ruta del taller B', async () => {
+    const escrituras: { tabla: string; payload: Record<string, unknown> }[] = [];
+    vi.spyOn(authServer, 'getPerfilSesion').mockResolvedValue({
+      id: 'u-a',
+      email: 'a@taller.test',
+      nombre: 'Ana',
+      rol: 'operacion',
+      tallerId: 'taller-a',
+      conductorId: null,
+      documento: null,
+    });
+    vi.spyOn(supabaseServer, 'getSupabaseServer').mockReturnValue(
+      clientePorTaller(escrituras) as unknown as NonNullable<
+        ReturnType<typeof supabaseServer.getSupabaseServer>
+      >,
+    );
+
+    expect(await supabaseRepo.getRutaVista('TR-B')).toBeNull();
+    await expect(supabaseRepo.agendarRuta({
+      rutaId: 'TR-B',
+      fecha: new Date('2026-08-02T10:00:00.000Z'),
+      franja: '10:00–11:00',
+      conductorId: 'd-a',
+    })).rejects.toThrow('Ruta TR-B no encontrada');
+    await expect(supabaseRepo.reasignarConductorTramo({
+      tramoId: 'TS-B',
+      conductorId: 'd-a',
+    })).rejects.toThrow('Tramo TS-B no encontrado');
+    await expect(supabaseRepo.actualizarTagsManual({
+      rutaId: 'TR-B',
+      tagsManual: ['urgente'],
+    })).rejects.toThrow('Ruta TR-B no encontrada');
+    expect(escrituras).toEqual([]);
+  });
 });
 
 const FILA_RUTA_A = {

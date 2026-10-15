@@ -220,6 +220,15 @@ async function requireTramo(id: string): Promise<Tramo> {
   const { data, error } = await sb().from('traslados').select('*').eq('id', id).maybeSingle();
   throwPg(error, 'tramo');
   if (!data) throw new Error(`Tramo ${id} no encontrado`);
+  const tallerId = await tallerDeSesion();
+  const { data: ruta, error: er } = await sb()
+    .from('rutas')
+    .select('id')
+    .eq('id', String(data.ruta_id))
+    .eq('taller_id', tallerId)
+    .maybeSingle();
+  throwPg(er, 'tramo taller');
+  if (!ruta) throw new Error(`Tramo ${id} no encontrado`);
   return mapTramo(data);
 }
 
@@ -446,8 +455,7 @@ export const supabaseRepo: MecanuRepo = {
     return data ? mapRuta(data) : null;
   },
   async getRutaVista(id) {
-    const { data, error } = await sb().from('rutas').select('*').eq('id', id).maybeSingle();
-    throwPg(error, 'ruta');
+    const data = await filaDeEsteTaller('rutas', id);
     return data ? vistaDeRuta(data) : null;
   },
   async getParada(id) {
@@ -706,13 +714,14 @@ export const supabaseRepo: MecanuRepo = {
 
   async entregar({ trasladoId, firmaCliente }: EntregaInput) {
     const t = await requireTramo(trasladoId);
+    const tallerId = await tallerDeSesion();
     const efecto = efectoEntregaRuta(t.rol);
     const [tramoRes, rutaRes] = await Promise.all([
       sb().from('traslados').update({ estado: 'completado', subestado: null }).eq('id', trasladoId),
       sb().from('rutas').update({
         estado: efecto.estado,
         subestado: efecto.subestado,
-      }).eq('id', t.rutaId),
+      }).eq('id', t.rutaId).eq('taller_id', tallerId),
     ]);
     throwPg(tramoRes.error, 'entrega');
     throwPg(rutaRes.error, 'ruta tras entrega');
@@ -751,10 +760,9 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async registrarIncidencia({ trasladoId, detalle }: IncidenciaInput) {
-    await sb().from('rutas').update({ incidencia: detalle }).eq(
-      'id',
-      (await requireTramo(trasladoId)).rutaId,
-    );
+    const t = await requireTramo(trasladoId);
+    const tallerId = await tallerDeSesion();
+    await sb().from('rutas').update({ incidencia: detalle }).eq('id', t.rutaId).eq('taller_id', tallerId);
     await insertLog(trasladoId, 'incidencia', 'conductor', 'conductor', {
       texto: detalle ?? 'Incidencia',
     });
@@ -874,6 +882,7 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async reasignarConductorTramo({ tramoId, conductorId }: ReasignarConductorInput) {
+    await requireTramo(tramoId);
     const { error } = await sb()
       .from('traslados')
       .update({ conductor_id: conductorId })
@@ -1019,7 +1028,13 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async actualizarTagsManual({ rutaId, tagsManual }: { rutaId: string; tagsManual: string[] }) {
-    const { error } = await sb().from('rutas').update({ tags_manual: tagsManual }).eq('id', rutaId);
+    const propia = await filaDeEsteTaller('rutas', rutaId);
+    if (!propia) throw new Error(`Ruta ${rutaId} no encontrada`);
+    const { error } = await sb()
+      .from('rutas')
+      .update({ tags_manual: tagsManual })
+      .eq('id', rutaId)
+      .eq('taller_id', String(propia.taller_id));
     throwPg(error, 'tags');
     const r = await this.getRuta(rutaId);
     if (!r) throw new Error(`Ruta ${rutaId} no encontrada`);
@@ -1042,6 +1057,8 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async agendarRuta({ rutaId, fecha, franja, conductorId }: AgendarRutaInput) {
+    const propia = await filaDeEsteTaller('rutas', rutaId);
+    if (!propia) throw new Error(`Ruta ${rutaId} no encontrada`);
     const partes = franja.split(/[–—-]/).map((s) => s.trim()).filter(Boolean);
     const inicio = partes[0] ?? '10:00';
     const fin = partes[1] ?? '11:00';
@@ -1050,7 +1067,7 @@ export const supabaseRepo: MecanuRepo = {
     const { error: er } = await sb().from('rutas').update({
       estado: 'agendado',
       subestado,
-    }).eq('id', rutaId);
+    }).eq('id', rutaId).eq('taller_id', String(propia.taller_id));
     throwPg(er, 'agendar ruta');
     const tramos = await this.listTramosDeRuta(rutaId);
     const t = tramos[0];
@@ -1071,6 +1088,8 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async asignarConductorRuta(rutaId: string, conductorId: string | null) {
+    const propia = await filaDeEsteTaller('rutas', rutaId);
+    if (!propia) throw new Error(`Ruta ${rutaId} no encontrada`);
     const tramos = await this.listTramosDeRuta(rutaId);
     const t = tramos.find((x) => x.estado !== 'completado') ?? tramos[0];
     if (!t) throw new Error(`Ruta ${rutaId} sin traslados`);
@@ -1080,7 +1099,7 @@ export const supabaseRepo: MecanuRepo = {
     if (ruta.estado === 'agendado') {
       const { error } = await sb().from('rutas').update({
         subestado: conductorId ? 'asignado' : 'sin_conductor',
-      }).eq('id', rutaId);
+      }).eq('id', rutaId).eq('taller_id', String(propia.taller_id));
       throwPg(error, 'asignar subestado');
     }
     const r = await this.getRuta(rutaId);
