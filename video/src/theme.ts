@@ -1,4 +1,25 @@
+import { continueRender, delayRender, staticFile } from "remotion";
 import { loadFont } from "@remotion/google-fonts/PlusJakartaSans";
+
+const esperaIconos = delayRender("Material Symbols Rounded");
+
+if (typeof document !== "undefined") {
+  const cara = new FontFace(
+    "Material Symbols Rounded",
+    `url(${staticFile("fonts/MaterialSymbolsRounded.ttf")}) format("truetype")`,
+    { style: "normal", weight: "400" },
+  );
+  cara
+    .load()
+    .then((cargada) => {
+      document.fonts.add(cargada);
+      return document.fonts.load("24px 'Material Symbols Rounded'");
+    })
+    .then(() => continueRender(esperaIconos))
+    .catch(() => continueRender(esperaIconos));
+} else {
+  continueRender(esperaIconos);
+}
 
 const cargada = loadFont("normal", {
   weights: ["500", "600", "700", "800"],

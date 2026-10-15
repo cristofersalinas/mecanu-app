@@ -8,7 +8,7 @@ npm install
 npm run dev
 ```
 
-Abre http://localhost:3030 y elige la composición **PlataformaTaller**. Cada bloque del timeline es un caso. La barra espaciadora lo reproduce; puedes saltar de bloque en bloque.
+Abre http://localhost:3030 y elige la composición **PlataformaTaller**. Cada bloque es una pantalla del panel o del móvil, con el pie que explica el caso. La barra espaciadora lo reproduce; puedes saltar de bloque en bloque.
 
 Desde la raíz del repo, con las dependencias de `video/` ya instaladas: `npm run video`.
 
