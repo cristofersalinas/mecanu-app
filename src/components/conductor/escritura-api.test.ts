@@ -1,6 +1,9 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { COLA_STORAGE_KEY, escribirCola, leerCola } from '@/lib/mecanu/cola-offline';
 import { flushColaPendiente, postConCola, tomarRechazosFlush } from '@/components/conductor/escritura-api';
+import { avanceDesdeCola } from '@/components/conductor/useConductor';
+import { accionDe, buildJob } from '@/components/conductor/selectors';
+import type { AppState } from '@/components/conductor/types';
 
 function memoria(): { store: Record<string, string>; api: Storage } {
   const store: Record<string, string> = {};
@@ -231,5 +234,67 @@ describe('postConCola / flushCola', () => {
     expect(cola).toHaveLength(1);
     expect(cola[0]?.idempotencyKey).toBe('hallazgo-otra:misma');
     expect(cola[0]?.tipo).toBe('hallazgo');
+  });
+
+  it('con un check-in en la cola, al rehidratar, no vuelve a sin check-in', () => {
+    const { api } = memoria();
+    const tid = 'TS-1056-1';
+    escribirCola(
+      [
+        {
+          id: 'q-chk',
+          tipo: 'checkin',
+          creado: '2026-08-20T10:00:00.000Z',
+          payload: {
+            url: `/api/v1/traslados/${tid}/checkin`,
+            body: {
+              km: 68550,
+              combustible: '1/2',
+              fotos: [{ slot: 'frente', url: 'https://ejemplo.local/frente.jpg' }],
+              testigos: { presion: true, aceite: false },
+              videoUrl: null,
+            },
+          },
+          idempotencyKey: `checkin-${tid}:misma`,
+        },
+      ],
+      api,
+    );
+    const soloCheckin = avanceDesdeCola(leerCola(api));
+    expect(soloCheckin.checkins[tid]?.sellado).toBe(true);
+    expect(soloCheckin.checkins[tid]?.km).toBe('68550');
+    expect(soloCheckin.jobOv[tid]).toBeUndefined();
+
+    escribirCola(
+      [
+        ...leerCola(api),
+        {
+          id: 'q-sub',
+          tipo: 'subestado',
+          creado: '2026-08-20T10:01:00.000Z',
+          payload: {
+            url: `/api/v1/traslados/${tid}/subestado`,
+            body: { a: 'en_transito', triggerSource: 'conductor' },
+          },
+          idempotencyKey: `subestado-${tid}-en_transito:misma`,
+        },
+      ],
+      api,
+    );
+    const avance = avanceDesdeCola(leerCola(api));
+    const estado = {
+      jobOv: { [tid]: { sub: 'en_camino_origen', done: false }, ...avance.jobOv },
+      checkins: { ...avance.checkins },
+      inspecciones: {},
+      kmVehiculo: {},
+      incidentes: {},
+      solicitudes: {},
+      tomados: [],
+    } as unknown as AppState;
+    const job = buildJob(tid, estado);
+    expect(job?.checkin?.sellado).toBe(true);
+    expect(job?.checkin ? 'Check-in hecho' : 'sin check-in').toBe('Check-in hecho');
+    const accion = job ? accionDe(job) : null;
+    expect(accion?.to).toBe('en_destino');
   });
 });

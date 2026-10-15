@@ -52,7 +52,7 @@ import {
   solapa,
 } from './selectors';
 import { motivoOfertaItv, nivelHallazgoItv } from '@/lib/mecanu/oferta-itv';
-import { escribirCola, leerCola, vaciarCola } from '@/lib/mecanu/cola-offline';
+import { escribirCola, leerCola, vaciarCola, type ItemColaOffline } from '@/lib/mecanu/cola-offline';
 import {
   combustiblePct,
   tipoSolicitudApi,
@@ -76,8 +76,10 @@ import {
 } from '@/lib/mecanu/gps-conductor';
 import type {
   AppState,
+  Checkin,
   Foto,
   Job,
+  JobOv,
   ModoCamara,
   Nivel,
   EntState,
@@ -87,9 +89,125 @@ import type {
   Subestado,
   TipoLog,
   TipoSolicitud,
+  Video,
   Vista,
   WizState,
 } from './types';
+
+const SUBESTADOS_COLA: readonly Subestado[] = [
+  'agendado',
+  'en_camino_origen',
+  'en_origen',
+  'en_transito',
+  'en_destino',
+  'completado',
+];
+
+function esSubestadoCola(valor: string): valor is Subestado {
+  return (SUBESTADOS_COLA as readonly string[]).includes(valor);
+}
+
+function cuerpoDeCola(item: ItemColaOffline): { url: string; body: Record<string, unknown> } | null {
+  const p = item.payload;
+  if (!p || typeof p !== 'object') return null;
+  const o = p as Record<string, unknown>;
+  if (typeof o.url !== 'string' || !o.body || typeof o.body !== 'object') return null;
+  return { url: o.url, body: o.body as Record<string, unknown> };
+}
+
+function tidDeAccion(url: string, accion: 'checkin' | 'subestado'): string | null {
+  const marca = '/api/v1/traslados/';
+  const fin = `/${accion}`;
+  if (!url.startsWith(marca) || !url.endsWith(fin)) return null;
+  const tid = decodeURIComponent(url.slice(marca.length, url.length - fin.length));
+  if (!tid || tid.includes('/')) return null;
+  return tid;
+}
+
+function fechaDeCola(creado: string): Date | null {
+  const ts = new Date(creado);
+  return Number.isNaN(ts.getTime()) ? null : ts;
+}
+
+function selloDeCola(tid: string, creado: string, ts: Date): Sello {
+  return { ts, tid, conductorId: '', gps: null, linea: creado };
+}
+
+function checkinDesdeCola(tid: string, creado: string, body: Record<string, unknown>): Checkin | null {
+  const ts = fechaDeCola(creado);
+  if (!ts) return null;
+  const sello = selloDeCola(tid, creado, ts);
+  const fotos: Record<string, Foto> = {};
+  const extras: Foto[] = [];
+  if (Array.isArray(body.fotos)) {
+    for (const raw of body.fotos) {
+      if (!raw || typeof raw !== 'object') continue;
+      const slot = (raw as { slot?: unknown }).slot;
+      const url = (raw as { url?: unknown }).url;
+      if (typeof slot !== 'string' || typeof url !== 'string') continue;
+      const foto: Foto = { src: url, bytes: 0, sello };
+      if (slot.startsWith('extra-')) extras.push(foto);
+      else fotos[slot] = foto;
+    }
+  }
+  const testigosSrc = body.testigos;
+  const testigos =
+    testigosSrc && typeof testigosSrc === 'object' && !Array.isArray(testigosSrc)
+      ? Object.entries(testigosSrc as Record<string, unknown>).flatMap(([k, v]) => (v === true ? [k] : []))
+      : [];
+  const videoUrl = body.videoUrl;
+  const video: Video | null =
+    typeof videoUrl === 'string' && videoUrl
+      ? { url: videoUrl, seg: 0, bytes: 0, sello }
+      : null;
+  return {
+    fotos,
+    extras,
+    video,
+    km: typeof body.km === 'number' ? String(body.km) : '',
+    combustible: typeof body.combustible === 'string' ? body.combustible : null,
+    testigos,
+    sellado: true,
+    ts,
+  };
+}
+
+export type AvanceCola = {
+  jobOv: Record<string, JobOv>;
+  checkins: Record<string, Checkin>;
+  kmVehiculo: Record<string, number>;
+};
+
+/** Lo que la cola ya guardó. Sin subestado en el ítem, no se inventa el peldaño. */
+export function avanceDesdeCola(items: ItemColaOffline[]): AvanceCola {
+  const jobOv: Record<string, JobOv> = {};
+  const checkins: Record<string, Checkin> = {};
+  const kmVehiculo: Record<string, number> = {};
+  for (const item of items) {
+    const c = cuerpoDeCola(item);
+    if (!c) continue;
+    const subTid = tidDeAccion(c.url, 'subestado');
+    if (item.tipo === 'subestado' && subTid && typeof c.body.a === 'string' && esSubestadoCola(c.body.a)) {
+      jobOv[subTid] = { sub: c.body.a, done: c.body.a === 'completado' };
+      continue;
+    }
+    const chkTid = tidDeAccion(c.url, 'checkin');
+    if (item.tipo === 'checkin' && chkTid) {
+      const chk = checkinDesdeCola(chkTid, item.creado, c.body);
+      if (chk) checkins[chkTid] = chk;
+      continue;
+    }
+    if (
+      item.tipo === 'km' &&
+      c.url.startsWith('/api/v1/vehiculos/') &&
+      typeof c.body.km === 'number'
+    ) {
+      const id = decodeURIComponent(c.url.slice('/api/v1/vehiculos/'.length));
+      if (id && !id.includes('/')) kmVehiculo[id] = c.body.km;
+    }
+  }
+  return { jobOv, checkins, kmVehiculo };
+}
 
 /**
  * Semillas del mock: un check-in con testigo rojo ya sellado (y su solicitud de
@@ -495,6 +613,19 @@ export function useConductor(opts: OpcionesConductor = {}) {
   useEffect(() => {
     const t = window.setTimeout(() => {
       const items = leerCola(window.localStorage);
+      const avance = avanceDesdeCola(items);
+      const hayAvance =
+        Object.keys(avance.checkins).length > 0 ||
+        Object.keys(avance.jobOv).length > 0 ||
+        Object.keys(avance.kmVehiculo).length > 0;
+      const mezclar = (prev: AppState): Pick<AppState, 'jobOv' | 'checkins' | 'kmVehiculo'> | Record<string, never> =>
+        hayAvance
+          ? {
+              jobOv: { ...prev.jobOv, ...avance.jobOv },
+              checkins: { ...prev.checkins, ...avance.checkins },
+              kmVehiculo: { ...prev.kmVehiculo, ...avance.kmVehiculo },
+            }
+          : {};
       if (!items.length) {
         patch({
           queue: 0,
@@ -503,11 +634,11 @@ export function useConductor(opts: OpcionesConductor = {}) {
         return;
       }
       if (!ref.current.online) {
-        patch({ queue: items.length, sync: 'offline' });
+        patch((prev) => ({ queue: items.length, sync: 'offline', ...mezclar(prev) }));
         return;
       }
-      /* Con red y cola residual: reenvía sin fingir offline. */
-      patch({ queue: items.length, sync: 'syncing' });
+      /* Con red y cola residual: reenvía sin fingir offline. El avance local ya está. */
+      patch((prev) => ({ queue: items.length, sync: 'syncing', ...mezclar(prev) }));
       void flushColaPendiente().then((quedan) => {
         aplicarFlush(quedan, { vacio: 'quedar' });
       });
