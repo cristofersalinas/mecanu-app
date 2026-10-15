@@ -74,10 +74,6 @@ export type LandingCopy = {
     heading: string;
     items: { valor: string; etiqueta: string }[];
   };
-  faq: {
-    eyebrow: string;
-    heading: string;
-  };
   hiw: {
     eyebrow: string;
     heading: string;
@@ -292,10 +288,6 @@ const es: LandingCopy = {
         etiqueta: "El siguiente servicio, desde el check-in",
       },
     ],
-  },
-  faq: {
-    eyebrow: "Preguntas frecuentes",
-    heading: "Preguntas frecuentes",
   },
   stats: [
     {
@@ -691,10 +683,6 @@ const ca: LandingCopy = {
       },
     ],
   },
-  faq: {
-    eyebrow: "Preguntes freqüents",
-    heading: "Preguntes freqüents",
-  },
   stats: [
     {
       numero: "01",
@@ -1089,10 +1077,6 @@ const en: LandingCopy = {
       },
     ],
   },
-  faq: {
-    eyebrow: "Frequently asked questions",
-    heading: "Frequently asked questions",
-  },
   stats: [
     {
       numero: "01",
@@ -1482,10 +1466,6 @@ const pt: LandingCopy = {
         etiqueta: "Cobertura RC em custódia e trajeto",
       },
     ],
-  },
-  faq: {
-    eyebrow: "Perguntas frequentes",
-    heading: "Perguntas frequentes",
   },
   stats: [
     {
