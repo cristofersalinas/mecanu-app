@@ -3,21 +3,21 @@ import Link from "next/link";
 import { SeoPage, FaqBlock } from "@/components/landing/SeoPage";
 import { BreadcrumbJsonLd, FaqJsonLd } from "@/components/landing/JsonLd";
 import type { FaqItem } from "@/lib/landing/faq";
+import { ogImageUrl } from "@/lib/landing/og";
 
 export const dynamic = "force-static";
 
 const URL = "https://mecanu.com/cliente-no-recoge-coche";
+const OG = ogImageUrl("cliente-no-recoge-coche");
 
 export const metadata: Metadata = {
   title: "El cliente no recoge el coche: qué hace el taller — Mecanu",
   description:
-    "El coche terminado que espera al cliente bloquea una plaza, retrasa otras OR y genera llamadas. Cómo devolverlo el mismo día sin contratar un conductor fijo.",
+    "Hasta 7 días coordinando con quien no puede ir. Devuelve el coche y libera la plaza. Plataforma logística en Madrid y Barcelona. Seguro de traslado opcional.",
   keywords: [
     "cliente no recoge el coche del taller",
-    "coche abandonado en taller",
     "liberar plaza taller mecánico",
     "vehículo terminado no lo recogen",
-    "cuánto tiempo puede estar un coche en el taller",
     "devolver coche al cliente a domicilio",
     "taller lleno de coches terminados",
     "capacidad taller mecánico",
@@ -25,12 +25,27 @@ export const metadata: Metadata = {
   ].join(", "),
   alternates: { canonical: URL },
   openGraph: {
+    type: "website",
     title: "El cliente no recoge el coche: qué hace el taller — Mecanu",
     description:
-      "El coche terminado ocupa una plaza que ya está pagada. Devolverlo el mismo día libera capacidad.",
+      "Hasta 7 días coordinando. Devuelve el coche y libera la plaza. Plataforma logística. Seguro de traslado opcional.",
     url: URL,
     siteName: "Mecanu",
-    images: [{ url: "https://mecanu.com/og-image.png", width: 1200, height: 630 }],
+    images: [
+      {
+        url: OG,
+        width: 1200,
+        height: 630,
+        alt: "El cliente no recoge el coche — Mecanu",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "El cliente no recoge el coche: qué hace el taller — Mecanu",
+    description:
+      "Hasta 7 días coordinando. Devuelve el coche y libera la plaza. Madrid y Barcelona.",
+    images: [OG],
   },
 };
 
@@ -97,8 +112,8 @@ export default function ClienteNoRecogePage() {
           <li>Cierra la OR: el coche está listo de verdad, no “casi”.</li>
           <li>Avisa al cliente y ofrece ventana de una hora para la devolución.</li>
           <li>
-            Crea el traslado. Un conductor verificado lo lleva, con fotos y seguro del trayecto —
-            no un aprendiz sin cobertura. Ver{" "}
+            Crea el traslado. Un conductor verificado lo lleva, con fotos y registro. El seguro de
+            traslado se añade solo si el taller lo quiere. Ver{" "}
             <Link href="/blog/seguro-responsabilidad-civil-traslados">el seguro del traslado</Link>.
           </li>
           <li>La plaza queda libre el mismo día. Entra el siguiente trabajo.</li>

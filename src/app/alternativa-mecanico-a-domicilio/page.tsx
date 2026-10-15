@@ -2,35 +2,49 @@ import type { Metadata } from "next";
 import { SeoPage, CompareTable, FaqBlock } from "@/components/landing/SeoPage";
 import { BreadcrumbJsonLd, FaqJsonLd } from "@/components/landing/JsonLd";
 import type { FaqItem } from "@/lib/landing/faq";
+import { ogImageUrl } from "@/lib/landing/og";
 
 export const dynamic = "force-static";
 
 const URL = "https://mecanu.com/alternativa-mecanico-a-domicilio";
+const OG = ogImageUrl("alternativa-mecanico-a-domicilio");
 
 export const metadata: Metadata = {
-  title: "Mecánico a domicilio o llevar el coche al taller — Mecanu",
+  title: "Mecánico a domicilio o delivery del coche al taller — Mecanu",
   description:
-    "Qué puede resolver un mecánico a domicilio y qué necesita elevador y diagnóstico. Comparativa para talleres que quieren dar comodidad al cliente sin renunciar a trabajar en condiciones.",
+    "Mecanu no repara en la calle: lleva el coche al taller con elevador. Comodidad para el cliente sin sacar al mecánico. Plataforma logística en Madrid y Barcelona. Seguro de traslado opcional.",
   keywords: [
     "mecánico a domicilio Madrid",
     "mecánico a domicilio Barcelona",
-    "taller a domicilio",
-    "mecánico a domicilio España",
-    "mecánico a domicilio precio",
     "mecánico a domicilio o taller",
-    "revisión coche a domicilio",
-    "mantenimiento coche a domicilio",
     "alternativa mecánico a domicilio",
     "taller mecánico recoge el coche",
+    "recogida domicilio taller mecánico",
+    "dejar coche en taller sin ir",
   ].join(", "),
   alternates: { canonical: URL },
   openGraph: {
-    title: "Mecánico a domicilio o llevar el coche al taller — Mecanu",
+    type: "website",
+    title: "Mecánico a domicilio o delivery del coche al taller — Mecanu",
     description:
-      "Qué resuelve un mecánico a domicilio y qué necesita elevador. Comparativa para talleres.",
+      "El cliente no va. El trabajo se hace en el taller. Plataforma logística en Madrid y Barcelona. Seguro de traslado opcional.",
     url: URL,
     siteName: "Mecanu",
-    images: [{ url: "https://mecanu.com/og-image.png", width: 1200, height: 630 }],
+    images: [
+      {
+        url: OG,
+        width: 1200,
+        height: 630,
+        alt: "Mecánico a domicilio o delivery del coche al taller — Mecanu",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mecánico a domicilio o delivery del coche al taller — Mecanu",
+    description:
+      "El cliente no va. El trabajo se hace en el taller. Plataforma logística. Madrid y Barcelona.",
+    images: [OG],
   },
 };
 
@@ -74,6 +88,7 @@ export default function AlternativaMecanicoDomicilioPage() {
           { href: "/barcelona", label: "Mecanu en Barcelona" },
           { href: "/alternativa-grua", label: "Comparado con una grúa" },
           { href: "/para-talleres", label: "Cómo funciona para tu taller" },
+          { href: "/blog/mecanico-a-domicilio-o-taller", label: "La comparación que más se confunde" },
         ]}
       >
         <h2>Qué necesita taller y qué no</h2>
@@ -143,10 +158,10 @@ export default function AlternativaMecanicoDomicilioPage() {
 
         <h2>Cómo lo resuelve Mecanu</h2>
         <p>
-          Mecanu coordina esas recogidas y entregas con conductores verificados, seguro de
-          responsabilidad civil incluido en cada traslado y seguimiento en tiempo real desde un panel
-          web. El taller no contrata conductores ni compra furgonetas: usa el servicio cuando lo
-          necesita y paga por traslado.
+          Mecanu es la plataforma logística que coordina esas recogidas y entregas, con
+          seguimiento en tiempo real desde un panel web. El seguro de traslado se añade solo si
+          el taller lo quiere. El taller no contrata conductores ni compra furgonetas: usa el
+          servicio cuando lo necesita y paga por traslado.
         </p>
         <p>
           Disponible en <a href="/madrid">Madrid</a> y <a href="/barcelona">Barcelona</a> con sus

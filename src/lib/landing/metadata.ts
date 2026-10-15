@@ -18,69 +18,38 @@ const KEYWORDS: Record<Locale, string> = {
     // Conductor externo
     "conductor externo taller mecánico", "conductor externo Madrid", "conductor externo Barcelona",
     "conductor para taller mecánico España",
-    // Grúa alternativa
-    "grúa coches Madrid", "grúa coches Barcelona", "grúa particular Madrid",
-    "grúa particular Barcelona", "alternativa grúa taller", "grúa alternativa taller mecánico",
-    "grúa barata Madrid", "grúa barata Barcelona", "servicio grúa sin avería",
-    // Mecánico a domicilio
+    // Grúa (intención taller, no urgencia)
+    "alternativa grúa taller", "grúa o conductor para mover coche",
+    "mover coche sin grúa", "traslado coche taller sin grúa",
+    // Mecánico a domicilio (delivery del coche, no reparar en calle)
     "mecánico a domicilio Madrid", "mecánico a domicilio Barcelona",
-    "mecánico a domicilio España", "servicio mecánico domicilio",
-    // Servicio automotriz por ciudad
-    "servicio automotriz Madrid", "servicio automotriz Barcelona",
-    "taller mecánico Madrid", "taller mecánico Barcelona", "taller mecánico Valencia",
-    "mejor taller mecánico Madrid 2026", "mejor taller mecánico Barcelona 2026",
-    "taller mecánico barato Madrid", "taller mecánico barato Barcelona",
-    "taller multimarca Madrid", "taller multimarca Barcelona",
-    // Escáner y diagnóstico
-    "escáner automotriz Madrid", "escáner automotriz Barcelona",
-    "escaner automotriz Madrid", "escaner automotriz Barcelona",
-    "diagnóstico electrónico coche Madrid", "diagnóstico electrónico coche Barcelona",
-    "diagnóstico OBD Madrid", "diagnóstico OBD Barcelona",
-    // Mantenimiento por marca
-    "mantenimiento Volkswagen Madrid", "mantenimiento BMW Madrid", "mantenimiento Toyota Madrid",
-    "mantenimiento Renault Madrid", "mantenimiento Seat Madrid", "mantenimiento Peugeot Madrid",
-    "mantenimiento Ford Madrid", "mantenimiento Audi Madrid", "mantenimiento Mercedes Madrid",
-    "mantenimiento Volkswagen Barcelona", "mantenimiento BMW Barcelona",
-    "mantenimiento Toyota Barcelona", "mantenimiento Renault Barcelona",
-    // ITV y asistencia
-    "ITV a domicilio Madrid", "ITV a domicilio Barcelona", "gestión ITV taller",
-    "asistencia en carretera Madrid", "asistencia en carretera Barcelona",
-    // Software y logística
-    "software gestión taller mecánico", "panel digital taller mecánico",
-    "logística vehículos talleres España", "logística automotriz B2B España",
-    "liberar plaza taller mecánico", "traslado vehículos taller",
-    "seguro responsabilidad civil traslado vehículos",
-    // ITV y dolor operativo del dueño
+    "mecánico a domicilio o taller", "alternativa mecánico a domicilio",
+    // Taller por ciudad (área Madrid / Barcelona)
+    "taller mecánico Madrid", "taller mecánico Barcelona",
+    "liberar plaza taller mecánico", "cliente no recoge el coche del taller",
+    "coche terminado en el taller", "capacidad taller mecánico",
+    // ITV como uso del traslado
     "ITV a domicilio Madrid", "ITV a domicilio Barcelona", "taller lleva coche a la ITV",
-    "cliente no recoge el coche del taller", "coche terminado en el taller",
-    // Software y herramientas que busca el dueño
-    "software taller mecánico", "software gestión taller España", "DMS taller",
-    "tempario taller", "WhatsApp taller mecánico", "programa facturación taller",
-    // Marcas (intención del conductor que el taller quiere capturar)
-    "mantenimiento Volkswagen Madrid", "mantenimiento BMW Barcelona",
-    "taller independiente BMW garantía", "revisión Audi taller de confianza",
+    // Logística (no DMS / facturación)
+    "logística vehículos talleres España", "traslado vehículos taller",
+    "seguro responsabilidad civil traslado vehículos",
+    "panel digital taller mecánico",
   ].join(", "),
   ca: [
     "taller mecànic Barcelona", "taller mecànic Madrid", "mecànic a domicili",
     "recollida de vehicles per a tallers", "lliurament cotxes taller",
-    "servei automotriu Barcelona", "logística per a tallers mecànics",
-    "grua alternativa taller", "Mecanu", "trasllat de vehicles Barcelona",
-    "conductor extern per a taller", "manteniment cotxe a domicili",
-    "escàner automotriu Barcelona", "millor taller mecànic Barcelona",
+    "logística per a tallers mecànics", "alternativa grua taller", "Mecanu",
+    "trasllat de vehicles Barcelona", "conductor extern per a taller",
   ].join(", "),
   en: [
-    "auto repair shop London", "car collection delivery service", "mechanic at home London",
-    "car pickup service workshop", "vehicle logistics for garages", "Mecanu",
-    "best auto repair shop London", "car diagnostics London", "MOT service London",
-    "tow truck alternative London", "car recovery London", "car service pickup",
-    "workshop management software", "vehicle collection delivery London",
-    "auto repair San Francisco", "car repair New York", "auto shop logistics",
+    "vehicle logistics for garages", "car pickup service workshop", "Mecanu",
+    "tow truck alternative workshop", "mechanic at home vs garage",
+    "car collection delivery Madrid", "car collection delivery Barcelona",
   ].join(", "),
   pt: [
     "oficina mecânica Lisboa", "oficina mecânica Porto", "mecânico ao domicílio",
     "recolha de veículos para oficinas", "entrega de carros oficina",
-    "serviço automóvel Lisboa", "Mecanu", "diagnóstico carros Lisboa",
-    "melhor oficina mecânica Lisboa", "logística para oficinas mecânicas",
+    "Mecanu", "logística para oficinas mecânicas",
   ].join(", "),
 };
 
@@ -154,7 +123,7 @@ export function landingMetadata(locale: Locale): Metadata {
     other: {
       // Señales adicionales para rastreadores LLM (ChatGPT, Claude, Gemini)
       "llm:name": "Mecanu",
-      "llm:description": "Mecanu es una plataforma B2B de logística de vehículos para talleres mecánicos. Coordina recogida, traslado y entrega de coches de clientes con conductores verificados, seguro incluido y panel de control en tiempo real.",
+      "llm:description": "Mecanu es la plataforma logística con la que un taller recoge y entrega coches, con sus conductores o con los de Mecanu. Seguimiento en tiempo real. El seguro de traslado es opcional.",
       "llm:category": "Automotive logistics SaaS",
       "llm:geo": "Spain: Madrid, Barcelona",
     },

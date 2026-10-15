@@ -22,10 +22,10 @@ export type Post = {
 
 export const AUTHORS: Author[] = [
   {
-    slug: "cristofer",
-    name: "Cristofer Salinas",
-    bio: "Emprendedor por afición, vocación y profesión.",
-    avatar: "/blog/avatar-cristofer.jpg",
+    slug: "mecanu",
+    name: "Mecanu",
+    bio: "Plataforma logística con la que un taller recoge y entrega el coche del cliente, con sus conductores o con los de Mecanu. Madrid y Barcelona.",
+    avatar: "",
   },
 ];
 
@@ -40,7 +40,7 @@ export const POSTS: Post[] = [
     coverAlt: "Collage vintage con bolsas de compra, mochilas de delivery y una moto de reparto sobre fondo crema.",
     publishedAt: "2026-08-19",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>Uber Eats, Glovo y Amazon no cambiaron solo la comida o las compras. Cambiaron la tolerancia del cliente a la fricción. Hoy nadie quiere organizar su agenda alrededor de una gestión que podría resolverse sin salir de casa.</p>
 
@@ -48,7 +48,7 @@ export const POSTS: Post[] = [
 
 <h2>La lección real del delivery</h2>
 
-<p>El éxito del delivery no está en la moto ni en la mochila. Está en tres promesas operativas muy claras: recogida o entrega sin esfuerzo, visibilidad del estado y una franja de tiempo que el cliente entiende. El dueño del taller puede tomar esas mismas piezas y aplicarlas al servicio automotriz.</p>
+<p>El éxito del delivery no está en la moto ni en la mochila. Está en tres promesas operativas muy claras: recogida o entrega sin esfuerzo, visibilidad del estado y una franja de tiempo que el cliente entiende. El dueño del taller puede tomar esas mismas piezas y aplicarlas al servicio del taller mecánico.</p>
 
 <ul>
   <li><strong>Comodidad percibida.</strong> El cliente siente que el taller se adapta a su rutina, no al revés.</li>
@@ -72,7 +72,7 @@ export const POSTS: Post[] = [
 
 <p>El taller no tiene que disfrazarse de marketplace. Tiene que adoptar la lógica correcta: ventana horaria clara, conductor verificado, cobertura del trayecto y trazabilidad. En automoción hay más riesgo que en una hamburguesa, así que la experiencia solo funciona si detrás hay operación seria.</p>
 
-<p>Por eso el “delivery” automotriz no es marketing. Es servicio envuelto en logística: recoger, mover, devolver y registrar. Lo que Amazon hizo con la expectativa del paquete, el taller puede hacerlo con la experiencia del coche.</p>
+<p>Por eso el delivery del coche no es marketing. Es servicio envuelto en logística: recoger, mover, devolver y registrar. Lo que Amazon hizo con la expectativa del paquete, el taller puede hacerlo con la experiencia del coche.</p>
 
 <h2>La pregunta útil para un dueño de taller</h2>
 
@@ -91,7 +91,7 @@ export const POSTS: Post[] = [
     coverAlt: "Mano sosteniendo una llave de coche en collage vintage sobre fondo crema.",
     publishedAt: "2026-08-14",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>La mayoría de los talleres mecánicos en España son buenos técnicamente. El problema no está en el motor — está en la logística de la experiencia.</p>
 
@@ -99,18 +99,18 @@ export const POSTS: Post[] = [
 
 <h2>El coste invisible de la incomodidad</h2>
 
-<p>Un estudio interno con talleres de Madrid y Barcelona mostró que el 38 % de los clientes que no repiten no lo hace por precio ni por calidad del servicio — lo hace porque "fue una molestia demasiado grande". Ese número es el que Mecanu intenta mover.</p>
+<p>Cuando el cliente no puede ir, cuadrar la entrega se alarga hasta 7 días. Y el coche listo puede quedarse hasta 4 días ocupando plaza. Eso no es un fallo del motor: es fricción logística. Ese es el hueco que Mecanu ataca.</p>
 
 <p>La solución no es contratar más personal. Es coordinar mejor lo que ya existe: conductores disponibles, ventanas horarias claras y una comunicación que no dependa de llamadas de teléfono.</p>
 
 <h2>Lo que cambia cuando ofreces recogida a domicilio</h2>
 
-<p>Los talleres que han integrado un servicio de recogida y entrega reportan tres efectos consistentes:</p>
+<p>Los talleres que incorporan recogida y entrega notan tres efectos consistentes:</p>
 
 <ul>
-  <li><strong>Tasa de retención más alta.</strong> El cliente que no tiene que preocuparse por el traslado vuelve. El promedio de repetición sube un 40 % en el primer año.</li>
-  <li><strong>Ticket medio mayor.</strong> Cuando el cliente no está esperando en el taller, acepta más revisiones adicionales — no hay prisa por irse.</li>
-  <li><strong>Menos llamadas entrantes.</strong> El seguimiento en tiempo real elimina la pregunta "¿ya está listo mi coche?" que consume entre 15 y 30 minutos al día de recepción.</li>
+  <li><strong>Más repetición.</strong> El cliente que no tiene que preocuparse por el traslado vuelve.</li>
+  <li><strong>Más trabajo aceptado.</strong> Cuando el cliente no está esperando en el taller, acepta más revisiones adicionales — no hay prisa por irse.</li>
+  <li><strong>Menos llamadas entrantes.</strong> El seguimiento en tiempo real reduce la pregunta "¿ya está listo mi coche?" que consume tiempo de recepción cada día.</li>
 </ul>
 
 <h2>El problema de coordinar sin herramientas</h2>
@@ -136,7 +136,7 @@ export const POSTS: Post[] = [
     coverAlt: "Conductor saludando desde la ventanilla de un coche clásico en collage vintage.",
     publishedAt: "2026-07-28",
     readingMinutes: 4,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>Tener conductores propios parece la solución obvia. Pero para la mayoría de talleres, la mejor flota es la que no aparece en tu nómina.</p>
 
@@ -144,9 +144,9 @@ export const POSTS: Post[] = [
 
 <h2>El modelo de conductores bajo demanda</h2>
 
-<p>La alternativa es trabajar con conductores externos verificados que se activan cuando hay un traslado confirmado. Sin contrato fijo, sin coste cuando no hay trabajo, con la misma cobertura de seguro que un empleado propio.</p>
+<p>La alternativa es trabajar con conductores externos verificados que se activan cuando hay un traslado confirmado. Sin contrato fijo, sin coste cuando no hay trabajo. El seguro de traslado se añade solo si el taller lo quiere: no va en todos los viajes.</p>
 
-<p>Esto no es nuevo — es el mismo modelo que usan las plataformas de reparto desde hace años. La diferencia es que en el mundo del taller mecánico, nadie lo había adaptado con las garantías que el sector necesita: verificación del conductor, cobertura de responsabilidad civil específica para traslados de vehículos de terceros, y un registro completo de cada movimiento.</p>
+<p>Esto no es nuevo — es el mismo modelo que usan las plataformas de reparto desde hace años. La diferencia es que en el mundo del taller mecánico, nadie lo había adaptado con las piezas que el sector necesita: verificación del conductor, trazabilidad del trayecto y, si el taller lo pide, cobertura de responsabilidad civil específica para traslados de vehículos de terceros.</p>
 
 <h2>Qué necesita el taller para que funcione</h2>
 
@@ -165,7 +165,7 @@ export const POSTS: Post[] = [
     coverAlt: "Dos personas entregándose unas llaves en una ilustración estilo mosaico.",
     publishedAt: "2026-07-10",
     readingMinutes: 6,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>Mover el coche de un cliente sin la cobertura correcta es un riesgo que la mayoría de talleres asume sin saberlo.</p>
 
@@ -177,11 +177,11 @@ export const POSTS: Post[] = [
 
 <p>Antes de ofrecer recogida y entrega, revisa tres cosas en tu póliza: si los traslados fuera de las instalaciones están cubiertos, si el conductor que usa el vehículo del cliente está cubierto como conductor autorizado, y cuál es el límite de responsabilidad por daños materiales a vehículos en custodia.</p>
 
-<h2>Lo que Mecanu incluye en cada traslado</h2>
+<h2>Cómo lo trata Mecanu</h2>
 
-<p>Cada traslado coordinado a través de Mecanu incluye cobertura específica para el vehículo durante el trayecto. No es el seguro del cliente ni el seguro del taller — es una cobertura de custodia que activa en el momento en que el conductor recoge las llaves y se desactiva cuando el cliente firma la entrega.</p>
+<p>En Mecanu el seguro de traslado es un añadido: solo si el taller lo quiere. No va incluido en todos los viajes. Cuando se activa, es una cobertura de custodia del vehículo durante el trayecto — no el seguro del cliente ni el del taller — y se desactiva cuando el cliente firma la entrega.</p>
 
-<p>Eso elimina la zona gris. El taller sabe que está cubierto. El cliente sabe que su coche está protegido. Y el conductor sabe exactamente cuál es su responsabilidad.</p>
+<p>Así el taller decide si asume el riesgo con su propia póliza o añade la cobertura del trayecto. El cliente solo ve el coche protegido cuando el taller ha pedido esa capa. Y el conductor sabe exactamente cuál es su responsabilidad.</p>
     `,
   },
   {
@@ -194,7 +194,7 @@ export const POSTS: Post[] = [
     coverAlt: "Hombre revisando el móvil junto a un coche clásico en collage vintage.",
     publishedAt: "2026-08-18",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>El trabajo ya está facturado. El elevador está libre. La plaza no. En un taller de Madrid o Barcelona esa plaza vale más que el recambio que acabas de montar.</p>
 
@@ -209,7 +209,7 @@ export const POSTS: Post[] = [
 <ul>
   <li>Confirma que el coche está listo de verdad, no “casi”.</li>
   <li>Propón una ventana de una hora para devolverlo. Nunca una hora exacta.</li>
-  <li>Que el trayecto tenga fotos y seguro de custodia. Un aprendiz sin cobertura no es un proceso.</li>
+  <li>Que el trayecto tenga fotos y, si el taller lo quiere, seguro de custodia. Un aprendiz sin marco no es un proceso.</li>
 </ul>
 
 <p>El marco operativo está en <a href="/cliente-no-recoge-coche">el cliente no recoge el coche</a> y en <a href="/capacidad-taller">capacidad del taller</a>.</p>
@@ -225,7 +225,7 @@ export const POSTS: Post[] = [
     coverAlt: "Montón de papeles y hojas de trabajo representados en mosaico cerámico.",
     publishedAt: "2026-08-19",
     readingMinutes: 6,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>El buscador del dueño de taller no es el del particular. Escribe tempario, referencia de recambio, Autel, GT Motive, “programa de facturación taller” e ITV. Compra diagnosis y DMS. Sigue coordinando recogidas por WhatsApp.</p>
 
@@ -239,11 +239,11 @@ export const POSTS: Post[] = [
   <li><strong>WhatsApp:</strong> “¿ya está mi coche?”</li>
 </ul>
 
-<p>Ninguno mueve el vehículo. El hueco está entre el domicilio y la puerta. Ahí se rompe el grupo de WhatsApp: un conductor que no aparece, un parachoques sin foto, un seguro que pregunta quién conducía.</p>
+<p>Ninguno mueve el coche. El hueco está entre el domicilio y la puerta. Ahí se rompe el grupo de WhatsApp: un conductor que no aparece, un parachoques sin foto, una incidencia sin registro de quién conducía.</p>
 
 <h2>Qué no hay que hacer</h2>
 
-<p>No hay que tirar el DMS ni el escáner. Mecanu no es un sustituto de Autel ni de GT Motive. Es la capa de traslado: ventana de una hora, conductor verificado, RC del trayecto, registro. El resto del oficio sigue en tu nave.</p>
+<p>No hay que tirar el DMS ni el escáner. Mecanu no es un sustituto de Autel ni de GT Motive. Es la capa de traslado: ventana de una hora, conductor verificado, registro del trayecto y, si el taller lo quiere, seguro de traslado. El resto del oficio sigue en tu nave.</p>
 
 <p>Desglose en <a href="/software-taller">software de taller</a> y <a href="/itv-para-talleres">ITV para talleres</a>.</p>
     `,
@@ -258,7 +258,7 @@ export const POSTS: Post[] = [
     coverAlt: "Coche recorriendo una carretera en mosaico.",
     publishedAt: "2026-08-04",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>Madrid no falla por falta de talleres. Falla por la distancia entre el taller y el cliente. Cuando el coche está en Chamartín, el conductor en Vallecas y la cita del cliente en Pozuelo, la fricción no es mecánica: es logística.</p>
 
@@ -285,7 +285,7 @@ export const POSTS: Post[] = [
     coverAlt: "Patrón de estrellas amarillas sobre fondo azul en mosaico.",
     publishedAt: "2026-08-03",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>En Barcelona el coste oculto del taller no es solo la mano de obra. También es la fricción del desplazamiento: ZBE, tráfico, aparcamiento, agendas apretadas y clientes que retrasan la visita porque dejar el coche les desordena el día completo.</p>
 
@@ -308,7 +308,7 @@ export const POSTS: Post[] = [
     coverAlt: "Hombre revisando el móvil junto a un coche clásico en collage vintage.",
     publishedAt: "2026-08-02",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>La explicación corta es esta: el taller crea una solicitud, Mecanu coordina el conductor, el coche se recoge en una ventana clara y el trayecto queda registrado. Eso sirve tanto para traer el vehículo al taller como para devolverlo cuando ya está listo.</p>
 
@@ -318,7 +318,7 @@ export const POSTS: Post[] = [
 
 <ol>
   <li><strong>Asignación.</strong> El conductor no sale de una libreta ni de una cadena de WhatsApp.</li>
-  <li><strong>Cobertura.</strong> El trayecto tiene marco documental y seguro de custodia.</li>
+  <li><strong>Registro.</strong> El trayecto tiene marco documental; el seguro de custodia se añade solo si el taller lo quiere.</li>
   <li><strong>Visibilidad.</strong> El taller sabe qué coche está en recogida, en ruta o entregado.</li>
 </ol>
 
@@ -335,11 +335,11 @@ export const POSTS: Post[] = [
     coverAlt: "Dos camiones chocando en una composición de mosaico.",
     publishedAt: "2026-08-01",
     readingMinutes: 4,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>La grúa tiene un sitio claro: vehículo inmovilizado, avería seria o imposibilidad real de circular. El problema es usarla como herramienta universal para cualquier traslado del taller.</p>
 
-<p>Cuando el coche está operativo, la grúa introduce coste, espera y una experiencia más aparatosa para un caso que muchas veces solo pedía mover el coche de A a B con normalidad, seguro y seguimiento.</p>
+<p>Cuando el coche está operativo, la grúa introduce coste, espera y una experiencia más aparatosa para un caso que muchas veces solo pedía mover el coche de A a B con normalidad y seguimiento.</p>
 
 <h2>Qué comparar de verdad</h2>
 
@@ -363,7 +363,7 @@ export const POSTS: Post[] = [
     coverAlt: "Mecánico trabajando en la rueda de un coche clásico en collage vintage.",
     publishedAt: "2026-07-31",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>Un mecánico a domicilio es útil para baterías, revisiones concretas o averías muy delimitadas. Pero cuando el trabajo necesita elevador, diagnosis, varias horas o coordinación con piezas y más personal, el destino natural sigue siendo el taller.</p>
 
@@ -384,7 +384,7 @@ export const POSTS: Post[] = [
     coverAlt: "Inspector frente a varios coches clásicos y un cartel de ITV en collage vintage.",
     publishedAt: "2026-07-30",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>La ITV no es solo una inspección. Para el cliente también es agenda, desplazamiento, espera y vuelta. Y para el taller, una oportunidad clara de cerrar el ciclo del servicio si puede hacerse cargo de ese movimiento.</p>
 
@@ -407,7 +407,7 @@ export const POSTS: Post[] = [
     coverAlt: "Montón de papeles y hojas de trabajo representados en mosaico.",
     publishedAt: "2026-07-29",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>El dueño de taller compra DMS, diagnosis y peritación para ordenar la nave. Y hace bien. El problema es esperar que esas herramientas también resuelvan la parte del servicio que ocurre fuera del taller.</p>
 
@@ -436,7 +436,7 @@ export const POSTS: Post[] = [
     coverAlt: "Motor visto dentro del vano delantero en una composición de mosaico.",
     publishedAt: "2026-07-27",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>Las búsquedas por marca tienen intención comercial muy clara: “mantenimiento BMW”, “revisión Audi”, “taller Volkswagen”. Ahí compiten concesionarios, talleres especialistas e independientes con buen posicionamiento local.</p>
 
@@ -457,7 +457,7 @@ export const POSTS: Post[] = [
     coverAlt: "Mano sosteniendo una llave de coche en collage vintage sobre fondo crema.",
     publishedAt: "2026-07-26",
     readingMinutes: 5,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
     content: `
 <p>Hay un momento muy común en los talleres urbanos: la orden ya está cerrada, la factura está lista, el coche también, pero la plaza sigue ocupada. A partir de ahí cada hora pesa más que el margen de una reparación pequeña.</p>
 

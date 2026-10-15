@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Logo } from "@/components/ds/Logo";
-import { POSTS, getPost, getAuthor, getPostsByAuthor, formatDate } from "@/lib/blog/data";
+import { POSTS, getPost, getAuthor, formatDate } from "@/lib/blog/data";
 import { BlogPostJsonLd } from "@/components/landing/JsonLd";
 import { Applause } from "../Applause";
 import { ShareLinks } from "../ShareLinks";
@@ -26,15 +26,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const author = getAuthor(post.authorSlug);
   const url = `${SITE}/blog/${slug}`;
   const image = post.coverImage.startsWith("http") ? post.coverImage : `${SITE}${post.coverImage}`;
+  const authorName = author?.name ?? "Mecanu";
 
   return {
     title: `${post.title} — Blog Mecanu`,
     description: post.excerpt,
-    authors: author ? [{ name: author.name, url: `${SITE}/blog/author/${author.slug}` }] : [],
+    authors: [{ name: authorName }],
     keywords: [
       "taller mecánico", "Mecanu", post.category,
       "recogida coches", "logística vehículos", "mecánico a domicilio",
-      "grúa coches Madrid", "grúa coches Barcelona", "taller Madrid", "taller Barcelona",
+      "alternativa grúa taller", "taller Madrid", "taller Barcelona",
     ].join(", "),
     alternates: { canonical: url },
     openGraph: {
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: post.excerpt,
       siteName: "Mecanu",
       publishedTime: post.publishedAt,
-      authors: author ? [author.name] : [],
+      authors: [authorName],
       images: [{ url: image, width: 1200, height: 630, alt: post.coverAlt }],
     },
     twitter: {
@@ -62,9 +63,8 @@ export default async function BlogPostPage({ params }: Props) {
   if (!post) notFound();
 
   const author = getAuthor(post.authorSlug);
-  const related = getPostsByAuthor(post.authorSlug)
-    .filter((p) => p.slug !== post.slug)
-    .slice(0, 3);
+  const authorName = author?.name ?? "Mecanu";
+  const related = POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
 
   return (
     <div className={styles.page}>
@@ -73,10 +73,9 @@ export default async function BlogPostPage({ params }: Props) {
         description={post.excerpt}
         slug={post.slug}
         publishedAt={post.publishedAt}
-        authorName={author?.name ?? "Mecanu"}
+        authorName={authorName}
         image={post.coverImage}
       />
-      {/* Nav */}
       <nav className={styles.nav}>
         <Link href="/" className={styles.navLogo} aria-label="Mecanu — volver a la web">
           <Logo height={20} />
@@ -87,7 +86,6 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       </nav>
 
-      {/* Breadcrumb */}
       <div className={styles.breadcrumb}>
         <Link href="/">Home</Link>
         <span>›</span>
@@ -96,7 +94,6 @@ export default async function BlogPostPage({ params }: Props) {
         <span>{post.category}</span>
       </div>
 
-      {/* Hero: imagen full-width + meta debajo centrada */}
       <div className={styles.hero}>
         <div className={styles.heroImage}>
           <Image
@@ -112,9 +109,7 @@ export default async function BlogPostPage({ params }: Props) {
           <p className={styles.category}>{post.category}</p>
           <h1 className={styles.title}>{post.title}</h1>
           <div className={styles.byline}>
-            {author ? (
-              <Link href={`/blog/author/${author.slug}`}>{author.name}</Link>
-            ) : null}
+            <span>{authorName}</span>
             <span className={styles.bylineDot}>·</span>
             <span>{formatDate(post.publishedAt)}</span>
             <span className={styles.bylineDot}>·</span>
@@ -123,7 +118,6 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Cuerpo */}
       <div className={styles.articleWrap}>
         <article>
           <ShareLinks title={post.title} />
@@ -135,45 +129,25 @@ export default async function BlogPostPage({ params }: Props) {
         </article>
       </div>
 
-      {/* CTA */}
       <div className={styles.ctaBanner}>
         <h2>¿Tu taller todavía mueve coches a mano?</h2>
-        <p>Mecanu coordina recogidas, entregas y conductores externos en un solo panel. Sin hojas de cálculo.</p>
+        <p>Mecanu coordina recogidas, entregas y conductores —tuyos o de Mecanu— en un solo panel. Sin hojas de cálculo.</p>
         <Link href="/contacto" className={styles.ctaBannerBtn}>
           Hablar con Mecanu
         </Link>
       </div>
 
-      {/* Autor */}
-      {author ? (
-        <div className={styles.authorSection}>
-          {author.avatar ? (
-            <div className={styles.authorAvatar}>
-              <Image
-                src={author.avatar}
-                alt={author.name}
-                width={88}
-                height={88}
-                style={{ objectFit: "cover", objectPosition: "center top" }}
-              />
-            </div>
-          ) : (
-            <div className={styles.authorAvatarPlaceholder} aria-hidden="true">👤</div>
-          )}
-          <div className={styles.authorInfo}>
-            <span className={styles.authorLabel}>Sobre el autor</span>
-            <Link href={`/blog/author/${author.slug}`} className={styles.authorName}>
-              {author.name}
-            </Link>
-            <span className={styles.authorBio}>{author.bio}</span>
-          </div>
-          <Link href={`/blog/author/${author.slug}`} className={styles.authorProfileLink}>
-            Ir a su perfil →
-          </Link>
+      <div className={styles.authorSection}>
+        <div className={styles.authorInfo}>
+          <span className={styles.authorLabel}>Publicado por</span>
+          <span className={styles.authorName}>{authorName}</span>
+          {author?.bio ? <span className={styles.authorBio}>{author.bio}</span> : null}
         </div>
-      ) : null}
+        <Link href="/blog" className={styles.authorProfileLink}>
+          Ver el blog →
+        </Link>
+      </div>
 
-      {/* Posts relacionados */}
       {related.length > 0 ? (
         <div className={styles.related}>
           <div className={styles.relatedLabel}>
@@ -196,7 +170,7 @@ export default async function BlogPostPage({ params }: Props) {
                   <span className={styles.relatedCat}>{p.category}</span>
                   <p className={styles.relatedTitle}>{p.title}</p>
                   <span className={styles.relatedByline}>
-                    por {getAuthor(p.authorSlug)?.name} · {formatDate(p.publishedAt)}
+                    {formatDate(p.publishedAt)}
                   </span>
                   <span className={styles.relatedReadLink}>Leer →</span>
                 </div>
@@ -206,7 +180,6 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       ) : null}
 
-      {/* Footer */}
       <footer className={styles.footer}>
         <div className={styles.footerActions}>
           <Link href="/contacto" className={styles.footerBtnBlack}>Hablar con Mecanu</Link>

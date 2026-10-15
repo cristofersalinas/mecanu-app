@@ -2,36 +2,50 @@ import type { Metadata } from "next";
 import { SeoPage, CompareTable, FaqBlock } from "@/components/landing/SeoPage";
 import { BreadcrumbJsonLd, FaqJsonLd } from "@/components/landing/JsonLd";
 import type { FaqItem } from "@/lib/landing/faq";
+import { ogImageUrl } from "@/lib/landing/og";
 
 export const dynamic = "force-static";
 
 const URL = "https://mecanu.com/alternativa-grua";
+const OG = ogImageUrl("alternativa-grua");
 
 export const metadata: Metadata = {
-  title: "Alternativa a la grúa para mover coches del taller — Mecanu",
+  title: "Alternativa a la grúa para coches que sí circulan — Mecanu",
   description:
-    "Cuándo conviene una grúa y cuándo un conductor. Comparativa de coste, tiempo y cobertura para talleres que necesitan mover coches que sí arrancan en Madrid y Barcelona.",
+    "Recogida y entrega con conductor frente a la grúa: más hueco y menos coste cuando el coche arranca. Plataforma logística para talleres en Madrid y Barcelona. El seguro de traslado es opcional.",
   keywords: [
     "alternativa grúa taller",
-    "grúa coches Madrid",
-    "grúa coches Barcelona",
-    "grúa particular Madrid",
-    "grúa particular Barcelona",
-    "grúa barata Madrid",
-    "cuánto cuesta una grúa para coche",
     "grúa o conductor para mover coche",
     "mover coche sin grúa",
     "traslado coche taller sin grúa",
     "grúa taller mecánico precio",
+    "servicio grúa sin avería",
+    "recogida coches talleres Madrid",
+    "recogida coches talleres Barcelona",
   ].join(", "),
   alternates: { canonical: URL },
   openGraph: {
-    title: "Alternativa a la grúa para mover coches del taller — Mecanu",
+    type: "website",
+    title: "Alternativa a la grúa para coches que sí circulan — Mecanu",
     description:
-      "Cuándo conviene una grúa y cuándo un conductor. Comparativa de coste, tiempo y cobertura para talleres.",
+      "Cuando el coche arranca, un conductor suele bastar. Plataforma logística para talleres en Madrid y Barcelona. Seguro de traslado opcional.",
     url: URL,
     siteName: "Mecanu",
-    images: [{ url: "https://mecanu.com/og-image.png", width: 1200, height: 630 }],
+    images: [
+      {
+        url: OG,
+        width: 1200,
+        height: 630,
+        alt: "Alternativa a la grúa para coches que sí circulan — Mecanu",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Alternativa a la grúa para coches que sí circulan — Mecanu",
+    description:
+      "Cuando el coche arranca, un conductor suele bastar. Plataforma logística. Madrid y Barcelona.",
+    images: [OG],
   },
 };
 
@@ -46,7 +60,7 @@ const FAQ: readonly FaqItem[] = [
   },
   {
     q: "¿El seguro cubre igual en los dos casos?",
-    a: "Son coberturas distintas. La grúa cubre el vehículo como carga transportada. Un traslado con conductor necesita responsabilidad civil específica para alguien que conduce un coche que no es suyo — en Mecanu esa cobertura va incluida en cada traslado, cosa que un conductor informal o un empleado del taller sin póliza específica no tiene.",
+    a: "Son coberturas distintas. La grúa cubre el vehículo como carga transportada. Un traslado con conductor necesita responsabilidad civil específica para quien conduce un coche ajeno. En Mecanu el seguro de traslado es un añadido: solo si el taller lo quiere, no va en todos los viajes.",
   },
   {
     q: "¿Cuánto se tarda en cada caso?",
@@ -73,6 +87,7 @@ export default function AlternativaGruaPage() {
           { href: "/barcelona", label: "Mecanu en Barcelona" },
           { href: "/alternativa-mecanico-a-domicilio", label: "Comparado con un mecánico a domicilio" },
           { href: "/para-talleres", label: "Cómo funciona para tu taller" },
+          { href: "/blog/alternativa-a-la-grua", label: "Cuándo la grúa no es la mejor opción" },
         ]}
       >
         <h2>La diferencia real</h2>
@@ -98,7 +113,7 @@ export default function AlternativaGruaPage() {
               label: "Coste relativo",
               cells: [
                 "Alto: moviliza camión y operario",
-                "Bajo: una persona conduciendo",
+                "Más bajo: una persona conduciendo",
               ],
             },
             {
@@ -112,7 +127,7 @@ export default function AlternativaGruaPage() {
               label: "Cobertura del seguro",
               cells: [
                 "El vehículo va como carga transportada",
-                "Responsabilidad civil para quien conduce un coche ajeno",
+                "RC de quien conduce un coche ajeno (en Mecanu, solo si el taller la añade)",
               ],
             },
             {
@@ -170,10 +185,10 @@ export default function AlternativaGruaPage() {
 
         <h2>Cómo lo resuelve Mecanu</h2>
         <p>
-          Mecanu coordina traslados con conductores verificados para coches que circulan. Cada
-          traslado incluye cobertura de responsabilidad civil, ventana horaria de una hora, y
-          registro con fotos al recoger y al entregar. El taller lo gestiona desde un panel web sin
-          instalar nada, y paga por traslado realizado sin coste fijo.
+          Mecanu es la plataforma logística con la que el taller recoge y entrega el coche del
+          cliente, con sus conductores o con los de Mecanu. Ventana de una hora, registro con fotos
+          y seguimiento georreferenciado en tiempo real. El seguro de traslado se añade solo si el
+          taller lo quiere: no va en todos los viajes.
         </p>
         <p>
           Operamos en <a href="/madrid">Madrid</a> y <a href="/barcelona">Barcelona</a>, incluidas

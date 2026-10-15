@@ -8,14 +8,33 @@ import styles from "./blog.module.css";
 
 export const dynamic = "force-static";
 
+const OG = "https://mecanu.com/og/blog";
+
 export const metadata: Metadata = {
   title: "Blog — Mecanu",
-  description: "Artículos sobre operaciones, logística y tecnología para talleres mecánicos.",
+  description:
+    "Operaciones y logística para talleres: capacidad, grúa, mecánico a domicilio y recogida del coche. Plataforma logística en Madrid y Barcelona.",
+  authors: [{ name: "Mecanu" }],
   alternates: {
     canonical: "https://mecanu.com/blog",
     types: {
       "application/rss+xml": "https://mecanu.com/feed.xml",
     },
+  },
+  openGraph: {
+    type: "website",
+    title: "Blog — Mecanu",
+    description:
+      "Operaciones y logística para talleres. Plataforma logística en Madrid y Barcelona.",
+    url: "https://mecanu.com/blog",
+    siteName: "Mecanu",
+    images: [{ url: OG, width: 1200, height: 630, alt: "Blog Mecanu" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog — Mecanu",
+    description: "Operaciones y logística para talleres. Madrid y Barcelona.",
+    images: [OG],
   },
 };
 
@@ -59,7 +78,7 @@ export default function BlogIndexPage() {
             <h2 className={styles.featuredTitle}>{featured.title}</h2>
             <p className={styles.featuredExcerpt}>{featured.excerpt}</p>
             <span className={styles.featuredByline}>
-              por {featuredAuthor?.name} · {formatDate(featured.publishedAt)} · {featured.readingMinutes} min
+              {featuredAuthor?.name ?? "Mecanu"} · {formatDate(featured.publishedAt)} · {featured.readingMinutes} min
             </span>
           </div>
         </Link>
