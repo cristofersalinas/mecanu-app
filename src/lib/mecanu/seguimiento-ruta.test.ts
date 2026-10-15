@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import SeguimientoTokenPage from '@/app/s/[token]/page';
 import * as authServer from '@/lib/supabase/auth-server';
 import * as supabaseServer from '@/lib/supabase/server';
 import { supabaseRepo } from './repo/repo-supabase';
@@ -473,5 +474,98 @@ describe('supabase: taller de la sesión', () => {
     expect(ubi?.rutaId).toBe('TR-OTRO');
     expect(filtros).toContainEqual({ tabla: 'rutas', col: 'link_token', val: 'token-otro' });
     expect(filtros.some((f) => f.col === 'taller_id' || f.val === 'taller-rodriguez')).toBe(false);
+  });
+});
+
+function clienteSoloToken(tokenEsperado: string) {
+  return {
+    from(tabla: string) {
+      const eqs: { col: string; val: unknown }[] = [];
+      const builder = {
+        select() {
+          return builder;
+        },
+        eq(col: string, val: unknown) {
+          eqs.push({ col, val });
+          return builder;
+        },
+        order() {
+          return builder;
+        },
+        limit() {
+          return builder;
+        },
+        maybeSingle() {
+          const token = eqs.find((e) => e.col === 'link_token')?.val;
+          const data = tabla === 'rutas' && token === tokenEsperado ? FILA_OTRO : null;
+          return Promise.resolve({ data, error: null });
+        },
+        then(
+          onFulfilled: (v: { data: unknown; error: null }) => unknown,
+          onRejected?: (e: unknown) => unknown,
+        ) {
+          return Promise.resolve({ data: [], error: null }).then(onFulfilled, onRejected);
+        },
+      };
+      return builder;
+    },
+  };
+}
+
+describe('página /s/{token} sin sesión de taller', () => {
+  const envPrev = {
+    flag: process.env.MECANU_USE_SUPABASE,
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    key: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    if (envPrev.flag === undefined) delete process.env.MECANU_USE_SUPABASE;
+    else process.env.MECANU_USE_SUPABASE = envPrev.flag;
+    if (envPrev.url === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    else process.env.NEXT_PUBLIC_SUPABASE_URL = envPrev.url;
+    if (envPrev.key === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = envPrev.key;
+  });
+
+  function activarSupabaseSinSesion() {
+    process.env.MECANU_USE_SUPABASE = '1';
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://mecanu-test.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'eyJ-test-no-es-una-clave';
+    vi.spyOn(authServer, 'getPerfilSesion').mockRejectedValue(new Error('sin sesión'));
+  }
+
+  it('abre el viaje del token sin cookie de taller y no el mock de otro', async () => {
+    activarSupabaseSinSesion();
+    vi.spyOn(supabaseServer, 'getSupabaseServer').mockReturnValue(
+      clienteSoloToken('token-otro') as unknown as NonNullable<
+        ReturnType<typeof supabaseServer.getSupabaseServer>
+      >,
+    );
+
+    const el = await SeguimientoTokenPage({
+      params: Promise.resolve({ token: 'token-otro' }),
+      searchParams: Promise.resolve({}),
+    });
+    const data = (el as { props: { data: { rutaId: string } | null } }).props.data;
+    expect(data?.rutaId).toBe('TR-OTRO');
+    expect(authServer.getPerfilSesion).not.toHaveBeenCalled();
+  });
+
+  it('si Supabase responde y el token no está, no muestra el viaje del mock', async () => {
+    activarSupabaseSinSesion();
+    vi.spyOn(supabaseServer, 'getSupabaseServer').mockReturnValue(
+      clienteSoloToken('token-otro') as unknown as NonNullable<
+        ReturnType<typeof supabaseServer.getSupabaseServer>
+      >,
+    );
+
+    const el = await SeguimientoTokenPage({
+      params: Promise.resolve({ token: 'cristofer-wa-demo' }),
+      searchParams: Promise.resolve({}),
+    });
+    const data = (el as { props: { data: { rutaId: string } | null } }).props.data;
+    expect(data).toBeNull();
   });
 });

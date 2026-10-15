@@ -2,11 +2,13 @@ import type { Metadata } from 'next';
 import { SeguimientoRutaView } from '@/components/seguimiento/SeguimientoRutaView';
 import { repo } from '@/lib/mecanu/repo';
 import { mockRepo } from '@/lib/mecanu/repo/repo-mock';
+import { campanasDeRutaPublica, rutaVistaPorLinkToken } from '@/lib/mecanu/repo/repo-supabase';
 import {
   campanaOfertaDeRuta,
   construirSeguimientoPublico,
   rutaPorLinkToken,
 } from '@/lib/mecanu/seguimiento-ruta';
+import { supabaseServerConfigured } from '@/lib/supabase/server';
 import type {
   Actividad,
   Conductor,
@@ -47,61 +49,87 @@ type Carga = {
   campanaOferta: { id: string; estado: string; presupuesto: Presupuesto } | null;
 };
 
+const CARGA_VACIA: Carga = {
+  ruta: null,
+  vehiculo: null,
+  conductor: null,
+  tramos: [],
+  paradas: [],
+  actividad: [],
+  inspecciones: [],
+  presupuesto: null,
+  campanaOferta: null,
+};
+
+function supabaseActivo(): boolean {
+  return process.env.MECANU_USE_SUPABASE === '1' && supabaseServerConfigured();
+}
+
+async function silencio<T>(p: Promise<T | null>): Promise<T | null> {
+  try {
+    return await p;
+  } catch {
+    return null;
+  }
+}
+
+async function armar(
+  fuente: typeof repo,
+  ruta: RutaVista,
+  campanaOferta: Carga['campanaOferta'],
+): Promise<Carga> {
+  const [vehiculo, conductor, tramos, paradas, actividad, inspecciones, presupuesto] = await Promise.all([
+    ruta.vehiculoId ? silencio(fuente.getVehiculo(ruta.vehiculoId)) : Promise.resolve(null),
+    ruta.conductorId ? silencio(fuente.getConductor(ruta.conductorId)) : Promise.resolve(null),
+    fuente.listTramosDeRuta(ruta.id),
+    fuente.listParadasDeRuta(ruta.id),
+    fuente.listActividadDeRuta(ruta.id),
+    fuente.listInspeccionesDeRuta(ruta.id),
+    ruta.presupuestoId
+      ? fuente.getPresupuesto(ruta.presupuestoId)
+      : Promise.resolve(ruta.presupuesto),
+  ]);
+  return {
+    ruta,
+    vehiculo,
+    conductor,
+    tramos,
+    paradas,
+    actividad,
+    inspecciones,
+    presupuesto: presupuesto ?? ruta.presupuesto,
+    campanaOferta,
+  };
+}
+
+/** Mock solo si Supabase no está o no responde. Un token ausente no se rellena. */
+async function cargarMock(token: string): Promise<Carga> {
+  try {
+    const rutas = await mockRepo.listRutasVista();
+    const ruta = rutaPorLinkToken(rutas, token);
+    if (!ruta) return CARGA_VACIA;
+    const campanas = await mockRepo.listCampanas();
+    return armar(mockRepo, ruta, campanaOfertaDeRuta(campanas, ruta.id));
+  } catch {
+    return CARGA_VACIA;
+  }
+}
+
 async function cargarPorToken(token: string): Promise<Carga> {
-  const vacio: Carga = {
-    ruta: null,
-    vehiculo: null,
-    conductor: null,
-    tramos: [],
-    paradas: [],
-    actividad: [],
-    inspecciones: [],
-    presupuesto: null,
-    campanaOferta: null,
-  };
-
-  const tryFuente = async (fuente: typeof repo): Promise<Carga | null> => {
-    try {
-      const [rutas, conductores, campanas] = await Promise.all([
-        fuente.listRutasVista(),
-        fuente.listConductores(),
-        fuente.listCampanas(),
-      ]);
-      const ruta = rutaPorLinkToken(rutas, token);
-      if (!ruta) return null;
-
-      const [vehiculo, tramos, paradas, actividad, inspecciones, presupuesto] = await Promise.all([
-        ruta.vehiculoId ? fuente.getVehiculo(ruta.vehiculoId) : Promise.resolve(null),
-        fuente.listTramosDeRuta(ruta.id),
-        fuente.listParadasDeRuta(ruta.id),
-        fuente.listActividadDeRuta(ruta.id),
-        fuente.listInspeccionesDeRuta(ruta.id),
-        ruta.presupuestoId
-          ? fuente.getPresupuesto(ruta.presupuestoId)
-          : Promise.resolve(ruta.presupuesto),
-      ]);
-
-      const conductor = ruta.conductorId
-        ? (conductores.find((d) => d.id === ruta.conductorId) ?? null)
-        : null;
-
-      return {
-        ruta,
-        vehiculo,
-        conductor,
-        tramos,
-        paradas,
-        actividad,
-        inspecciones,
-        presupuesto: presupuesto ?? ruta.presupuesto,
-        campanaOferta: campanaOfertaDeRuta(campanas, ruta.id),
-      };
-    } catch {
-      return null;
-    }
-  };
-
-  return (await tryFuente(repo)) ?? (await tryFuente(mockRepo)) ?? vacio;
+  if (!supabaseActivo()) return cargarMock(token);
+  let ruta: RutaVista | null;
+  try {
+    ruta = await rutaVistaPorLinkToken(token);
+  } catch {
+    return cargarMock(token);
+  }
+  if (!ruta) return CARGA_VACIA;
+  try {
+    const campanas = await campanasDeRutaPublica(ruta.id);
+    return await armar(repo, ruta, campanaOfertaDeRuta(campanas, ruta.id));
+  } catch {
+    return { ...CARGA_VACIA, ruta };
+  }
 }
 
 export default async function SeguimientoTokenPage({ params, searchParams }: Props) {

@@ -102,7 +102,7 @@ async function cargarPresupuesto(id: string | null | undefined): Promise<Presupu
   );
 }
 
-async function rutaVistaPorLinkToken(token: string): Promise<RutaVista | null> {
+export async function rutaVistaPorLinkToken(token: string): Promise<RutaVista | null> {
   const t = token.trim();
   if (!t) return null;
   const { data, error } = await sb().from('rutas').select('*').eq('link_token', t).maybeSingle();
@@ -112,7 +112,7 @@ async function rutaVistaPorLinkToken(token: string): Promise<RutaVista | null> {
 }
 
 /** Cotización del enlace público: la ruta ya identifica el taller, no la sesión. */
-async function campanasDeRutaPublica(rutaId: string): Promise<Campana[]> {
+export async function campanasDeRutaPublica(rutaId: string): Promise<Campana[]> {
   const client = sb();
   const { data, error } = await client.from('campanas').select('*').eq('ruta_origen_id', rutaId);
   throwPg(error, 'campanas token');
