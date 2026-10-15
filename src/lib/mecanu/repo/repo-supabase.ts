@@ -5,6 +5,7 @@
  * La UI del panel/conductor sigue en mock hasta migrar data.ts (async).
  * APIs y Server Actions que usen `repo` sí pueden apuntar aquí.
  */
+import { getPerfilSesion } from '@/lib/supabase/auth-server';
 import { getSupabaseServer } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { crearRutaDesdeCampana as construirRutaDesdeCampana } from '../crear-ruta-desde-campana';
@@ -32,12 +33,18 @@ import {
 } from './mappers-supabase';
 import { tagsDeRutaConDatos } from '../mecanu-rutas';
 import { construirUbicacionSeguimiento } from '../ubicacion-seguimiento';
-import { campanaOfertaDeRuta, rutaPorLinkToken } from '../seguimiento-ruta';
+import { campanaOfertaDeRuta } from '../seguimiento-ruta';
 import { geocodificarDireccion } from '../geocode';
 import { gpsPosicionEsquemaAusente } from '../gps-conductor';
 import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '../transicion-en-ruta';
 
-const TALLER_DEFAULT = 'taller-rodriguez';
+/** Taller del usuario autenticado. `service_role` no aplica RLS. */
+async function tallerDeSesion(): Promise<string> {
+  const perfil = await getPerfilSesion();
+  const id = perfil?.tallerId?.trim() ?? '';
+  if (!id) throw new Error('No hay taller en la sesión');
+  return id;
+}
 
 function sb(): SupabaseClient {
   const c = getSupabaseServer();
@@ -93,6 +100,42 @@ async function cargarPresupuesto(id: string | null | undefined): Promise<Presupu
       servicioTemparioId: l.servicio_tempario_id == null ? null : String(l.servicio_tempario_id),
     })),
   );
+}
+
+async function rutaVistaPorLinkToken(token: string): Promise<RutaVista | null> {
+  const t = token.trim();
+  if (!t) return null;
+  const { data, error } = await sb().from('rutas').select('*').eq('link_token', t).maybeSingle();
+  throwPg(error, 'ruta token');
+  if (!data) return null;
+  return vistaDeRuta(data);
+}
+
+/** Cotización del enlace público: la ruta ya identifica el taller, no la sesión. */
+async function campanasDeRutaPublica(rutaId: string): Promise<Campana[]> {
+  const client = sb();
+  const { data, error } = await client.from('campanas').select('*').eq('ruta_origen_id', rutaId);
+  throwPg(error, 'campanas token');
+  const out: Campana[] = [];
+  for (const row of data ?? []) {
+    const { data: pr } = await client
+      .from('presupuestos')
+      .select('*')
+      .eq('campana_id', row.id)
+      .limit(1)
+      .maybeSingle();
+    const presupuesto = pr
+      ? await cargarPresupuesto(String(pr.id))
+      : mapPresupuesto({
+        id: `PR-tmp-${row.id}`,
+        modo: 'detallado',
+        estado: 'nueva',
+        total: 0,
+        iva_incluido: true,
+      });
+    out.push(mapCampana(row, presupuesto!, []));
+  }
+  return out;
 }
 
 async function vistaDeRuta(rutaRow: Record<string, unknown>): Promise<RutaVista> {
@@ -245,7 +288,8 @@ async function cargarInspeccion(row: Record<string, unknown>): Promise<Inspeccio
 
 export const supabaseRepo: MecanuRepo = {
   async listClientes() {
-    const { data, error } = await sb().from('clientes').select('*').eq('taller_id', TALLER_DEFAULT).order('nombre');
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await sb().from('clientes').select('*').eq('taller_id', tallerId).order('nombre');
     throwPg(error, 'clientes');
     return (data ?? []).map((r) => mapCliente(r));
   },
@@ -257,7 +301,8 @@ export const supabaseRepo: MecanuRepo = {
 
   async listVehiculos() {
     const client = sb();
-    const { data, error } = await client.from('vehiculos').select('*').eq('taller_id', TALLER_DEFAULT).order('matricula');
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await client.from('vehiculos').select('*').eq('taller_id', tallerId).order('matricula');
     throwPg(error, 'vehiculos');
     const ids = (data ?? []).map((v) => v.id as string);
     const usuariosBy: Record<string, Vehiculo['usuarios']> = {};
@@ -281,7 +326,8 @@ export const supabaseRepo: MecanuRepo = {
 
   async listConductores() {
     const client = sb();
-    const { data, error } = await client.from('conductores').select('*').eq('taller_id', TALLER_DEFAULT).order('nombre');
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await client.from('conductores').select('*').eq('taller_id', tallerId).order('nombre');
     throwPg(error, 'conductores');
     const ids = (data ?? []).map((c) => c.id as string);
     const incBy: Record<string, Conductor['incidencias']> = {};
@@ -305,7 +351,8 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async listServicios() {
-    const { data, error } = await sb().from('servicios').select('*').eq('taller_id', TALLER_DEFAULT).order('nombre');
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await sb().from('servicios').select('*').eq('taller_id', tallerId).order('nombre');
     throwPg(error, 'servicios');
     return (data ?? []).map((r) => mapServicio(r));
   },
@@ -316,12 +363,14 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async listRutas() {
-    const { data, error } = await sb().from('rutas').select('*').eq('taller_id', TALLER_DEFAULT).order('creada_en', { ascending: false });
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await sb().from('rutas').select('*').eq('taller_id', tallerId).order('creada_en', { ascending: false });
     throwPg(error, 'rutas');
     return (data ?? []).map((r) => mapRuta(r));
   },
   async listRutasVista() {
-    const { data, error } = await sb().from('rutas').select('*').eq('taller_id', TALLER_DEFAULT).order('creada_en', { ascending: false });
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await sb().from('rutas').select('*').eq('taller_id', tallerId).order('creada_en', { ascending: false });
     throwPg(error, 'rutas');
     return Promise.all((data ?? []).map((r) => vistaDeRuta(r)));
   },
@@ -421,7 +470,8 @@ export const supabaseRepo: MecanuRepo = {
   },
   async listCampanas() {
     const client = sb();
-    const { data, error } = await client.from('campanas').select('*').eq('taller_id', TALLER_DEFAULT).order('fecha', { ascending: false });
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await client.from('campanas').select('*').eq('taller_id', tallerId).order('fecha', { ascending: false });
     throwPg(error, 'campanas');
     const campIds = (data ?? []).map((r) => r.id as string);
     const itemsBy: Record<string, Campana['items']> = {};
@@ -543,7 +593,7 @@ export const supabaseRepo: MecanuRepo = {
     const id = `IN-${Date.now().toString(36)}`;
     const row = {
       id,
-      taller_id: TALLER_DEFAULT,
+      taller_id: await tallerDeSesion(),
       ruta_id: t.rutaId,
       traslado_id: trasladoId,
       tipo: 'check-in',
@@ -695,8 +745,7 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async getUbicacionSeguimientoPublico(token: string) {
-    const vistas = await this.listRutasVista();
-    const ruta = rutaPorLinkToken(vistas, token);
+    const ruta = await rutaVistaPorLinkToken(token);
     if (!ruta) return null;
     const tramos = await this.listTramosDeRuta(ruta.id);
     const tramo =
@@ -729,10 +778,9 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async responderPresupuestoSeguimiento({ token, accion, indices }) {
-    const vistas = await this.listRutasVista();
-    const rutaV = rutaPorLinkToken(vistas, token);
+    const rutaV = await rutaVistaPorLinkToken(token);
     if (!rutaV) throw new Error('Enlace de seguimiento no válido');
-    const campanas = await this.listCampanas();
+    const campanas = await campanasDeRutaPublica(rutaV.id);
     const oferta = campanaOfertaDeRuta(campanas, rutaV.id);
     if (!oferta) throw new Error('No hay cotización abierta en este enlace');
     const estado = accion === 'aceptar' ? 'aceptada' : 'rechazada';
@@ -783,7 +831,7 @@ export const supabaseRepo: MecanuRepo = {
       direccionCliente: cliente?.direccion ?? null,
     });
     const client = sb();
-    const tallerId = TALLER_DEFAULT;
+    const tallerId = await tallerDeSesion();
     const pr = built.presupuesto;
     const r = built.ruta;
     // Circular FK: presupuestos.ruta_generada_id → rutas.id y
@@ -994,11 +1042,12 @@ export const supabaseRepo: MecanuRepo = {
     const existentes = await this.listUsuariosBackoffice();
     const draft = invitarUsuario(existentes, input, new Date());
     const client = sb();
+    const tallerId = await tallerDeSesion();
     const { data: created, error: authErr } = await client.auth.admin.createUser({
       email: draft.email,
       email_confirm: true,
       app_metadata: {
-        taller_id: TALLER_DEFAULT,
+        taller_id: tallerId,
         rol: draft.rol,
         conductor_id: draft.conductorId,
         nombre: draft.nombre,
@@ -1009,7 +1058,7 @@ export const supabaseRepo: MecanuRepo = {
     }
     const { error } = await client.from('perfiles').upsert({
       id: created.user.id,
-      taller_id: TALLER_DEFAULT,
+      taller_id: tallerId,
       rol: draft.rol,
       nombre: draft.nombre,
       email: draft.email,

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as authServer from '@/lib/supabase/auth-server';
 import * as supabaseServer from '@/lib/supabase/server';
 import { supabaseRepo } from './repo/repo-supabase';
 import {
@@ -16,7 +17,7 @@ import {
   tramosPublicos,
   ventanaPublica,
 } from './seguimiento-ruta';
-import type { Actividad, Campana, Inspeccion, Presupuesto, RutaVista, Tramo } from './types';
+import type { Actividad, Inspeccion, Presupuesto, RutaVista, Tramo } from './types';
 
 describe('seguimiento-ruta', () => {
   it('título público usa subestado en ruta sin repetir «En ruta»', () => {
@@ -295,6 +296,20 @@ function clienteQueAnota(escrituras: EscrituraPg[]) {
           return builder;
         },
         maybeSingle() {
+          if (tabla === 'rutas') {
+            return Promise.resolve({
+              data: {
+                id: 'TR-1041',
+                link_token: 'token-test-1041',
+                estado: 'agendado',
+                subestado: 'sin_conductor',
+                perfil_servicio: 'traslado',
+                creada_en: '2026-08-01T10:00:00.000Z',
+                tags_manual: [],
+              },
+              error: null,
+            });
+          }
           return Promise.resolve({
             data: tabla === 'presupuestos'
               ? {
@@ -314,7 +329,17 @@ function clienteQueAnota(escrituras: EscrituraPg[]) {
           onRejected?: (e: unknown) => unknown,
         ) {
           if (op === 'update' && payload) escrituras.push({ tabla, payload });
-          const data = tabla === 'presupuesto_lineas' ? [] : null;
+          const data = tabla === 'campanas'
+            ? [{
+              id: 'OP-3003',
+              ruta_origen_id: 'TR-1041',
+              falla: 'Frenos',
+              evidencia: 'Foto',
+              urgente: false,
+              fecha: '2026-08-01T10:00:00.000Z',
+              origen_automatico: true,
+            }]
+            : [];
           return Promise.resolve({ data, error: null }).then(onFulfilled, onRejected);
         },
       };
@@ -335,27 +360,6 @@ describe('supabase: respuesta del cliente al presupuesto', () => {
         ReturnType<typeof supabaseServer.getSupabaseServer>
       >,
     );
-    vi.spyOn(supabaseRepo, 'listRutasVista').mockResolvedValue([
-      { id: 'TR-1041', linkToken: 'token-test-1041' } as RutaVista,
-    ]);
-    vi.spyOn(supabaseRepo, 'listCampanas').mockResolvedValue([
-      {
-        id: 'OP-3003',
-        rutaOrigenId: 'TR-1041',
-        estado: 'enviada',
-        origenAutomatico: true,
-        presupuesto: {
-          id: 'PR-3003',
-          estado: 'enviada',
-          total: 160,
-          lineas: [
-            { descripcion: 'Servicio A', importe: 100, origen: 'inspeccion', servicioTemparioId: 'SV-01' },
-            { descripcion: 'Servicio B', importe: 60, origen: 'inspeccion', servicioTemparioId: 'SV-08' },
-          ],
-        },
-      } as Campana,
-    ]);
-
     const out = await supabaseRepo.responderPresupuestoSeguimiento({
       token: 'token-test-1041',
       accion: 'aceptar',
@@ -365,5 +369,109 @@ describe('supabase: respuesta del cliente al presupuesto', () => {
     expect(out).toEqual({ campanaId: 'OP-3003', estado: 'aceptada' });
     expect(escrituras.some((e) => e.tabla === 'campanas' && 'estado' in e.payload)).toBe(false);
     expect(escrituras).toContainEqual({ tabla: 'presupuestos', payload: { estado: 'aceptada' } });
+  });
+});
+
+type FiltroPg = { tabla: string; col: string; val: unknown };
+
+const FILA_OTRO = {
+  id: 'TR-OTRO',
+  taller_id: 'taller-otro',
+  link_token: 'token-otro',
+  estado: 'agendado',
+  subestado: 'sin_conductor',
+  perfil_servicio: 'traslado',
+  creada_en: '2026-08-01T10:00:00.000Z',
+  tags_manual: [],
+};
+
+const FILA_RODRIGUEZ = {
+  id: 'TR-RODRIGUEZ',
+  taller_id: 'taller-rodriguez',
+  link_token: 'token-rodriguez',
+  estado: 'agendado',
+  subestado: 'sin_conductor',
+  perfil_servicio: 'traslado',
+  creada_en: '2026-08-01T10:00:00.000Z',
+  tags_manual: [],
+};
+
+function filasRuta(eqs: { col: string; val: unknown }[]) {
+  const token = eqs.find((e) => e.col === 'link_token')?.val;
+  if (token === 'token-otro') return [FILA_OTRO];
+  const taller = eqs.find((e) => e.col === 'taller_id')?.val;
+  if (taller === 'taller-otro') return [FILA_OTRO];
+  if (taller === 'taller-rodriguez') return [FILA_RODRIGUEZ];
+  return [FILA_OTRO, FILA_RODRIGUEZ];
+}
+
+function clienteConFiltros(filtros: FiltroPg[]) {
+  return {
+    from(tabla: string) {
+      const eqs: { col: string; val: unknown }[] = [];
+      const builder = {
+        select() {
+          return builder;
+        },
+        eq(col: string, val: unknown) {
+          eqs.push({ col, val });
+          filtros.push({ tabla, col, val });
+          return builder;
+        },
+        order() {
+          return builder;
+        },
+        limit() {
+          return builder;
+        },
+        maybeSingle() {
+          const filas = tabla === 'rutas' ? filasRuta(eqs) : [];
+          return Promise.resolve({ data: filas[0] ?? null, error: null });
+        },
+        then(
+          onFulfilled: (v: { data: unknown; error: null }) => unknown,
+          onRejected?: (e: unknown) => unknown,
+        ) {
+          const data = tabla === 'rutas' ? filasRuta(eqs) : [];
+          return Promise.resolve({ data, error: null }).then(onFulfilled, onRejected);
+        },
+      };
+      return builder;
+    },
+  };
+}
+
+describe('supabase: taller de la sesión', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('un taller distinto no recibe las rutas de taller-rodriguez y el token público no filtra por esa constante', async () => {
+    const filtros: FiltroPg[] = [];
+    vi.spyOn(authServer, 'getPerfilSesion').mockResolvedValue({
+      id: 'u-otro',
+      email: 'otro@taller.test',
+      nombre: 'Otro',
+      rol: 'operacion',
+      tallerId: 'taller-otro',
+      conductorId: null,
+      documento: null,
+    });
+    vi.spyOn(supabaseServer, 'getSupabaseServer').mockReturnValue(
+      clienteConFiltros(filtros) as unknown as NonNullable<
+        ReturnType<typeof supabaseServer.getSupabaseServer>
+      >,
+    );
+
+    const rutas = await supabaseRepo.listRutas();
+    expect(rutas.map((r) => r.id)).toEqual(['TR-OTRO']);
+    expect(filtros).toContainEqual({ tabla: 'rutas', col: 'taller_id', val: 'taller-otro' });
+    expect(filtros.some((f) => f.val === 'taller-rodriguez')).toBe(false);
+
+    filtros.length = 0;
+    const ubi = await supabaseRepo.getUbicacionSeguimientoPublico('token-otro');
+    expect(ubi?.rutaId).toBe('TR-OTRO');
+    expect(filtros).toContainEqual({ tabla: 'rutas', col: 'link_token', val: 'token-otro' });
+    expect(filtros.some((f) => f.col === 'taller_id' || f.val === 'taller-rodriguez')).toBe(false);
   });
 });
