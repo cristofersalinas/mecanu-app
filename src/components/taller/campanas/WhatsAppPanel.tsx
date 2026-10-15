@@ -8,18 +8,35 @@ import { Icon } from '@/components/ds/Icon';
 import { esModoDemo } from '@/lib/entorno';
 import {
   CampanaItem, ERRORES, ESTADO_MENSAJE, ETIQUETA_ORIGEN, MAX_CUERPO, MENSAJE, MensajeWa,
-  PRESUPUESTO_META, RESPUESTAS_DEMO, cliente, detalleHallazgo, estadoVentana, fmtDia,
-  fmtDinero, fmtReloj, fmtTel, fromISO, rangoFecha, renderMensaje, toISO, valoresOportunidad, vehiculo, etiquetaVehiculo,
+  PRESUPUESTO_META, RESPUESTAS_DEMO, asegurarLinkTokenRuta, cliente, detalleHallazgo, enviar, estadoVentana, e164, fmtDia,
+  fmtDinero, fmtReloj, fromISO, payloadTexto, rangoFecha, renderMensaje,
+  renderMensajeCotizacion, toISO, valoresOportunidad, vehiculo,
 } from '../data';
 import { panelApi } from '../panel-api';
 import { usePanel } from '../store';
 import { Input, Tabs } from '../ui/Primitives';
 import { ImporteIva } from '../ui/ImporteIva';
 import { NudgeZona } from '../ui/NudgeZona';
+import { SidebarPerfilHeader } from '../ficha/SidebarPerfilHeader';
+import { perfilSidebarDeCampana } from '../ficha/sidebar-perfil';
 import { CrearRutaModal } from './CrearRutaModal';
 import {
   intencionRespuestaCliente, modoContactoOferta, renderSeguimiento, sugerirRespuesta, ultimaEntradaCliente,
 } from '@/lib/mecanu/seguimiento-oferta';
+import {
+  marcarUsadaSesion,
+  sugerenciasRapidas,
+} from '@/lib/mecanu/whatsapp-respuestas-rapidas';
+import { urlSeguimientoPresupuesto } from '@/lib/mecanu/whatsapp-contexto';
+import {
+  esDeberAgendaCampana,
+  esDeberSeguirAgenda,
+  mensajeLinkAgenda,
+  mensajeSeguirAgendaAyuda,
+  tokenAgendaCampana,
+  urlAgendaAutogestion,
+} from '@/lib/mecanu/agenda-link-campana';
+import { useAhora } from '../ui/useCarga';
 import styles from '../panel.module.css';
 
 let waSeq = 0;
@@ -38,12 +55,21 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
   const canal = p.canalesWa[campanaId] ?? { optIn: 'IN' as const, mensajes: [] };
   const mensajes = canal.mensajes;
   const modoInicial = modoContactoOferta({ estadoCampana: campana?.estado ?? '', mensajes });
+  const contacto = campana ? cliente(campana.clienteId) : null;
+  const deberCampanaInit = p.deberActivo?.entidadKind === 'campana' && p.deberActivo.entidadId === campanaId
+    ? p.deberActivo
+    : null;
+  const tabInicial: 'previa' | 'chat' = deberCampanaInit && esDeberAgendaCampana(deberCampanaInit)
+    ? 'chat'
+    : modoInicial === 'responder'
+      ? 'chat'
+      : 'previa';
 
   // El padre monta este panel con `key={campanaId}` (ver CampanasView.tsx): al cambiar
   // de campaña, React desmonta y vuelve a montar el componente entero en vez de mutar
   // uno existente, así que todo useState de aquí abajo ya nace con los datos de LA
   // campaña correcta sin necesitar un efecto que la resetee a mano.
-  const [tab, setTab] = useState<'previa' | 'chat'>(modoInicial === 'responder' ? 'chat' : 'previa');
+  const [tab, setTab] = useState<'previa' | 'chat'>(tabInicial);
   const [seleccion, setSeleccion] = useState<string[]>(() => campana ? campana.items.map((i) => i.id) : []);
   const [abiertos, setAbiertos] = useState<string[]>([]);
   const [nombreOv, setNombreOv] = useState<string | null>(null);
@@ -59,6 +85,7 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
   const [modoVisto, setModoVisto] = useState(modoInicial);
   const [prellenado, setPrellenado] = useState(false);
   const chatRef = useRef<HTMLDivElement | null>(null);
+  const ahoraMs = useAhora();
 
   const setMensajes = (next: MensajeWa[] | ((ms: MensajeWa[]) => MensajeWa[])) => {
     p.setMensajesWa(campanaId, next);
@@ -72,9 +99,14 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 
   const valores = useMemo(() => {
     if (!campana) return null;
-    const ov: { nombre?: string; fecha?: string } = {};
+    const ov: { nombre?: string; fecha?: string; link?: string } = {};
     if (nombreOv !== null) ov.nombre = nombreOv;
     if (fechaOv !== null) ov.fecha = fechaOv;
+    if (campana.rutaOrigenId) {
+      const token = asegurarLinkTokenRuta(campana.rutaOrigenId);
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mecanu.com';
+      ov.link = urlSeguimientoPresupuesto(token, origin) ?? undefined;
+    }
     return valoresOportunidad(campana, seleccion, ov);
   }, [campana, seleccion, nombreOv, fechaOv]);
 
@@ -83,7 +115,10 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
     return entradas.length ? entradas[entradas.length - 1].ts : null;
   }, [mensajes]);
 
-  const ventana = useMemo(() => estadoVentana(ultimaEntrada), [ultimaEntrada]);
+  const ventana = useMemo(
+    () => estadoVentana(ultimaEntrada, new Date(ahoraMs)),
+    [ultimaEntrada, ahoraMs],
+  );
   const modo = modoContactoOferta({ estadoCampana: campana?.estado ?? '', mensajes });
   const textoCliente = ultimaEntradaCliente(mensajes);
   const sugerido = valores && modo === 'responder' && textoCliente
@@ -103,17 +138,63 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
 
   const c = cliente(campana.clienteId);
   const v = vehiculo(campana.vehiculoId);
-  const cuerpo = modo === 'seguimiento' ? renderSeguimiento(valores) : renderMensaje(valores);
+  const cuerpo = modo === 'seguimiento'
+    ? renderSeguimiento(valores)
+    : campana.origenAutomatico
+      ? renderMensajeCotizacion(valores)
+      : renderMensaje(valores);
   const meta = PRESUPUESTO_META[campana.estado];
   const rango = rangoFecha(campana.fecha);
 
   const avisos: { titulo: string; detalle: string }[] = [];
   if (optIn === 'OUT') avisos.push(ERRORES[368]);
-  if (!seleccion.length) avisos.push({ titulo: 'Sin hallazgos marcados', detalle: 'Marca al menos un servicio para poder enviar el mensaje.' });
+  // Solo si hay ítems y ninguno está marcado (si no hay hallazgos, lo dice el bloque de abajo).
+  if (campana.items.length > 0 && !seleccion.length) {
+    avisos.push({ titulo: 'Sin hallazgos marcados', detalle: 'Marca al menos un servicio para poder enviar el mensaje.' });
+  }
+  if (campana.origenAutomatico && !valores.link) {
+    avisos.push({
+      titulo: 'Sin link de cotización',
+      detalle: 'La campaña no tiene ruta de origen con token de seguimiento.',
+    });
+  }
   if (cuerpo.length > MAX_CUERPO) avisos.push({ titulo: 'Mensaje demasiado largo', detalle: `El cuerpo admite ${MAX_CUERPO} caracteres.` });
 
-  const noEnviar = optIn === 'OUT' || !seleccion.length || enviando || cuerpo.length > MAX_CUERPO;
-  const nudgeCampana = p.deberActivo?.entidadKind === 'campana' && p.deberActivo.entidadId === campana.id;
+  const noEnviar = optIn === 'OUT'
+    || (campana.items.length > 0 && !seleccion.length)
+    || (campana.origenAutomatico && !valores.link)
+    || enviando
+    || cuerpo.length > MAX_CUERPO;
+  const deberCampana = p.deberActivo?.entidadKind === 'campana' && p.deberActivo.entidadId === campana.id
+    ? p.deberActivo
+    : null;
+  const nudgeCampana = !!deberCampana;
+  const atajosAgenda = !!deberCampana && esDeberAgendaCampana(deberCampana);
+  const seguirAgenda = !!deberCampana && esDeberSeguirAgenda(deberCampana.id);
+
+  const perfil = perfilSidebarDeCampana(campana, {
+    optIn,
+    ventanaAbierta: ventana.abierta,
+    ventanaEtiqueta: ventana.etiqueta,
+    ventanaDetalle: ventana.detalle,
+    deber: deberCampana,
+  });
+
+  const cerrarSidebar = () => {
+    if (deberCampana) p.volverDeDeber();
+    else onCerrar();
+  };
+
+  const abrirBandejaWa = () => {
+    if (!contacto?.telefono) return;
+    try {
+      sessionStorage.setItem('mecanu.wa.focusTel', contacto.telefono);
+    } catch {
+      /* */
+    }
+    onCerrar();
+    p.irA('whatsapp');
+  };
 
   const enviarProactivo = async () => {
     setEnviando(true);
@@ -164,48 +245,70 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
     }
   };
 
+  const enviarMensajeChat = async (texto: string) => {
+    const body = texto.trim();
+    if (!body || !campana) return false;
+    const localId = nuevoId();
+    setMensajes((ms) => [...ms, { id: localId, dir: 'out', tipo: 'text', texto: body, ts: new Date(), estado: 'pending' }]);
+    try {
+      await enviar(payloadTexto(e164(contacto?.telefono ?? null) ?? '', body), {
+        onEstado: (_id, estado) => {
+          setMensajes((ms) => ms.map((m) => (m.id === localId ? { ...m, estado: estado as MensajeWa['estado'] } : m)));
+        },
+      });
+      return true;
+    } catch {
+      setMensajes((ms) => ms.map((m) => (m.id === localId ? { ...m, estado: 'failed', error: 131026 } : m)));
+      p.toast('No se pudo entregar el mensaje.', 'alert');
+      return false;
+    }
+  };
+
+  const enviarAgendaLink = async () => {
+    if (!campana) return;
+    if (optIn === 'OUT') {
+      p.toast('Cliente dado de baja: no se puede enviar el link.', 'alert');
+      return;
+    }
+    const nombre = (contacto?.nombre ?? '').split(' ')[0] ?? '';
+    const token = p.agendaLinkDe(campana.id)?.token ?? tokenAgendaCampana(campana.id);
+    const ok = await enviarMensajeChat(mensajeLinkAgenda({
+      nombre,
+      url: urlAgendaAutogestion(token),
+    }));
+    if (ok) p.registrarLinkAgendaEnviado(campana.id);
+  };
+
+  const enviarAyudaAgenda = async () => {
+    if (!campana) return;
+    if (optIn === 'OUT') {
+      p.toast('Cliente dado de baja: no se puede escribir.', 'alert');
+      return;
+    }
+    const ok = await enviarMensajeChat(mensajeSeguirAgendaAyuda());
+    if (ok) p.registrarAyudaAgendaEnviada(campana.id);
+  };
+
   const simularRespuesta = () => {
     const texto = RESPUESTAS_DEMO[Math.floor(Math.random() * RESPUESTAS_DEMO.length)];
     setMensajes((ms) => [...ms, { id: nuevoId(), dir: 'in', tipo: 'text', texto, ts: new Date(), estado: null }]);
   };
 
   return (
-    <aside
-      className={styles.fichaIn}
-      style={{
-        flex: 'none', width: 400, minHeight: 0, display: 'flex', flexDirection: 'column',
-        border: '1px solid var(--mecanu-border)', borderRadius: 12, background: 'var(--mecanu-neutral-0)', overflow: 'hidden',
-      }}
-    >
-      <header style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '14px 16px 10px', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className={styles.eyebrow}>WhatsApp Business</div>
-          <div style={{ fontSize: 15, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {c ? c.nombre : '—'}
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-            {fmtTel(c?.telefono ?? null)} · {etiquetaVehiculo(v)} {v?.matricula ?? ''}
-          </div>
-          <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-            <Badge kind={optIn === 'IN' ? 'positive' : 'alert'}>{optIn === 'IN' ? 'Opt-in activo' : 'Dado de baja'}</Badge>
-            <Badge kind={ventana.abierta ? 'info' : 'neutral'}>{ventana.abierta ? 'Ventana 24 h abierta' : 'Ventana cerrada'}</Badge>
-          </div>
-        </div>
-        <Button kind="tertiary" size="compact" icon="close" onClick={onCerrar} />
-      </header>
-
-      {nudgeCampana && p.deberActivo ? (
-        <div className={styles.deberBanner}>
-          <Icon name="bolt" size="md" color="var(--mecanu-electric-600)" />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 800 }}>{p.deberActivo.titulo}</div>
-            <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>{p.deberActivo.detalle}</div>
-          </div>
-          <Button kind="tertiary" size="compact" onClick={() => p.volverDeDeber()}>
-            Volver a Tareas
-          </Button>
-        </div>
-      ) : null}
+    <aside className={styles.sidebarCompact}>
+      <SidebarPerfilHeader
+        eyebrow={perfil.eyebrow}
+        personaLinea={perfil.personaLinea}
+        vehiculoLinea={perfil.vehiculoLinea}
+        descripcionTarea={perfil.descripcionTarea}
+        pills={perfil.pills}
+        onCerrar={cerrarSidebar}
+        accionSecundaria={contacto?.telefono ? {
+          label: 'Abrir bandeja',
+          title: 'Abre el hilo de este número en WhatsApp (bandeja del taller), fuera del contexto de la campaña.',
+          onClick: abrirBandejaWa,
+        } : null}
+      />
 
       <div style={{ padding: '0 16px' }}>
         <Tabs
@@ -218,30 +321,42 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
       {tab === 'previa' ? (
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <section>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span className={styles.eyebrow} style={{ flex: 1 }}>Hallazgos incluidos</span>
-              <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
-                {seleccion.length} de {campana.items.length}
-              </span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {campana.items.map((it) => (
-                <HallazgoFila
-                  key={it.id}
-                  item={it}
-                  marcado={seleccion.includes(it.id)}
-                  abierto={abiertos.includes(it.id)}
-                  detalle={detalleHallazgo(campana, it)}
-                  onToggle={() => setSeleccion((s) => (s.includes(it.id) ? s.filter((x) => x !== it.id) : [...s, it.id]))}
-                  onToggleDetalle={() => setAbiertos((a) => (a.includes(it.id) ? a.filter((x) => x !== it.id) : [...a, it.id]))}
-                />
-              ))}
-              {campana.items.length === 0 ? (
-                <div style={{ padding: 12, fontSize: 12, color: 'var(--mecanu-neutral-300)' }}>
-                  Esta campaña no tiene hallazgos de inspección: el presupuesto lo cotizó el taller.
+            {campana.items.length === 0 ? (
+              <div
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: 10,
+                  background: 'var(--mecanu-neutral-25)',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--mecanu-text-secondary-light)',
+                }}
+              >
+                Sin hallazgos
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span className={styles.eyebrow} style={{ flex: 1 }}>Hallazgos incluidos</span>
+                  <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)' }}>
+                    {seleccion.length} de {campana.items.length}
+                  </span>
                 </div>
-              ) : null}
-            </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {campana.items.map((it) => (
+                    <HallazgoFila
+                      key={it.id}
+                      item={it}
+                      marcado={seleccion.includes(it.id)}
+                      abierto={abiertos.includes(it.id)}
+                      detalle={detalleHallazgo(campana, it)}
+                      onToggle={() => setSeleccion((s) => (s.includes(it.id) ? s.filter((x) => x !== it.id) : [...s, it.id]))}
+                      onToggleDetalle={() => setAbiertos((a) => (a.includes(it.id) ? a.filter((x) => x !== it.id) : [...a, it.id]))}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </section>
 
           <section className={styles.panelBox} style={{ padding: 14 }}>
@@ -361,24 +476,30 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {meta?.siguiente && meta.accion ? (
-                <Button kind="secondary" size="compact" onClick={() => p.avanzarCampana(campana.id)}>{meta.accion}</Button>
-              ) : null}
               {campana.estado === 'enviada' ? (
-                confirmarRechazo ? (
-                  <Button
-                    kind="negative"
-                    size="compact"
-                    onClick={() => {
-                      p.rechazarCampana(campana.id);
-                      setConfirmarRechazo(false);
-                    }}
-                  >
-                    Confirmar rechazo
+                <>
+                  <Button kind="primary" size="compact" icon="check" onClick={() => p.avanzarCampana(campana.id)}>
+                    Cliente aceptó
                   </Button>
-                ) : (
-                  <Button kind="tertiary" size="compact" onClick={() => setConfirmarRechazo(true)}>Marcar rechazada</Button>
-                )
+                  {confirmarRechazo ? (
+                    <Button
+                      kind="negative"
+                      size="compact"
+                      onClick={() => {
+                        p.rechazarCampana(campana.id);
+                        setConfirmarRechazo(false);
+                      }}
+                    >
+                      Confirmar rechazo
+                    </Button>
+                  ) : (
+                    <Button kind="secondary" size="compact" icon="close" onClick={() => setConfirmarRechazo(true)}>
+                      Cliente rechazó
+                    </Button>
+                  )}
+                </>
+              ) : meta?.siguiente && meta.accion ? (
+                <Button kind="secondary" size="compact" onClick={() => p.avanzarCampana(campana.id)}>{meta.accion}</Button>
               ) : null}
               {campana.estado === 'aceptada' && !campana.rutaGeneradaId ? (
                 <Button kind="primary" size="compact" icon="add_road" onClick={() => setCrearRuta(true)}>Crear ruta</Button>
@@ -429,15 +550,13 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
         </div>
       ) : (
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--mecanu-neutral-25)' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 700 }}>{ventana.etiqueta}</div>
-              <div style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)' }}>{ventana.detalle}</div>
+          {esModoDemo() ? (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 16px 0' }}>
+              <button type="button" className={styles.linkBtn} onClick={simularRespuesta}>
+                Simular respuesta
+              </button>
             </div>
-            {esModoDemo() ? (
-              <button type="button" className={styles.linkBtn} onClick={simularRespuesta}>Simular respuesta</button>
-            ) : null}
-          </div>
+          ) : null}
           {modo === 'responder' && sugerido ? (
             <div style={{ padding: '8px 16px', fontSize: 12, color: 'var(--mecanu-text-secondary-light)', borderBottom: '1px solid var(--mecanu-border-subtle)' }}>
               Respuesta sugerida. Edítala si hace falta.
@@ -486,34 +605,164 @@ export function WhatsAppPanel({ campanaId, onCerrar }: { campanaId: string; onCe
             })}
             {mensajes.length === 0 ? (
               <div style={{ margin: 'auto', textAlign: 'center', fontSize: 12, color: 'var(--mecanu-neutral-300)' }}>
-                Todavía no hay conversación. El primer contacto se hace con el recordatorio de la inspección.
+                Chat de {contacto?.nombre ?? 'este cliente'}. Todavía no hay hilo: el primer contacto es el recordatorio.
               </div>
             ) : null}
           </div>
 
           {ventana.abierta && optIn === 'IN' ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, borderTop: '1px solid var(--mecanu-border-subtle)' }}>
-              <Input
-                placeholder="Escribe un mensaje"
-                value={input}
-                onChange={setInput}
-                onKeyDown={(e) => { if (e.key === 'Enter') void enviarTexto(); }}
-                fullWidth
-              />
-              <Button kind="primary" size="compact" icon="send" onClick={() => void enviarTexto()} />
-            </div>
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '8px 12px 0', alignItems: 'center' }}>
+                {atajosAgenda ? (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.iconBtn}
+                      title="Agendar ruta"
+                      aria-label="Agendar ruta"
+                      onClick={() => setCrearRuta(true)}
+                      style={{
+                        width: 32, height: 32,
+                        border: '1px solid var(--mecanu-border-subtle)',
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Icon name="event" size="sm" />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.linkBtn}
+                      style={{
+                        border: '1px solid var(--mecanu-border-subtle)',
+                        borderRadius: 999,
+                        padding: '4px 10px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}
+                      onClick={() => void enviarAgendaLink()}
+                    >
+                      Enviar agenda
+                    </button>
+                    {seguirAgenda ? (
+                      <button
+                        type="button"
+                        className={styles.linkBtn}
+                        style={{
+                          border: '1px solid var(--mecanu-border-subtle)',
+                          borderRadius: 999,
+                          padding: '4px 10px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                        onClick={() => void enviarAyudaAgenda()}
+                      >
+                        Preguntar ayuda
+                      </button>
+                    ) : null}
+                  </>
+                ) : null}
+                {sugerenciasRapidas(
+                  {
+                    impulsoTraslado: true,
+                    tienePresupuestoPendiente: campana?.estado === 'enviada' || campana?.estado === 'valorada',
+                    postventa: campana?.estado === 'aceptada',
+                  },
+                  atajosAgenda ? 2 : 4,
+                ).map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className={styles.linkBtn}
+                    style={{
+                      border: '1px solid var(--mecanu-border-subtle)',
+                      borderRadius: 999,
+                      padding: '4px 10px',
+                      fontSize: 11,
+                    }}
+                    onClick={() => {
+                      marcarUsadaSesion(r.id);
+                      setInput(r.texto);
+                    }}
+                  >
+                    {r.etiqueta}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, borderTop: '1px solid var(--mecanu-border-subtle)' }}>
+                <Input
+                  placeholder={`Mensaje a ${contacto?.nombre ?? 'cliente'}…`}
+                  value={input}
+                  onChange={setInput}
+                  onKeyDown={(e) => { if (e.key === 'Enter') void enviarTexto(); }}
+                  fullWidth
+                />
+                <Button kind="primary" size="compact" icon="send" onClick={() => void enviarTexto()} />
+              </div>
+            </>
           ) : (
-            <div style={{ padding: 12, borderTop: '1px solid var(--mecanu-border-subtle)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-                {optIn === 'OUT'
-                  ? 'Respondió BAJA. No se le escribe hasta que él inicie.'
-                  : 'Ventana de 24 h cerrada.'}
-              </span>
-              {optIn === 'IN' ? (
-                <Button kind="secondary" size="compact" icon="send" onClick={() => setTab('previa')}>
-                  {modo === 'seguimiento' ? 'Ir al seguimiento' : 'Ir al recordatorio'}
-                </Button>
+            <div style={{ padding: 12, borderTop: '1px solid var(--mecanu-border-subtle)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {atajosAgenda ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className={styles.iconBtn}
+                    title="Agendar ruta"
+                    aria-label="Agendar ruta"
+                    onClick={() => setCrearRuta(true)}
+                    style={{
+                      width: 32, height: 32,
+                      border: '1px solid var(--mecanu-border-subtle)',
+                      borderRadius: 8,
+                    }}
+                  >
+                    <Icon name="event" size="sm" />
+                  </button>
+                  {optIn === 'IN' ? (
+                    <button
+                      type="button"
+                      className={styles.linkBtn}
+                      style={{
+                        border: '1px solid var(--mecanu-border-subtle)',
+                        borderRadius: 999,
+                        padding: '4px 10px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}
+                      onClick={() => void enviarAgendaLink()}
+                    >
+                      Enviar agenda
+                    </button>
+                  ) : null}
+                  {seguirAgenda && optIn === 'IN' ? (
+                    <button
+                      type="button"
+                      className={styles.linkBtn}
+                      style={{
+                        border: '1px solid var(--mecanu-border-subtle)',
+                        borderRadius: 999,
+                        padding: '4px 10px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}
+                      onClick={() => void enviarAyudaAgenda()}
+                    >
+                      Preguntar ayuda
+                    </button>
+                  ) : null}
+                </div>
               ) : null}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
+                  {optIn === 'OUT'
+                    ? 'Respondió BAJA. No se le escribe hasta que él inicie.'
+                    : 'Ventana de 24 h cerrada.'}
+                </span>
+                {optIn === 'IN' && !atajosAgenda ? (
+                  <Button kind="secondary" size="compact" icon="send" onClick={() => setTab('previa')}>
+                    {modo === 'seguimiento' ? 'Ir al seguimiento' : 'Ir al recordatorio'}
+                  </Button>
+                ) : null}
+              </div>
             </div>
           )}
         </div>

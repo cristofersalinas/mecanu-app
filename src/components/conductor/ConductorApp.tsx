@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { ConnectionBanner } from '@/components/ds/ConnectionBanner';
 import { Icon } from '@/components/ds/Icon';
 import { Skeleton } from '@/components/ds/Skeleton';
@@ -12,12 +12,24 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { DisponiblesScreen } from './DisponiblesScreen';
 import { EmergenciasScreen } from './EmergenciasScreen';
 import { EntregaWizard } from './EntregaWizard';
+import { GpsGate } from './GpsGate';
 import { JornadaScreen } from './JornadaScreen';
 import { registerConductorServiceWorker } from './registerSW';
 import { SolicitudSheet } from './SolicitudSheet';
 import { TrasladoScreen } from './TrasladoScreen';
 import { useConductor, type OpcionesConductor } from './useConductor';
 import css from './conductor.module.css';
+
+function suscribirNada() {
+  return () => {};
+}
+
+/** Controles de simulación: demo explícito o puerto 3001. */
+function usarControlesDemo(): boolean {
+  if (typeof window === 'undefined') return esModoDemo();
+  if (esModoDemo()) return true;
+  return window.location.port === '3001';
+}
 
 /**
  * App del conductor. Una sola pantalla: toda la navegación es estado
@@ -26,12 +38,10 @@ import css from './conductor.module.css';
  * la vista activa.
  */
 export function ConductorApp(props: OpcionesConductor) {
-  const { s, cargando, clock, politica, redExterna, avisoCola, haySolPendiente, listo1, listo2, acciones } =
+  const { s, cargando, clock, politica, redExterna, avisoCola, haySolPendiente, conductorId, listo1, listo2, acciones } =
     useConductor(props);
+  const demoUi = useSyncExternalStore(suscribirNada, usarControlesDemo, () => false);
 
-  // Registro del service worker del conductor (PWA offline-first). Vive aquí
-  // y no en el layout raíz para que `scope: '/conductor'` nunca llegue a
-  // controlar `/panel`.
   useEffect(() => {
     registerConductorServiceWorker();
   }, []);
@@ -40,6 +50,15 @@ export function ConductorApp(props: OpcionesConductor) {
   const riesgoSheet = s.sheet
     ? (agenda(s).find((x) => x.tid === s.sheet!.tid)?.riesgo?.hasta ?? null)
     : null;
+
+  const gpsBloquea = !s.gps;
+
+  /* Con red y cola: «pendiente», no «sin señal». Sin red: offline. */
+  const bannerStatus =
+    !s.online ? 'offline' as const
+      : s.sync === 'syncing' ? 'syncing' as const
+        : s.queue > 0 ? 'pending' as const
+          : null;
 
   return (
     <div className={css.escenario}>
@@ -52,11 +71,18 @@ export function ConductorApp(props: OpcionesConductor) {
           </div>
         </div>
 
-        {/* R10: banner persistente y no bloqueante — offline · sincronizando · al día. */}
-        {s.sync !== 'synced' ? (
+        {gpsBloquea ? (
+          <GpsGate
+            permiso={s.gpsPermiso}
+            error={s.gpsError}
+            onReintentar={acciones.activarGps}
+          />
+        ) : null}
+
+        {bannerStatus ? (
           <div style={{ flex: 'none' }}>
-            <ConnectionBanner status={s.sync} queuedCount={s.queue} />
-            {s.queue > 0 ? (
+            <ConnectionBanner status={bannerStatus} queuedCount={s.queue} />
+            {s.queue > 0 && s.online ? (
               <button
                 type="button"
                 onClick={acciones.reintentarCola}
@@ -220,22 +246,27 @@ export function ConductorApp(props: OpcionesConductor) {
         ) : null}
       </div>
 
-      {esModoDemo() ? (
-      <div className={css.pie}>
-        <button type="button" className={css.pieBoton} onClick={acciones.toggleOnline}>
-          <Icon name={s.online ? 'wifi_off' : 'wifi'} size="sm" style={{ fontSize: 16 }} />
-          {s.online ? 'Simular sin conexión' : 'Reconectar'}
-        </button>
-        {haySolPendiente ? (
-          <>
-            <span style={{ opacity: 0.4 }}>·</span>
-            <button type="button" className={css.pieBoton} onClick={acciones.simularTaller}>
-              <Icon name="reply" size="sm" style={{ fontSize: 16 }} />
-              Simular respuesta del taller
-            </button>
-          </>
-        ) : null}
-      </div>
+      {demoUi ? (
+        <div className={css.pie} role="toolbar" aria-label="Controles de simulación">
+          <span className={css.pieMeta} title="conductorId activo">
+            {conductorId}
+          </span>
+          <button type="button" className={css.pieBoton} onClick={acciones.toggleOnline}>
+            <Icon name={s.online ? 'wifi_off' : 'wifi'} size="sm" style={{ fontSize: 16 }} />
+            {s.online ? 'Simular sin conexión' : 'Reconectar'}
+          </button>
+          {haySolPendiente ? (
+            <>
+              <span className={css.pieSep} aria-hidden>
+                ·
+              </span>
+              <button type="button" className={css.pieBoton} onClick={acciones.simularTaller}>
+                <Icon name="reply" size="sm" style={{ fontSize: 16 }} />
+                Simular respuesta del taller
+              </button>
+            </>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

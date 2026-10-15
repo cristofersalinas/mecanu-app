@@ -8,6 +8,7 @@ import { Switch } from '@/components/ds/Switch';
 import { Empresa, DIAS_LABEL, Perfil, PlantillaRecepcion, Sucursal, usePanel } from '../store';
 import { Dialog, Input, SectionCard, Select } from '../ui/Primitives';
 import { TutorialesView } from '../onboarding/OnboardingTaller';
+import { SeccionWhatsApp } from '../whatsapp/WhatsAppConfig';
 import styles from '../panel.module.css';
 
 const SECCIONES = [
@@ -16,6 +17,7 @@ const SECCIONES = [
   { id: 'empresa', label: 'Empresa', icon: 'domain' },
   { id: 'sucursales', label: 'Sucursales', icon: 'store' },
   { id: 'recepcion', label: 'Recepción', icon: 'checklist' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: 'chat' },
 ];
 
 export function ConfiguracionView() {
@@ -26,7 +28,7 @@ export function ConfiguracionView() {
     <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: 4 }}>
       <div style={{ maxWidth: 980, margin: '0 0 24px' }}>
         <p style={{ margin: '0 0 16px', fontSize: 13, lineHeight: '18px', color: 'var(--mecanu-text-secondary-light)' }}>
-          Gestiona tu perfil, los datos del taller y sus sucursales.
+          Gestiona tu perfil, los datos del taller y WhatsApp.
         </p>
         <div style={{ display: 'inline-flex', gap: 2, padding: 3, background: 'var(--mecanu-neutral-25)', borderRadius: 10 }}>
           {SECCIONES.map((s) => {
@@ -57,6 +59,7 @@ export function ConfiguracionView() {
       {seccion === 'empresa' ? <SeccionEmpresa /> : null}
       {seccion === 'sucursales' ? <SeccionSucursales /> : null}
       {seccion === 'recepcion' ? <SeccionRecepcion /> : null}
+      {seccion === 'whatsapp' ? <SeccionWhatsApp /> : null}
     </div>
   );
 }

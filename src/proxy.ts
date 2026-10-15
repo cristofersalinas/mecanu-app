@@ -19,6 +19,17 @@ import {
   esPanelApp,
   esRutaAuthPanel,
 } from "@/lib/supabase/session-proxy";
+import {
+  esHostNegocio,
+  esHostPublicoMarketing,
+  origenNegocio,
+  pathInternoAuthDesdeBonito,
+} from "@/lib/mecanu/host-negocio";
+import {
+  esRutaAuthBonita,
+  esRutaPanelBonita,
+  pathBonitoDesdeUbicacionInterna,
+} from "@/lib/mecanu/panel-rutas";
 
 /**
  * 1. Fuera de local: corte fail-closed de apps mock, salvo auth pública del panel
@@ -41,24 +52,27 @@ function esApiPublica(pathname: string) {
     pathname === "/api/v1/panel/snapshot" ||
     pathname.startsWith("/api/v1/panel/") ||
     pathname === "/api/v1/conductor/snapshot" ||
-    pathname.startsWith("/api/v1/conductor/")
+    pathname.startsWith("/api/v1/conductor/") ||
+    pathname.startsWith("/api/v1/s/")
   );
 }
 
-function esAppProtegida(pathname: string) {
-  if (esApiPublica(pathname)) return false;
-  if (esRutaAuthPanel(pathname)) return false;
-  if (pathname === "/auth" || pathname.startsWith("/auth/")) return false;
-  if (pathname === "/entrar" || pathname.startsWith("/entrar/")) return false;
-  return (
-    pathname === "/panel" ||
-    pathname.startsWith("/panel/") ||
-    pathname === "/conductor" ||
-    pathname.startsWith("/conductor/") ||
-    pathname === "/backoffice" ||
-    pathname.startsWith("/backoffice/") ||
-    pathname === "/api" ||
-    pathname.startsWith("/api/")
+function aplicarCookies(desde: NextResponse, hacia: NextResponse): NextResponse {
+  desde.cookies.getAll().forEach((c) => {
+    hacia.cookies.set(c.name, c.value);
+  });
+  return hacia;
+}
+
+/** Rewrite interno conservando `x-mecanu-pathname` (path bonito → `/panel`). */
+function rewriteConPathname(
+  url: URL,
+  requestHeaders: Headers,
+  sesionRes: NextResponse,
+): NextResponse {
+  return aplicarCookies(
+    sesionRes,
+    NextResponse.rewrite(url, { request: { headers: requestHeaders } }),
   );
 }
 
@@ -75,8 +89,27 @@ function sinCookieHeroAb(request: NextRequest, response: NextResponse): NextResp
   return response;
 }
 
+function esAppProtegida(pathname: string) {
+  if (esApiPublica(pathname)) return false;
+  if (esRutaAuthPanel(pathname)) return false;
+  if (pathname === "/auth" || pathname.startsWith("/auth/")) return false;
+  if (pathname === "/entrar" || pathname.startsWith("/entrar/")) return false;
+  if (esRutaPanelBonita(pathname)) return true;
+  return (
+    pathname === "/panel" ||
+    pathname.startsWith("/panel/") ||
+    pathname === "/conductor" ||
+    pathname.startsWith("/conductor/") ||
+    pathname === "/backoffice" ||
+    pathname.startsWith("/backoffice/") ||
+    pathname === "/api" ||
+    pathname.startsWith("/api/")
+  );
+}
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "";
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-mecanu-pathname", pathname);
   requestHeaders.set("x-mecanu-locale", localeFromPathname(pathname));
@@ -86,7 +119,7 @@ export async function proxy(request: NextRequest) {
 
   if (pathname === "/") {
     const locale = preferredLocaleFromRequest(request.headers, request.headers.get("cookie"));
-    if (locale !== "es") {
+    if (locale !== "es" && !esHostNegocio(host)) {
       const destino = new URL(pathFor(locale), request.url);
       destino.search = request.nextUrl.search;
       const respuesta = NextResponse.redirect(destino);
@@ -102,17 +135,100 @@ export async function proxy(request: NextRequest) {
   }
 
   const tocaSupabase =
+    esHostNegocio(host) ||
     pathname.startsWith("/panel") ||
     pathname.startsWith("/auth") ||
-    pathname.startsWith("/entrar");
+    pathname.startsWith("/entrar") ||
+    esRutaAuthBonita(pathname) ||
+    esRutaPanelBonita(pathname);
   const { response: sesionRes, user } = tocaSupabase
     ? await actualizarSesionSupabase(request)
     : { response: NextResponse.next({ request: { headers: requestHeaders } }), user: null };
 
+  if (esHostPublicoMarketing(host)) {
+    if (
+      pathname === "/panel" ||
+      pathname.startsWith("/panel/") ||
+      pathInternoAuthDesdeBonito(pathname) ||
+      esRutaPanelBonita(pathname)
+    ) {
+      const dest = new URL(origenNegocio());
+      dest.pathname = pathBonitoDesdeUbicacionInterna(
+        pathInternoAuthDesdeBonito(pathname) ?? pathname,
+      );
+      dest.search = request.nextUrl.search;
+      return NextResponse.redirect(dest, 308);
+    }
+  }
+
+  if (esHostNegocio(host)) {
+    const internoAuth = pathInternoAuthDesdeBonito(pathname);
+
+    if (pathname === "/panel" || pathname === "/panel/") {
+      const dest = request.nextUrl.clone();
+      dest.pathname = user ? "/general" : "/";
+      return NextResponse.redirect(dest);
+    }
+
+    if (pathname.startsWith("/panel/") && !esRutaAuthPanel(pathname)) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = pathBonitoDesdeUbicacionInterna(pathname);
+      dest.search = request.nextUrl.search;
+      return NextResponse.redirect(dest);
+    }
+
+    if (pathname === "/" || pathname === "") {
+      if (user) {
+        const dest = request.nextUrl.clone();
+        dest.pathname = "/general";
+        dest.search = request.nextUrl.search;
+        return NextResponse.redirect(dest);
+      }
+      const u = request.nextUrl.clone();
+      u.pathname = "/panel/entrar";
+      return rewriteConPathname(u, requestHeaders, sesionRes);
+    }
+
+    if (internoAuth) {
+      const u = request.nextUrl.clone();
+      u.pathname = internoAuth;
+      return rewriteConPathname(u, requestHeaders, sesionRes);
+    }
+
+    if (esRutaPanelBonita(pathname)) {
+      if (!user) {
+        const dest = request.nextUrl.clone();
+        dest.pathname = "/";
+        dest.search = "";
+        return NextResponse.redirect(dest);
+      }
+      const u = request.nextUrl.clone();
+      u.pathname = "/panel";
+      return rewriteConPathname(u, requestHeaders, sesionRes);
+    }
+
+    if (!user && esPanelApp(pathname)) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = "/";
+      dest.search = "";
+      return NextResponse.redirect(dest);
+    }
+
+    if (user && pathname === "/panel/entrar") {
+      const dest = request.nextUrl.clone();
+      dest.pathname = "/general";
+      return NextResponse.redirect(dest);
+    }
+  }
+
   if (soloLanding && esPanelApp(pathname)) {
     if (user) {
-      // Panel autenticado: dejar pasar aunque el mock aún no esté apagado.
       return sesionRes;
+    }
+    if (esHostNegocio(host)) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = "/";
+      return NextResponse.redirect(dest);
     }
     return NextResponse.redirect(new URL("/panel/entrar", request.url));
   }
@@ -125,17 +241,25 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname === "/api" || pathname.startsWith("/api/")) {
-    const ip = ipDeRequest(request.headers);
-    const regla = metodoEsEscritura(request.method) ? REGLA_API_ESCRITURA : REGLA_API_LECTURA;
-    const limite = comprobarRateLimit(`api:${ip}`, Date.now(), regla);
-    if (!limite.permitido) {
-      return NextResponse.json(
-        { error: { code: "rate_limited", message: "Demasiadas peticiones. Espera un momento." } },
-        {
-          status: 429,
-          headers: { "Retry-After": String(limite.retryAfterSeg) },
-        },
-      );
+    /* En demo local el poll del panel + GPS + clicks del conductor
+       saturan el cupo de escritura y el móvil encola «falsos» fallos. */
+    const demoLocal =
+      process.env.MECANU_DEMO === "1" || process.env.NEXT_PUBLIC_MECANU_DEMO === "1";
+    const esGps =
+      pathname.includes("/traslados/") && pathname.endsWith("/gps");
+    if (!demoLocal && !esGps) {
+      const ip = ipDeRequest(request.headers);
+      const regla = metodoEsEscritura(request.method) ? REGLA_API_ESCRITURA : REGLA_API_LECTURA;
+      const limite = comprobarRateLimit(`api:${ip}`, Date.now(), regla);
+      if (!limite.permitido) {
+        return NextResponse.json(
+          { error: { code: "rate_limited", message: "Demasiadas peticiones. Espera un momento." } },
+          {
+            status: 429,
+            headers: { "Retry-After": String(limite.retryAfterSeg) },
+          },
+        );
+      }
     }
   }
 
@@ -161,6 +285,21 @@ export const config = {
     "/entrar/:path*",
     "/auth",
     "/auth/:path*",
+    "/registro",
+    "/recuperar",
+    "/nueva-contrasena",
+    "/general",
+    "/tablero",
+    "/tablero/:path*",
+    "/contactos",
+    "/contactos/:path*",
+    "/tempario",
+    "/tempario/:path*",
+    "/conductores",
+    "/conductores/:path*",
+    "/whatsapp",
+    "/config",
+    "/config/:path*",
     "/conductor",
     "/conductor/:path*",
     "/backoffice",

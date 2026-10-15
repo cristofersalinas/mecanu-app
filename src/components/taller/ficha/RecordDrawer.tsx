@@ -10,6 +10,7 @@ import { ProgressBar } from '@/components/ds/ProgressBar';
 import { StatusTimeline } from '@/components/ds/StatusTimeline';
 import { TimeWindow } from '@/components/ds/TimeWindow';
 import { esModoDemo } from '@/lib/entorno';
+import { urlSeguimientoRuta } from '@/lib/mecanu/whatsapp-contexto';
 import {
   CONDUCTORES, CLIENTES, LOG_TIPOS, ONBOARDING_META, ORDEN_ONBOARDING, ORIGEN_LINEA, PRESUPUESTO_META,
   SUBESTADO, TRIGGERS, VENTANA_MODOS, actividadDeRuta, conductor, contactosDeVehiculo, fmtDia, fmtDiaHora,
@@ -21,6 +22,8 @@ import { ImporteIva } from '../ui/ImporteIva';
 import { NudgeZona } from '../ui/NudgeZona';
 import { useAhora } from '../ui/useCarga';
 import { construirResumen } from './resumen';
+import { FichaPills } from './FichaPills';
+import { pillsDeRuta, pillsDesdeBadges } from './ficha-pills';
 import { AgendarModal } from '../tablero/AgendarModal';
 import { SelectorConductor } from './SelectorConductor';
 import styles from '../panel.module.css';
@@ -39,6 +42,11 @@ export function RecordDrawer() {
   const sel = p.seleccion;
   const resumen = useMemo(() => (sel ? construirResumen(sel, p.rutas) : null), [sel, p.rutas]);
   const ruta = sel?.kind === 'ruta' ? p.rutas.find((r) => r.id === sel.id) ?? null : null;
+  const pills = useMemo(() => {
+    if (ruta) return pillsDeRuta(ruta, p.tagsDe(ruta));
+    if (resumen) return pillsDesdeBadges(resumen.badges);
+    return [];
+  }, [ruta, resumen, p]);
   const deber = p.deberActivo
     && p.deberActivo.entidadKind === 'ruta'
     && p.deberActivo.entidadId === ruta?.id
@@ -63,6 +71,7 @@ export function RecordDrawer() {
 
   const pasos = ruta ? pasosDeRuta(ruta.id) : [];
   const pasoActual = ruta ? pasoActualDeRuta(ruta) : 0;
+  const linkCliente = ruta?.linkToken ? urlSeguimientoRuta(ruta.linkToken) : null;
 
   const tabs: { id: TabId; label: string; bloqueada?: boolean }[] = [
     { id: 'resumen', label: 'Resumen' },
@@ -85,36 +94,58 @@ export function RecordDrawer() {
           background: 'var(--mecanu-neutral-0)', boxShadow: '-16px 0 48px rgba(22,23,24,.24)',
         }}
       >
-        <header style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 18px', borderBottom: '1px solid var(--mecanu-border)' }}>
-          {deber ? (
-            <>
+        <header style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 10px 12px 18px', borderBottom: '1px solid var(--mecanu-border)' }}>
+          <div className={styles.fichaHeaderRow}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flexWrap: 'wrap' }}>
+              {deber ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => p.volverDeDeber()}
+                    aria-label="Volver a Tareas"
+                    className={styles.iconBtn}
+                    style={{ width: 28, height: 28, border: '1px solid var(--mecanu-border)', borderRadius: 6, flex: 'none' }}
+                  >
+                    <Icon name="arrow_back" size="sm" />
+                  </button>
+                  <button type="button" className={styles.linkBtn} style={{ fontSize: 13, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }} onClick={() => p.volverDeDeber()}>
+                    Tareas
+                  </button>
+                  <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }}>{deber.cta}</span>
+                  <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{resumen.titulo}</span>
+                </>
+              ) : (
+                <>
+                  <span className={styles.eyebrow}>{resumen.kindLabel}</span>
+                  <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{resumen.titulo}</span>
+                </>
+              )}
+            </div>
+            <div className={styles.fichaHeaderActions}>
               <button
                 type="button"
-                onClick={() => p.volverDeDeber()}
-                aria-label="Volver a Tareas"
                 className={styles.iconBtn}
-                style={{ width: 28, height: 28, border: '1px solid var(--mecanu-border)', borderRadius: 6, flex: 'none' }}
+                title="Minimizar"
+                aria-label="Minimizar ficha"
+                onClick={() => p.setModoFicha('panel')}
               >
-                <Icon name="arrow_back" size="sm" />
+                <Icon name="close_fullscreen" size="sm" />
               </button>
-              <button type="button" className={styles.linkBtn} style={{ fontSize: 13, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }} onClick={() => p.volverDeDeber()}>
-                Tareas
+              <button
+                type="button"
+                className={styles.iconBtn}
+                title="Cerrar"
+                aria-label="Cerrar ficha"
+                onClick={() => deber ? p.volverDeDeber() : p.seleccionar(null)}
+              >
+                <Icon name="close" size="sm" />
               </button>
-              <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }}>{deber.cta}</span>
-              <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
-              <span style={{ fontSize: 13, fontWeight: 700 }}>{resumen.titulo}</span>
-            </>
-          ) : (
-            <>
-              <span className={styles.eyebrow}>{resumen.kindLabel}</span>
-              <span style={{ color: 'var(--mecanu-neutral-200)' }}>/</span>
-              <span style={{ fontSize: 13, fontWeight: 700 }}>{resumen.titulo}</span>
-            </>
-          )}
-          <div style={{ flex: 1 }} />
-          <Button kind="tertiary" size="compact" icon="close_fullscreen" onClick={() => p.setModoFicha('panel')} />
-          <Button kind="tertiary" size="compact" icon="close" onClick={() => deber ? p.volverDeDeber() : p.seleccionar(null)} />
+            </div>
+          </div>
+          <FichaPills pills={pills} />
         </header>
 
         {deber ? (
@@ -124,9 +155,6 @@ export function RecordDrawer() {
               <div style={{ fontSize: 14, fontWeight: 800 }}>{deber.titulo}</div>
               <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>{deber.detalle}</div>
             </div>
-            <Button kind="tertiary" size="compact" onClick={() => p.volverDeDeber()}>
-              Volver a Tareas
-            </Button>
           </div>
         ) : null}
 
@@ -135,10 +163,7 @@ export function RecordDrawer() {
           <div style={{ minHeight: 0, overflowY: 'auto', padding: 18, borderRight: '1px solid var(--mecanu-border-subtle)' }}>
             <div className={styles.eyebrow}>{resumen.kindLabel}</div>
             <h2 style={{ margin: '2px 0 2px', fontSize: 20, fontWeight: 700 }}>{resumen.titulo}</h2>
-            <div style={{ fontSize: 13, color: 'var(--mecanu-text-secondary-light)' }}>{resumen.subtitulo}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '10px 0 16px' }}>
-              {resumen.badges.map((b) => <Badge key={b.text} kind={b.kind} icon={b.icon}>{b.text}</Badge>)}
-            </div>
+            <div style={{ fontSize: 13, color: 'var(--mecanu-text-secondary-light)', marginBottom: 16 }}>{resumen.subtitulo}</div>
 
             <Seccion titulo="Datos" abierta={secciones.datos} onToggle={() => toggle('datos')}>
               {resumen.props.map((pr) => (
@@ -300,18 +325,18 @@ export function RecordDrawer() {
                       <div style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)', marginBottom: 8 }}>
                         {SUBESTADO[`prospectos.${ruta.subestado}`]?.desc ?? 'Sin fecha agendada.'}
                       </div>
-                      {ruta.linkToken ? (
+                      {linkCliente ? (
                         <>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                             <span style={{ flex: 1, fontSize: 12, fontFamily: 'monospace' }}>
-                              mecanu.es/a/{ruta.linkToken}
+                              {linkCliente}
                             </span>
                             <Button
                               kind="secondary"
                               size="compact"
                               icon="content_copy"
                               onClick={() => {
-                                void navigator.clipboard?.writeText(`https://mecanu.es/a/${ruta.linkToken}`);
+                                void navigator.clipboard?.writeText(linkCliente);
                                 p.toast('Link copiado al portapapeles.');
                               }}
                             >
@@ -336,7 +361,7 @@ export function RecordDrawer() {
                   <section className={styles.panelBox} style={{ padding: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                       <span className={styles.eyebrow} style={{ flex: 1 }}>Ciclo de la ruta</span>
-                      {ruta.estado === 'en_ruta' && esModoDemo() ? (
+                      { (ruta.estado === 'en_ruta' || ruta.estado === 'agendado') && esModoDemo() ? (
                         <Button kind="tertiary" size="compact" icon="smart_toy" onClick={() => p.avanzarSubestadoEnRuta(ruta.id)}>
                           Simular avance del conductor
                         </Button>

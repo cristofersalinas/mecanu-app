@@ -14,8 +14,8 @@ const BodySchema = z.object({
 });
 
 /**
- * POST /api/v1/campanas/hallazgos — testigos ámbar (nivel 2-4) e ITV no hecha /
- * sin pegatina / <60 días. `testigo: "itv"` crea una oferta SV-04 en el mock.
+ * POST /api/v1/campanas/hallazgos — ITV, testigos ámbar e ítems/ruedas del check-in
+ * (nivel ≥ 2). En mock crea/acumula campaña vía catálogo `oferta-hallazgo-checkin`.
  * Si crea campaña, abre hilo en Slack #oportunidades.
  */
 export async function POST(request: Request) {

@@ -7,10 +7,15 @@ export default defineConfig({
     include: [
       'src/lib/mecanu/**/*.test.ts',
       'src/lib/security/**/*.test.ts',
+      'src/lib/kapso/**/*.test.ts',
       'src/lib/landing/**/*.test.ts',
       'src/lib/slack/**/*.test.ts',
       'src/lib/next-invariants/**/*.test.ts',
       'src/lib/entorno.test.ts',
+      'src/components/taller/hidratar-panel.test.ts',
+      'src/components/taller/tablero/kanban-card-copy.test.ts',
+      'src/components/taller/tablero/tarea-card-copy.test.ts',
+      'src/components/conductor/escritura-api.test.ts',
     ],
     coverage: {
       provider: 'v8',

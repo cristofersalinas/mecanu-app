@@ -15,7 +15,7 @@
 import * as M from '../mecanu-rutas';
 import * as W from '../mecanu-whatsapp';
 import { crearRutaDesdeCampana as construirRutaDesdeCampana } from '../crear-ruta-desde-campana';
-import { cliente as lookupCliente } from '../mecanu-data';
+import { cliente as lookupCliente, TALLER } from '../mecanu-data';
 import type {
   Actividad, AutomatizacionEjecucion, Campana, Cliente, Conductor, Inspeccion, Log, Parada, Presupuesto,
   Ruta, RutaVista, Servicio, Solicitud, TagRuta, Tramo, UsuarioBackoffice, Vehiculo,
@@ -31,7 +31,11 @@ import type {
   EntregaInput, EnviarMensajeWaInput, EnviarMensajeWaResult, HallazgoCampanaInput,
   IncidenciaInput, MecanuRepo, ReasignarConductorInput, RegistrarMensajeEntranteInput,
   SolicitudInput, AgendarRutaInput,
+  GpsPingInput, UbicacionConductorInput,
 } from './repo';
+import { construirUbicacionSeguimiento } from '../ubicacion-seguimiento';
+import { campanaOfertaDeRuta, rutaPorLinkToken } from '../seguimiento-ruta';
+import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '../transicion-en-ruta';
 import {
   actualizarEstadoMensajeMemoria, getCanalWaMemoria, listCanalesWaMemoria,
   registrarEntranteMemoria, upsertMensajeCanal,
@@ -40,6 +44,9 @@ import {
   construirEnvioWa, despacharPorKapso, mensajeSalienteEnviado, mensajeSalientePendiente,
   telefonoClienteCampana,
 } from '../whatsapp-service';
+
+/** Trail en memoria (mock): no se rehidrata entre procesos. */
+const TRAIL_MOCK: { trasladoId: string; lat: number; lng: number; ts: string }[] = [];
 
 /* El modelo es JS sin tipos: se estrecha una sola vez, aquí — mismo patrón que
    `src/components/taller/data.ts` / `src/components/conductor/data.ts`. */
@@ -80,6 +87,11 @@ const m = M as unknown as {
     motivo: 'sin_pegatina' | 'vencida' | 'por_vencer';
     dias: number | null;
   }) => Campana | null;
+  campanaDesdeHallazgoCheckin: (input: {
+    rutaId: string;
+    testigo: string;
+    nivel: number;
+  }) => Campana | null;
 };
 
 const w = W as unknown as {
@@ -106,10 +118,58 @@ function requireRuta(id: string): Ruta {
   return r;
 }
 
+function refrescarVista(rutaId: string) {
+  const vista = m.rutaVista(rutaId);
+  if (!vista) return;
+  const i = m.RUTAS_VISTA.findIndex((v) => v.id === rutaId);
+  if (i >= 0) m.RUTAS_VISTA[i] = vista;
+  else m.RUTAS_VISTA.push(vista);
+}
+
 /* -- Solicitudes del conductor: HANDOFF.md §7.3, entidad decidida pero no construida
    en el prototipo original. Vive en memoria aquí porque es infraestructura nueva. -- */
 const SOLICITUDES: Solicitud[] = [];
 let solicitudSeq = 0;
+
+/** Check-ins sellados en caliente. Las sembradas siguen en `INSPECCIONES_RAW`. */
+const INSPECCIONES_CHECKIN: Inspeccion[] = [];
+let inspeccionSeq = 0;
+
+function inspeccionDeCheckin(t: Tramo, evidencia: Omit<CheckinInput, 'trasladoId'>): Inspeccion {
+  const ruta = m.ruta(t.rutaId);
+  const vehiculo = ruta?.vehiculoId ? m.vehiculo(ruta.vehiculoId) : null;
+  const conductor = t.conductorId ? m.conductor(t.conductorId) : null;
+  const fecha = new Date();
+  return {
+    id: `CHK-M${++inspeccionSeq}`,
+    tipo: 'check-in',
+    rutaId: t.rutaId,
+    trasladoId: t.id,
+    fecha,
+    inspector: t.conductorId ?? '',
+    inspectorNombre: conductor?.nombre ?? 'Sin dato',
+    sede: `${TALLER.nombre} · ${TALLER.direccion}`,
+    km: evidencia.km,
+    combustible: evidencia.combustible,
+    combustiblePct: evidencia.combustiblePct,
+    limpieza: evidencia.limpieza,
+    vehiculo: {
+      matricula: vehiculo?.matricula ?? 'Sin dato',
+      modelo: vehiculo ? `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio}` : 'Sin dato',
+      vin: 'Sin dato',
+      km: evidencia.km,
+      combustible: evidencia.combustible,
+      combustiblePct: evidencia.combustiblePct,
+    },
+    // El contrato del check-in no trae ITV. `itvVence` es Date obligatorio; no es un vencimiento.
+    itv: { estado: 'Sin dato', vence: [] },
+    itvVence: fecha,
+    zonas: [],
+    danos: [],
+    hallazgos: [],
+    firmas: { cliente: null, conductor: evidencia.firmaConductor },
+  };
+}
 
 const USUARIOS: UsuarioBackoffice[] = [];
 const EJECUCIONES: AutomatizacionEjecucion[] = [];
@@ -243,7 +303,12 @@ export const mockRepo: MecanuRepo = {
   async listCampanas() { return m.CAMPANAS; },
   async getCampana(id) { return m.campana(id); },
 
-  async listInspeccionesDeRuta(rutaId) { return m.inspeccionesDeRuta(rutaId); },
+  async listInspeccionesDeRuta(rutaId) {
+    return [
+      ...m.inspeccionesDeRuta(rutaId),
+      ...INSPECCIONES_CHECKIN.filter((i) => i.rutaId === rutaId),
+    ];
+  },
 
   async getTurnoConductor() {
     // `TURNO`/`POOL` del conductor hoy viven hardcodeados en
@@ -269,8 +334,15 @@ export const mockRepo: MecanuRepo = {
 
   async cambiarSubestadoTramo({ trasladoId, a, triggerSource }: CambiarSubestadoTramoInput) {
     const t = requireTramo(trasladoId);
+    const efecto = efectoAvanceSubestadoEnRuta(a);
     t.subestado = a;
-    if (a === 'en_destino') t.estado = 'en_curso';
+    if (efecto) t.estado = efecto.tramo.estado;
+    if (efecto) {
+      const r = requireRuta(t.rutaId);
+      r.estado = efecto.ruta.estado;
+      r.subestado = efecto.ruta.subestado;
+      refrescarVista(r.id);
+    }
     nuevoLog(trasladoId, 'cambio_estado', triggerSource === 'conductor' ? (t.conductorId ?? 'conductor') : 'Sistema', triggerSource, { a, texto: `Subestado → ${a}` });
     return t;
   },
@@ -278,15 +350,15 @@ export const mockRepo: MecanuRepo = {
   async checkin({ trasladoId, ...evidencia }: CheckinInput) {
     const t = requireTramo(trasladoId);
     nuevoLog(trasladoId, 'evidencia', t.conductorId ?? 'conductor', 'conductor', {
-      texto: 'Check-in con fotos, testigos e inspección', tipoEvidencia: 'check-in',
+      texto: 'Check-in con fotos, testigos e inspección',
+      tipoEvidencia: 'check-in',
+      detalle: evidencia.nota ?? undefined,
     });
-    const r = m.RUTAS.find((x) => m.tramosDeRuta(x.id).some((tr) => tr.id === trasladoId));
-    const inspecciones = r ? m.inspeccionesDeRuta(r.id) : [];
-    const inspeccion = inspecciones[inspecciones.length - 1] ?? null;
-    if (!inspeccion) {
-      throw new Error('El mock no genera inspecciones nuevas dinámicamente — ver PREGUNTAS-ABIERTAS.md');
-    }
-    void evidencia;
+    const sembradas = m.inspeccionesDeRuta(t.rutaId);
+    const previa = sembradas[sembradas.length - 1] ?? null;
+    if (previa) return { tramo: t, inspeccion: previa };
+    const inspeccion = inspeccionDeCheckin(t, evidencia);
+    INSPECCIONES_CHECKIN.push(inspeccion);
     return { tramo: t, inspeccion };
   },
 
@@ -302,19 +374,24 @@ export const mockRepo: MecanuRepo = {
       texto: `Hallazgo: ${testigo} nivel ${nivel}`, rutaId,
       detalle: detalle ?? undefined,
     });
-    if (testigo !== 'itv') {
-      // El resto de testigos ámbar sigue sin catálogo testigo→servicio. Ver PREGUNTAS-ABIERTAS.md #5.
-      return null;
+    if (testigo === 'itv') {
+      const motivo = detalle === 'sin_pegatina' || detalle === 'vencida' || detalle === 'por_vencer'
+        ? detalle
+        : 'vencida';
+      return m.campanaDesdeItvCheckin({ rutaId, motivo, dias: dias ?? null });
     }
-    const motivo = detalle === 'sin_pegatina' || detalle === 'vencida' || detalle === 'por_vencer'
-      ? detalle
-      : 'vencida';
-    return m.campanaDesdeItvCheckin({ rutaId, motivo, dias: dias ?? null });
+    return m.campanaDesdeHallazgoCheckin({ rutaId, testigo, nivel });
   },
 
   async entregar({ trasladoId, firmaCliente }: EntregaInput) {
     const t = requireTramo(trasladoId);
     t.estado = 'completado';
+    t.subestado = null;
+    const efecto = efectoEntregaRuta(t.rol);
+    const r = requireRuta(t.rutaId);
+    r.estado = efecto.estado;
+    r.subestado = efecto.subestado;
+    refrescarVista(r.id);
     nuevoLog(trasladoId, 'evidencia', t.conductorId ?? 'conductor', 'conductor', {
       texto: firmaCliente ? 'Entrega con firma del cliente' : 'Entrega en taller', tipoEvidencia: 'check-out',
     });
@@ -348,6 +425,93 @@ export const mockRepo: MecanuRepo = {
     const t = requireTramo(trasladoId);
     t.estado = 'cancelado'; // "congela" el tramo — decisión de mock: cancelado bloquea avance
     nuevoLog(trasladoId, 'incidencia', t.conductorId ?? 'conductor', 'conductor', { texto: 'Siniestro reportado', detalle: detalle ?? undefined });
+  },
+
+  async registrarGpsTramo(input: GpsPingInput) {
+    const t = requireTramo(input.trasladoId);
+    const ts = input.ts ? new Date(input.ts) : new Date();
+    t.posLat = input.lat;
+    t.posLng = input.lng;
+    t.posPrecisionM = input.accuracy ?? null;
+    t.posActualizadaEn = ts;
+    if (t.conductorId) {
+      const c = m.CONDUCTORES.find((x) => x.id === t.conductorId);
+      if (c) {
+        c.posLat = input.lat;
+        c.posLng = input.lng;
+        c.posPrecisionM = input.accuracy ?? null;
+        c.posActualizadaEn = ts;
+      }
+    }
+    TRAIL_MOCK.push({
+      trasladoId: t.id,
+      lat: input.lat,
+      lng: input.lng,
+      ts: ts.toISOString(),
+    });
+    nuevoLog(t.id, 'gps', t.conductorId ?? 'conductor', input.fuente === 'api' ? 'api' : 'conductor', {
+      texto: `Posición ${input.lat.toFixed(5)}, ${input.lng.toFixed(5)}`,
+    });
+    return t;
+  },
+
+  async registrarUbicacionConductor(input: UbicacionConductorInput) {
+    const c = m.CONDUCTORES.find((x) => x.id === input.conductorId);
+    if (!c) throw new Error(`Conductor ${input.conductorId} no encontrado`);
+    const ts = input.ts ? new Date(input.ts) : new Date();
+    c.posLat = input.lat;
+    c.posLng = input.lng;
+    c.posPrecisionM = input.accuracy ?? null;
+    c.posActualizadaEn = ts;
+  },
+
+  async getUbicacionSeguimientoPublico(token: string) {
+    const vistas = m.RUTAS_VISTA as RutaVista[];
+    const ruta = rutaPorLinkToken(vistas, token);
+    if (!ruta) return null;
+    const tramos = m.tramosDeRuta(ruta.id);
+    const tramo =
+      tramos.find((x) => x.id === ruta.tramoActivoId) ??
+      tramos.find((x) => x.estado === 'en_curso') ??
+      tramos[0] ??
+      null;
+    const paradas = m.paradasDeRuta(ruta.id);
+    const origen = tramo?.paradaOrigenId
+      ? paradas.find((p) => p.id === tramo.paradaOrigenId) ?? null
+      : ruta.paradaOrigen;
+    const destino = tramo?.paradaDestinoId
+      ? paradas.find((p) => p.id === tramo.paradaDestinoId) ?? null
+      : ruta.paradaDestino;
+    return construirUbicacionSeguimiento({ token, ruta, tramo, origen, destino });
+  },
+
+  async responderPresupuestoSeguimiento({ token, accion, indices }) {
+    const vistas = m.RUTAS_VISTA as RutaVista[];
+    const rutaV = rutaPorLinkToken(vistas, token);
+    if (!rutaV) throw new Error('Enlace de seguimiento no válido');
+    const oferta = campanaOfertaDeRuta(m.CAMPANAS, rutaV.id);
+    if (!oferta) throw new Error('No hay cotización abierta en este enlace');
+    const campana = m.campana(oferta.id);
+    if (!campana) throw new Error('Cotización no encontrada');
+    if (campana.estado === 'aceptada' || campana.estado === 'rechazada' || campana.estado === 'caducada') {
+      throw new Error('Esta cotización ya está cerrada');
+    }
+    if (accion === 'rechazar') {
+      campana.estado = 'rechazada';
+      campana.presupuesto.estado = 'rechazada';
+      campana.presupuesto.actualizado = new Date();
+      return { campanaId: campana.id, estado: 'rechazada' };
+    }
+    const uniq = [...new Set(indices)].filter((i) => i >= 0 && i < campana.presupuesto.lineas.length);
+    if (!uniq.length) throw new Error('Selecciona al menos una línea');
+    const elegidas = uniq.map((i) => campana.presupuesto.lineas[i]!).filter(Boolean);
+    campana.presupuesto.lineas = elegidas;
+    campana.presupuesto.total = Math.round(elegidas.reduce((a, l) => a + l.importe, 0) * 100) / 100;
+    campana.presupuesto.estado = 'aceptada';
+    campana.presupuesto.actualizado = new Date();
+    campana.estado = 'aceptada';
+    campana.valor = campana.presupuesto.total;
+    return { campanaId: campana.id, estado: 'aceptada' };
   },
 
   async reasignarConductorTramo({ tramoId, conductorId }: ReasignarConductorInput) {

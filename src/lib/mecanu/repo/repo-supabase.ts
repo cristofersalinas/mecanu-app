@@ -5,6 +5,8 @@
  * La UI del panel/conductor sigue en mock hasta migrar data.ts (async).
  * APIs y Server Actions que usen `repo` sí pueden apuntar aquí.
  */
+import { getPerfilSesion } from '@/lib/supabase/auth-server';
+import { mockRepo } from './repo-mock';
 import { getSupabaseServer } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { crearRutaDesdeCampana as construirRutaDesdeCampana } from '../crear-ruta-desde-campana';
@@ -24,6 +26,7 @@ import type {
   EntregaInput, EnviarMensajeWaInput, EnviarMensajeWaResult, HallazgoCampanaInput,
   IncidenciaInput, MecanuRepo, ReasignarConductorInput, RegistrarMensajeEntranteInput,
   SolicitudInput, AgendarRutaInput,
+  GpsPingInput, UbicacionConductorInput,
 } from './repo';
 import {
   actualizarEstadoMensajeSb, getCanalWaSb, guardarMensajeSb, listCanalesWaSb, registrarEntranteSb,
@@ -33,11 +36,33 @@ import {
   telefonoClienteCampana,
 } from '../whatsapp-service';
 import {
-  construirVista, mapCampana, mapCliente, mapConductor, mapLog, mapParada, mapPerfilAUsuario,
+  construirVista, mapCampana, mapCampanaItem, mapCliente, mapConductor, mapLog, mapParada, mapPerfilAUsuario,
   mapPresupuesto, mapRuta, mapServicio, mapSolicitud, mapTramo, mapVehiculo,
 } from './mappers-supabase';
+import { tagsDeRutaConDatos } from '../mecanu-rutas';
+import { construirUbicacionSeguimiento } from '../ubicacion-seguimiento';
+import { campanaOfertaDeRuta } from '../seguimiento-ruta';
+import { geocodificarDireccion } from '../geocode';
+import { gpsPosicionEsquemaAusente } from '../gps-conductor';
+import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '../transicion-en-ruta';
 
-const TALLER_DEFAULT = 'taller-rodriguez';
+const UUID_ACTOR = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Uuid del argumento o de la sesión. `u-dueno` no es un id de `perfiles`. */
+async function idDeActor(actorId: string): Promise<string | null> {
+  if (UUID_ACTOR.test(actorId)) return actorId;
+  const perfil = await getPerfilSesion();
+  if (perfil?.id && UUID_ACTOR.test(perfil.id)) return perfil.id;
+  return null;
+}
+
+/** Taller del usuario autenticado. `service_role` no aplica RLS. */
+async function tallerDeSesion(): Promise<string> {
+  const perfil = await getPerfilSesion();
+  const id = perfil?.tallerId?.trim() ?? '';
+  if (!id) throw new Error('No hay taller en la sesión');
+  return id;
+}
 
 function sb(): SupabaseClient {
   const c = getSupabaseServer();
@@ -47,6 +72,22 @@ function sb(): SupabaseClient {
 
 function throwPg(error: { message: string } | null, ctx: string): void {
   if (error) throw new Error(`${ctx}: ${error.message}`);
+}
+
+/** Fila por id solo si es del taller de la sesión. Si no, el mismo vacío que si no existe. */
+async function filaDeEsteTaller(
+  tabla: 'clientes' | 'rutas' | 'presupuestos',
+  id: string,
+): Promise<Record<string, unknown> | null> {
+  const tallerId = await tallerDeSesion();
+  const { data, error } = await sb()
+    .from(tabla)
+    .select('*')
+    .eq('id', id)
+    .eq('taller_id', tallerId)
+    .maybeSingle();
+  throwPg(error, tabla);
+  return (data as Record<string, unknown> | null) ?? null;
 }
 
 async function cargarParadas(rutaId: string): Promise<Parada[]> {
@@ -95,6 +136,94 @@ async function cargarPresupuesto(id: string | null | undefined): Promise<Presupu
   );
 }
 
+function conductorDelViaje(rows: { conductor_id?: unknown; estado?: unknown; orden?: unknown }[]): string | null {
+  const tramos = rows.map((r) => ({
+    conductorId: r.conductor_id == null ? null : String(r.conductor_id),
+    estado: String(r.estado ?? ''),
+    orden: Number(r.orden ?? 0),
+  }));
+  const activos = tramos
+    .filter((t) => t.estado === 'en_curso' || t.estado === 'agendado')
+    .sort((a, b) => a.orden - b.orden);
+  const tramo = activos[0] ?? [...tramos].sort((a, b) => a.orden - b.orden)[0];
+  return tramo?.conductorId ?? null;
+}
+
+/** Coche y conductor del viaje de ese token. No lista el taller. */
+export async function cocheYConductorPorToken(token: string): Promise<{
+  vehiculo: Vehiculo | null;
+  conductor: Conductor | null;
+}> {
+  const vacio = { vehiculo: null, conductor: null };
+  const t = token.trim();
+  if (!t) return vacio;
+  const client = sb();
+  const { data: ruta, error } = await client
+    .from('rutas')
+    .select('id, vehiculo_id')
+    .eq('link_token', t)
+    .maybeSingle();
+  throwPg(error, 'ficha token');
+  if (!ruta) return vacio;
+
+  const vehiculoP = ruta.vehiculo_id
+    ? client.from('vehiculos').select('*').eq('id', String(ruta.vehiculo_id)).maybeSingle()
+    : Promise.resolve({ data: null, error: null as { message: string } | null });
+  const tramosP = client
+    .from('traslados')
+    .select('conductor_id, estado, orden')
+    .eq('ruta_id', String(ruta.id));
+  const [vehiculoRes, tramosRes] = await Promise.all([vehiculoP, tramosP]);
+  throwPg(vehiculoRes.error, 'vehiculo token');
+  throwPg(tramosRes.error, 'tramos token');
+  const vehiculo = vehiculoRes.data ? mapVehiculo(vehiculoRes.data) : null;
+  const conductorId = conductorDelViaje(tramosRes.data ?? []);
+  if (!conductorId) return { vehiculo, conductor: null };
+  const { data: cond, error: ec } = await client
+    .from('conductores')
+    .select('*')
+    .eq('id', conductorId)
+    .maybeSingle();
+  throwPg(ec, 'conductor token');
+  return { vehiculo, conductor: cond ? mapConductor(cond) : null };
+}
+
+export async function rutaVistaPorLinkToken(token: string): Promise<RutaVista | null> {
+  const t = token.trim();
+  if (!t) return null;
+  const { data, error } = await sb().from('rutas').select('*').eq('link_token', t).maybeSingle();
+  throwPg(error, 'ruta token');
+  if (!data) return null;
+  return vistaDeRuta(data);
+}
+
+/** Cotización del enlace público: la ruta ya identifica el taller, no la sesión. */
+export async function campanasDeRutaPublica(rutaId: string): Promise<Campana[]> {
+  const client = sb();
+  const { data, error } = await client.from('campanas').select('*').eq('ruta_origen_id', rutaId);
+  throwPg(error, 'campanas token');
+  const out: Campana[] = [];
+  for (const row of data ?? []) {
+    const { data: pr } = await client
+      .from('presupuestos')
+      .select('*')
+      .eq('campana_id', row.id)
+      .limit(1)
+      .maybeSingle();
+    const presupuesto = pr
+      ? await cargarPresupuesto(String(pr.id))
+      : mapPresupuesto({
+        id: `PR-tmp-${row.id}`,
+        modo: 'detallado',
+        estado: 'nueva',
+        total: 0,
+        iva_incluido: true,
+      });
+    out.push(mapCampana(row, presupuesto!, []));
+  }
+  return out;
+}
+
 async function vistaDeRuta(rutaRow: Record<string, unknown>): Promise<RutaVista> {
   const ruta = mapRuta(rutaRow);
   const [tramos, paradas, presupuesto] = await Promise.all([
@@ -109,6 +238,15 @@ async function requireTramo(id: string): Promise<Tramo> {
   const { data, error } = await sb().from('traslados').select('*').eq('id', id).maybeSingle();
   throwPg(error, 'tramo');
   if (!data) throw new Error(`Tramo ${id} no encontrado`);
+  const tallerId = await tallerDeSesion();
+  const { data: ruta, error: er } = await sb()
+    .from('rutas')
+    .select('id')
+    .eq('id', String(data.ruta_id))
+    .eq('taller_id', tallerId)
+    .maybeSingle();
+  throwPg(er, 'tramo taller');
+  if (!ruta) throw new Error(`Tramo ${id} no encontrado`);
   return mapTramo(data);
 }
 
@@ -119,7 +257,10 @@ async function insertLog(
   triggerSource: Log['triggerSource'],
   payload: Log['payload'],
 ): Promise<void> {
-  const id = `LG-${Date.now().toString(36)}`;
+  const id =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? `LG-${crypto.randomUUID()}`
+      : `LG-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   const { error } = await sb().from('logs').insert({
     id,
     traslado_id: trasladoId,
@@ -129,7 +270,8 @@ async function insertLog(
     trigger_source: triggerSource,
     payload: payload ?? {},
   });
-  throwPg(error, 'log');
+  /* El log no debe tumbar un cambio de estado ya persistido: el panel lee rutas. */
+  if (error) console.warn('[repo] log no escrito', error.message);
 }
 
 function mundoDesde(
@@ -194,21 +336,67 @@ function inspeccionMinima(row: Record<string, unknown>): Inspeccion {
   };
 }
 
+async function cargarInspeccion(row: Record<string, unknown>): Promise<Inspeccion> {
+  const id = String(row.id);
+  const client = sb();
+  const [{ data: danos }, { data: hallazgos }] = await Promise.all([
+    client.from('inspeccion_danos').select('*').eq('inspeccion_id', id),
+    client.from('inspeccion_hallazgos').select('*').eq('inspeccion_id', id),
+  ]);
+  const base = inspeccionMinima(row);
+  base.danos = (danos ?? []).map((d) => ({
+    zona: String(d.zona),
+    tipo: String(d.tipo),
+    descripcion: String(d.descripcion),
+    ubicacion: String(d.ubicacion),
+    foto: null,
+    fotoUrl: d.foto_url == null ? null : String(d.foto_url),
+  }));
+  base.hallazgos = (hallazgos ?? []).map((h) => ({
+    categoria: String(h.categoria),
+    item: String(h.item),
+    metrica: String(h.metrica),
+    severidad: h.severidad as Inspeccion['hallazgos'][0]['severidad'],
+    prediccion: '',
+    vida: '',
+    cambio: '',
+    servicio: h.servicio_nombre
+      ? { nombre: String(h.servicio_nombre), precio: Number(h.servicio_precio ?? 0) }
+      : null,
+    foto: null,
+    fotoUrl: h.foto_url == null ? null : String(h.foto_url),
+  }));
+  const { data: rutaRow } = await client.from('rutas').select('vehiculo_id').eq('id', base.rutaId).maybeSingle();
+  if (rutaRow?.vehiculo_id) {
+    const { data: vRow } = await client.from('vehiculos').select('*').eq('id', rutaRow.vehiculo_id).maybeSingle();
+    if (vRow) {
+      base.vehiculo.matricula = String(vRow.matricula);
+      base.vehiculo.modelo = `${vRow.marca} ${vRow.modelo} ${vRow.anio}`;
+    }
+  }
+  if (base.inspector) {
+    const { data: dRow } = await client.from('conductores').select('nombre').eq('id', base.inspector).maybeSingle();
+    if (dRow) base.inspectorNombre = String(dRow.nombre);
+  }
+  return base;
+}
+
 export const supabaseRepo: MecanuRepo = {
   async listClientes() {
-    const { data, error } = await sb().from('clientes').select('*').order('nombre');
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await sb().from('clientes').select('*').eq('taller_id', tallerId).order('nombre');
     throwPg(error, 'clientes');
     return (data ?? []).map((r) => mapCliente(r));
   },
   async getCliente(id) {
-    const { data, error } = await sb().from('clientes').select('*').eq('id', id).maybeSingle();
-    throwPg(error, 'cliente');
+    const data = await filaDeEsteTaller('clientes', id);
     return data ? mapCliente(data) : null;
   },
 
   async listVehiculos() {
     const client = sb();
-    const { data, error } = await client.from('vehiculos').select('*').order('matricula');
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await client.from('vehiculos').select('*').eq('taller_id', tallerId).order('matricula');
     throwPg(error, 'vehiculos');
     const ids = (data ?? []).map((v) => v.id as string);
     const usuariosBy: Record<string, Vehiculo['usuarios']> = {};
@@ -232,7 +420,8 @@ export const supabaseRepo: MecanuRepo = {
 
   async listConductores() {
     const client = sb();
-    const { data, error } = await client.from('conductores').select('*').order('nombre');
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await client.from('conductores').select('*').eq('taller_id', tallerId).order('nombre');
     throwPg(error, 'conductores');
     const ids = (data ?? []).map((c) => c.id as string);
     const incBy: Record<string, Conductor['incidencias']> = {};
@@ -256,7 +445,8 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async listServicios() {
-    const { data, error } = await sb().from('servicios').select('*').order('nombre');
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await sb().from('servicios').select('*').eq('taller_id', tallerId).order('nombre');
     throwPg(error, 'servicios');
     return (data ?? []).map((r) => mapServicio(r));
   },
@@ -267,23 +457,23 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async listRutas() {
-    const { data, error } = await sb().from('rutas').select('*').order('creada_en', { ascending: false });
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await sb().from('rutas').select('*').eq('taller_id', tallerId).order('creada_en', { ascending: false });
     throwPg(error, 'rutas');
     return (data ?? []).map((r) => mapRuta(r));
   },
   async listRutasVista() {
-    const { data, error } = await sb().from('rutas').select('*').order('creada_en', { ascending: false });
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await sb().from('rutas').select('*').eq('taller_id', tallerId).order('creada_en', { ascending: false });
     throwPg(error, 'rutas');
     return Promise.all((data ?? []).map((r) => vistaDeRuta(r)));
   },
   async getRuta(id) {
-    const { data, error } = await sb().from('rutas').select('*').eq('id', id).maybeSingle();
-    throwPg(error, 'ruta');
+    const data = await filaDeEsteTaller('rutas', id);
     return data ? mapRuta(data) : null;
   },
   async getRutaVista(id) {
-    const { data, error } = await sb().from('rutas').select('*').eq('id', id).maybeSingle();
-    throwPg(error, 'ruta');
+    const data = await filaDeEsteTaller('rutas', id);
     return data ? vistaDeRuta(data) : null;
   },
   async getParada(id) {
@@ -345,15 +535,14 @@ export const supabaseRepo: MecanuRepo = {
     }
     return out.sort((a, b) => b.fecha.getTime() - a.fecha.getTime());
   },
-  async listTagsDeRuta(rutaId) {
+  async listTagsDeRuta(rutaId, ahora) {
     const ruta = await this.getRuta(rutaId);
     if (!ruta) return [];
-    return ruta.tagsManual.map((id): TagRuta => ({
-      id,
-      label: id,
-      color: 'neutral',
-      derivado: false,
-    }));
+    const [tramos, paradas] = await Promise.all([
+      this.listTramosDeRuta(rutaId),
+      this.listParadasDeRuta(rutaId),
+    ]);
+    return tagsDeRutaConDatos(ruta, tramos, paradas, ahora);
   },
   async listRutasDeCliente(clienteId) {
     const vistas = await this.listRutasVista();
@@ -372,11 +561,23 @@ export const supabaseRepo: MecanuRepo = {
     return cargarPresupuesto(id);
   },
   async listCampanas() {
-    const { data, error } = await sb().from('campanas').select('*').order('fecha', { ascending: false });
+    const client = sb();
+    const tallerId = await tallerDeSesion();
+    const { data, error } = await client.from('campanas').select('*').eq('taller_id', tallerId).order('fecha', { ascending: false });
     throwPg(error, 'campanas');
+    const campIds = (data ?? []).map((r) => r.id as string);
+    const itemsBy: Record<string, Campana['items']> = {};
+    const servicios = new Map((await this.listServicios()).map((s) => [s.id, s]));
+    if (campIds.length) {
+      const { data: items } = await client.from('campana_items').select('*').in('campana_id', campIds);
+      for (const row of items ?? []) {
+        const cid = String(row.campana_id);
+        (itemsBy[cid] ??= []).push(mapCampanaItem(row, servicios));
+      }
+    }
     const out: Campana[] = [];
     for (const row of data ?? []) {
-      const { data: pr } = await sb()
+      const { data: pr } = await client
         .from('presupuestos')
         .select('*')
         .eq('campana_id', row.id)
@@ -391,7 +592,7 @@ export const supabaseRepo: MecanuRepo = {
           total: 0,
           iva_incluido: true,
         });
-      out.push(mapCampana(row, presupuesto!));
+      out.push(mapCampana(row, presupuesto!, itemsBy[String(row.id)] ?? []));
     }
     return out;
   },
@@ -403,7 +604,7 @@ export const supabaseRepo: MecanuRepo = {
   async listInspeccionesDeRuta(rutaId) {
     const { data, error } = await sb().from('inspecciones').select('*').eq('ruta_id', rutaId);
     throwPg(error, 'inspecciones');
-    return (data ?? []).map((row) => inspeccionMinima(row));
+    return Promise.all((data ?? []).map((row) => cargarInspeccion(row)));
   },
 
   async getTurnoConductor(conductorId) {
@@ -452,10 +653,28 @@ export const supabaseRepo: MecanuRepo = {
 
   async cambiarSubestadoTramo({ trasladoId, a, triggerSource }: CambiarSubestadoTramoInput) {
     const t = await requireTramo(trasladoId);
+    const tallerId = await tallerDeSesion();
+    const { data: rutaPropia, error: eruta } = await sb()
+      .from('rutas')
+      .select('id')
+      .eq('id', t.rutaId)
+      .eq('taller_id', tallerId)
+      .maybeSingle();
+    throwPg(eruta, 'tramo taller');
+    if (!rutaPropia) throw new Error(`Tramo ${trasladoId} no encontrado`);
+    const efecto = efectoAvanceSubestadoEnRuta(a);
     const patch: Record<string, unknown> = { subestado: a };
-    if (a === 'en_destino') patch.estado = 'en_curso';
-    const { error } = await sb().from('traslados').update(patch).eq('id', trasladoId);
-    throwPg(error, 'subestado');
+    if (efecto) patch.estado = efecto.tramo.estado;
+    const tramoUpdate = sb().from('traslados').update(patch).eq('id', trasladoId);
+    const rutaUpdate = efecto
+      ? sb().from('rutas').update({
+          estado: efecto.ruta.estado,
+          subestado: efecto.ruta.subestado,
+        }).eq('id', t.rutaId).eq('taller_id', tallerId)
+      : Promise.resolve({ error: null });
+    const [tramoRes, rutaRes] = await Promise.all([tramoUpdate, rutaUpdate]);
+    throwPg(tramoRes.error, 'subestado');
+    throwPg(rutaRes.error, 'ruta en_ruta');
     await insertLog(
       trasladoId,
       'cambio_estado',
@@ -475,7 +694,7 @@ export const supabaseRepo: MecanuRepo = {
     const id = `IN-${Date.now().toString(36)}`;
     const row = {
       id,
-      taller_id: TALLER_DEFAULT,
+      taller_id: await tallerDeSesion(),
       ruta_id: t.rutaId,
       traslado_id: trasladoId,
       tipo: 'check-in',
@@ -512,12 +731,19 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async entregar({ trasladoId, firmaCliente }: EntregaInput) {
-    const { error } = await sb()
-      .from('traslados')
-      .update({ estado: 'completado', subestado: null })
-      .eq('id', trasladoId);
-    throwPg(error, 'entrega');
-    await insertLog(trasladoId, 'evidencia', 'conductor', 'conductor', {
+    const t = await requireTramo(trasladoId);
+    const tallerId = await tallerDeSesion();
+    const efecto = efectoEntregaRuta(t.rol);
+    const [tramoRes, rutaRes] = await Promise.all([
+      sb().from('traslados').update({ estado: 'completado', subestado: null }).eq('id', trasladoId),
+      sb().from('rutas').update({
+        estado: efecto.estado,
+        subestado: efecto.subestado,
+      }).eq('id', t.rutaId).eq('taller_id', tallerId),
+    ]);
+    throwPg(tramoRes.error, 'entrega');
+    throwPg(rutaRes.error, 'ruta tras entrega');
+    await insertLog(trasladoId, 'evidencia', t.conductorId ?? 'conductor', 'conductor', {
       texto: firmaCliente ? 'Entrega con firma' : 'Entrega en taller',
       tipoEvidencia: 'entrega',
     });
@@ -552,16 +778,129 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async registrarIncidencia({ trasladoId, detalle }: IncidenciaInput) {
-    await sb().from('rutas').update({ incidencia: detalle }).eq(
-      'id',
-      (await requireTramo(trasladoId)).rutaId,
-    );
+    const t = await requireTramo(trasladoId);
+    const tallerId = await tallerDeSesion();
+    await sb().from('rutas').update({ incidencia: detalle }).eq('id', t.rutaId).eq('taller_id', tallerId);
     await insertLog(trasladoId, 'incidencia', 'conductor', 'conductor', {
       texto: detalle ?? 'Incidencia',
     });
   },
 
+  async registrarGpsTramo(input: GpsPingInput) {
+    const t = await requireTramo(input.trasladoId);
+    const ts = input.ts ? new Date(input.ts) : new Date();
+    const { error } = await sb()
+      .from('traslados')
+      .update({
+        pos_lat: input.lat,
+        pos_lng: input.lng,
+        pos_precision_m: input.accuracy ?? null,
+        pos_actualizada_en: ts.toISOString(),
+      })
+      .eq('id', input.trasladoId);
+    if (error && !gpsPosicionEsquemaAusente(error.message)) throwPg(error, 'gps pos');
+    if (t.conductorId) {
+      const { error: eCond } = await sb()
+        .from('conductores')
+        .update({
+          pos_lat: input.lat,
+          pos_lng: input.lng,
+          pos_precision_m: input.accuracy ?? null,
+          pos_actualizada_en: ts.toISOString(),
+        })
+        .eq('id', t.conductorId);
+      if (eCond && !gpsPosicionEsquemaAusente(eCond.message)) {
+        console.warn('[repo] conductor pos no escrita', eCond.message);
+      }
+    }
+    const { error: eTrail } = await sb().from('traslado_ubicaciones').insert({
+      traslado_id: t.id,
+      conductor_id: t.conductorId,
+      ruta_id: t.rutaId,
+      lat: input.lat,
+      lng: input.lng,
+      precision_m: input.accuracy ?? null,
+      heading: input.heading ?? null,
+      speed_mps: input.speed ?? null,
+      ts: ts.toISOString(),
+      fuente: input.fuente ?? 'conductor',
+    });
+    if (eTrail && !gpsPosicionEsquemaAusente(eTrail.message)) throwPg(eTrail, 'gps trail');
+    /* Sin log por ping: el trail (`traslado_ubicaciones`) ya es la fuente.
+       Un LG-* por cada 20 s chocaba la PK y tumba el POST → cola hinchada. */
+    return requireTramo(input.trasladoId);
+  },
+
+  async registrarUbicacionConductor(input: UbicacionConductorInput) {
+    const ts = input.ts ? new Date(input.ts) : new Date();
+    const { error } = await sb()
+      .from('conductores')
+      .update({
+        pos_lat: input.lat,
+        pos_lng: input.lng,
+        pos_precision_m: input.accuracy ?? null,
+        pos_actualizada_en: ts.toISOString(),
+      })
+      .eq('id', input.conductorId);
+    if (error && !gpsPosicionEsquemaAusente(error.message)) throwPg(error, 'conductor ubicacion');
+  },
+
+  async getUbicacionSeguimientoPublico(token: string) {
+    const ruta = await rutaVistaPorLinkToken(token);
+    if (!ruta) return null;
+    const tramos = await this.listTramosDeRuta(ruta.id);
+    const tramo =
+      tramos.find((x) => x.id === ruta.tramoActivoId) ??
+      tramos.find((x) => x.estado === 'en_curso') ??
+      tramos[0] ??
+      null;
+    const paradas = await this.listParadasDeRuta(ruta.id);
+    const origen = tramo?.paradaOrigenId
+      ? paradas.find((p) => p.id === tramo.paradaOrigenId) ?? null
+      : ruta.paradaOrigen;
+    const destino = tramo?.paradaDestinoId
+      ? paradas.find((p) => p.id === tramo.paradaDestinoId) ?? null
+      : ruta.paradaDestino;
+
+    // Geocode on the fly if coords missing (persiste para siguientes lecturas).
+    for (const p of [origen, destino]) {
+      if (!p || (p.lat != null && p.lng != null) || !p.direccion) continue;
+      const coords = await geocodificarDireccion(p.direccion);
+      if (!coords) continue;
+      p.lat = coords.lat;
+      p.lng = coords.lng;
+      await sb()
+        .from('paradas')
+        .update({ lat: coords.lat, lng: coords.lng })
+        .eq('id', p.id);
+    }
+
+    return construirUbicacionSeguimiento({ token, ruta, tramo, origen, destino });
+  },
+
+  async responderPresupuestoSeguimiento({ token, accion, indices }) {
+    const rutaV = await rutaVistaPorLinkToken(token);
+    if (!rutaV) throw new Error('Enlace de seguimiento no válido');
+    const campanas = await campanasDeRutaPublica(rutaV.id);
+    const oferta = campanaOfertaDeRuta(campanas, rutaV.id);
+    if (!oferta) throw new Error('No hay cotización abierta en este enlace');
+    const estado = accion === 'aceptar' ? 'aceptada' : 'rechazada';
+    if (accion === 'aceptar' && indices.length === 0) {
+      throw new Error('Selecciona al menos una línea');
+    }
+    // campanas no tiene columna estado. El de la cotización vive en presupuestos.
+    // Los índices no recortan líneas: CONTRATOS-API.md no pide ese POST.
+    // El token ya eligió este presupuesto. No pasa por el filtro de sesión del panel.
+    const { error } = await sb()
+      .from('presupuestos')
+      .update({ estado })
+      .eq('id', oferta.presupuesto.id);
+    throwPg(error, 'presupuesto estado');
+    return { campanaId: oferta.id, estado };
+  },
+
   async reasignarConductorTramo({ tramoId, conductorId }: ReasignarConductorInput) {
+    await requireTramo(tramoId);
     const { error } = await sb()
       .from('traslados')
       .update({ conductor_id: conductorId })
@@ -574,7 +913,13 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async cambiarEstadoPresupuesto({ presupuestoId, estado }: CambiarEstadoPresupuestoInput) {
-    const { error } = await sb().from('presupuestos').update({ estado }).eq('id', presupuestoId);
+    const propia = await filaDeEsteTaller('presupuestos', presupuestoId);
+    if (!propia) throw new Error(`Presupuesto ${presupuestoId} no encontrado`);
+    const { error } = await sb()
+      .from('presupuestos')
+      .update({ estado })
+      .eq('id', presupuestoId)
+      .eq('taller_id', String(propia.taller_id));
     throwPg(error, 'presupuesto estado');
     const p = await cargarPresupuesto(presupuestoId);
     if (!p) throw new Error(`Presupuesto ${presupuestoId} no encontrado`);
@@ -596,8 +941,12 @@ export const supabaseRepo: MecanuRepo = {
       direccionCliente: cliente?.direccion ?? null,
     });
     const client = sb();
-    const tallerId = TALLER_DEFAULT;
+    const tallerId = await tallerDeSesion();
     const pr = built.presupuesto;
+    const r = built.ruta;
+    // Circular FK: presupuestos.ruta_generada_id → rutas.id y
+    // rutas.presupuesto_id → presupuestos.id. Primero el presupuesto
+    // sin ruta, luego la ruta, luego se cierra el enlace.
     const { error: e1 } = await client.from('presupuestos').upsert({
       id: pr.id,
       taller_id: tallerId,
@@ -607,7 +956,7 @@ export const supabaseRepo: MecanuRepo = {
       estado: pr.estado,
       iva_incluido: pr.ivaIncluido,
       total: pr.total,
-      ruta_generada_id: built.ruta.id,
+      ruta_generada_id: null,
     });
     throwPg(e1, 'presupuesto upsert');
     if (pr.lineas.length) {
@@ -623,7 +972,6 @@ export const supabaseRepo: MecanuRepo = {
       );
       throwPg(e2, 'lineas');
     }
-    const r = built.ruta;
     const { error: e3 } = await client.from('rutas').insert({
       id: r.id,
       taller_id: tallerId,
@@ -641,6 +989,11 @@ export const supabaseRepo: MecanuRepo = {
       creada_en: r.creadaEn.toISOString(),
     });
     throwPg(e3, 'ruta insert');
+    const { error: e4 } = await client
+      .from('presupuestos')
+      .update({ ruta_generada_id: r.id })
+      .eq('id', pr.id);
+    throwPg(e4, 'presupuesto ruta');
     for (const p of built.paradas) {
       const { error: ep } = await client.from('paradas').insert({
         id: p.id,
@@ -651,13 +1004,16 @@ export const supabaseRepo: MecanuRepo = {
         direccion: p.direccion,
         localidad: p.localidad,
         sublocalidad: p.sublocalidad,
+        lat: p.lat ?? null,
+        lng: p.lng ?? null,
       });
       throwPg(ep, 'parada');
       for (const s of p.servicios) {
-        await client.from('parada_servicios').insert({
+        const { error: es } = await client.from('parada_servicios').insert({
           parada_id: p.id,
           descripcion: s.descripcion,
         });
+        throwPg(es, 'parada servicio');
       }
     }
     for (const t of built.tramos) {
@@ -672,6 +1028,7 @@ export const supabaseRepo: MecanuRepo = {
         ventana_fecha: t.ventana?.fecha.toISOString().slice(0, 10) ?? null,
         ventana_inicio: t.ventana?.inicio ?? null,
         ventana_fin: t.ventana?.fin ?? null,
+        ventana_modo: t.ventanaModo,
         estado: t.estado,
         subestado: t.subestado,
         seguro: t.seguro,
@@ -680,12 +1037,22 @@ export const supabaseRepo: MecanuRepo = {
       });
       throwPg(et, 'traslado');
     }
-    await client.from('campanas').update({ ruta_generada_id: r.id }).eq('id', campana.id);
+    const { error: e5 } = await client
+      .from('campanas')
+      .update({ ruta_generada_id: r.id })
+      .eq('id', campana.id);
+    throwPg(e5, 'campaña ruta');
     return r;
   },
 
   async actualizarTagsManual({ rutaId, tagsManual }: { rutaId: string; tagsManual: string[] }) {
-    const { error } = await sb().from('rutas').update({ tags_manual: tagsManual }).eq('id', rutaId);
+    const propia = await filaDeEsteTaller('rutas', rutaId);
+    if (!propia) throw new Error(`Ruta ${rutaId} no encontrada`);
+    const { error } = await sb()
+      .from('rutas')
+      .update({ tags_manual: tagsManual })
+      .eq('id', rutaId)
+      .eq('taller_id', String(propia.taller_id));
     throwPg(error, 'tags');
     const r = await this.getRuta(rutaId);
     if (!r) throw new Error(`Ruta ${rutaId} no encontrada`);
@@ -693,12 +1060,14 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async cancelarRuta({ rutaId, subestado, motivo }: CancelarRutaInput) {
+    const propia = await filaDeEsteTaller('rutas', rutaId);
+    if (!propia) throw new Error(`Ruta ${rutaId} no encontrada`);
     const { error } = await sb().from('rutas').update({
       estado: 'cancelado',
       subestado,
       motivo,
       cancelada_en: new Date().toISOString(),
-    }).eq('id', rutaId);
+    }).eq('id', rutaId).eq('taller_id', String(propia.taller_id));
     throwPg(error, 'cancelar');
     const r = await this.getRuta(rutaId);
     if (!r) throw new Error(`Ruta ${rutaId} no encontrada`);
@@ -706,6 +1075,8 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async agendarRuta({ rutaId, fecha, franja, conductorId }: AgendarRutaInput) {
+    const propia = await filaDeEsteTaller('rutas', rutaId);
+    if (!propia) throw new Error(`Ruta ${rutaId} no encontrada`);
     const partes = franja.split(/[–—-]/).map((s) => s.trim()).filter(Boolean);
     const inicio = partes[0] ?? '10:00';
     const fin = partes[1] ?? '11:00';
@@ -714,7 +1085,7 @@ export const supabaseRepo: MecanuRepo = {
     const { error: er } = await sb().from('rutas').update({
       estado: 'agendado',
       subestado,
-    }).eq('id', rutaId);
+    }).eq('id', rutaId).eq('taller_id', String(propia.taller_id));
     throwPg(er, 'agendar ruta');
     const tramos = await this.listTramosDeRuta(rutaId);
     const t = tramos[0];
@@ -735,6 +1106,8 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async asignarConductorRuta(rutaId: string, conductorId: string | null) {
+    const propia = await filaDeEsteTaller('rutas', rutaId);
+    if (!propia) throw new Error(`Ruta ${rutaId} no encontrada`);
     const tramos = await this.listTramosDeRuta(rutaId);
     const t = tramos.find((x) => x.estado !== 'completado') ?? tramos[0];
     if (!t) throw new Error(`Ruta ${rutaId} sin traslados`);
@@ -744,7 +1117,7 @@ export const supabaseRepo: MecanuRepo = {
     if (ruta.estado === 'agendado') {
       const { error } = await sb().from('rutas').update({
         subestado: conductorId ? 'asignado' : 'sin_conductor',
-      }).eq('id', rutaId);
+      }).eq('id', rutaId).eq('taller_id', String(propia.taller_id));
       throwPg(error, 'asignar subestado');
     }
     const r = await this.getRuta(rutaId);
@@ -779,34 +1152,39 @@ export const supabaseRepo: MecanuRepo = {
     return (data ?? []).map((r) => mapPerfilAUsuario(r));
   },
   async getUsuarioBackoffice(id) {
-    const { data, error } = await sb().from('perfiles').select('*').eq('id', id).maybeSingle();
+    const resuelto = await idDeActor(id);
+    if (!resuelto) return mockRepo.getUsuarioBackoffice(id);
+    const { data, error } = await sb().from('perfiles').select('*').eq('id', resuelto).maybeSingle();
     throwPg(error, 'perfil');
     return data ? mapPerfilAUsuario(data) : null;
   },
   async invitarUsuarioBackoffice(actorId, input) {
-    const actor = await this.getUsuarioBackoffice(actorId);
+    const id = await idDeActor(actorId);
+    if (!id) return mockRepo.invitarUsuarioBackoffice(actorId, input);
+    const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'gestionar_usuarios')) {
       throw new Error('Sin permiso para invitar');
     }
     const existentes = await this.listUsuariosBackoffice();
     const draft = invitarUsuario(existentes, input, new Date());
     const client = sb();
+    const tallerId = await tallerDeSesion();
     const { data: created, error: authErr } = await client.auth.admin.createUser({
       email: draft.email,
       email_confirm: true,
       app_metadata: {
-        taller_id: TALLER_DEFAULT,
+        taller_id: tallerId,
         rol: draft.rol,
         conductor_id: draft.conductorId,
         nombre: draft.nombre,
       },
     });
-    if (authErr || !created.user) {
+    if (authErr || !created.user || !UUID_ACTOR.test(created.user.id)) {
       throw new Error(authErr?.message ?? 'No se pudo crear el usuario Auth');
     }
     const { error } = await client.from('perfiles').upsert({
       id: created.user.id,
-      taller_id: TALLER_DEFAULT,
+      taller_id: tallerId,
       rol: draft.rol,
       nombre: draft.nombre,
       email: draft.email,
@@ -819,7 +1197,11 @@ export const supabaseRepo: MecanuRepo = {
     return { ...draft, id: created.user.id };
   },
   async transicionarUsuarioBackoffice(actorId, usuarioId, hacia: EstadoUsuarioBackoffice) {
-    const actor = await this.getUsuarioBackoffice(actorId);
+    const id = await idDeActor(actorId);
+    if (!id || !UUID_ACTOR.test(usuarioId)) {
+      return mockRepo.transicionarUsuarioBackoffice(actorId, usuarioId, hacia);
+    }
+    const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'gestionar_usuarios')) {
       throw new Error('Sin permiso');
     }
@@ -830,7 +1212,9 @@ export const supabaseRepo: MecanuRepo = {
     return next;
   },
   async transicionarProcesoConductor(actorId, conductorId, hacia: ProcesoConductor) {
-    const actor = await this.getUsuarioBackoffice(actorId);
+    const id = await idDeActor(actorId);
+    if (!id) return mockRepo.transicionarProcesoConductor(actorId, conductorId, hacia);
+    const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'cambiar_proceso_conductor')) {
       throw new Error('Sin permiso');
     }
@@ -842,7 +1226,9 @@ export const supabaseRepo: MecanuRepo = {
     return next;
   },
   async getBackofficeSnapshot(actorId, ahora = new Date()) {
-    const actor = await this.getUsuarioBackoffice(actorId);
+    const id = await idDeActor(actorId);
+    if (!id) return mockRepo.getBackofficeSnapshot(actorId, ahora);
+    const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'ver_backoffice')) throw new Error('No puedes entrar al backoffice');
     const [rutas, conductores, solicitudes, usuarios, campanas, tramosRaw, logsRaw] = await Promise.all([
       this.listRutasVista(),
@@ -861,14 +1247,16 @@ export const supabaseRepo: MecanuRepo = {
     const mundo = mundoDesde(
       rutas, tramos, logs, campanas, presupuestos, conductores, solicitudes, usuarios, ahora,
     );
-    return buildSnapshot(mundo, actorId);
+    return buildSnapshot(mundo, id);
   },
   async ejecutarAutomatizacionesBackoffice(actorId, ahora = new Date()) {
-    const actor = await this.getUsuarioBackoffice(actorId);
+    const id = await idDeActor(actorId);
+    if (!id) return mockRepo.ejecutarAutomatizacionesBackoffice(actorId, ahora);
+    const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'ejecutar_automatizaciones')) {
       throw new Error('Sin permiso');
     }
-    const snap = await this.getBackofficeSnapshot(actorId, ahora);
+    const snap = await this.getBackofficeSnapshot(id, ahora);
     const [tramosRaw, logsRaw, usuarios] = await Promise.all([
       sb().from('traslados').select('*'),
       sb().from('logs').select('*').limit(500),
@@ -905,7 +1293,7 @@ export const supabaseRepo: MecanuRepo = {
     const { cuerpo, payload, tipoMensaje } = construirEnvioWa(campana, canal, input, telefonoDigits);
 
     const { data: meta } = await sb().from('campanas').select('taller_id').eq('id', input.campanaId).maybeSingle();
-    const tallerId = meta ? String(meta.taller_id) : TALLER_DEFAULT;
+    const tallerId = meta?.taller_id ? String(meta.taller_id) : await tallerDeSesion();
 
     const localId = `wa-local-${Date.now()}`;
     await guardarMensajeSb(sb(), input.campanaId, tallerId, telefonoE164,

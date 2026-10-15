@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+import { rutasPorEstado } from '@/lib/mecanu/kpis-panel';
 import { usePanel } from '../store';
 import { Tabs } from '../ui/Primitives';
 import { TrasladosView } from './TrasladosView';
@@ -9,6 +11,7 @@ import { CampanasView } from '../campanas/CampanasView';
 export function TableroView({ agendarPeticion }: { agendarPeticion: number }) {
   const p = usePanel();
   const pendientes = p.campanas.filter((c) => c.estado === 'nueva' || c.estado === 'valorada').length;
+  const prospectosN = useMemo(() => rutasPorEstado(p.rutas, 'prospectos'), [p.rutas]);
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -16,7 +19,12 @@ export function TableroView({ agendarPeticion }: { agendarPeticion: number }) {
         <Tabs
           items={[
             { id: 'tareas', label: 'Tareas', badge: p.tareasPendientesN, badgeTitle: 'Huecos que el taller puede cerrar' },
-            { id: 'traslados', label: 'Traslados' },
+            {
+              id: 'traslados',
+              label: 'Traslados',
+              badge: prospectosN,
+              badgeTitle: 'Traslados en prospectos sin fecha agendada',
+            },
             { id: 'campanas', label: 'Campañas', badge: pendientes, badgeTitle: 'Campañas pendientes de acción del taller' },
           ]}
           activeId={p.sub === 'campanas' ? 'campanas' : p.sub === 'traslados' ? 'traslados' : 'tareas'}

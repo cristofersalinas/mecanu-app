@@ -35,8 +35,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   // El Root Layout no lee headers() ni cookies para ser cacheable/estático.
   // El lang="es" es el default; /ca, /en, /pt tienen su propio layout que
-  // aplica HtmlLangPatch en el cliente. El consent se gestiona íntegramente
-  // en GoogleTag (client component) sin necesitar el snapshot del servidor.
+  // aplica HtmlLangPatch en el cliente. GoogleTag no pinta el banner hasta
+  // hidratar y leer `mecanu_consent` (evita flash si ya aceptaste).
   return (
     <html lang="es" className={`h-full antialiased ${plusJakartaSans.variable}`}>
       <head>
@@ -54,7 +54,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* eslint-disable-next-line @next/next/no-page-custom-font -- falso positivo en App Router; el <link> vive en el layout raíz por diseño */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block"
         />
         {analiticaHabilitada() ? (
           <Script id="ga-consent-default" strategy="beforeInteractive">

@@ -10,9 +10,10 @@ devuelven JSON.
 - **Idempotencia**: todo POST/PATCH de escritura acepta un header
   `Idempotency-Key: <string>` opcional pero fuertemente recomendado. Si se repite la
   misma clave, se devuelve la respuesta guardada de la primera vez sin re-ejecutar
-  la mutación. La app del conductor debe generar una clave (ej. un UUID) por acción
-  encolada offline, no por intento de red — así reintentos automáticos son
-  idempotentes de verdad. Ver `src/lib/mecanu/idempotency.ts`.
+  la mutación. La clave es **por toque** (UUID), no por `trasladoId + acción`:
+  `subestado-TS-x-en_camino_origen` reutilizado tras un seed responde 200 y no
+  escribe. El cliente usa `nuevaClaveIdempotencia` (`idempotency.ts`). Reintentos
+  de la misma tarea encolada reutilizan esa clave.
 - **Errores**: siempre `{ "error": { "code": string, "message": string } }` con el
   status HTTP correspondiente:
   - `400` — body no es JSON válido.
@@ -37,11 +38,57 @@ El conductor toma un traslado de la bolsa de disponibles.
 ### `POST /api/v1/traslados/:id/subestado`
 Avance de EN_RUTA. **R7: solo el conductor dispara este endpoint** — el backend real
 debería verificar que el `conductorId` autenticado coincide con `tramo.conductorId`.
+
+Si `a` es un peldaño de EN RUTA (`en_camino_origen` … `en_destino`), **también
+promociona la ruta**: `ruta.estado = en_ruta` y `ruta.subestado = a`. Así
+agendado → en_ruta queda persistido (no solo el subestado del tramo).
 ```json
 // Request
-{ "a": "en_origen", "triggerSource": "conductor" }
+{ "a": "en_camino_origen", "triggerSource": "conductor" }
 // a ∈ en_camino_origen | en_origen | en_transito | en_destino
-// Response 200 → Tramo actualizado
+// Response 200 → Tramo actualizado (estado en_curso)
+```
+
+### `GET /api/v1/panel/rutas/:id`
+Lectura de una ruta (estado y subestado incluidos). Con Supabase configurado
+(sin demo) exige sesión de panel.
+```json
+// Response 200
+{ "ruta": { "id": "TR-1046", "estado": "en_ruta", "subestado": "en_camino_origen" } }
+```
+
+### `POST /api/v1/traslados/:id/gps`
+Ping de ubicación del conductor (offline-first + `Idempotency-Key`). Actualiza
+`traslados.pos_*` y añade una fila en `traslado_ubicaciones`.
+```json
+// Request
+{
+  "lat": 41.3901,
+  "lng": 2.1542,
+  "accuracy": 12.5,
+  "heading": 90,
+  "speed": 8.2,
+  "ts": "2026-01-01T12:00:00.000Z"
+}
+// Response 200 → Tramo actualizado (con posLat/posLng/…)
+```
+
+### `GET /api/v1/s/:token/ubicacion`
+Lectura pública del mapa de seguimiento (sin auth; el secreto es el token).
+Sin trail ni PII. `conductor` solo viene si la ruta está EN RUTA.
+```json
+// Response 200
+{
+  "token": "…",
+  "rutaId": "TR-1042",
+  "estadoId": "en_ruta",
+  "subestado": "en_transito",
+  "callout": "En camino al destino",
+  "visible": true,
+  "conductor": { "lat": 41.39, "lng": 2.15, "actualizadoEn": "…" },
+  "origen": { "lat": 41.40, "lng": 2.14, "label": "Casa" },
+  "destino": { "lat": 41.38, "lng": 2.13, "label": "Taller" }
+}
 ```
 
 ### `POST /api/v1/traslados/:id/checkin`
@@ -67,14 +114,16 @@ testigos/km/combustible antes de aceptar.
 ```
 
 ### `POST /api/v1/traslados/:id/entrega`
-Completa el tramo (entrega en taller o devolución al cliente).
+Completa el tramo (entrega en taller o devolución al cliente). También mueve
+la **ruta**: ida/interno → `en_taller` / `esperando_agenda_vuelta`; vuelta →
+`completado` / `ok`. El kanban lee el estado de la ruta.
 ```json
 // Request
 {
   "fotos": [{ "slot": "estado", "url": "..." }, { "slot": "entorno", "url": "..." }], // mínimo 2
   "firmaCliente": "data:image/..." | null   // obligatoria si rol=vuelta, el backend real debe validarlo cruzando el tramo
 }
-// Response 200 → Tramo actualizado
+// Response 200 → Tramo actualizado (estado completado); la ruta queda en_taller o completado
 ```
 
 ### `POST /api/v1/traslados/:id/confirmaciones`
@@ -176,16 +225,53 @@ Destacados / upsell / subuso → `#csx`. Body:
 `{ "tipo": "paquete_semanal" | "destacados" | "upsell" | "subuso" }`.
 Ver `docs/SLACK-CSX.md`.
 
+### `GET /api/v1/panel/flota`
+Marcadores del mapa General: solo rutas `en_ruta` o `en_taller`. Sin pin
+fijo del taller (los de `en_taller` usan sus coords). Auth de panel si no es demo.
+```json
+// Response 200
+{
+  "taller": { "lat": 41.38, "lng": 2.13, "label": "…", "direccion": "…" },
+  "marcadores": [{
+    "id": "TR-1042",
+    "rutaId": "TR-1042",
+    "estado": "en_ruta",
+    "label": "4521 KTM · Seat León",
+    "vehiculoLabel": "4521 KTM · Seat León",
+    "conductorLabel": "Javier Molina",
+    "direccion": "Carrer de Muntaner 340…",
+    "lat": 41.39,
+    "lng": 2.15,
+    "actualizadaEn": "2026-08-26T12:00:00.000Z",
+    "enVivo": true,
+    "ultimaVezLabel": "Ahora",
+    "fotoUrl": null
+  }]
+}
+```
+
 ### `GET /api/v1/panel/snapshot`
 Hidrata el panel (rutas, campañas, clientes, vehículos, conductores, servicios).
 Con Supabase configurado (sin demo) exige sesión.
+
+### `GET /api/v1/panel/kanban`
+Poll ligero del tablero: `{ rutas: [{ id, estado, subestado }] }`. Una sola
+query a `rutas` (sin vistas N+1). El panel lo pide ~cada 1,2 s; el snapshot
+completo solo cada ~15 s o al volver a la pestaña. `Cache-Control: no-store`.
+
+El kanban no cachea estos GET. Con sesión se suscribe a Realtime
+(`public.rutas` en `supabase_realtime`, migraciones `0016`/`0017`) y vuelve a
+pedir el kanban al cambiar estado/subestado. Si el websocket no entrega
+(TIMED_OUT, RLS sin JWT, publication no aplicada), el poll ligero cubre el
+mismo refresco. Tras un POST ok del conductor, `BroadcastChannel` adelanta
+el refresco en la misma origen.
 
 ### `POST /api/v1/panel/rutas/desde-campana`
 Crea ruta desde campaña aceptada. Body: `campanaId`, `modo`, `lineas?`,
 `tipoServicio`, `fecha` (ISO|null), `franja`. Idempotency-Key recomendado.
 
-### `POST /api/v1/panel/rutas/:id/agendar` · `/cancelar` · `/tags` · `/asignar-conductor`
-Mutaciones del panel sobre una ruta. Idempotency-Key recomendado.
+### `GET /api/v1/panel/rutas/:id` · `POST .../agendar` · `/cancelar` · `/tags` · `/asignar-conductor`
+Lectura de una ruta y mutaciones del panel. Idempotency-Key recomendado en POST.
 
 ### `POST /api/v1/panel/campanas/:id/estado`
 `{ "estado": "valorada" | "enviada" | "aceptada" | … }` sobre el presupuesto ligado.
@@ -196,6 +282,7 @@ Turno + pool + entidades para hidratar la app del conductor.
 ## Lo que falta y por qué (resumen — ver PREGUNTAS-ABIERTAS.md)
 
 - Auth fina en APIs del conductor (JWT debe coincidir con `conductorId`).
-- Escrituras del conductor (check-in, subestado, cola offline) aún no persisten
-  todas vía panel/repo en el mismo ciclo que el snapshot.
+- Escrituras del conductor: el POST de subestado persiste `ruta.estado = en_ruta`.
+  El check-in sellado dispara `en_transito`. La entrega persiste `en_taller` (ida)
+  o `completado` (vuelta). Fotos de check-in a Storage aún no van en el mismo ciclo.
 - Migración UI completa: helpers síncronos de `data.ts` siguen como puente.

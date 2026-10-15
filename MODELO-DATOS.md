@@ -1,5 +1,12 @@
 # Modelo de datos — propuesta para PostgreSQL / Supabase
 
+**Diccionario de hechos (qué significa cada palabra):** `docs/DICCIONARIO-DATOS.md`.
+En Supabase, la misma frase está en el comentario de cada tabla y columna
+(migración `0010_comentarios_diccionario.sql`). Vistas planas de analista y
+auditoría de PII/dinero: `0011_auditoria_y_vistas_bi.sql`. El SQL versionado
+vive en `supabase/migrations/` — si este documento y una migración chocan, gana
+la migración.
+
 Traduce `MODELO.md` (el modelo de negocio, ya cerrado y verificado) a tablas,
 columnas, tipos, relaciones e índices. Es una **propuesta**, no una migración
 ejecutada — quien construya el backend real la revisa, ajusta y la convierte en

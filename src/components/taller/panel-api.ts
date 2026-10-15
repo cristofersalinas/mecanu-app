@@ -44,6 +44,12 @@ export const panelApi = {
   asignarConductor(rutaId: string, conductorId: string | null) {
     return postJson(`/api/v1/panel/rutas/${encodeURIComponent(rutaId)}/asignar-conductor`, { conductorId }, 'asignar');
   },
+  subestadoTramo(trasladoId: string, a: 'en_camino_origen' | 'en_origen' | 'en_transito' | 'en_destino') {
+    return postJson(`/api/v1/traslados/${encodeURIComponent(trasladoId)}/subestado`, {
+      a,
+      triggerSource: 'manual',
+    }, 'subestado');
+  },
   estadoCampana(campanaId: string, estado: string) {
     return postJson(`/api/v1/panel/campanas/${encodeURIComponent(campanaId)}/estado`, { estado }, 'camp-estado');
   },

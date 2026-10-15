@@ -6,6 +6,7 @@
 import {
   cliente, conductor, ESTADO, fmtDia, fmtDinero, nombreCorto, RutaVista, SUBESTADO, vehiculo,
 } from '../data';
+import { etiquetaEnRutaKanban } from '@/lib/mecanu/etiqueta-en-ruta';
 
 export type TipoColumna = 'text' | 'enum' | 'number' | 'date';
 
@@ -33,7 +34,10 @@ export const COLUMNAS: ColumnaDef[] = [
   {
     key: 'subestado', label: 'Subestado', tipo: 'enum', ancho: 150,
     valor: (r) => r.subestado,
-    texto: (r) => SUBESTADO[`${r.estado}.${r.subestado}`]?.label ?? '—',
+    texto: (r) =>
+      etiquetaEnRutaKanban(r.estado, r.subestado, conductor(r.conductorId)?.nombre)
+      ?? SUBESTADO[`${r.estado}.${r.subestado}`]?.label
+      ?? '—',
   },
   {
     key: 'cliente', label: 'Cliente', tipo: 'text', ancho: 170,

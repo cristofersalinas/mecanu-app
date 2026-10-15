@@ -1,0 +1,31 @@
+---
+description: Pedir confirmación antes de tocar archivos de dominio (pipeline, tipos, estados, tags, migraciones)
+alwaysApply: true
+---
+
+# Dominio requiere aprobación
+
+Antes de **modificar** cualquiera de estos archivos, **detente y pide
+confirmación explícita** al usuario. No edites, no parches, no “dejes
+listo” el cambio. Espera el sí.
+
+- `src/lib/mecanu/mecanu-pipeline.ts`
+- `src/lib/mecanu/types.ts`
+- `src/lib/mecanu/pipeline-tareas.ts`
+- Cualquier migración SQL en `supabase/migrations/` que toque
+  estados, subestados o tags
+
+Aplica **aunque la tarea original no mencione estos archivos**. Leerlos
+está bien. Escribirlos, no, hasta que el usuario lo confirme.
+
+## Mejoras generales y efectos colaterales
+
+Si una tarea de “mejora”, refactor o limpieza **necesitaría** tocar
+estos archivos de paso:
+
+1. Reporta **qué** archivos de dominio tocarías y **por qué**.
+2. No los edites.
+3. Espera aprobación antes de continuar por ese camino.
+
+Si el resto del trabajo se puede hacer sin ellos, sigue por ahí y deja
+el dominio fuera hasta que lo pidan.

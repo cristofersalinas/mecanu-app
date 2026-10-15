@@ -137,13 +137,17 @@ describe('vistaRuta: fachada de lectura que aplana tramo activo, ventana, seguro
   });
 });
 
-describe('RUTAS_VISTA cubre las 29 rutas documentadas en CLAUDE.md, sin excepción', () => {
-  it('tiene exactamente 29 entradas', () => {
-    expect(RUTAS_VISTA).toHaveLength(29);
+describe('RUTAS_VISTA cubre las rutas del mock, sin excepción', () => {
+  it('tiene exactamente 33 entradas (31 previas + 2 demo WA c15)', () => {
+    expect(RUTAS_VISTA).toHaveLength(33);
   });
 
-  it('11 campañas, como documenta CLAUDE.md', () => {
-    expect(CAMPANAS).toHaveLength(11);
+  it('14 campañas: todos los estados de presupuesto', () => {
+    expect(CAMPANAS).toHaveLength(14);
+    const estados = new Set(CAMPANAS.map((c) => c.estado));
+    for (const e of ['nueva', 'valorada', 'enviada', 'aceptada', 'rechazada', 'caducada'] as const) {
+      expect(estados.has(e)).toBe(true);
+    }
   });
 });
 

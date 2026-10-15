@@ -213,4 +213,7 @@ export type AppState = {
   flash: string | null;
   voz: { seg: number } | null;
   gps: { lat: number; lon: number } | null;
+  /** Gate: sin 'concedido' + fix, la UI bloquea la app. */
+  gpsPermiso: 'pendiente' | 'concedido' | 'denegado' | 'no_soportado';
+  gpsError: string | null;
 };

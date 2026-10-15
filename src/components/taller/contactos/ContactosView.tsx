@@ -8,6 +8,7 @@ import {
   nombreCorto, vehiculosDeCliente,
 } from '../data';
 import { usePanel } from '../store';
+import { usePanelUrlFiltros } from '../usePanelUrlFiltros';
 import { SearchInput, TableSkeleton } from '../ui/Primitives';
 import { useCarga } from '../ui/useCarga';
 import styles from '../panel.module.css';
@@ -16,8 +17,10 @@ type Fila = Record<string, unknown>;
 
 export function ContactosView() {
   const p = usePanel();
+  const { filtros, setFiltro } = usePanelUrlFiltros();
   const cargando = useCarga();
-  const [busqueda, setBusqueda] = useState('');
+  const busqueda = filtros.q ?? '';
+  const setBusqueda = (v: string) => setFiltro('q', v || undefined);
 
   const clientes = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
@@ -27,8 +30,7 @@ export function ContactosView() {
   const mapaClientes = useMemo(() => new Map(clientes.map((c) => [c.id, c])), [clientes]);
 
   const colClientes: DataTableColumn<Fila>[] = [
-    { key: 'nombre', label: 'Cliente', width: 200, render: (r) => nombreCorto(mapaClientes.get(r.id as string)?.nombre ?? null) },
-    { key: 'tipo', label: 'Tipo', width: 110, render: (r) => mapaClientes.get(r.id as string)?.tipo ?? '—' },
+    { key: 'nombre', label: 'Cliente', width: 220, render: (r) => nombreCorto(mapaClientes.get(r.id as string)?.nombre ?? null) },
     { key: 'telefono', label: 'Teléfono', width: 140, render: (r) => maskTel(mapaClientes.get(r.id as string)?.telefono ?? null) },
     { key: 'email', label: 'Email', width: 220, render: (r) => mapaClientes.get(r.id as string)?.email ?? '—' },
     { key: 'direccion', label: 'Zona', width: 200, render: (r) => maskDireccion(mapaClientes.get(r.id as string)?.direccion ?? null) },

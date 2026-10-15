@@ -90,6 +90,23 @@ export const MENSAJE: PlantillaMensaje = {
   respuestas: ['Sí, agendar', 'Ver presupuesto', 'Ahora no'],
 };
 
+/** Cotización tras check-in / hallazgos en recepción (link a /s/{token}?vista=presupuesto). */
+export const MENSAJE_COTIZACION_CHECKIN: PlantillaMensaje = {
+  id: 'cotizacion_checkin',
+  body:
+    'Hola {{nombre}}.\n\n' +
+    'En la recepción de tu {{vehiculo}} ({{matricula}}) vimos algunas observaciones de las que podemos hacernos cargo. ' +
+    'En este enlace tienes la cotización: puedes desmarcar lo que no quieras y aceptar o rechazar.\n\n' +
+    '{{link}}',
+  bodySoloPendientes:
+    'Hola {{nombre}}.\n\n' +
+    'En la recepción de tu {{vehiculo}} ({{matricula}}) vimos algunas observaciones de las que podemos hacernos cargo. ' +
+    'En este enlace tienes la cotización: puedes desmarcar lo que no quieras y aceptar o rechazar.\n\n' +
+    '{{link}}',
+  footer: 'Taller Central Mecanu',
+  respuestas: ['Acepto', 'Lo miro', 'Ahora no'],
+};
+
 /** Qué campos puede ajustar el operador y qué viene fijo del sistema. */
 export const META_VARIABLES: Record<string, { label: string; editable: boolean; fuente: string }> = {
   nombre:     { label: 'Nombre en el saludo', editable: true,  fuente: 'Ficha del cliente' },
@@ -121,6 +138,9 @@ export const FRASE_SERVICIO: Record<string, string> = {
   'Escobillas': 'el cambio de escobillas',
   'Filtros': 'el cambio de filtros',
   'Refrigerante': 'la revisión del circuito de refrigeración',
+  'Carrocería': 'la reparación de carrocería',
+  'Cristales': 'la reparación de cristales',
+  'Limpieza': 'la limpieza interior',
 };
 export const frase = (etiqueta: string): string => FRASE_SERVICIO[etiqueta] || etiqueta.toLowerCase();
 
@@ -305,6 +325,8 @@ export interface ValoresMensaje {
   matricula: string;
   importe: string;
   fecha: string;
+  /** Link a /s/{token}?vista=presupuesto (cotización). */
+  link: string;
   /** total en euros de los ítems marcados (no se interpola: lo usa la UI) */
   _total: number;
   _items: CampanaItem[];
@@ -315,6 +337,7 @@ export interface OverridesMensaje {
   nombre?: string;
   /** ISO yyyy-mm-dd, tal cual sale del <input type="date"> */
   fecha?: string;
+  link?: string;
 }
 
 /** Diccionario de valores según los hallazgos marcados. */
@@ -335,6 +358,7 @@ export function valoresOportunidad(o: Campana, seleccion: string[], overrides?: 
     matricula: v ? v.matricula : '—',
     importe: fmtDinero(total),
     fecha: ov.fecha != null ? fmtDia(fromISO(ov.fecha)) : fmtDia(o.fecha),
+    link: (ov.link ?? '').trim(),
     _total: total,
     _items: items,
   };
@@ -342,8 +366,15 @@ export function valoresOportunidad(o: Campana, seleccion: string[], overrides?: 
 
 export function renderMensaje(valores: ValoresMensaje): string {
   const body = valores.sugeridos ? MENSAJE.body : MENSAJE.bodySoloPendientes;
-  /* Todos los placeholders de la plantilla son campos de texto de `ValoresMensaje`;
-     el acceso dinámico se estrecha aquí en vez de abrir la interfaz con un index signature. */
+  return interpolarPlantilla(body, valores);
+}
+
+/** Cotización de hallazgos de check-in (incluye link de presupuesto). */
+export function renderMensajeCotizacion(valores: ValoresMensaje): string {
+  return interpolarPlantilla(MENSAJE_COTIZACION_CHECKIN.body, valores);
+}
+
+function interpolarPlantilla(body: string, valores: ValoresMensaje): string {
   const texto = valores as unknown as Record<string, string | undefined>;
   return body.replace(/\{\{(\w+)\}\}/g, (_, k: string) => {
     const val = texto[k];
@@ -373,13 +404,16 @@ export interface PayloadWa {
   text: { preview_url: boolean; body: string };
 }
 
-export function payloadRecordatorio(to: string, valores: ValoresMensaje): PayloadWa {
-  return { messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text',
-    text: { preview_url: false, body: renderMensaje(valores) } };
+export function payloadRecordatorio(to: string, valores: ValoresMensaje, cuerpo?: string): PayloadWa {
+  const body = cuerpo ?? renderMensaje(valores);
+  return {
+    messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text',
+    text: { preview_url: true, body },
+  };
 }
 export function payloadSeguimiento(to: string, valores: ValoresMensaje, cuerpo: string): PayloadWa {
   return { messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text',
-    text: { preview_url: false, body: cuerpo } };
+    text: { preview_url: true, body: cuerpo } };
 }
 export function payloadTexto(to: string, body: string): PayloadWa {
   return { messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text', text: { preview_url: false, body } };
@@ -469,34 +503,78 @@ const msg = (dir: MensajeWa['dir'], texto: string | null, min: number, extra?: P
     id: wamid(), dir, tipo: 'text', texto, ts: hace(min), estado: dir === 'out' ? 'read' : null,
   }, extra || {});
 
-/** clave = id de oportunidad. optIn: 'IN' | 'OUT' (respondió BAJA) */
+/** clave = id de oportunidad/campaña. optIn: 'IN' | 'OUT' (respondió BAJA) */
 export const CANALES_SEED: Record<string, CanalWa> = {
+  /* Sin mensajes · pendiente de primer contacto */
   'OP-3001': { optIn: 'IN', mensajes: [] },
+
+  /* Recordatorio leído + pregunta del cliente */
   'OP-3002': { optIn: 'IN', mensajes: [
     msg('out', null, 190, { tipo: 'recordatorio', estado: 'read' }),
     msg('in', 'Buenas, ¿cuánto tardaría el pulido de faros? El coche lo necesito por la tarde.', 44),
   ] },
+
+  /* Entregado pero aún no leído */
   'OP-3003': { optIn: 'IN', mensajes: [
     msg('out', null, 1620, { tipo: 'recordatorio', estado: 'delivered' }),
   ] },
+
+  /* Cliente acepta (SÍ) y pide cambio de dirección */
   'OP-3004': { optIn: 'IN', mensajes: [
     msg('out', null, 96, { tipo: 'recordatorio', estado: 'read' }),
     msg('in', 'SÍ', 12),
     msg('in', '¿Podéis recogerlo en la oficina en vez de en casa?', 11),
   ] },
+
+  /* Fallo de entrega WhatsApp (número inválido / sin WhatsApp) */
   'OP-3005': { optIn: 'IN', mensajes: [
     msg('out', null, 25, { tipo: 'recordatorio', estado: 'failed', error: 131026 }),
   ] },
+
+  /* Opt-out: el cliente se dio de baja */
   'OP-3006': { optIn: 'OUT', mensajes: [
     msg('out', null, 4300, { tipo: 'recordatorio', estado: 'read' }),
     msg('in', 'BAJA', 4260),
     { id: wamid(), dir: 'sistema', tipo: 'sistema', texto: 'El cliente se dio de baja de los avisos (BAJA).', ts: hace(4260) },
   ] },
+
+  /* Hilo comercial: interés parcial + respuesta del taller */
   'OP-3007': { optIn: 'IN', mensajes: [
     msg('out', null, 300, { tipo: 'recordatorio', estado: 'read' }),
     msg('in', 'Me interesa la batería, lo de las escobillas lo dejo para más adelante.', 128),
     msg('out', 'Perfecto, te preparo el presupuesto solo con la batería y te paso el enlace para agendar.', 120, { estado: 'read' }),
   ] },
+
+  /* Campaña aceptada · enlace de agenda enviado */
+  'CMP-3008': { optIn: 'IN', mensajes: [
+    msg('out', null, 2880, { tipo: 'recordatorio', estado: 'read' }),
+    msg('in', 'SÍ', 2800),
+    msg('out', 'Genial. Aquí tienes el enlace para elegir día y franja: https://mecanu.com/a/demo', 2790, { tipo: 'seguimiento', estado: 'read' }),
+  ] },
+
+  /* Solo total · mensaje pendiente de confirmar entrega */
+  'CMP-3009': { optIn: 'IN', mensajes: [
+    msg('out', null, 8, { tipo: 'recordatorio', estado: 'sent' }),
+  ] },
+
+  /* Nueva · sin contacto aún */
+  'CMP-3010': { optIn: 'IN', mensajes: [] },
+
+  /* Aceptada con seguimiento de cita */
+  'CMP-3011': { optIn: 'IN', mensajes: [
+    msg('out', null, 900, { tipo: 'recordatorio', estado: 'read' }),
+    msg('in', 'De acuerdo, mándame el enlace para agendar.', 860),
+    msg('out', 'Listo, te lo acabo de mandar. Si no te llega en un minuto avísame.', 850, { estado: 'delivered' }),
+  ] },
+
+  /* Caducada · último intento leído sin respuesta */
+  'CMP-3012': { optIn: 'IN', mensajes: [
+    msg('out', null, 21600, { tipo: 'recordatorio', estado: 'read' }),
+    msg('out', 'Hola, te escribo por si todavía te interesa el presupuesto de pastillas. Caduca en dos días.', 7200, { tipo: 'seguimiento', estado: 'read' }),
+  ] },
+
+  /* Valorada · canal vacío a la espera de enviar */
+  'CMP-3013': { optIn: 'IN', mensajes: [] },
 };
 
 /** Respuestas simuladas del cliente (en producción llegan por webhook). */

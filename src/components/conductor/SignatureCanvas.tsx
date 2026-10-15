@@ -3,6 +3,48 @@
 import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react';
 
 /**
+ * El trazo que se manda en `firmaCliente`. El contrato pide `data:image/...`,
+ * no un literal. Vive aquí porque el estado de la entrega solo guarda si hay
+ * firma, y ese booleano no cabe el dibujo.
+ */
+let trazoFirma: string | null = null;
+
+export function leerTrazoFirma(): string | null {
+  return trazoFirma;
+}
+
+export function olvidarTrazoFirma() {
+  trazoFirma = null;
+}
+
+/** PNG del canvas, o null si no es un data URL de imagen. */
+export function capturarTrazoFirma(el: { toDataURL: (type?: string) => string } | null): string | null {
+  if (!el) {
+    trazoFirma = null;
+    return null;
+  }
+  let url: string;
+  try {
+    url = el.toDataURL('image/png');
+  } catch {
+    trazoFirma = null;
+    return null;
+  }
+  trazoFirma = url.startsWith('data:image/') ? url : null;
+  return trazoFirma;
+}
+
+/**
+ * Valor de `firmaCliente`: el data URL del trazo en devolución, null en la
+ * entrega al taller. Un texto que no sea imagen no cuenta.
+ */
+export function firmaClienteDeTrazo(pideFirma: boolean, trazo: string | null): string | null {
+  if (!pideFirma) return null;
+  if (trazo?.startsWith('data:image/')) return trazo;
+  return null;
+}
+
+/**
  * Firma del cliente en la devolución. Se dibuja con el dedo sobre el móvil del
  * conductor; el trazo se sella con hora y GPS al confirmar la entrega.
  * TODO DS: sustituir por `@/components/ds/SignatureCanvas` cuando exista.
@@ -51,8 +93,11 @@ export function SignatureCanvas({
     const el = canvas.current;
     const g = ctx();
     if (el && g) g.clearRect(0, 0, el.width, el.height);
+    olvidarTrazoFirma();
     onBorrar();
   }, [ctx, onBorrar]);
+
+  useEffect(() => () => olvidarTrazoFirma(), []);
 
   return (
     <div>
@@ -118,11 +163,16 @@ export function SignatureCanvas({
           ultimo.current = [x, y];
           g.lineTo(x, y);
           g.stroke();
-          if (!firmada && recorrido.current >= TRAZO_MIN) onFirmar();
+          if (!firmada && recorrido.current >= TRAZO_MIN) {
+            capturarTrazoFirma(canvas.current);
+            onFirmar();
+          }
         }}
         onPointerUp={() => {
+          const habiaTrazo = firmada || recorrido.current >= TRAZO_MIN;
           pintando.current = false;
           ultimo.current = null;
+          if (habiaTrazo) capturarTrazoFirma(canvas.current);
         }}
         onPointerCancel={() => {
           pintando.current = false;

@@ -6,6 +6,19 @@ import { getSupabaseServer, supabaseServerConfigured } from '@/lib/supabase/serv
 
 export const IDEMPOTENCY_HEADER = 'Idempotency-Key';
 
+/**
+ * Una clave por *toque* del conductor, no por entidad. Si se reutiliza
+ * `subestado-TS-x-en_camino_origen`, un `db:seed:avance` deja la ruta en
+ * agendado y el siguiente Iniciar viaje responde 200 de caché sin escribir.
+ */
+export function nuevaClaveIdempotencia(prefijo: string): string {
+  const id =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return `${prefijo}:${id}`;
+}
+
 interface CachedResponse {
   status: number;
   body: unknown;

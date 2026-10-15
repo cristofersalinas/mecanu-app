@@ -6,7 +6,7 @@
  *   DATABASE_URL=postgres://... node scripts/aplicar-migraciones.mjs
  *   SUPABASE_ACCESS_TOKEN=sbp_... node scripts/aplicar-migraciones.mjs
  *
- * Orden: 0001, 0002, 0003, 0004, 0006 (salta 0005 a propósito).
+ * Orden: todos los 00xx_*.sql salvo 0005 (security_events, a propósito).
  */
 import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';

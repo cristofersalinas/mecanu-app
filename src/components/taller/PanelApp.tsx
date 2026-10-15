@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '@/components/ds/Avatar';
 import { Button } from '@/components/ds/Button';
 import { Icon } from '@/components/ds/Icon';
@@ -9,6 +9,7 @@ import { Toast } from '@/components/ds/Toast';
 import { NAV_ITEMS, NavId, PanelProvider, usePanel } from './store';
 import { SidebarNav } from './ui/Primitives';
 import styles from './panel.module.css';
+import type { PanelUrlEstado } from './panel-url';
 
 import { GeneralDashboard } from './general/GeneralDashboard';
 import { TableroView } from './tablero/TableroView';
@@ -16,10 +17,13 @@ import { ContactosView } from './contactos/ContactosView';
 import { TemparioView } from './tempario/TemparioView';
 import { ConductoresModule } from './conductores/ConductoresModule';
 import { ConfiguracionView } from './config/ConfiguracionView';
+import { WhatsAppBandeja } from './whatsapp/WhatsAppBandeja';
 import { EncuestaOnboarding } from './onboarding/OnboardingTaller';
 import { SidePanel } from './ficha/SidePanel';
 import { RecordDrawer } from './ficha/RecordDrawer';
 import { InspeccionModal } from './ficha/InspeccionModal';
+import { useCerrarSidebarClickFuera } from './useCerrarSidebarClickFuera';
+import { setPanelNavMinimizado } from './panel-nav-prefs';
 
 const TITULOS: Record<NavId, string> = {
   general: 'General',
@@ -27,6 +31,7 @@ const TITULOS: Record<NavId, string> = {
   contactos: 'Contactos',
   tempario: 'Tempario',
   conductores: 'Conductores',
+  whatsapp: 'WhatsApp',
   config: 'Configuración',
 };
 
@@ -42,17 +47,61 @@ const SUBTITULOS: Record<string, string> = {
   empresa: 'Empresa',
   sucursales: 'Sucursales',
   recepcion: 'Recepción',
+  whatsapp: 'WhatsApp',
 };
 
-function Shell() {
+/** Subsección alcanzable por pestaña o vista raíz del módulo: sin flecha atrás en cabecera. */
+const SUBS_DIRECTOS_MODULO: Partial<Record<NavId, readonly string[]>> = {
+  tablero: ['tareas', 'traslados', 'campanas'],
+  config: ['perfil', 'aprender', 'empresa', 'sucursales', 'recepcion', 'whatsapp'],
+  contactos: ['clientes'],
+  conductores: ['conductores'],
+};
+
+function subDirectoDelModulo(nav: NavId, sub: string): boolean {
+  return SUBS_DIRECTOS_MODULO[nav]?.includes(sub) ?? false;
+}
+
+function migasMuestranFlecha(nav: NavId, sub: string): boolean {
+  if (subDirectoDelModulo(nav, sub)) return false;
+  if (nav === 'conductores' && sub === 'agendar') return false;
+  return true;
+}
+
+function Shell({ navMinimizadoInicial }: { navMinimizadoInicial: boolean }) {
   const p = usePanel();
-  const [minimizado, setMinimizado] = useState(false);
+  const [minimizado, setMinimizado] = useState(navMinimizadoInicial);
   const [tooltip, setTooltip] = useState<{ label: string; y: number } | null>(null);
   const [agendarPeticion, setAgendarPeticion] = useState(0);
   const [servicioPeticion, setServicioPeticion] = useState(0);
+  const esBandeja = p.nav === 'whatsapp';
+  const redirectWhatsappVisto = useRef(false);
+
+  useEffect(() => {
+    if (redirectWhatsappVisto.current) return;
+    const q = new URLSearchParams(window.location.search);
+    const wa = q.get('whatsapp');
+    if (!wa) return;
+    redirectWhatsappVisto.current = true;
+    if (wa === 'ok') {
+      p.irA('config', 'whatsapp');
+      p.toast('WhatsApp Business conectado.', 'positive');
+    } else if (wa === 'error') {
+      p.irA('config', 'whatsapp');
+      p.toast('No se pudo conectar WhatsApp. Vuelve a intentarlo.', 'alert');
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete('whatsapp');
+    const qs = url.searchParams.toString();
+    window.history.replaceState({}, '', url.pathname + (qs ? `?${qs}` : '') + url.hash);
+  }, [p]);
 
   const hayMigas = p.sub !== p.nav && !!SUBTITULOS[p.sub];
+  const migasConFlecha = hayMigas && migasMuestranFlecha(p.nav, p.sub);
   const trailDeber = p.deberActivo;
+  const sidebarEnTareasDeber = p.nav === 'tablero' && p.sub === 'tareas' && !!p.deberActivo;
+  const sidebarGlobalVisible = !!(p.seleccion && p.modoFicha === 'panel' && !sidebarEnTareasDeber);
+  useCerrarSidebarClickFuera(sidebarGlobalVisible);
 
   return (
     <div className={styles.root}>
@@ -63,15 +112,6 @@ function Shell() {
           fontSize: 12, fontWeight: 600, boxShadow: '0 8px 24px rgba(0,0,0,.2)',
         }}>
           Cargando datos del taller…
-        </div>
-      ) : null}
-      {p.fuenteDatos === 'supabase' && !p.cargandoDatos ? (
-        <div style={{
-          position: 'fixed', top: 12, right: 12, zIndex: 200,
-          padding: '6px 10px', borderRadius: 8, background: '#ecfdf5', color: '#065f46',
-          fontSize: 11, fontWeight: 700, border: '1px solid #a7f3d0',
-        }}>
-          Datos · Supabase
         </div>
       ) : null}
       <div
@@ -92,7 +132,13 @@ function Shell() {
         />
         <button
           type="button"
-          onClick={() => setMinimizado((m) => !m)}
+          onClick={() => {
+            setMinimizado((m) => {
+              const next = !m;
+              setPanelNavMinimizado(next);
+              return next;
+            });
+          }}
           title={minimizado ? 'Expandir menú' : 'Contraer menú'}
           aria-label={minimizado ? 'Expandir menú' : 'Contraer menú'}
           style={{
@@ -149,18 +195,26 @@ function Shell() {
               </div>
             ) : hayMigas ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 2 }}>
-                <button
-                  type="button"
-                  onClick={() => p.irA(p.nav)}
-                  aria-label="Volver atrás"
-                  className={styles.iconBtn}
-                  style={{ width: 22, height: 22, border: '1px solid var(--mecanu-border)', borderRadius: 5 }}
-                >
-                  <Icon name="arrow_back" size="sm" />
-                </button>
-                <button type="button" className={styles.linkBtn} style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }} onClick={() => p.irA(p.nav)}>
-                  {TITULOS[p.nav]}
-                </button>
+                {migasConFlecha ? (
+                  <button
+                    type="button"
+                    onClick={() => p.irA(p.nav)}
+                    aria-label="Volver atrás"
+                    className={styles.iconBtn}
+                    style={{ width: 22, height: 22, border: '1px solid var(--mecanu-border)', borderRadius: 5 }}
+                  >
+                    <Icon name="arrow_back" size="sm" />
+                  </button>
+                ) : null}
+                {migasConFlecha ? (
+                  <button type="button" className={styles.linkBtn} style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }} onClick={() => p.irA(p.nav)}>
+                    {TITULOS[p.nav]}
+                  </button>
+                ) : (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--mecanu-neutral-300)' }}>
+                    {TITULOS[p.nav]}
+                  </span>
+                )}
                 <span aria-hidden style={{ fontSize: 11, color: 'var(--mecanu-neutral-200)' }}>/</span>
               </div>
             ) : (
@@ -184,12 +238,12 @@ function Shell() {
           <Avatar name="Rubén Ortega" size={40} />
         </header>
 
-        <div style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex', gap: 12, overflow: 'hidden' }}>
           <div
             className={styles.dense}
             style={{
               flex: 1, minWidth: 0, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column',
-              padding: '14px 24px 16px', background: 'var(--mecanu-neutral-0)', position: 'relative',
+              padding: esBandeja ? 0 : '14px 24px 16px', background: 'var(--mecanu-neutral-0)', position: 'relative',
             }}
           >
             {p.nav === 'general' ? <GeneralDashboard /> : null}
@@ -197,10 +251,18 @@ function Shell() {
             {p.nav === 'contactos' ? <ContactosView /> : null}
             {p.nav === 'tempario' ? <TemparioView servicioPeticion={servicioPeticion} /> : null}
             {p.nav === 'conductores' ? <ConductoresModule /> : null}
+            {p.nav === 'whatsapp' ? <WhatsAppBandeja /> : null}
             {p.nav === 'config' ? <ConfiguracionView /> : null}
           </div>
 
-          {p.seleccion && p.modoFicha === 'panel' ? <SidePanel /> : null}
+          {sidebarGlobalVisible ? (
+            <div
+              className={`${styles.sidebarCompactOverlay} ${styles.sidebarCompactOverlayDock}`}
+              data-sidebar-compact
+            >
+              <SidePanel />
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -217,10 +279,16 @@ function Shell() {
   );
 }
 
-export function PanelApp() {
+export function PanelApp({
+  inicial,
+  navMinimizadoInicial = false,
+}: {
+  inicial?: PanelUrlEstado | null;
+  navMinimizadoInicial?: boolean;
+}) {
   return (
-    <PanelProvider>
-      <Shell />
+    <PanelProvider inicial={inicial}>
+      <Shell navMinimizadoInicial={navMinimizadoInicial} />
     </PanelProvider>
   );
 }

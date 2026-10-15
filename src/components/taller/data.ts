@@ -5,6 +5,9 @@
 
 import * as M from '@/lib/mecanu/mecanu-rutas';
 import * as W from '@/lib/mecanu/mecanu-whatsapp';
+import type { EstadoRuta, ParadaSubtipo } from '@/lib/mecanu/types';
+
+export type { EstadoRuta };
 
 /* ------------------------- Entidades ------------------------- */
 
@@ -77,7 +80,7 @@ export interface Parada {
   rutaId: string;
   orden: number;
   tipo: 'cliente' | 'proveedor';
-  subtipo: string | null;
+  subtipo: ParadaSubtipo | null;
   etiqueta: string;
   direccion: string | null;
   localidad: string | null;
@@ -138,8 +141,6 @@ export interface Presupuesto {
   actualizado: Date | null;
   total: number;
 }
-
-export type EstadoRuta = 'prospectos' | 'agendado' | 'en_ruta' | 'en_taller' | 'completado' | 'cancelado';
 
 export interface Ruta {
   id: string;
@@ -440,6 +441,7 @@ export interface ValoresMensaje {
   matricula: string;
   importe: string;
   fecha: string;
+  link: string;
   _total: number;
   _items: CampanaItem[];
 }
@@ -467,9 +469,11 @@ export const RESPUESTAS_DEMO = w.RESPUESTAS_DEMO as string[];
 export const ERRORES = w.ERRORES as Record<number, { titulo: string; detalle: string }>;
 export const ESTADO_MENSAJE = w.ESTADO_MENSAJE as Record<string, { icono: string; color: string; label: string }>;
 export const valoresOportunidad = w.valoresOportunidad as (
-  o: Campana, seleccion: string[], overrides?: { nombre?: string; fecha?: string },
+  o: Campana, seleccion: string[], overrides?: { nombre?: string; fecha?: string; link?: string },
 ) => ValoresMensaje;
 export const renderMensaje = w.renderMensaje as (valores: ValoresMensaje) => string;
+export const renderMensajeCotizacion = w.renderMensajeCotizacion as (valores: ValoresMensaje) => string;
+export const asegurarLinkTokenRuta = m.asegurarLinkTokenRuta as (rutaId: string) => string | null;
 export const detalleHallazgo = w.detalleHallazgo as (o: Campana, it: CampanaItem) => {
   titulo: string;
   tags: string[];
@@ -477,7 +481,13 @@ export const detalleHallazgo = w.detalleHallazgo as (o: Campana, it: CampanaItem
   fotos: { url: string; label: string }[];
   detalles: { label: string; valor: string; servicioId?: string }[];
 };
-export const payloadRecordatorio = w.payloadRecordatorio as (to: string, valores: ValoresMensaje) => unknown;
+export const enviar = w.enviar as (
+  payload: unknown,
+  opts?: { forzarError?: number; onEstado?: (id: string, estado: string) => void },
+) => Promise<{ messages: { id: string }[] }>;
+export const payloadRecordatorio = w.payloadRecordatorio as (
+  to: string, valores: ValoresMensaje, cuerpo?: string,
+) => unknown;
 export const payloadSeguimiento = w.payloadSeguimiento as (to: string, valores: ValoresMensaje, cuerpo: string) => unknown;
 export const payloadTexto = w.payloadTexto as (to: string, body: string) => unknown;
 export const estadoVentana = w.estadoVentana as (

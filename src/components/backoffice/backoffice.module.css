@@ -166,7 +166,7 @@
 }
 
 .kebabBtn:hover {
-  background: var(--mecanu-neutral-50, #f0f0f0);
+  background: var(--mecanu-neutral-50);
 }
 
 .kebabMenu {

@@ -7,13 +7,16 @@ exhaustiva en vez de solo cómoda. Ordenada de más a menos urgente/bloqueante.
 ## Bloqueantes para un backend real
 
 ### 1. Autenticación
-**Conductor:** magic link solo (`/entrar` → `/conductor`).
+**Conductor:** magic link solo, enviado por correo (el taller). No hay formulario web para pedirlo ni reenviarlo. `/entrar` solo explica eso; el enlace abre `/conductor`.
 **Panel:** email+contraseña, registro con verificación de email, recuperación,
 Google OAuth, y teléfono/SMS si Phone provider está activo en Supabase.
-Rutas: `/panel/entrar`, `/panel/registro`, `/panel/recuperar`,
-`/panel/nueva-contrasena`. Botón «Entrar» en la landing → `/panel/entrar`.
+El acceso público es **https://negocio.mecanu.com/** (raíz = login).
+Registro `/registro`, recuperar `/recuperar`. El panel queda en
+`negocio.mecanu.com/panel`. La landing (mecanu.com) ya no tiene «Entrar»;
+`mecanu.com/panel/*` redirige al subdominio. En local sigue `/panel/entrar`.
 `npm run demo` sigue sin exigir login. Con keys Supabase y sin demo, `/panel`
 exige sesión y crea taller+perfil (`ensurePerfilPanel`).
+En Supabase → Redirect URLs: `https://negocio.mecanu.com/auth/callback`.
 **Backoffice:** pendiente.
 **Dashboard:** activar «Allow new users to sign up» (panel); Google provider;
 Redirect URLs con `/auth/callback`. Phone opcional (Twilio).
@@ -40,13 +43,12 @@ completamente distinta. Hay que decidir: ¿es un booleano explícito
 (agendado + sin conductor + dentro de X horas)? Afecta directamente a R8 (solape al
 tomar un disponible) y a la métrica "Disponibles" del header del conductor.
 
-### 5. `registrarHallazgoCampana` no crea campaña para testigos ámbar (sí para ITV)
-`testigo: "itv"` (pegatina ausente, vencida o <60 días) **sí crea** una oferta
-`SV-04` (revisión pre-ITV) en el mock — ver `campanaDesdeItvCheckin` y
-`src/lib/mecanu/oferta-itv.ts`. El resto de testigos ámbar del check-in sigue
-devolviendo `null`: falta un catálogo testigo→servicio de tempario resuelto en
-tiempo de ejecución (`CATALOGO_DETECCION` mapea *tipos* de oportunidad, no los
-8 testigos del conductor).
+### 5. ~~`registrarHallazgoCampana` no crea campaña para testigos ámbar~~ (cerrado en mock)
+Mock + conductor: testigos ámbar, ítems/ruedas nivel ≥ 2 e ITV crean oferta vía
+`oferta-hallazgo-checkin.ts` + `campanaDesdeHallazgoCheckin` (acumulados en una
+campaña por ruta). Tempario: carrocería SV-12 (150 € IVA), cristales SV-13 (120 €),
+limpieza SV-14 (39 €). Cotización al cliente: mensaje + `/s/{token}?vista=presupuesto`.
+Supabase `registrarHallazgoCampana` sigue en `null` — ver TODO-LIST.
 
 ## Casos borde del modelo sin cubrir explícitamente
 
@@ -113,14 +115,27 @@ en cada redeploy, no se comparte entre instancias serverless. Para Vercel
 producción con más de una instancia sirviendo tráfico a la vez.
 
 ### 16. Notificaciones (WhatsApp real, push al conductor)
-`readme.md` del design system y `HANDOFF.md` §8 son explícitos: "fuera del scope
-de este design system, lo gestiona otra capa". `mecanu-whatsapp.ts` es una
-simulación completa de la API de WhatsApp Cloud (payloads, ventana de 24h, estados
-de entrega) pero `enviar()` nunca llama a Meta de verdad. Conectar la API real es
-straightforward (el propio código lo dice: "solo se sustituye `enviar()` por el
-POST a /messages") pero requiere credenciales de WABA que no existen todavía.
-Notificaciones push al móvil del conductor (para solicitudes resueltas, nuevos
-traslados) no están ni simuladas.
+
+`mecanu-whatsapp.ts` sigue siendo la simulación de campañas (plantillas / opt-in).
+
+**Panel — WhatsApp personal embebido (ago 2026):** QR y chats **dentro** de
+`/panel`. [Baileys](https://github.com/WhiskeySockets/Baileys) en modo **ligero**:
+solo 1:1 (sin grupos), sin historial masivo, mensajes desde la fecha de
+integración, contactos primero (`npm run wa:bridge`). Ciclo de vida del cliente
+(`cliente-ciclo-vida.ts` + columna `clientes.ciclo_vida` en `0013`). Bandeja CRM
+con buscador, etiquetas, sidebar y respuestas rápidas. **No** Kapso.
+Riesgo: protocolo no oficial.
+
+Kapso Inbox (PR #30) queda aparcado: era Business/Cloud API, otro camino.
+
+Push al conductor: sigue sin simular ni implementar.
+
+### 16b. Panel: kanban en vivo cuando el conductor mueve el estado
+Hecho en código: Realtime sobre `public.rutas` (migraciones `0016`/`0017`) +
+`usePanelKanbanRealtime` (debounce 400 ms → `GET /api/v1/panel/snapshot` sin
+cache). Poll de 2,5 s de respaldo si el websocket no entrega el WAL. **Ops:**
+aplicar `0016` y `0017` en mecanu-dev. No usar `filter: taller_id=eq.…` con
+replica identity default (el `old` del UPDATE no trae `taller_id`).
 
 ## Ambigüedades menores de tipo/forma
 

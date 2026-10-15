@@ -1,4 +1,5 @@
 import { deberesDelTaller } from '@/lib/mecanu/deberes-taller';
+import type { AgendaLinkCampana } from '@/lib/mecanu/agenda-link-campana';
 import { vehiculo, type Campana, type CanalWa, type RutaVista } from './data';
 
 export function deberesDesdePanel(
@@ -6,6 +7,7 @@ export function deberesDesdePanel(
   campanas: Campana[],
   ahora: Date,
   canales: Record<string, CanalWa> = {},
+  agendaLinks: Record<string, AgendaLinkCampana> = {},
 ) {
   return deberesDelTaller({
     rutas: rutas.map((r) => ({
@@ -24,6 +26,7 @@ export function deberesDesdePanel(
       vehiculoId: c.vehiculoId,
       rutaGeneradaId: c.rutaGeneradaId,
       mensajes: (canales[c.id]?.mensajes ?? []).map((m) => ({ dir: m.dir, texto: m.texto })),
+      agendaLink: agendaLinks[c.id] ?? null,
     })),
     ahora,
     labelRuta: (r) => vehiculo(r.vehiculoId)?.matricula ?? r.matriculaLead ?? 'el traslado',

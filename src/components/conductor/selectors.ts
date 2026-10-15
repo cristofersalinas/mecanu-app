@@ -12,7 +12,9 @@ import {
   type EntradaTurno,
 } from './constants';
 import * as D from './data';
+import { vivo } from './vivo';
 import type { AppState, Accion, Job, Subestado, Ventana } from './types';
+import { indiceStepperEnRuta } from '@/lib/mecanu/etiqueta-en-ruta';
 
 /* --------- tiempo --------- */
 
@@ -88,7 +90,17 @@ export const activoId = (s: AppState): string | null =>
 /** R2: sin ventana comprometida no hay hueco en la jornada; el traslado existe aparte. */
 export const winDe = (tid: string): Ventana | null => {
   const cfg = cfgDe(tid);
-  if (cfg && cfg.off === null) return null;
+  if (cfg && 'off' in cfg && cfg.off === null) return null;
+
+  /*
+   * Snapshot Supabase: la ventana del tramo (con fecha) es la verdad.
+   * El `off` del turno es un truco del mock para anclar franjas a «ahora»; el
+   * API lo recalculaba solo con HH:MM del día en curso e ignoraba el día →
+   * el conductor marcaba «Atrasado» aunque la ventana fuera mañana.
+   */
+  const vivoWin = vivo.tramo(tid)?.ventana ?? null;
+  if (vivoWin) return vivoWin;
+
   if (cfg?.off) {
     const a = ancla().getTime();
     const ini = new Date(a + cfg.off[0] * 60000);
@@ -273,18 +285,7 @@ export const accionDe = (job: Job): Accion | null => {
   }
 };
 
-export const pasoTimeline = (job: Job): number => {
-  if (job.hecho) return 4;
-  const mapa: Record<Subestado, number> = {
-    agendado: 0,
-    en_camino_origen: 0,
-    en_origen: 0,
-    en_transito: 1,
-    en_destino: 2,
-    completado: 4,
-  };
-  return mapa[job.sub];
-};
+export const pasoTimeline = (job: Job): number => indiceStepperEnRuta(job.sub, job.hecho);
 
 /** Bolsa del taller: lo que nadie ha tomado todavía. */
 export const poolJobs = (s: AppState): Job[] => {

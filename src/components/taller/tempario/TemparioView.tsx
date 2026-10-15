@@ -7,6 +7,7 @@ import { DataTable, DataTableColumn } from '@/components/ds/DataTable';
 import { ErrorState } from '@/components/ds/ErrorState';
 import { CATEGORIAS_SERVICIO, IVA, SERVICIOS, Servicio, fmtDinero, fmtHoras } from '../data';
 import { usePanel } from '../store';
+import { usePanelUrlFiltros } from '../usePanelUrlFiltros';
 import { Dialog, Input, SearchInput, Select, TableSkeleton } from '../ui/Primitives';
 import { useCarga } from '../ui/useCarga';
 import styles from '../panel.module.css';
@@ -29,9 +30,12 @@ const VACIO: ServicioNuevo = {
 
 export function TemparioView({ servicioPeticion }: { servicioPeticion: number }) {
   const p = usePanel();
+  const { filtros, setFiltro } = usePanelUrlFiltros();
   const cargando = useCarga();
-  const [categoria, setCategoria] = useState<string>('Todas');
-  const [busqueda, setBusqueda] = useState('');
+  const categoria = filtros.categoria ?? 'Todas';
+  const setCategoria = (v: string) => setFiltro('categoria', v === 'Todas' ? undefined : v);
+  const busqueda = filtros.q ?? '';
+  const setBusqueda = (v: string) => setFiltro('q', v || undefined);
   const [nuevos, setNuevos] = useState<Servicio[]>([]);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState<ServicioNuevo>(VACIO);

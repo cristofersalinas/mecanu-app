@@ -3,6 +3,7 @@ import {
   clearIdempotencyMemoryForTests,
   getIdempotentResponse,
   getIdempotentResponseAsync,
+  nuevaClaveIdempotencia,
   saveIdempotentResponse,
   saveIdempotentResponseAsync,
 } from './idempotency';
@@ -15,5 +16,12 @@ describe('idempotency memoria', () => {
     await saveIdempotentResponseAsync('k2', 422, { error: 'x' });
     const cached = await getIdempotentResponseAsync('k2');
     expect(cached?.status).toBe(422);
+  });
+
+  it('nuevaClaveIdempotencia no se repite (el seed puede rehacer el mismo traslado)', () => {
+    const a = nuevaClaveIdempotencia('subestado-TS-1-en_camino_origen');
+    const b = nuevaClaveIdempotencia('subestado-TS-1-en_camino_origen');
+    expect(a).not.toBe(b);
+    expect(a.startsWith('subestado-TS-1-en_camino_origen:')).toBe(true);
   });
 });

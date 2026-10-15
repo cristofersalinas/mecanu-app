@@ -1,7 +1,8 @@
 # How we ship changes
 
 Two places matter: **your machine** and **production** (`mecanu.com`).
-Local: `npm run demo` (simulate) or `npm run dev`. `npm run entorno` prints the world.
+Local: `npm run demo` (port 3001, simulate) or `npm run dev` (port 3000, with login).
+`npm run stop` frees both ports. `npm run entorno` prints the world.
 Detail: [`docs/ENTORNOS.md`](./ENTORNOS.md).
 
 ## Branches (simple)

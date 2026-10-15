@@ -5,6 +5,7 @@
  * con fecha → AGENDADO; sin fecha → PROSPECTOS. Total incluye línea de traslado.
  */
 import { localizarDireccion, TALLER } from './mecanu-data';
+import { coordsDesdeCatalogo } from './geocode';
 import { etiquetaParada, ROLES_TRAMO, SERVICIO_TRASLADO_ID } from './mecanu-pipeline';
 import type {
   Campana,
@@ -108,6 +109,8 @@ export function crearRutaDesdeCampana(
 
   const locCli = localizarDireccion(dirCli);
   const locTall = localizarDireccion(dirTaller);
+  const coordsCli = coordsDesdeCatalogo(dirCli);
+  const coordsTall = coordsDesdeCatalogo(dirTaller);
 
   const paradaCasa: Parada = {
     id: `PD-${num}-1`,
@@ -119,6 +122,8 @@ export function crearRutaDesdeCampana(
     direccion: dirCli,
     localidad: locCli.localidad,
     sublocalidad: locCli.sublocalidad,
+    lat: coordsCli?.lat ?? null,
+    lng: coordsCli?.lng ?? null,
     servicios: [],
     llegadaReal: null,
     salidaReal: null,
@@ -134,6 +139,8 @@ export function crearRutaDesdeCampana(
     direccion: dirTaller,
     localidad: locTall.localidad,
     sublocalidad: locTall.sublocalidad,
+    lat: coordsTall?.lat ?? null,
+    lng: coordsTall?.lng ?? null,
     servicios: [{ descripcion: input.tipoServicio || campana.falla, presupuestoId: `PR-${rutaId}` }],
     llegadaReal: null,
     salidaReal: null,
@@ -162,6 +169,10 @@ export function crearRutaDesdeCampana(
     importe: importeIda,
     reprogramaciones: 0,
     comunicaAlCliente: true,
+    posLat: null,
+    posLng: null,
+    posPrecisionM: null,
+    posActualizadaEn: null,
   };
 
   let lineas = normalizarLineas(input, campana);

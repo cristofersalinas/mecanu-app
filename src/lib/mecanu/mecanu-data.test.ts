@@ -54,8 +54,8 @@ describe('Nombre corto: primer nombre + apellido, nunca el nombre completo en un
     expect(nombreCorto('Ana López')).toBe('Ana López');
   });
 
-  it('una empresa se muestra tal cual, nunca se abrevia', () => {
-    expect(nombreCorto('Jardines Verdes S.L.')).toBe('Jardines Verdes S.L.');
+  it('una persona con tres tokens añade la inicial del tercero', () => {
+    expect(nombreCorto('Diego Verde Jiménez')).toBe('Diego Verde J.');
   });
 
   it('nombreCliente1 da nombre + inicial del apellido, para el espacio más justo de una card', () => {
@@ -151,7 +151,17 @@ describe('El traslado es un ítem más del tempario del taller, no un concepto a
 });
 
 describe('Volumen de datos sembrados coincide con lo documentado en CLAUDE.md', () => {
-  it('14 clientes', () => expect(CLIENTES).toHaveLength(14));
-  it('18 vehículos', () => expect(VEHICULOS).toHaveLength(18));
-  it('6 conductores', () => expect(CONDUCTORES).toHaveLength(6));
+  it('clientes particulares, incl. demo WA', () => {
+    expect(CLIENTES).toHaveLength(23);
+    expect(CLIENTES.every((c) => c.tipo === 'Particular')).toBe(true);
+    expect(CLIENTES.some((c) => c.id === 'c15' && c.telefono.includes('4508'))).toBe(true);
+  });
+  it('30 vehículos (uno por card, salvo pares de campaña)', () => expect(VEHICULOS).toHaveLength(30));
+  it('8 conductores cubren onboarding (docs / supervisión / activo)', () => {
+    expect(CONDUCTORES).toHaveLength(8);
+    const procesos = new Set(CONDUCTORES.map((d) => d.proceso));
+    expect(procesos.has('documentos_pendientes')).toBe(true);
+    expect(procesos.has('en_supervision')).toBe(true);
+    expect(procesos.has('activo')).toBe(true);
+  });
 });

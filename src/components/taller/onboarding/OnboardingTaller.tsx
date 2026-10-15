@@ -13,19 +13,36 @@ import { usePanel } from '../store';
 import { Dialog } from '../ui/Primitives';
 import css from './onboarding.module.css';
 
+/**
+ * React exige que getSnapshot devuelva la misma referencia si el dato no
+ * cambió. Parsear localStorage en cada llamada crea un objeto nuevo y entra
+ * en bucle (Next lo acaba pintando como error 500).
+ */
+let snapshot: OnboardingTaller = ONBOARDING_TALLER_INICIAL;
+let snapshotRaw: string | null | undefined;
+
 function leer(): OnboardingTaller {
   if (typeof window === 'undefined') return ONBOARDING_TALLER_INICIAL;
   try {
     const raw = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
-    if (!raw) return ONBOARDING_TALLER_INICIAL;
-    return { ...ONBOARDING_TALLER_INICIAL, ...JSON.parse(raw) as Partial<OnboardingTaller> };
+    if (raw === snapshotRaw) return snapshot;
+    snapshotRaw = raw;
+    snapshot = raw
+      ? { ...ONBOARDING_TALLER_INICIAL, ...JSON.parse(raw) as Partial<OnboardingTaller> }
+      : ONBOARDING_TALLER_INICIAL;
+    return snapshot;
   } catch {
-    return ONBOARDING_TALLER_INICIAL;
+    snapshotRaw = null;
+    snapshot = ONBOARDING_TALLER_INICIAL;
+    return snapshot;
   }
 }
 
 function guardar(o: OnboardingTaller) {
-  window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(o));
+  const raw = JSON.stringify(o);
+  window.localStorage.setItem(ONBOARDING_STORAGE_KEY, raw);
+  snapshot = o;
+  snapshotRaw = raw;
 }
 
 const listeners = new Set<() => void>();
@@ -41,13 +58,17 @@ function bumpOnboarding() {
   for (const l of listeners) l();
 }
 
+function snapshotServidor() {
+  return ONBOARDING_TALLER_INICIAL;
+}
+
+const suscribirNada = () => () => {};
+const clienteListo = () => true;
+const servidorNoListo = () => false;
+
 export function EncuestaOnboarding({ onAbrirAprender }: { onAbrirAprender: () => void }) {
-  const o = useSyncExternalStore(suscribirOnboarding, leer, () => ONBOARDING_TALLER_INICIAL);
-  const listo = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
+  const o = useSyncExternalStore(suscribirOnboarding, leer, snapshotServidor);
+  const listo = useSyncExternalStore(suscribirNada, clienteListo, servidorNoListo);
 
   const tipo = listo ? encuestaPendiente(o) : null;
   if (!tipo) return null;
@@ -83,7 +104,7 @@ export function EncuestaOnboarding({ onAbrirAprender }: { onAbrirAprender: () =>
 
 export function TutorialesView() {
   const p = usePanel();
-  const o = useSyncExternalStore(suscribirOnboarding, leer, () => ONBOARDING_TALLER_INICIAL);
+  const o = useSyncExternalStore(suscribirOnboarding, leer, snapshotServidor);
   const [leccion, setLeccion] = useState<IdLeccionTaller | null>('agendar');
   const [paso, setPaso] = useState(0);
 

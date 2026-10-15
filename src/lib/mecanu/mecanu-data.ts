@@ -68,17 +68,15 @@ export function maskDireccion(dir: string | null | undefined): string {
 /** Vista: prioriza primer nombre + primer apellido + inicial del segundo. La BD guarda el nombre completo. */
 export function nombreCorto(nombre: string | null | undefined): string {
   if (!nombre) return '—';
-  if (/\b(S\.?\s?L\.?U?|S\.?\s?A\.?|C\.?\s?B\.?)\b/i.test(nombre)) return nombre;
   const p = nombre.trim().split(/\s+/);
   if (p.length <= 2) return nombre;
   if (p.length === 3) return `${p[0]} ${p[1]} ${p[2][0]}.`;
   return `${p[0]} ${p[p.length - 2]} ${p[p.length - 1][0]}.`;
 }
 
-/** Vista card: primer nombre + inicial del primer apellido (p.ej. "Antonio G."). Empresas → nombre tal cual. */
+/** Vista card: primer nombre + inicial del primer apellido (p.ej. "Antonio G."). */
 export function nombreCliente1(nombre: string | null | undefined): string {
   if (!nombre) return '—';
-  if (/\b(S\.?\s?L\.?U?|S\.?\s?A\.?|C\.?\s?B\.?)\b/i.test(nombre)) return nombre;
   const p = nombre.trim().split(/\s+/);
   if (p.length <= 1) return p[0] || '—';
   const apellido = p.length === 3 ? p[1] : p[p.length - 2];
@@ -91,6 +89,9 @@ const BARRIOS_BCN: Record<string, string> = {
   '08022': 'El Putxet', '08023': 'La Salut', '08034': 'Pedralbes',
   '08028': 'Les Corts', '08029': 'Les Corts', '08038': 'La Marina',
   '08007': 'Eixample', '08008': 'Eixample', '08036': 'Eixample',
+  '08009': 'Fort Pienc', '08010': 'Eixample', '08012': 'Gràcia',
+  '08013': 'Sagrada Família', '08014': 'Sants', '08024': 'Gràcia',
+  '08025': 'Camp de l\'Arpa',
 };
 
 /** Sublocalidad (barrio) + localidad (ciudad) a partir de una dirección. Lo desconocido queda en null. */
@@ -119,7 +120,7 @@ export const CLIENTES: Cliente[] = [
   { id: 'c3', nombre: 'Cristina Navarro Alba', tipo: 'Particular', telefono: '655 333 444', email: 'cnavarro@correo.es', direccion: 'Carrer de Balmes 340, 5ºC, 08006 Barcelona', desde: at(9, 0, -95) },
   { id: 'c4', nombre: 'Miguel Ángel Torres Vidal', tipo: 'Particular', telefono: '655 444 555', email: 'matorres@correo.es', direccion: 'Avinguda de Pedralbes 25, 08034 Barcelona', desde: at(9, 0, -62) },
   { id: 'c5', nombre: 'Beatriz Campos Iglesias', tipo: 'Particular', telefono: '655 555 666', email: 'bcampos@correo.es', direccion: 'Passeig de la Bonanova 42, 08017 Barcelona', desde: at(9, 0, -41) },
-  { id: 'c6', nombre: 'Jardines Verdes S.L.', tipo: 'Empresa', telefono: '655 666 777', email: 'flota@jardinesverdes.es', direccion: 'Carrer del Capità Arenas 18, 08034 Barcelona', desde: at(9, 0, -33) },
+  { id: 'c6', nombre: 'Diego Verde Jiménez', tipo: 'Particular', telefono: '655 666 777', email: 'dverde@correo.es', direccion: 'Carrer del Capità Arenas 18, 08034 Barcelona', desde: at(9, 0, -33) },
   { id: 'c7', nombre: 'Juanita García Moreno', tipo: 'Particular', telefono: '655 777 888', email: 'jgarcia@correo.es', direccion: 'Carrer de Sarrià 95, 1ºA, 08017 Barcelona', desde: at(9, 0, -28) },
   { id: 'c8', nombre: 'Roberto Ruiz Campos', tipo: 'Particular', telefono: '655 888 999', email: 'rruiz@correo.es', direccion: 'Carrer de Muntaner 340, 3ºB, 08021 Barcelona', desde: at(9, 0, -14) },
   { id: 'c9', nombre: 'Laura Giménez Soto', tipo: 'Particular', telefono: '655 999 000', email: 'lgimenez@correo.es', direccion: 'Carrer de Calvet 30, 08021 Barcelona', desde: at(9, 0, -6) },
@@ -128,6 +129,16 @@ export const CLIENTES: Cliente[] = [
   { id: 'c12', nombre: 'Elena Sáez Domínguez', tipo: 'Particular', telefono: '655 300 333', email: 'esaez@correo.es', direccion: 'Carrer de Mandri 12, 08022 Barcelona', desde: at(9, 0, -75) },
   { id: 'c13', nombre: 'Pablo Herrera Nieto', tipo: 'Particular', telefono: '655 400 444', email: 'pherrera@correo.es', direccion: 'Carrer de Ganduxer 88, 08021 Barcelona', desde: at(9, 0, -50) },
   { id: 'c14', nombre: 'Sofía Marín Delgado', tipo: 'Particular', telefono: '655 500 555', email: 'smarin@correo.es', direccion: 'Carrer Major de Sarrià 78, 08017 Barcelona', desde: at(9, 0, -3) },
+  /* Demo WhatsApp personal: número real del fundador para probar la bandeja 1:1. */
+  { id: 'c15', nombre: 'Cristofer', tipo: 'Particular', telefono: '+56 9 4508 8077', email: '', direccion: 'Carrer de Provença 210, 2ºA, 08036 Barcelona', desde: at(9, 0, -5), cicloVida: 'nuevo' },
+  { id: 'c16', nombre: 'Andreu Solé Ribas', tipo: 'Particular', telefono: '655 610 111', email: 'asole@correo.es', direccion: 'Carrer de Verdi 112, 3ºB, 08012 Barcelona', desde: at(9, 0, -22) },
+  { id: 'c17', nombre: 'Marta Quílez Aranda', tipo: 'Particular', telefono: '655 620 222', email: 'mquilez@correo.es', direccion: 'Carrer de Sicília 208, 4ºA, 08013 Barcelona', desde: at(9, 0, -18) },
+  { id: 'c18', nombre: 'Íñigo Larrañaga Paz', tipo: 'Particular', telefono: '655 630 333', email: 'ilarranaga@correo.es', direccion: 'Carrer de la Diputació 321, 2ºC, 08009 Barcelona', desde: at(9, 0, -40) },
+  { id: 'c19', nombre: 'Raquel Pujol Serra', tipo: 'Particular', telefono: '655 640 444', email: 'rpujol@correo.es', direccion: 'Travessera de Gràcia 340, 1ºD, 08025 Barcelona', desde: at(9, 0, -11) },
+  { id: 'c20', nombre: 'Héctor Blanco Riera', tipo: 'Particular', telefono: '655 650 555', email: 'hblanco@correo.es', direccion: 'Carrer d\'Enric Granados 78, 5ºA, 08008 Barcelona', desde: at(9, 0, -8) },
+  { id: 'c21', nombre: 'Ainhoa Cano Valls', tipo: 'Particular', telefono: '655 660 666', email: 'acano@correo.es', direccion: 'Carrer de l\'Or 14, 2ºA, 08024 Barcelona', desde: at(9, 0, -16) },
+  { id: 'c22', nombre: 'Gerard Muñoz Alcaraz', tipo: 'Particular', telefono: '655 670 777', email: 'gmunoz@correo.es', direccion: 'Carrer de Sants 45, 3ºB, 08014 Barcelona', desde: at(9, 0, -9) },
+  { id: 'c23', nombre: 'Núria Beltrán Cos', tipo: 'Particular', telefono: '655 680 888', email: 'nbeltran@correo.es', direccion: 'Passeig de Sant Joan 88, 4ºC, 08010 Barcelona', desde: at(9, 0, -7) },
 ];
 
 /* Muchos-a-muchos: un vehículo tiene varios usuarios y un cliente puede figurar en varios vehículos. */
@@ -145,9 +156,9 @@ export const VEHICULOS: Vehiculo[] = [
   { id: 'v6', marca: 'Dacia', modelo: 'Sandero', anio: 2020, matricula: '8842 JGM', km: 41200, color: 'Blanco',
     usuarios: [ { clienteId: 'c7', relacion: 'Titular', principal: true } ] },
   { id: 'v7', marca: 'Peugeot', modelo: 'Partner', anio: 2021, matricula: '2298 QWE', km: 51300, color: 'Blanco',
-    usuarios: [ { clienteId: 'c6', relacion: 'Titular (flota)', principal: true } ] },
+    usuarios: [ { clienteId: 'c6', relacion: 'Titular', principal: true } ] },
   { id: 'v8', marca: 'Toyota', modelo: 'Corolla', anio: 2021, matricula: '6654 PLM', km: 28700, color: 'Gris',
-    usuarios: [ { clienteId: 'c6', relacion: 'Titular (flota)', principal: true }, { clienteId: 'c3', relacion: 'Conductora habitual', principal: false } ] },
+    usuarios: [ { clienteId: 'c6', relacion: 'Titular', principal: true }, { clienteId: 'c3', relacion: 'Conductora habitual', principal: false } ] },
   { id: 'v9', marca: 'Opel', modelo: 'Corsa', anio: 2017, matricula: '1145 ZXC', km: 102400, color: 'Azul marino',
     usuarios: [ { clienteId: 'c9', relacion: 'Titular', principal: true } ] },
   { id: 'v10', marca: 'Ford', modelo: 'Focus', anio: 2019, matricula: '6721 DKL', km: 74300, color: 'Gris antracita',
@@ -163,15 +174,39 @@ export const VEHICULOS: Vehiculo[] = [
   { id: 'v15', marca: 'Nissan', modelo: 'Qashqai', anio: 2020, matricula: '1183 MKD', km: 62700, color: 'Gris',
     usuarios: [ { clienteId: 'c2', relacion: 'Titular', principal: true } ] },
   { id: 'v16', marca: 'Volvo', modelo: 'V40', anio: 2019, matricula: '9924 NRT', km: 81400, color: 'Blanco',
-    usuarios: [ { clienteId: 'c6', relacion: 'Titular (flota)', principal: true } ] },
+    usuarios: [ { clienteId: 'c13', relacion: 'Titular', principal: true } ] },
   { id: 'v17', marca: 'Mazda', modelo: '3', anio: 2023, matricula: '3058 RQB', km: 8900, color: 'Azul cristal',
     usuarios: [ { clienteId: 'c14', relacion: 'Titular', principal: true } ] },
   { id: 'v18', marca: 'Škoda', modelo: 'Octavia', anio: 2020, matricula: '6612 TBS', km: 71500, color: 'Gris platino',
     usuarios: [ { clienteId: 'c12', relacion: 'Titular', principal: true }, { clienteId: 'c11', relacion: 'Conductor autorizado', principal: false } ] },
+  { id: 'v19', marca: 'Toyota', modelo: 'Yaris', anio: 2021, matricula: 'RK 4508', km: 38400, color: 'Blanco',
+    usuarios: [ { clienteId: 'c15', relacion: 'Titular', principal: true } ] },
+  { id: 'v20', marca: 'Fiat', modelo: 'Panda', anio: 2019, matricula: '3471 WXC', km: 53800, color: 'Verde',
+    usuarios: [ { clienteId: 'c8', relacion: 'Titular', principal: true } ] },
+  { id: 'v21', marca: 'Honda', modelo: 'Civic', anio: 2018, matricula: '5820 HLM', km: 91200, color: 'Gris',
+    usuarios: [ { clienteId: 'c16', relacion: 'Titular', principal: true } ] },
+  { id: 'v22', marca: 'Honda', modelo: 'Jazz', anio: 2021, matricula: '9104 VBG', km: 27400, color: 'Azul',
+    usuarios: [ { clienteId: 'c17', relacion: 'Titular', principal: true } ] },
+  { id: 'v23', marca: 'Suzuki', modelo: 'Swift', anio: 2020, matricula: '2765 CJK', km: 46100, color: 'Rojo',
+    usuarios: [ { clienteId: 'c18', relacion: 'Titular', principal: true } ] },
+  { id: 'v24', marca: 'Mini', modelo: 'Cooper', anio: 2019, matricula: '8033 QRS', km: 67300, color: 'Negro',
+    usuarios: [ { clienteId: 'c19', relacion: 'Titular', principal: true } ] },
+  { id: 'v25', marca: 'Alfa Romeo', modelo: 'Giulia', anio: 2022, matricula: '1648 TNM', km: 22100, color: 'Rojo',
+    usuarios: [ { clienteId: 'c20', relacion: 'Titular', principal: true } ] },
+  { id: 'v26', marca: 'Seat', modelo: 'Ateca', anio: 2020, matricula: '7391 FHP', km: 54800, color: 'Gris',
+    usuarios: [ { clienteId: 'c6', relacion: 'Titular', principal: true } ] },
+  { id: 'v27', marca: 'Hyundai', modelo: 'Tucson', anio: 2021, matricula: '4216 KLD', km: 38900, color: 'Blanco',
+    usuarios: [ { clienteId: 'c9', relacion: 'Titular', principal: true } ] },
+  { id: 'v28', marca: 'Lexus', modelo: 'CT', anio: 2018, matricula: '6580 MJN', km: 88400, color: 'Azul oscuro',
+    usuarios: [ { clienteId: 'c21', relacion: 'Titular', principal: true } ] },
+  { id: 'v29', marca: 'Jeep', modelo: 'Renegade', anio: 2020, matricula: '1957 PWT', km: 51200, color: 'Naranja',
+    usuarios: [ { clienteId: 'c22', relacion: 'Titular', principal: true } ] },
+  { id: 'v30', marca: 'Fiat', modelo: 'Tipo', anio: 2019, matricula: '8642 BXR', km: 62900, color: 'Blanco',
+    usuarios: [ { clienteId: 'c23', relacion: 'Titular', principal: true } ] },
 ];
 
 export const CONDUCTORES: Conductor[] = [
-  { id: 'd1', nombre: 'Javier Molina Serrano', telefono: '611 223 344', red: 'Interna', furgoneta: 'Fiat Ducato · 4521 FMD',
+  { id: 'd1', nombre: 'Javier Molina Serrano', telefono: '611 223 344', red: 'Interna', furgoneta: 'Fiat Ducato · 8831 FMD',
     proceso: 'activo', supervisados: 3, requeridos: 3, alta: at(9, 0, -420), calificacion: 4.9, valoraciones: 186,
     docs: { dni: true, carnet: true, iban: true, seguro: true },
     incidencias: [{ fecha: at(11, 0, -30), tipo: 'Retraso', gravedad: 'Bajo', detalle: 'Llegó 15 min tarde a una recogida por tráfico en la M-30.' }] },
@@ -182,14 +217,20 @@ export const CONDUCTORES: Conductor[] = [
     proceso: 'activo', supervisados: 3, requeridos: 3, alta: at(9, 0, -95), calificacion: 5.0, valoraciones: 64,
     docs: { dni: true, carnet: true, iban: true, seguro: true }, incidencias: [] },
   { id: 'd4', nombre: 'Rachid El Amrani', telefono: '644 556 677', red: 'Interna', furgoneta: 'Citroën Berlingo · 5561 REA',
-    proceso: 'activo', supervisados: 3, requeridos: 3, alta: at(9, 0, -190), calificacion: 4.6, valoraciones: 78,
+    proceso: 'en_supervision', supervisados: 1, requeridos: 3, alta: at(9, 0, -12), calificacion: 4.6, valoraciones: 8,
     docs: { dni: true, carnet: true, iban: true, seguro: true },
     incidencias: [{ fecha: at(10, 0, -10), tipo: 'Daño leve', gravedad: 'Medio', detalle: 'Rayón en el retrovisor al maniobrar en un garaje estrecho.' }] },
   { id: 'd5', nombre: 'Sergio Delgado Muñoz', telefono: '688 112 233', red: 'Interna', furgoneta: 'Ford Transit · 6620 SDM',
-    proceso: 'activo', supervisados: 3, requeridos: 3, alta: at(9, 0, -140), calificacion: 4.7, valoraciones: 53,
-    docs: { dni: true, carnet: true, iban: true, seguro: true }, incidencias: [] },
+    proceso: 'documentos_pendientes', supervisados: 0, requeridos: 3, alta: at(9, 0, -3), calificacion: 0, valoraciones: 0,
+    docs: { dni: true, carnet: true, iban: false, seguro: false }, incidencias: [] },
   { id: 'd6', nombre: 'Yolanda Prieto Cano', telefono: '699 223 344', red: 'Externo Mecanu', furgoneta: 'Flota Mecanu · bajo demanda',
     proceso: 'activo', supervisados: 3, requeridos: 3, alta: at(9, 0, -60), calificacion: 4.5, valoraciones: 31,
+    docs: { dni: true, carnet: true, iban: true, seguro: true }, incidencias: [] },
+  { id: 'd7', nombre: 'Hugo Martín Cabello', telefono: '677 334 455', red: 'Interna', furgoneta: 'Pendiente de asignar',
+    proceso: 'documentos_pendientes', supervisados: 0, requeridos: 3, alta: at(9, 0, -1), calificacion: 0, valoraciones: 0,
+    docs: { dni: false, carnet: false, iban: false, seguro: false }, incidencias: [] },
+  { id: 'd8', nombre: 'Irene Soler Vargas', telefono: '666 445 566', red: 'Externo Mecanu', furgoneta: 'Flota Mecanu · bajo demanda',
+    proceso: 'en_supervision', supervisados: 2, requeridos: 3, alta: at(9, 0, -18), calificacion: 4.9, valoraciones: 12,
     docs: { dni: true, carnet: true, iban: true, seguro: true }, incidencias: [] },
 ];
 
@@ -379,6 +420,24 @@ export const INSPECCIONES_RAW: Record<string, InspeccionRaw[]> = {
       itv: { estado: 'Al día', vence: [4, 3, 2027] },
       firmas: { cliente: FIRMA_CLIENTE, conductor: FIRMA_CONDUCTOR } },
   ],
+  /* Demo seguimiento público Cristofer: check-in de ida ya hecho. */
+  'TR-1071': [
+    { id: 'CHK-1071', tipo: 'check-in', fechaH: [9, 18], dia: 0, inspector: 'd1',
+      vin: 'JTDBR32E70J945088', km: 38412, combustible: '1/2', combustiblePct: 55, limpieza: 'Limpio',
+      danos: [
+        { zona: 'Parachoques delantero', tipo: 'Rayón', descripcion: 'Rayón superficial de 8 cm', ubicacion: 'Lado derecho', foto: 'chk1071-delantero' },
+      ],
+      hallazgos: [
+        { categoria: 'Fluidos', item: 'Aceite motor', metrica: 'Intervalo por km cumplido', severidad: 'warning',
+          prediccion: 'Cambio programado en este servicio', vida: 'Próximo: 45.000 km', cambio: 'Actuación: ahora',
+          servicio: { nombre: 'Cambio de aceite y filtro', precio: 120 }, foto: null },
+        { categoria: 'Visibilidad', item: 'Filtro de habitáculo', metrica: 'Saturado', severidad: 'warning',
+          prediccion: 'Olor / menor caudal de aire', vida: '—', cambio: 'Sustitución en taller',
+          servicio: { nombre: 'Filtro de habitáculo', precio: 35 }, foto: null },
+      ],
+      itv: { estado: 'Al día', vence: [15, 9, 2027] },
+      firmas: { cliente: null, conductor: FIRMA_CONDUCTOR } },
+  ],
 };
 
 /* ======================================================================
@@ -457,6 +516,7 @@ export const DIRECCIONES_POOL: string[] = [
   'Via Augusta 128, 08006 Barcelona',
   'Passeig de Gràcia 43, 08007 Barcelona',
   'Carrer de Mallorca 401, 08013 Barcelona',
+  'Carrer de Provença 210, 2ºA, 08036 Barcelona',
   'Carrer de Provença 210, 08036 Barcelona',
   'Avinguda Diagonal 640, 08017 Barcelona',
   'Carrer de Balmes 145, 08008 Barcelona',
@@ -571,6 +631,13 @@ const SERVICIOS_RAW: ServicioRaw[] = [
   /* El traslado es un servicio del tempario del taller: cada taller fija su precio. Mecanu no lo sugiere. */
   { id: 'SV-11', nombre: 'Traslado a domicilio (por trayecto)', categoria: 'Traslado', horas: 1.0, manoObra: 38, materiales: 0,
     aplica: ['Turismo', 'SUV', 'Furgoneta'], garantia: '—', notas: 'Recogida o devolución con seguro puerta a puerta' },
+  /* Precios de vitrina (IVA incl.): 150 / 120 / 39 € — manoObra+materiales = base sin IVA. */
+  { id: 'SV-12', nombre: 'Reparación de carrocería (pieza / rayón)', categoria: 'Estética', horas: 2.0, manoObra: 49.59, materiales: 74.38,
+    aplica: ['Turismo', 'SUV', 'Furgoneta'], garantia: '12 meses', notas: 'Presupuesto orientativo; puede variar con la pieza' },
+  { id: 'SV-13', nombre: 'Cristal / luna (reparación o sustitución)', categoria: 'Estética', horas: 1.5, manoObra: 39.67, materiales: 59.5,
+    aplica: ['Turismo', 'SUV', 'Furgoneta'], garantia: '12 meses', notas: 'Incluye calibración de ADAS si aplica' },
+  { id: 'SV-14', nombre: 'Limpieza interior completa', categoria: 'Estética', horas: 1.0, manoObra: 12.89, materiales: 19.34,
+    aplica: ['Turismo', 'SUV', 'Furgoneta'], garantia: '—', notas: 'Aspirado, plásticos y tapicería' },
 ];
 
 export const SERVICIOS: Servicio[] = SERVICIOS_RAW.map((s) => {
@@ -609,6 +676,9 @@ export const CATALOGO_DETECCION: Record<string, { etiqueta: string; servicioId: 
   escobillas:   { etiqueta: 'Escobillas',   servicioId: 'SV-08' },
   filtros:      { etiqueta: 'Filtros',      servicioId: 'SV-09' },
   refrigerante: { etiqueta: 'Refrigerante', servicioId: 'SV-10' },
+  carroceria:   { etiqueta: 'Carrocería',   servicioId: 'SV-12' },
+  cristales:    { etiqueta: 'Cristales',    servicioId: 'SV-13' },
+  limpieza:     { etiqueta: 'Limpieza',     servicioId: 'SV-14' },
 };
 
 export const DIAS_SEMANA: string[] = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -680,9 +750,9 @@ const OPORTUNIDADES_RAW: OportunidadRaw[] = [
       { tipo: 'aceite', origen: 'estimado', dias: 20, falla: 'Cambio de aceite vencido por tiempo', registroIdx: 0, datos: { kmActual: 32150, kmProximo: 35000 } },
     ] },
   { id: 'OP-3006', clienteId: 'c6', vehiculoId: 'v7', inspeccionId: null,
-    fotoSeed: 'chk9955-flota', ultimo: { dow: 2, hora: 8 },
+    fotoSeed: 'chk9955-partner', ultimo: { dow: 2, hora: 8 },
     items: [
-      { tipo: 'itv', origen: 'confirmado', dias: 9, falla: 'ITV de flota vence en 9 días', registroIdx: 0, datos: { estado: 'Vence en 9 días' } },
+      { tipo: 'itv', origen: 'confirmado', dias: 9, falla: 'ITV vence en 9 días', registroIdx: 0, datos: { estado: 'Vence en 9 días' } },
       { tipo: 'frenos', origen: 'confirmado', dias: 9, falla: 'Pastillas traseras a 2 mm', registroIdx: 0, datos: { posicion: 'Traseras', mm: 2, tipoPastilla: 'Cerámica' } },
       { tipo: 'neumaticos', origen: 'estimado', dias: 25, falla: 'Neumáticos delanteros al 40 %', registroIdx: 0, datos: { posicion: 'Delanteros', vidaPct: 40 } },
       { tipo: 'filtros', origen: 'estimado', dias: 25, falla: 'Filtro de aire con hollín', registroIdx: 0, datos: { tipo: 'Aire', estado: 'Saturado' } },
@@ -695,6 +765,13 @@ const OPORTUNIDADES_RAW: OportunidadRaw[] = [
       { tipo: 'bateria', origen: 'confirmado', dias: 6, falla: 'Test de carga: 9,8 V en arranque', registroIdx: 0, datos: { voltaje: 9.8 } },
       { tipo: 'escobillas', origen: 'estimado', dias: 16, falla: 'Escobillas rayando el parabrisas', registroIdx: 0, datos: { estado: 'Rayando' } },
       { tipo: 'aceite', origen: 'estimado', dias: 18, falla: 'Aceite con 14 meses de uso', registroIdx: 0, datos: { kmActual: 41200, kmProximo: 56200 } },
+    ] },
+  { id: 'OP-3011', clienteId: 'c15', vehiculoId: 'v19', inspeccionId: null,
+    fotoSeed: 'chk-crist-demo', ultimo: { dow: 3, hora: 11 },
+    items: [
+      { tipo: 'aceite', origen: 'confirmado', dias: 5, falla: 'Cambio de aceite vencido por km', registroIdx: 0, datos: { kmActual: 38400, kmProximo: 40000 } },
+      { tipo: 'filtros', origen: 'estimado', dias: 5, falla: 'Filtro de habitáculo saturado', registroIdx: 0, datos: { tipo: 'Habitáculo', estado: 'Saturado' } },
+      { tipo: 'escobillas', origen: 'estimado', dias: 12, falla: 'Goma endurecida', registroIdx: 0, datos: { estado: 'Goma endurecida' } },
     ] },
 ];
 

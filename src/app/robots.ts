@@ -35,6 +35,7 @@ const PRIVADO = [
   "/_next/",
   "/assistant",
   "/internal/",
+  "/s/",
 ];
 
 const RASTREADORES_IA = [

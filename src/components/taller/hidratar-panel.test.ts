@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { reemplazarArray, revivirFechas } from '@/components/taller/hidratar-panel';
+import { FETCH_SNAPSHOT, reemplazarArray, revivirFechas } from '@/components/taller/hidratar-panel';
 
 describe('hidratar-panel', () => {
   it('reemplaza el array in-place', () => {
@@ -16,5 +16,9 @@ describe('hidratar-panel', () => {
     });
     expect(out.creadaEn).toBeInstanceOf(Date);
     expect(out.nested.fecha).toBeInstanceOf(Date);
+  });
+
+  it('el snapshot se pide sin cache', () => {
+    expect(FETCH_SNAPSHOT.cache).toBe('no-store');
   });
 });

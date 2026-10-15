@@ -48,3 +48,6 @@ _source/
 !.cursor/rules/
 !.cursor/rules/**
 supabase/.temp/
+
+# Auth de WhatsApp Web (Baileys). Nunca commitear.
+.whatsapp-sesiones/

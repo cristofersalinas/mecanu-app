@@ -80,13 +80,10 @@ Hasta que se aplique la migración `0005_security_events.sql` (no está aplicada
 `next dev` a veces deja un `next-server` escuchando en 3000/3001 después de cerrar la terminal. Otro proyecto puede ocupar el 3000 (pasó: un `next` de julio de `auto-job-app-crm`).
 
 ```bash
-lsof -nP -iTCP:3000 -sTCP:LISTEN
-lsof -nP -iTCP:3001 -sTCP:LISTEN
-# mira COMMAND y la ruta en ps -p PID -o command
-kill PID
+npm run stop    # mata lo que escuche en 3000 (dev) y 3001 (demo)
 ```
 
-No mates un `next dev` que hayas abierto tú hace diez minutos para ver la landing.
+Si hace falta ver qué era, `lsof -nP -iTCP:3000 -sTCP:LISTEN` (o 3001). No mates un `next dev` que hayas abierto tú hace diez minutos para ver la landing.
 
 ## Abrir panel en un preview (staging)
 

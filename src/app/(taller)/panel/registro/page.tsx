@@ -1,4 +1,5 @@
 import { PanelRegistroForm } from '@/components/auth/PanelRegistroForm';
+import { AuthShell } from '@/components/auth/AuthShell';
 
 export const metadata = {
   title: 'Crear cuenta · Panel · Mecanu',
@@ -6,5 +7,9 @@ export const metadata = {
 };
 
 export default function PanelRegistroPage() {
-  return <PanelRegistroForm />;
+  return (
+    <AuthShell>
+      <PanelRegistroForm />
+    </AuthShell>
+  );
 }

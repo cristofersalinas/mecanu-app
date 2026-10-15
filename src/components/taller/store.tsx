@@ -5,12 +5,15 @@
    // TODO API: cada acción de aquí marca el punto donde iría la llamada real. */
 
 import {
-  createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState,
+  createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import type { DeberTaller, TipoDeberTaller } from '@/lib/mecanu/deberes-taller';
+import type { AgendaLinkCampana } from '@/lib/mecanu/agenda-link-campana';
+import { tokenAgendaCampana } from '@/lib/mecanu/agenda-link-campana';
 import {
   PIPELINE_TAREAS_VACIO, aplicarMovimientoTarea, contarPendientesPipeline,
   proyectarPipelineTareas, reabrirTareaArchivada, reconciliarPipelineTareas,
+  type CancelacionTarea,
   type TareaKanban,
 } from '@/lib/mecanu/pipeline-tareas';
 import type { ColumnaTareaPipeline } from '@/lib/mecanu/types';
@@ -21,12 +24,15 @@ import {
 } from './data';
 import { deberesDesdePanel } from './deberes';
 import { notificarOportunidadSlack } from './slackOportunidades';
-import { reemplazarArray, revivirFechas, supabasePanelActivo } from './hidratar-panel';
+import { reemplazarArray, revivirFechas, supabasePanelActivo, FETCH_SNAPSHOT } from './hidratar-panel';
 import { panelApi } from './panel-api';
+import { leerEstadoUrl, sincronizarEstadoUrlPanel, urlsPanelActivas, type PanelUrlEstado } from './panel-url';
+import { usePanelKanbanRealtime } from './usePanelRealtime';
+import { useAhora } from './ui/useCarga';
 
 /* ------------------------- Navegación ------------------------- */
 
-export type NavId = 'general' | 'tablero' | 'contactos' | 'tempario' | 'conductores' | 'config';
+export type NavId = 'general' | 'tablero' | 'contactos' | 'tempario' | 'conductores' | 'whatsapp' | 'config';
 
 export const NAV_ITEMS: { id: NavId; label: string; icon: string }[] = [
   { id: 'general', label: 'General', icon: 'dashboard' },
@@ -34,6 +40,7 @@ export const NAV_ITEMS: { id: NavId; label: string; icon: string }[] = [
   { id: 'contactos', label: 'Contactos', icon: 'contacts' },
   { id: 'tempario', label: 'Tempario', icon: 'menu_book' },
   { id: 'conductores', label: 'Conductores', icon: 'local_shipping' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: 'chat' },
   { id: 'config', label: 'Configuración', icon: 'settings' },
 ];
 
@@ -43,6 +50,7 @@ export const SUBNAV_DEFAULT: Record<NavId, string> = {
   contactos: 'clientes',
   tempario: 'tempario',
   conductores: 'conductores',
+  whatsapp: 'whatsapp',
   config: 'perfil',
 };
 
@@ -225,6 +233,10 @@ interface PanelStore {
   modoFicha: 'panel' | 'ficha';
   seleccionar: (s: Seleccion | null, modo?: 'panel' | 'ficha') => void;
   setModoFicha: (m: 'panel' | 'ficha') => void;
+  filtrosUrl: Record<string, string>;
+  setFiltroUrl: (key: string, value: string | undefined) => void;
+  setFiltrosUrl: (partial: Record<string, string | undefined>) => void;
+  limpiarFiltrosUrl: () => void;
   deberActivo: DeberTaller | null;
   abrirDeber: (d: DeberTaller) => void;
   limpiarDeber: () => void;
@@ -232,7 +244,16 @@ interface PanelStore {
   pipelineTareas: Record<ColumnaTareaPipeline, TareaKanban[]>;
   tareasPendientesN: number;
   moverTareaPipeline: (id: string, hacia: ColumnaTareaPipeline) => void;
+  cancelarTareaPipeline: (id: string, cancelacion: CancelacionTarea) => void;
   reabrirTareaPipeline: (id: string) => void;
+  /** Tarea pendiente resaltada en verde tras cerrar otra. */
+  tareaResaltadaId: string | null;
+  limpiarTareaResaltada: () => void;
+  /** Tras enviar link de autoagenda: cierra crear_ruta y arranca el reloj de 12 h. */
+  registrarLinkAgendaEnviado: (campanaId: string) => void;
+  /** Tras preguntar ayuda en el seguimiento post-link. */
+  registrarAyudaAgendaEnviada: (campanaId: string) => void;
+  agendaLinkDe: (campanaId: string) => AgendaLinkCampana | null;
   canalesWa: Record<string, CanalWa>;
   setMensajesWa: (campanaId: string, mensajes: MensajeWa[] | ((prev: MensajeWa[]) => MensajeWa[])) => void;
   setCanalWa: (campanaId: string, canal: CanalWa) => void;
@@ -326,9 +347,38 @@ function snapshotOportunidad(
   };
 }
 
-export function PanelProvider({ children }: { children: ReactNode }) {
-  const [nav, setNav] = useState<NavId>('general');
-  const [sub, setSub] = useState<string>('general');
+function entidadExiste(
+  sel: Seleccion,
+  ctx: {
+    rutas: RutaVista[];
+    conductoresExtra: { id: string }[];
+  },
+): boolean {
+  switch (sel.kind) {
+    case 'ruta':
+      return ctx.rutas.some((r) => r.id === sel.id);
+    case 'cliente':
+      return CLIENTES.some((c) => c.id === sel.id);
+    case 'vehiculo':
+      return VEHICULOS.some((v) => v.id === sel.id);
+    case 'conductor':
+      return CONDUCTORES.some((c) => c.id === sel.id) || ctx.conductoresExtra.some((c) => c.id === sel.id);
+    case 'servicio':
+      return SERVICIOS.some((s) => s.id === sel.id);
+    default:
+      return false;
+  }
+}
+
+export function PanelProvider({
+  children,
+  inicial = null,
+}: {
+  children: ReactNode;
+  inicial?: PanelUrlEstado | null;
+}) {
+  const [nav, setNav] = useState<NavId>(() => (inicial?.nav as NavId) ?? 'general');
+  const [sub, setSub] = useState<string>(() => inicial?.sub ?? SUBNAV_DEFAULT.general);
 
   const [overlays, setOverlays] = useState<Record<string, Partial<RutaVista>>>({});
   const [rutasBase, setRutasBase] = useState<RutaVista[]>(() => [...RUTAS_VISTA]);
@@ -338,13 +388,20 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [logsCampana, setLogsCampana] = useState<Record<string, LogCampana[]>>({});
   const [fuenteDatos, setFuenteDatos] = useState<'mock' | 'supabase'>('mock');
   const [cargandoDatos, setCargandoDatos] = useState(false);
+  const [condCfg, setCondCfgState] = useState<Record<string, CondCfg>>(condCfgInicial);
+  const snapSeqRef = useRef(0);
+  const ahoraMs = useAhora();
+  const ahoraRef = useMemo(() => new Date(ahoraMs), [ahoraMs]);
 
-  const [seleccion, setSeleccion] = useState<Seleccion | null>(null);
-  const [modoFicha, setModoFicha] = useState<'panel' | 'ficha'>('panel');
+  const [seleccion, setSeleccion] = useState<Seleccion | null>(() => inicial?.seleccion ?? null);
+  const [modoFicha, setModoFicha] = useState<'panel' | 'ficha'>(() => inicial?.modoFicha ?? 'panel');
+  const [filtrosUrl, setFiltrosUrlState] = useState<Record<string, string>>(() => inicial?.filtros ?? {});
   const [deberActivo, setDeberActivo] = useState<DeberTaller | null>(null);
   const [origenDeber, setOrigenDeber] = useState<{ nav: NavId; sub: string } | null>(null);
   const [pipelineEstado, setPipelineEstado] = useState(PIPELINE_TAREAS_VACIO);
   const [canalesWa, setCanalesWa] = useState<Record<string, CanalWa>>(() => ({ ...CANALES_SEED }));
+  const [agendaLinks, setAgendaLinks] = useState<Record<string, AgendaLinkCampana>>({});
+  const [tareaResaltadaId, setTareaResaltadaId] = useState<string | null>(null);
 
   const [notas, setNotas] = useState<Record<string, Nota[]>>({});
   const [tareas, setTareas] = useState<Record<string, Tarea[]>>({
@@ -356,7 +413,6 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     ],
   });
 
-  const [condCfg, setCondCfgState] = useState<Record<string, CondCfg>>(condCfgInicial);
   const [conductoresExtra, setConductoresExtra] = useState<{ id: string; nombre: string; telefono: string }[]>([]);
   const [conductoresEliminados, setConductoresEliminados] = useState<string[]>([]);
 
@@ -416,6 +472,40 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [inspeccionAbierta, setInspeccionAbierta] = useState<{ rutaId: string; inspeccionId: string } | null>(null);
 
+  const omitirSyncUrl = useRef(false);
+  const prevNavSub = useRef({ nav, sub });
+
+  useEffect(() => {
+    if (!urlsPanelActivas()) return;
+    const onPop = () => {
+      const e = leerEstadoUrl({
+        pathname: window.location.pathname,
+        search: window.location.search,
+        host: window.location.host,
+      });
+      omitirSyncUrl.current = true;
+      setNav(e.nav as NavId);
+      setSub(e.sub);
+      setSeleccion(e.seleccion);
+      setModoFicha(e.modoFicha);
+      setFiltrosUrlState(e.filtros);
+      prevNavSub.current = { nav: e.nav, sub: e.sub };
+      omitirSyncUrl.current = false;
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  useEffect(() => {
+    if (!urlsPanelActivas() || omitirSyncUrl.current) return;
+    const navSubChanged = prevNavSub.current.nav !== nav || prevNavSub.current.sub !== sub;
+    prevNavSub.current = { nav, sub };
+    sincronizarEstadoUrlPanel(
+      { nav, sub, seleccion, modoFicha, filtros: filtrosUrl },
+      { replace: !navSubChanged },
+    );
+  }, [nav, sub, seleccion, modoFicha, filtrosUrl]);
+
   /* -- Derivados -- */
 
   const rutas = useMemo<RutaVista[]>(
@@ -431,19 +521,29 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const rutaPorId = useCallback((id: string) => rutas.find((r) => r.id === id) ?? null, [rutas]);
   const campanaPorId = useCallback((id: string) => campanas.find((c) => c.id === id) ?? null, [campanas]);
 
+  useEffect(() => {
+    if (cargandoDatos || !seleccion) return;
+    if (!entidadExiste(seleccion, { rutas, conductoresExtra })) {
+      queueMicrotask(() => {
+        setSeleccion(null);
+        setModoFicha('panel');
+      });
+    }
+  }, [cargandoDatos, seleccion, rutas, conductoresExtra]);
+
   const tagsDe = useCallback((r: RutaVista): TagRuta[] => {
     try {
-      return tagsDeRuta(r);
+      return tagsDeRuta(r, ahoraMs);
     } catch {
       return [];
     }
-  }, []);
+  }, [ahoraMs]);
 
   const derivadosTareas = useMemo(
-    () => deberesDesdePanel(rutas, campanas, new Date(), canalesWa),
-    [rutas, campanas, canalesWa],
+    () => deberesDesdePanel(rutas, campanas, ahoraRef, canalesWa, agendaLinks),
+    [rutas, campanas, canalesWa, agendaLinks, ahoraRef],
   );
-  const pipelineReconciliado = reconciliarPipelineTareas(pipelineEstado, derivadosTareas, new Date());
+  const pipelineReconciliado = reconciliarPipelineTareas(pipelineEstado, derivadosTareas, ahoraRef);
   if (pipelineReconciliado !== pipelineEstado) setPipelineEstado(pipelineReconciliado);
   const pipelineTareas = useMemo(
     () => proyectarPipelineTareas(pipelineReconciliado, derivadosTareas),
@@ -461,16 +561,37 @@ export function PanelProvider({ children }: { children: ReactNode }) {
 
   const cerrarToast = useCallback((id: string) => setToasts((t) => t.filter((x) => x.id !== id)), []);
 
+  const setFiltroUrl = useCallback((key: string, value: string | undefined) => {
+    setFiltrosUrlState((prev) => {
+      const next = { ...prev };
+      if (value) next[key] = value;
+      else delete next[key];
+      return next;
+    });
+  }, []);
+
+  const setFiltrosUrl = useCallback((partial: Record<string, string | undefined>) => {
+    setFiltrosUrlState((prev) => {
+      const next = { ...prev };
+      for (const [k, v] of Object.entries(partial)) {
+        if (v) next[k] = v;
+        else delete next[k];
+      }
+      return next;
+    });
+  }, []);
+
+  const limpiarFiltrosUrl = useCallback(() => setFiltrosUrlState({}), []);
+
   const irA = useCallback((n: NavId, s?: string) => {
     setNav(n);
     setSub(s ?? SUBNAV_DEFAULT[n]);
-    if (origenDeber) {
-      setDeberActivo(null);
-      setOrigenDeber(null);
-      setSeleccion(null);
-      setModoFicha('panel');
-    }
-  }, [origenDeber]);
+    setFiltrosUrlState({});
+    setDeberActivo(null);
+    setOrigenDeber(null);
+    setSeleccion(null);
+    setModoFicha('panel');
+  }, []);
 
   const seleccionar = useCallback((s: Seleccion | null, modo?: 'panel' | 'ficha') => {
     setSeleccion(s);
@@ -494,23 +615,64 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const abrirDeber = useCallback((d: DeberTaller) => {
     setOrigenDeber((o) => o ?? { nav, sub });
     setDeberActivo(d);
+    setTareaResaltadaId(null);
     if (d.entidadKind === 'ruta') {
       setSeleccion({ kind: 'ruta', id: d.entidadId });
-      setModoFicha('ficha');
-      setNav('tablero');
-      setSub('tareas');
+      setModoFicha('panel');
     } else {
       setSeleccion(null);
       setModoFicha('panel');
-      setNav('tablero');
-      setSub('campanas');
     }
+    setNav('tablero');
+    setSub('tareas');
   }, [nav, sub]);
 
   const limpiarDeber = useCallback(() => {
     setDeberActivo(null);
     setOrigenDeber(null);
   }, []);
+
+  const limpiarTareaResaltada = useCallback(() => setTareaResaltadaId(null), []);
+
+  const resaltarSiguientePendiente = useCallback((cerradoId: string | null | undefined) => {
+    const siguiente = pipelineTareas.pendiente.find((t) => t.id !== cerradoId);
+    setTareaResaltadaId(siguiente?.id ?? null);
+  }, [pipelineTareas.pendiente]);
+
+  const agendaLinkDe = useCallback(
+    (campanaId: string) => agendaLinks[campanaId] ?? null,
+    [agendaLinks],
+  );
+
+  const registrarLinkAgendaEnviado = useCallback((campanaId: string) => {
+    const cerradoId = deberActivo?.entidadId === campanaId ? deberActivo.id : `ruta-${campanaId}`;
+    setAgendaLinks((prev) => ({
+      ...prev,
+      [campanaId]: {
+        enviadoEn: Date.now(),
+        token: prev[campanaId]?.token ?? tokenAgendaCampana(campanaId),
+      },
+    }));
+    resaltarSiguientePendiente(cerradoId);
+    if (deberActivo?.entidadKind === 'campana' && deberActivo.entidadId === campanaId) {
+      volverDeDeber();
+    }
+    toast('Link de agenda enviado. Si no agenda en 12 h, vuelve el seguimiento.');
+  }, [deberActivo, resaltarSiguientePendiente, toast, volverDeDeber]);
+
+  const registrarAyudaAgendaEnviada = useCallback((campanaId: string) => {
+    const cerradoId = deberActivo?.entidadId === campanaId ? deberActivo.id : null;
+    setAgendaLinks((prev) => {
+      const actual = prev[campanaId];
+      if (!actual) return prev;
+      return { ...prev, [campanaId]: { ...actual, ayudaEn: Date.now() } };
+    });
+    resaltarSiguientePendiente(cerradoId);
+    if (deberActivo?.entidadKind === 'campana' && deberActivo.entidadId === campanaId) {
+      volverDeDeber();
+    }
+    toast('Seguimiento enviado.');
+  }, [deberActivo, resaltarSiguientePendiente, toast, volverDeDeber]);
 
   const moverTareaPipeline = useCallback((id: string, hacia: ColumnaTareaPipeline) => {
     const card = (['pendiente', 'hecho', 'cancelado'] as const).flatMap((c) => pipelineTareas[c]).find((t) => t.id === id);
@@ -523,8 +685,20 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     if (r.estado === pipelineReconciliado) return;
     setPipelineEstado(r.estado);
     if (hacia === 'hecho') toast('Seguimiento archivado.');
-    if (hacia === 'cancelado') toast('Tarea cancelada.');
   }, [pipelineTareas, pipelineReconciliado, toast]);
+
+  const cancelarTareaPipeline = useCallback((id: string, cancelacion: CancelacionTarea) => {
+    const card = pipelineTareas.pendiente.find((t) => t.id === id);
+    if (!card) return;
+    const r = aplicarMovimientoTarea(pipelineReconciliado, card, 'cancelado', new Date(), { cancelacion });
+    if (!r.ok) {
+      toast(r.motivo, 'warning');
+      return;
+    }
+    if (r.estado === pipelineReconciliado) return;
+    setPipelineEstado(r.estado);
+    toast('Tarea cancelada.');
+  }, [pipelineTareas.pendiente, pipelineReconciliado, toast]);
 
   const reabrirTareaPipeline = useCallback((id: string) => {
     setPipelineEstado((s) => reabrirTareaArchivada(s, id));
@@ -547,9 +721,10 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     if (!deberActivo) return false;
     if (deberActivo.entidadKind !== entidadKind || deberActivo.entidadId !== entidadId) return false;
     if (!tipos.includes(deberActivo.tipo)) return false;
+    resaltarSiguientePendiente(deberActivo.id);
     volverDeDeber();
     return true;
-  }, [deberActivo, volverDeDeber]);
+  }, [deberActivo, volverDeDeber, resaltarSiguientePendiente]);
 
   const patch = useCallback((id: string, p: Partial<RutaVista>) => {
     setOverlays((o) => ({ ...o, [id]: { ...o[id], ...p } }));
@@ -557,10 +732,12 @@ export function PanelProvider({ children }: { children: ReactNode }) {
 
   const refrescarSnapshot = useCallback(async () => {
     if (!supabasePanelActivo()) return;
+    const seq = ++snapSeqRef.current;
     try {
-      const res = await fetch('/api/v1/panel/snapshot');
+      const res = await fetch('/api/v1/panel/snapshot', FETCH_SNAPSHOT);
       if (!res.ok) return;
       const raw = await res.json();
+      if (seq !== snapSeqRef.current) return;
       const rutas = revivirFechas(raw.rutas ?? []) as RutaVista[];
       const campanas = revivirFechas(raw.campanas ?? []) as Campana[];
       const clientes = revivirFechas(raw.clientes ?? []) as Cliente[];
@@ -574,14 +751,135 @@ export function PanelProvider({ children }: { children: ReactNode }) {
       setRutasBase(rutas);
       setCampanasBase(campanas);
       if (raw.canalesWa) setCanalesWa(revivirFechas(raw.canalesWa) as Record<string, CanalWa>);
-      setRutasNuevas([]);
-      setOverlays({});
-      setCampOverlays({});
+      setRutasNuevas((prev) => prev.filter((r) => !rutas.some((s) => s.id === r.id)));
+      setOverlays((prev) => {
+        const next: Record<string, Partial<RutaVista>> = {};
+        for (const [id, o] of Object.entries(prev)) {
+          const resto = { ...o };
+          delete resto.estado;
+          delete resto.subestado;
+          if (Object.keys(resto).length > 0) next[id] = resto;
+        }
+        return next;
+      });
       setFuenteDatos('supabase');
     } catch (e) {
       console.warn('[panel] refrescar snapshot falló', e);
     }
   }, []);
+
+  /**
+   * En mock, el conductor crea campañas en el proceso del servidor (API).
+   * El panel tiene una copia local de CAMPANAS: traemos las nuevas / ampliadas.
+   */
+  const sincronizarCampanasMock = useCallback(async () => {
+    if (supabasePanelActivo()) return;
+    try {
+      const res = await fetch('/api/v1/panel/snapshot', FETCH_SNAPSHOT);
+      if (!res.ok) return;
+      const raw = await res.json();
+      const serverCampanas = revivirFechas(raw.campanas ?? []) as Campana[];
+      setCampanasBase((prev) => {
+        const byServer = new Map(serverCampanas.map((c) => [c.id, c]));
+        let changed = false;
+        const next = prev.map((c) => {
+          const s = byServer.get(c.id);
+          if (!s) return c;
+          if (s.presupuesto.lineas.length > c.presupuesto.lineas.length) {
+            changed = true;
+            return s;
+          }
+          return c;
+        });
+        const ids = new Set(prev.map((c) => c.id));
+        const nuevas = serverCampanas.filter((c) => !ids.has(c.id));
+        if (nuevas.length) {
+          changed = true;
+          for (const c of nuevas) {
+            if (!CAMPANAS.some((x) => x.id === c.id)) CAMPANAS.push(c);
+          }
+        }
+        return changed ? [...next, ...nuevas] : prev;
+      });
+    } catch (e) {
+      console.warn('[panel] sync campañas mock falló', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (supabasePanelActivo()) return;
+    queueMicrotask(() => { void sincronizarCampanasMock(); });
+    const id = window.setInterval(() => { void sincronizarCampanasMock(); }, 6000);
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void sincronizarCampanasMock();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [sincronizarCampanasMock]);
+
+  const kanbanSeqRef = useRef(0);
+
+  const parchearKanban = useCallback(
+    (cambios: { id: string; estado: string; subestado: string }[]) => {
+      const porId = new Map(cambios.map((r) => [r.id, r]));
+      if (!porId.size) return;
+      setRutasBase((prev) =>
+        prev.map((r) => {
+          const u = porId.get(r.id);
+          if (!u) return r;
+          if (r.estado === u.estado && r.subestado === u.subestado) return r;
+          return { ...r, estado: u.estado as RutaVista['estado'], subestado: u.subestado as RutaVista['subestado'] };
+        }),
+      );
+      setOverlays((prev) => {
+        let changed = false;
+        const next: Record<string, Partial<RutaVista>> = {};
+        for (const [id, o] of Object.entries(prev)) {
+          if (!porId.has(id)) {
+            next[id] = o;
+            continue;
+          }
+          const resto = { ...o };
+          if ('estado' in resto || 'subestado' in resto) {
+            delete resto.estado;
+            delete resto.subestado;
+            changed = true;
+          }
+          if (Object.keys(resto).length > 0) next[id] = resto;
+          else if (Object.keys(o).length > 0) changed = true;
+        }
+        return changed ? next : prev;
+      });
+      setFuenteDatos('supabase');
+    },
+    [],
+  );
+
+  const refrescarKanban = useCallback(async () => {
+    if (!supabasePanelActivo()) return;
+    const seq = ++kanbanSeqRef.current;
+    try {
+      const res = await fetch('/api/v1/panel/kanban', FETCH_SNAPSHOT);
+      if (!res.ok) return;
+      const raw = (await res.json()) as {
+        rutas?: { id: string; estado: RutaVista['estado']; subestado: RutaVista['subestado'] }[];
+      };
+      if (seq !== kanbanSeqRef.current) return;
+      parchearKanban(raw.rutas ?? []);
+    } catch (e) {
+      console.warn('[panel] refrescar kanban falló', e);
+    }
+  }, [parchearKanban]);
+
+  usePanelKanbanRealtime(
+    refrescarKanban,
+    refrescarSnapshot,
+    parchearKanban,
+    supabasePanelActivo(),
+  );
 
   const agendarRuta = useCallback<PanelStore['agendarRuta']>((id, datos) => {
     patch(id, {
@@ -627,17 +925,32 @@ export function PanelProvider({ children }: { children: ReactNode }) {
   const avanzarSubestadoEnRuta = useCallback((id: string) => {
     const r = rutas.find((x) => x.id === id);
     if (!r) return;
-    const pasos = ['en_camino_origen', 'en_origen', 'en_transito', 'en_destino'];
-    const i = pasos.indexOf(r.subestado);
-    if (r.estado !== 'en_ruta') return;
-    if (i < pasos.length - 1) {
-      patch(id, { subestado: pasos[i + 1] });
-      toast(`Simulación del conductor: ${pasos[i + 1].replace(/_/g, ' ')}.`, 'info');
-    } else {
+    const pasos = ['en_camino_origen', 'en_origen', 'en_transito', 'en_destino'] as const;
+    let siguiente: (typeof pasos)[number] | null = null;
+    if (r.estado === 'agendado') {
+      siguiente = 'en_camino_origen';
+    } else if (r.estado === 'en_ruta') {
+      const i = pasos.indexOf(r.subestado as (typeof pasos)[number]);
+      if (i >= 0 && i < pasos.length - 1) siguiente = pasos[i + 1];
+    }
+    if (siguiente) {
+      patch(id, { estado: 'en_ruta', subestado: siguiente });
+      toast(`Simulación del conductor: ${siguiente.replace(/_/g, ' ')}.`, 'info');
+      const tid = r.tramoActivoId;
+      if (tid) {
+        void panelApi.subestadoTramo(tid, siguiente).then(() => {
+          if (fuenteDatos === 'supabase') return refrescarSnapshot();
+        }).catch((e) => {
+          toast(e instanceof Error ? e.message : 'No se pudo persistir el avance.', 'alert');
+        });
+      }
+      return;
+    }
+    if (r.estado === 'en_ruta') {
       patch(id, { estado: 'en_taller', subestado: 'esperando_agenda_vuelta' });
       toast('Simulación del conductor: tramo completado, el vehículo queda en la parada.', 'info');
     }
-  }, [rutas, patch, toast]);
+  }, [rutas, patch, toast, fuenteDatos, refrescarSnapshot]);
 
   const toggleTagManual = useCallback((rutaId: string, tagId: string) => {
     const r = rutas.find((x) => x.id === rutaId);
@@ -690,12 +1003,12 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     const prevCamp = campanas.find((c) => c.id === id);
     const estadoAntes = desde ?? prevCamp?.estado;
     setCampOverlays((o) => {
-      const base = CAMPANAS.find((c) => c.id === id);
       const prev = o[id] ?? {};
       const ahora = new Date();
-      const pres: Presupuesto | undefined = base
+      const fuente = prevCamp ?? CAMPANAS.find((c) => c.id === id);
+      const pres: Presupuesto | undefined = fuente
         ? {
-            ...(prev.presupuesto ?? base.presupuesto),
+            ...(prev.presupuesto ?? fuente.presupuesto),
             estado,
             actualizado: ahora,
           }
@@ -971,8 +1284,11 @@ export function PanelProvider({ children }: { children: ReactNode }) {
     rutas, rutaPorId, tagsDe,
     campanas, campanaPorId, logsCampana,
     seleccion, modoFicha, seleccionar, setModoFicha,
+    filtrosUrl, setFiltroUrl, setFiltrosUrl, limpiarFiltrosUrl,
     deberActivo, abrirDeber, limpiarDeber, volverDeDeber,
-    pipelineTareas, tareasPendientesN, moverTareaPipeline, reabrirTareaPipeline,
+    pipelineTareas, tareasPendientesN, moverTareaPipeline, cancelarTareaPipeline, reabrirTareaPipeline,
+    tareaResaltadaId, limpiarTareaResaltada,
+    registrarLinkAgendaEnviado, registrarAyudaAgendaEnviada, agendaLinkDe,
     canalesWa, setMensajesWa, setCanalWa,
     notas, addNota, tareas, toggleTarea, addTarea,
     agendarRuta, cancelarRuta, avanzarSubestadoEnRuta, setEstadoRuta, toggleTagManual, asignarConductor,

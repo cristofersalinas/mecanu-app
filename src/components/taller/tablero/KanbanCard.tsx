@@ -1,12 +1,18 @@
 'use client';
 
-import { DragEvent, useState } from 'react';
+import { DragEvent, useState, type CSSProperties } from 'react';
 import { Icon } from '@/components/ds/Icon';
 import {
-  actividadDeRuta, cliente, ESTADO, esArrastrable, fmtDia, fmtDinero, nombreCliente1,
-  RutaVista, SUBESTADO, TagRuta, TAGS_MANUALES, vehiculo, etiquetaVehiculo,
+  actividadDeRuta, cliente, conductor, ESTADO, esArrastrable, fmtDia, fmtDinero, nombreCliente1,
+  RutaVista, SUBESTADO, TagRuta, TAGS_MANUALES, vehiculo,
 } from '../data';
+import { etiquetaEnRutaKanban } from '@/lib/mecanu/etiqueta-en-ruta';
 import { ImporteIva } from '../ui/ImporteIva';
+import {
+  colorPillEstado,
+  refParadaKanban,
+  tituloVehiculoKanban,
+} from './kanban-card-copy';
 import styles from '../panel.module.css';
 
 interface Props {
@@ -30,6 +36,14 @@ function ultimaActividad(rutaId: string): string {
   }
 }
 
+function pillStyle(color: string): CSSProperties {
+  return {
+    color,
+    border: `1px solid ${color}`,
+    background: 'var(--mecanu-neutral-0)',
+  };
+}
+
 export function KanbanCard({
   ruta, tags, arrastrando, onDragStart, onDragEnd, onClick, onCancelar, onToggleTag,
 }: Props) {
@@ -38,9 +52,19 @@ export function KanbanCard({
   const sub = SUBESTADO[`${ruta.estado}.${ruta.subestado}`];
   const v = vehiculo(ruta.vehiculoId);
   const c = cliente(ruta.clienteId);
+  const subLabel = etiquetaEnRutaKanban(
+    ruta.estado,
+    ruta.subestado,
+    conductor(ruta.conductorId)?.nombre,
+  ) ?? sub?.label;
+  const subColor = colorPillEstado(cfg?.kind);
+  const pie = ultimaActividad(ruta.id);
   const draggable = esArrastrable(ruta.estado);
   const bloqueado = cfg?.edicion === 'bloqueado';
   const puedeCancelar = ruta.estado !== 'cancelado' && ruta.estado !== 'completado';
+  const nombreCliente = c ? nombreCliente1(c.nombre) : (ruta.matriculaLead ? 'Lead sin cliente' : 'Sin cliente');
+  const origen = refParadaKanban(ruta.paradaOrigen);
+  const destino = refParadaKanban(ruta.paradaDestino);
 
   return (
     <div
@@ -51,49 +75,58 @@ export function KanbanCard({
       onClick={onClick}
       style={{ cursor: draggable ? 'grab' : 'pointer', position: 'relative' }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {sub ? (
-          <span
-            title={sub.desc}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 999,
-              background: 'var(--mecanu-neutral-25)', fontSize: 11, fontWeight: 700,
-              color: 'var(--mecanu-text-secondary-light)',
-              flex: 'none', whiteSpace: 'nowrap',
-            }}
-          >
-            <span style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--mecanu-neutral-300)' }} />
-            {sub.label}
-          </span>
-        ) : null}
-        <span style={{ flex: 1 }} />
-        <button
-          type="button"
-          className={styles.iconBtn}
-          style={{ width: 24, height: 24 }}
-          title="Añadir etiqueta manual"
-          aria-label="Añadir etiqueta manual"
-          onClick={(e) => { e.stopPropagation(); setTagsAbierto((t) => !t); }}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2, minHeight: 32 }}>
+        <span
+          style={{
+            flex: 1,
+            fontSize: 13,
+            fontWeight: 700,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
         >
-          <Icon name="add" size="sm" />
-        </button>
-        {bloqueado ? (
-          <span title="Este estado no se edita desde el panel" style={{ color: 'var(--mecanu-neutral-300)', display: 'flex' }}>
-            <Icon name="lock" size="sm" />
-          </span>
-        ) : null}
-        {puedeCancelar ? (
+          {nombreCliente}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', flex: 'none', marginRight: -4 }}>
           <button
             type="button"
             className={styles.iconBtn}
-            style={{ width: 'auto', minWidth: 24, height: 24, padding: '0 8px', color: '#A81823', fontSize: 11, fontWeight: 700 }}
-            title="Cancelar traslado"
-            aria-label="Cancelar traslado"
-            onClick={(e) => { e.stopPropagation(); onCancelar(); }}
+            style={{ width: 24, height: 24 }}
+            title="Añadir etiqueta manual"
+            aria-label="Añadir etiqueta manual"
+            onClick={(e) => { e.stopPropagation(); setTagsAbierto((t) => !t); }}
           >
-            Cancelar
+            <Icon name="add" size="sm" />
           </button>
-        ) : null}
+          {bloqueado ? (
+            <span
+              title="Este estado no se edita desde el panel"
+              style={{
+                color: 'var(--mecanu-neutral-300)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 24,
+                height: 24,
+                flex: 'none',
+              }}
+            >
+              <Icon name="lock" size="sm" />
+            </span>
+          ) : null}
+          {puedeCancelar ? (
+            <button
+              type="button"
+              className={`${styles.iconBtn} ${styles.cardCancelBtn}`}
+              title="Cancelar traslado"
+              aria-label="Cancelar traslado"
+              onClick={(e) => { e.stopPropagation(); onCancelar(); }}
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {tagsAbierto ? (
@@ -114,7 +147,7 @@ export function KanbanCard({
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ width: 8, height: 8, borderRadius: 2, background: t.color }} />
-                  {t.emoji ? `${t.emoji} ` : ''}{t.label}
+                  {t.label}
                 </span>
                 {activo ? <Icon name="check" size="sm" color="var(--mecanu-brand-primary-light)" /> : null}
               </button>
@@ -123,50 +156,71 @@ export function KanbanCard({
         </div>
       ) : null}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Icon name="directions_car" size="sm" color="var(--mecanu-text-secondary-light)" />
-          <span style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {etiquetaVehiculo(v)}
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Icon name="person" size="sm" color="var(--mecanu-text-secondary-light)" />
-          <span style={{ fontSize: 12, color: 'var(--mecanu-text-secondary-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {c ? nombreCliente1(c.nombre) : (ruta.matriculaLead ? 'Lead sin cliente' : 'Sin cliente')}
-          </span>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        <Icon name="directions_car" size="sm" color="var(--mecanu-text-secondary-light)" />
+        <span style={{ fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {tituloVehiculoKanban(v, ruta.matriculaLead)}
+        </span>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)' }}>
-          {ruta.importe ? <ImporteIva texto={fmtDinero(ruta.importe)} /> : 'Sin valorar'} · {v?.matricula ?? ruta.matriculaLead ?? '—'}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        <span style={{ flex: 1, fontSize: 12, color: 'var(--mecanu-text-secondary-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {ruta.importe ? <ImporteIva texto={fmtDinero(ruta.importe)} /> : 'Sin valorar'}
         </span>
         <span
           title={ruta.seguro ? 'Traslado con cobertura de seguro' : 'Sin cobertura de seguro'}
-          style={{ display: 'flex', color: ruta.seguro ? 'var(--mecanu-positive)' : 'var(--mecanu-neutral-300)' }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            flex: 'none',
+            fontSize: 11,
+            fontWeight: 600,
+            color: ruta.seguro ? 'var(--mecanu-positive)' : 'var(--mecanu-neutral-400)',
+          }}
         >
           <Icon name={ruta.seguro ? 'shield' : 'shield_with_heart'} size="sm" />
+          {ruta.seguro ? 'Asegurado' : 'Sin seguro'}
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 8 }}>
         {[
-          { icon: 'arrow_downward', label: 'Origen', bold: ruta.etiquetaOrigen, sub: ruta.paradaOrigen?.sublocalidad ?? ruta.paradaOrigen?.localidad },
-          { icon: 'arrow_upward', label: 'Destino', bold: ruta.etiquetaDestino, sub: ruta.paradaDestino?.sublocalidad ?? ruta.paradaDestino?.localidad },
+          { icon: 'arrow_downward', label: 'Origen', ...origen },
+          { icon: 'arrow_upward', label: 'Destino', ...destino },
         ].map((b) => (
-          <div key={b.label} style={{ padding: '7px 9px', borderRadius: 8, background: 'var(--mecanu-neutral-25)' }}>
+          <div
+            key={b.label}
+            style={{
+              padding: '7px 9px',
+              borderRadius: 8,
+              background: 'var(--mecanu-neutral-25)',
+              minWidth: 0,
+              overflow: 'hidden',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
               <Icon name={b.icon} size="sm" color="var(--mecanu-neutral-300)" />
               <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--mecanu-neutral-300)' }}>
                 {b.label}
               </span>
             </div>
-            <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {b.bold ?? '—'}
+            <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {b.bold}
             </div>
             {b.sub ? (
-              <div style={{ fontSize: 11, color: 'var(--mecanu-text-secondary-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  lineHeight: '14px',
+                  color: 'var(--mecanu-text-secondary-light)',
+                  overflow: 'hidden',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  wordBreak: 'break-word',
+                }}
+              >
                 {b.sub}
               </div>
             ) : null}
@@ -186,27 +240,31 @@ export function KanbanCard({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {tags.length ? (
+        {subLabel || tags.length ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {subLabel ? (
+              <span
+                className={styles.cardPill}
+                title={sub?.desc}
+                style={pillStyle(subColor)}
+              >
+                {subLabel}
+              </span>
+            ) : null}
             {tags.map((t) => (
               <span
                 key={t.id}
+                className={styles.cardPill}
                 title={t.derivado ? 'Etiqueta derivada (calculada por el sistema)' : 'Etiqueta manual'}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 3, padding: '1px 7px', borderRadius: 999,
-                  fontSize: 11, fontWeight: 600,
-                  background: t.derivado ? 'var(--mecanu-neutral-25)' : 'var(--mecanu-neutral-0)',
-                  color: t.derivado ? 'var(--mecanu-text-secondary-light)' : t.color,
-                  border: t.derivado ? '1px solid transparent' : `1px solid ${t.color}`,
-                }}
+                style={pillStyle(t.color)}
               >
-                {t.emoji ? `${t.emoji} ` : ''}{t.label}
+                {t.label}
               </span>
             ))}
           </div>
         ) : null}
         <span style={{ fontSize: 11, color: 'var(--mecanu-neutral-300)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {ultimaActividad(ruta.id)}
+          {pie}
         </span>
       </div>
     </div>

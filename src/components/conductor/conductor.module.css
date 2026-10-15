@@ -15,12 +15,13 @@
   font-family: var(--mecanu-font-family);
 }
 
-/* Marco de móvil: en pantalla ancha se ve el aparato, en móvil ocupa todo. */
+/* Marco de móvil: en pantalla ancha se ve el aparato, en móvil ocupa todo.
+   Deja hueco fijo abajo para el pie de simulación (fuera del marco). */
 .dispositivo {
   position: relative;
   width: 390px;
   height: 844px;
-  max-height: calc(100dvh - 96px);
+  max-height: calc(100dvh - 160px);
   flex: none;
   background: var(--mecanu-neutral-0);
   border-radius: 42px;
@@ -34,19 +35,19 @@
 
 @media (max-width: 480px) {
   .escenario {
-    padding: 0;
-    gap: 0;
+    padding: 0 0 8px;
+    gap: 8px;
     justify-content: flex-start;
+    min-height: 100%;
   }
   .dispositivo {
     width: 100%;
-    height: 100dvh;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
     max-height: none;
     border-radius: 0;
     box-shadow: none;
-  }
-  .pie {
-    display: none;
   }
 }
 
@@ -63,27 +64,58 @@
   z-index: 50;
 }
 
+/* Fuera del marco: siempre visible, estilo demo. */
 .pie {
   display: flex;
+  flex: none;
   align-items: center;
-  gap: 14px;
-  font-size: 13px;
-  color: var(--mecanu-neutral-700);
-  flex-wrap: wrap;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: min(390px, 100%);
+  padding: 10px 14px;
+  box-sizing: border-box;
+  background: #1a1200;
+  border: 2px solid #f5c518;
+  border-radius: 14px;
+  z-index: 40;
+}
+
+.pieSep {
+  color: #f5c518;
+  opacity: 0.5;
+}
+
+.pieMeta {
+  color: #f5c518;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pieBoton {
-  border: none;
-  background: none;
+  border: 1px solid #f5c518;
+  border-radius: 999px;
+  background: #f5c518;
+  color: #1a1200;
   cursor: pointer;
   font: inherit;
   font-size: 13px;
-  color: var(--mecanu-neutral-700);
+  font-weight: 800;
+  min-height: 36px;
+  padding: 0 14px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
+}
+
+.pieBoton:active {
+  filter: brightness(0.95);
 }
 
 .scroll {
@@ -211,4 +243,74 @@
   .slide {
     transition: none;
   }
+}
+
+.gpsGate {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  box-sizing: border-box;
+  background: rgba(11, 12, 12, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.gpsGateCard {
+  width: 100%;
+  max-width: 320px;
+  background: var(--mecanu-neutral-0);
+  border-radius: 20px;
+  padding: 28px 22px 22px;
+  box-shadow: var(--mecanu-shadow-deep);
+  text-align: center;
+}
+
+.gpsGateIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: #e8f5f3;
+  color: #0d7377;
+  margin-bottom: 14px;
+}
+
+.gpsGateTitle {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--mecanu-neutral-900);
+}
+
+.gpsGateText {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--mecanu-neutral-700);
+}
+
+.gpsGateBtn {
+  width: 100%;
+  min-height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: var(--mecanu-brand-primary);
+  color: var(--mecanu-neutral-900);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.gpsGateHint {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--mecanu-neutral-600);
 }

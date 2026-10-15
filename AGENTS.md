@@ -58,11 +58,16 @@ criterio implícito.
 
 | URL | Quién | Archivo |
 |---|---|---|
+| `https://negocio.mecanu.com/` | Login del taller (prod) | rewrite → `/panel/entrar` |
 | `/panel` | Operador del taller | `src/app/(taller)/panel/page.tsx` → `PanelApp` |
 | `/conductor` | Conductor (PWA) | `src/app/(conductor)/conductor/page.tsx` → `ConductorApp` |
 | `/backoffice` | Dueño / operación | `src/app/(backoffice)/backoffice/page.tsx` → `BackofficeApp` |
 
-En local: `http://localhost:3000` + la URL. En Vercel están cortados (mock).
+En local: `npm run dev` → http://localhost:3000 (con login, `/panel/entrar`).
+`npm run demo` → http://localhost:3001 (sin login, con Simular).
+`npm run stop` mata lo que escuche en 3000 y 3001. Si el puerto de ese modo
+está ocupado, el arranque falla: no salta a otro. En producción el acceso
+no está en mecanu.com: `mecanu.com/panel/*` redirige a `negocio.mecanu.com`.
 
 ## Qué leer primero, en orden
 
@@ -76,7 +81,10 @@ En local: `http://localhost:3000` + la URL. En Vercel están cortados (mock).
 2. `ARQUITECTURA.md` — qué vive dónde y por qué.
 3. `src/lib/mecanu/types.ts` — las formas de datos reales, con comentarios de qué
    es decisión de producto y qué es campo `// REVISAR`.
-4. `MODELO-DATOS.md` — si vas a tocar el esquema de Postgres.
+4. `docs/DICCIONARIO-DATOS.md` — qué significa cada palabra del modelo (hechos).
+   `MODELO-DATOS.md` — columnas, tipos e índices si vas a tocar el esquema de
+   Postgres. En Supabase, los comentarios de tabla/columna salen de la
+   migración `0010_comentarios_diccionario.sql`.
 5. `CONTRATOS-API.md` — si vas a tocar `/api/v1/*` o el cliente que las llama desde
    el conductor.
 6. `PREGUNTAS-ABIERTAS.md` — antes de asumir cualquier cosa que el código deja
@@ -172,7 +180,8 @@ misma vertical derecha, sin solaparse; hero en 720 / 450 / <450.
 ## Ramas
 
 `feature/<nombre>` → PR a `main` → CI verde → merge → producción.
-No hay staging permanente. Local: `npm run demo` (con Simular) o `npm run dev`.
+No hay staging permanente. Local: `npm run demo` (puerto 3001, con Simular)
+o `npm run dev` (puerto 3000, con login). `npm run stop` libera ambos.
 `npm run entorno` te dice el mundo. Detalle: `docs/BRANCHING.md` y `docs/ENTORNOS.md`.
 
 <!-- BEGIN:nextjs-agent-rules -->

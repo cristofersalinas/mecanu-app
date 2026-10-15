@@ -86,14 +86,51 @@ export type ViaCierreTarea = z.infer<typeof ViaCierreTareaSchema>;
    Entidades base
    ============================================================== */
 
+export const OrigenContactoSchema = z.enum([
+  'manual',
+  'whatsapp_sync',
+  'whatsapp_mensaje',
+  'excel',
+  'gsheets',
+  'api',
+  'campana',
+  'lead',
+]);
+export type OrigenContacto = z.infer<typeof OrigenContactoSchema>;
+
 export const ClienteSchema = z.object({
   id: z.string(),
   nombre: z.string(),
-  tipo: z.enum(['Particular', 'Empresa']),
+  tipo: z.literal('Particular'),
   telefono: z.string(),
   email: z.string(),
   direccion: z.string(),
   desde: FechaSchema,
+  /**
+   * Ciclo de vida comercial (también etiqueta en WhatsApp).
+   * Reglas: `cliente-ciclo-vida.ts`. Puede venir null hasta recalcular.
+   */
+  cicloVida: z
+    .enum([
+      'prospecto',
+      'registrado',
+      'nuevo',
+      'recompra',
+      'fidelizado',
+      'en_riesgo',
+      'perdido',
+    ])
+    .nullable()
+    .optional(),
+  /** Canal de alta. No se pisa al reimportar. */
+  origen: OrigenContactoSchema.optional(),
+  origenDetalle: z.string().nullable().optional(),
+  origenEn: FechaSchema.nullable().optional(),
+  /** Último canal que tocó el contacto. */
+  origenUltimo: OrigenContactoSchema.nullable().optional(),
+  origenUltimoEn: FechaSchema.nullable().optional(),
+  /** Solo dígitos; clave de deduplicación. */
+  telefonoDigitos: z.string().nullable().optional(),
 });
 export type Cliente = z.infer<typeof ClienteSchema>;
 
@@ -145,6 +182,11 @@ export const ConductorSchema = z.object({
   valoraciones: z.number().int().nonnegative(),
   docs: ConductorDocsSchema,
   incidencias: z.array(IncidenciaConductorSchema),
+  /** Última ubicación de la app del conductor (null si nunca abrió con GPS). */
+  posLat: z.number().nullable().optional(),
+  posLng: z.number().nullable().optional(),
+  posPrecisionM: z.number().nullable().optional(),
+  posActualizadaEn: FechaSchema.nullable().optional(),
 });
 export type Conductor = z.infer<typeof ConductorSchema>;
 
@@ -182,9 +224,12 @@ export const ParadaSchema = z.object({
   subtipo: ParadaSubtipoSchema.nullable(),
   etiqueta: z.string(),
   direccion: z.string().nullable(),
-  /** derivado de `direccion` vía geocoder — nunca se persiste como dato propio */
+  /** derivado de `direccion` vía geocoder — texto de zona; las coords van en lat/lng */
   localidad: z.string().nullable(),
   sublocalidad: z.string().nullable(),
+  /** WGS84; null si aún no se geocodificó */
+  lat: z.number().nullable().optional(),
+  lng: z.number().nullable().optional(),
   servicios: z.array(ParadaServicioSchema),
   llegadaReal: FechaSchema.nullable(),
   salidaReal: FechaSchema.nullable(),
@@ -220,6 +265,11 @@ export const TramoSchema = z.object({
   importe: z.number().nonnegative(),
   reprogramaciones: z.number().int().nonnegative(),
   comunicaAlCliente: z.boolean(),
+  /** Última posición GPS del conductor en este tramo (null si aún no hay ping). */
+  posLat: z.number().nullable().optional(),
+  posLng: z.number().nullable().optional(),
+  posPrecisionM: z.number().nullable().optional(),
+  posActualizadaEn: FechaSchema.nullable().optional(),
 });
 export type Tramo = z.infer<typeof TramoSchema>;
 

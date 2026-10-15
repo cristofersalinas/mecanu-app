@@ -96,23 +96,15 @@ export async function GET(request: Request) {
     const toEntrada = (tid: string) => {
       const t = tramos.find((x) => x.id === tid);
       if (!t) return null;
-      let off: [number, number] | null = null;
-      if (t.ventana?.inicio && t.ventana?.fin) {
-        const now = new Date();
-        const [hi, mi] = t.ventana.inicio.split(':').map(Number);
-        const [hf, mf] = t.ventana.fin.split(':').map(Number);
-        const start = new Date(now);
-        start.setHours(hi, mi, 0, 0);
-        const end = new Date(now);
-        end.setHours(hf, mf, 0, 0);
-        off = [
-          Math.round((start.getTime() - now.getTime()) / 60000),
-          Math.round((end.getTime() - now.getTime()) / 60000),
-        ];
-      }
+      /*
+       * No mandamos `off` inventado con el reloj de hoy: winDe en el cliente
+       * usa `tramo.ventana` (fecha + franja) cuando hay snapshot Supabase.
+       * Solo `off: null` = sin ventana comprometida (R2).
+       */
+      const tieneVentana = !!(t.ventana?.inicio && t.ventana?.fin);
       return {
         tid,
-        off,
+        ...(tieneVentana ? {} : { off: null as null }),
         sub: mapSub(t.estado, t.subestado),
         seguro: t.seguro,
       };

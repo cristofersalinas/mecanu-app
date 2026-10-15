@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ErrorState } from '@/components/ds/ErrorState';
 import { Icon } from '@/components/ds/Icon';
 import {
@@ -15,6 +15,7 @@ import {
   ventana,
 } from './selectors';
 import { JobCard, SR_ONLY } from './JobCard';
+import { ReferirConductorBlock } from './ReferirConductorBlock';
 import type { AccionesConductor } from './useConductor';
 import type { AppState, Job } from './types';
 import css from './conductor.module.css';
@@ -51,6 +52,7 @@ export function JornadaScreen({
   /* R2: sin ventana comprometida, fuera de la lista de hoy. */
   const sinFecha = mis.filter((j) => !j.hecho && !j.win);
   const pool = politica === 'manual' ? [] : poolJobs(s);
+  const [verReferir, setVerReferir] = useState(false);
 
   const dir = (j: Job) => (redExterna ? dirVaga(j.dirProxima) : j.dirProxima);
 
@@ -271,6 +273,16 @@ export function JornadaScreen({
               ))}
             </Plegable>
           ) : null}
+
+          <Plegable
+            icono="person_add"
+            iconoColor="var(--mecanu-neutral-700)"
+            abierto={verReferir}
+            onToggle={() => setVerReferir((v) => !v)}
+            label="Recomienda un conductor"
+          >
+            <ReferirConductorBlock compacto />
+          </Plegable>
         </div>
       </div>
     </>

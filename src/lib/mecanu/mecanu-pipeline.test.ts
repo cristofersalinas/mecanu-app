@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   puedeEditar, esArrastrable, aceptaDrop, seComunicaAlCliente, subestadoMeta,
-  ESTADO, SUBESTADOS_FRIOS, PASOS_EN_RUTA, PRESUPUESTO_PENDIENTES,
+  ESTADO, ESTADOS, SUBESTADOS_FRIOS, PASOS_EN_RUTA, PRESUPUESTO_PENDIENTES,
+  TAGS_DERIVADOS, TAGS_MANUALES,
 } from './mecanu-pipeline';
 
 describe('Solo Prospectos es arrastrable en el kanban', () => {
@@ -120,6 +121,40 @@ describe('Leads fríos: el subestado "caducado" sale del pipeline activo', () =>
   it('ningún subestado de otro estado está marcado fuera del pipeline', () => {
     const otros = SUBESTADOS_FRIOS.filter((s) => !s.startsWith('prospectos.'));
     expect(otros).toHaveLength(0);
+  });
+});
+
+describe('Congelación de ids del pipeline', () => {
+  it('estados: añadir, quitar o renombrar un id falla hasta actualizar esta lista', () => {
+    expect(ESTADOS.map((e) => e.id)).toEqual([
+      'prospectos', 'agendado', 'en_ruta', 'en_taller', 'completado', 'cancelado',
+    ]);
+  });
+
+  it('subestados: añadir, quitar o renombrar un id falla hasta actualizar esta lista', () => {
+    expect(ESTADOS.map((e) => ({ id: e.id, subestados: e.subestados.map((s) => s.id) }))).toEqual([
+      { id: 'prospectos', subestados: ['sin_fecha', 'oferta_enviada', 'propuesto', 'caducado'] },
+      { id: 'agendado', subestados: ['sin_conductor', 'asignado', 'aceptado'] },
+      { id: 'en_ruta', subestados: ['en_camino_origen', 'en_origen', 'en_transito', 'en_destino'] },
+      { id: 'en_taller', subestados: ['esperando_agenda_vuelta', 'oportunidad_vuelta', 'pendiente_confirmar_retiro'] },
+      { id: 'completado', subestados: ['ok', 'retirado_por_cliente', 'con_incidencia', 'pendiente_cierre'] },
+      { id: 'cancelado', subestados: ['por_cliente', 'por_taller', 'fallido_origen', 'fallido_ruta'] },
+    ]);
+  });
+
+  it('tags derivados: añadir, quitar o renombrar un id falla hasta actualizar esta lista', () => {
+    expect(TAGS_DERIVADOS.map((t) => t.id)).toEqual([
+      'sin_conductor', 'en_riesgo', 'retrasado', 'entrega_en_riesgo',
+      'oportunidad_vuelta', 'larga_custodia', 'sin_confirmar_cliente',
+      'inestable', 'doc_pendiente',
+    ]);
+  });
+
+  it('tags manuales: añadir, quitar o renombrar un id falla hasta actualizar esta lista', () => {
+    expect(TAGS_MANUALES.map((t) => t.id)).toEqual([
+      'urgente', 'vip', 'no_rodante', 'cobro_pendiente',
+      'tg-att', 'tg-flota', 'tg-garantia',
+    ]);
   });
 });
 

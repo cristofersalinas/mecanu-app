@@ -12,8 +12,10 @@ export * from './mecanu-pipeline';
 import {
   at, TALLER, cliente, vehiculo, conductor,
   servicio, INSPECCIONES_RAW, ZONAS_CARROCERIA, foto, OPORTUNIDADES_BASE, DIAS_SEMANA,
-  localizarDireccion,
+  localizarDireccion, CATALOGO_DETECCION,
 } from './mecanu-data';
+
+import { coordsDesdeCatalogo } from './geocode';
 
 import {
   subestadoMeta, etiquetaParada, etiquetaPaso, PARADA_SUBTIPOS, ROLES_TRAMO,
@@ -34,6 +36,12 @@ import {
   evidenciaOfertaItv, fallaOfertaItv, SERVICIO_ITV_ID, UMBRAL_DIAS_ITV,
   type MotivoOfertaItv,
 } from './oferta-itv';
+import {
+  etiquetaHallazgoCheckin,
+  severidadDesdeNivel,
+  servicioIdParaHallazgoCheckin,
+  tipoDeteccionParaHallazgo,
+} from './oferta-hallazgo-checkin';
 
 const DIA = 86400000;
 
@@ -159,9 +167,9 @@ const RUTAS_RAW: RutaRaw[] = [
       { rol: 'vuelta', conductorId: 'd2', dia: -1, franja: '16:00 - 17:00', seguro: false, estado: 'completado', modo: 'fija_taller', importe: 38, confirmado: true },
     ] },
 
-  { id: 'TR-1039', clienteId: 'c6', vehiculoId: 'v8', perfil: 'estimable',
-    estado: 'completado', subestado: 'ok', servicio: 'Mantenimiento de flota',
-    reparacion: 410.25, presEstado: 'aceptada', tagsManual: ['tg-flota'], clienteTieneAuto: false, vehiculoListo: true,
+  { id: 'TR-1039', clienteId: 'c6', vehiculoId: 'v26', perfil: 'estimable',
+    estado: 'completado', subestado: 'ok', servicio: 'Revisión de 30.000 km',
+    reparacion: 410.25, presEstado: 'aceptada', tagsManual: ['vip'], clienteTieneAuto: false, vehiculoListo: true,
     paradas: [cli(), prov('taller'), cli()],
     tramos: [
       { rol: 'ida',    conductorId: 'd1', dia: -2, franja: '16:00 - 17:00', seguro: true, estado: 'completado', modo: 'fija_taller', importe: 55, confirmado: true },
@@ -209,13 +217,13 @@ const RUTAS_RAW: RutaRaw[] = [
   /* Dos reprogramaciones → tag derivado "inestable" (caso 13). */
   { id: 'TR-1047', clienteId: 'c6', vehiculoId: 'v7', perfil: 'estimable',
     estado: 'agendado', subestado: 'asignado', servicio: 'Cambio de embrague',
-    reparacion: 0, presEstado: 'valorada', tagsManual: ['tg-flota'],
+    reparacion: 0, presEstado: 'valorada', tagsManual: [],
     paradas: [cli(), prov('taller')],
     tramos: [
       { rol: 'ida', conductorId: 'd4', dia: 1, franja: '09:00 - 10:00', seguro: false, estado: 'agendado', modo: 'fija_taller', importe: 52, reprogramaciones: 2, confirmado: true },
     ] },
 
-  { id: 'TR-1048', clienteId: 'c8', vehiculoId: 'v1', perfil: 'estimable',
+  { id: 'TR-1048', clienteId: 'c8', vehiculoId: 'v20', perfil: 'estimable',
     estado: 'agendado', subestado: 'aceptado', servicio: 'Aire acondicionado',
     reparacion: 0, presEstado: 'valorada',
     paradas: [cli(), prov('taller')],
@@ -224,15 +232,15 @@ const RUTAS_RAW: RutaRaw[] = [
     ] },
 
   /* Ventana fijada por el taller sin confirmación del cliente → tag "sin_confirmar_cliente". */
-  { id: 'TR-1049', clienteId: 'c9', vehiculoId: 'v9', perfil: 'mismo_dia',
+  { id: 'TR-1049', clienteId: 'c9', vehiculoId: 'v27', perfil: 'mismo_dia',
     estado: 'agendado', subestado: 'asignado', servicio: 'Pre-ITV',
     reparacion: 0, presEstado: 'valorada',
     paradas: [cli(), prov('taller')],
     tramos: [
-      { rol: 'ida', conductorId: 'd5', dia: 1, franja: '17:00 - 18:00', seguro: true, estado: 'agendado', modo: 'fija_taller', importe: 39, confirmado: false },
+      { rol: 'ida', conductorId: 'd6', dia: 1, franja: '17:00 - 18:00', seguro: true, estado: 'agendado', modo: 'fija_taller', importe: 39, confirmado: false },
     ] },
 
-  { id: 'TR-1050', clienteId: 'c4', vehiculoId: 'v4', perfil: 'abierto',
+  { id: 'TR-1050', clienteId: 'c17', vehiculoId: 'v22', perfil: 'abierto',
     estado: 'prospectos', subestado: 'propuesto', servicio: 'Consulta por embrague',
     reparacion: 0, presEstado: 'nueva',
     paradas: [cli(), prov('taller')],
@@ -257,7 +265,7 @@ const RUTAS_RAW: RutaRaw[] = [
       { rol: 'ida', conductorId: null, dia: null, franja: null, seguro: false, estado: 'sin_agenda', modo: 'slots_cliente', importe: 40 },
     ] },
 
-  { id: 'TR-1038', clienteId: 'c3', vehiculoId: 'v8', perfil: 'estimable',
+  { id: 'TR-1038', clienteId: 'c20', vehiculoId: 'v25', perfil: 'estimable',
     estado: 'cancelado', subestado: 'por_cliente', servicio: 'Revisión anual',
     reparacion: 0, presEstado: 'caducada',
     motivo: 'El cliente cambió de planes y prefiere llevarlo él mismo',
@@ -303,7 +311,7 @@ const RUTAS_RAW: RutaRaw[] = [
     reparacion: 148.0, presEstado: 'aceptada',
     paradas: [cli(), prov('taller')],
     tramos: [
-      { rol: 'ida', conductorId: 'd1', dia: 0, franja: '10:00 - 11:00', seguro: true, estado: 'en_curso', modo: 'slots_cliente', importe: 44, confirmado: true },
+      { rol: 'ida', conductorId: 'd8', dia: 0, franja: '10:00 - 11:00', seguro: true, estado: 'en_curso', modo: 'slots_cliente', importe: 44, confirmado: true },
     ] },
 
   { id: 'TR-1057', clienteId: 'c13', vehiculoId: 'v13', perfil: 'mismo_dia',
@@ -342,18 +350,40 @@ const RUTAS_RAW: RutaRaw[] = [
     ] },
 
   /* Caso 11 · no-show del cliente en la recogida. */
-  { id: 'TR-1061', clienteId: 'c4', vehiculoId: 'v4', perfil: 'mismo_dia',
+  { id: 'TR-1061', clienteId: 'c18', vehiculoId: 'v23', perfil: 'mismo_dia',
     estado: 'cancelado', subestado: 'fallido_origen', servicio: 'Cambio de escobillas y filtro',
     reparacion: 0, presEstado: 'caducada',
     motivo: 'El cliente no estaba en el punto de recogida y no contestó al teléfono',
     cancelada: { dia: -3, hora: '10:35' },
     paradas: [cli(), prov('taller')],
     tramos: [
-      { rol: 'ida', conductorId: 'd5', dia: -3, franja: '10:00 - 11:00', seguro: true, estado: 'cancelado', modo: 'fija_taller', importe: 40, confirmado: true },
+      { rol: 'ida', conductorId: 'd6', dia: -3, franja: '10:00 - 11:00', seguro: true, estado: 'cancelado', modo: 'fija_taller', importe: 40, confirmado: true },
+    ] },
+
+  /* Caso 11b · el taller cancela (falta de plaza). */
+  { id: 'TR-1061b', clienteId: 'c22', vehiculoId: 'v29', perfil: 'mismo_dia',
+    estado: 'cancelado', subestado: 'por_taller', servicio: 'Diagnóstico eléctrico',
+    reparacion: 0, presEstado: 'caducada',
+    motivo: 'Sin plaza en el taller ese día; se propone nueva ventana',
+    cancelada: { dia: -5, hora: '08:40' },
+    paradas: [cli(), prov('taller')],
+    tramos: [
+      { rol: 'ida', conductorId: 'd2', dia: -5, franja: '09:00 - 10:00', seguro: true, estado: 'cancelado', modo: 'fija_taller', importe: 40, confirmado: true },
+    ] },
+
+  /* Caso 11c · fallo en ruta (pinchazo / incidente). */
+  { id: 'TR-1061c', clienteId: 'c23', vehiculoId: 'v30', perfil: 'mismo_dia',
+    estado: 'cancelado', subestado: 'fallido_ruta', servicio: 'Cambio de aceite',
+    reparacion: 0, presEstado: 'caducada',
+    motivo: 'Pinchazo en el trayecto; el vehículo no llegó al taller',
+    cancelada: { dia: -4, hora: '11:20' },
+    paradas: [cli(), prov('taller')],
+    tramos: [
+      { rol: 'ida', conductorId: 'd3', dia: -4, franja: '10:00 - 11:00', seguro: true, estado: 'cancelado', modo: 'fija_taller', importe: 38, confirmado: true },
     ] },
 
   /* Caso 12 · el cliente se llevó el coche sin vuelta. */
-  { id: 'TR-1062', clienteId: 'c9', vehiculoId: 'v9', perfil: 'abierto',
+  { id: 'TR-1062', clienteId: 'c21', vehiculoId: 'v28', perfil: 'abierto',
     estado: 'completado', subestado: 'retirado_por_cliente', servicio: 'Cambio de correa de distribución',
     reparacion: 545.0, presEstado: 'aceptada', clienteTieneAuto: true, vehiculoListo: true,
     paradas: [cli(), prov('taller')],
@@ -362,9 +392,9 @@ const RUTAS_RAW: RutaRaw[] = [
     ] },
 
   /* Caso 14 · multi-parada: Cliente → Taller → Chapista → Taller → Cliente (5 paradas, 4 tramos). */
-  { id: 'TR-1063', clienteId: 'c6', vehiculoId: 'v16', perfil: 'abierto',
+  { id: 'TR-1063', clienteId: 'c13', vehiculoId: 'v16', perfil: 'abierto',
     estado: 'en_taller', subestado: 'esperando_agenda_vuelta', servicio: 'Siniestro: mecánica y chapa',
-    reparacion: 1240.0, presEstado: 'aceptada', tagsManual: ['tg-flota', 'no_rodante'],
+    reparacion: 1240.0, presEstado: 'aceptada', tagsManual: ['no_rodante'],
     clienteTieneAuto: null, vehiculoListo: false,
     paradas: [
       cli(),
@@ -381,7 +411,7 @@ const RUTAS_RAW: RutaRaw[] = [
     ] },
 
   /* Subestados de COMPLETADO que faltaban. */
-  { id: 'TR-1064', clienteId: 'c7', vehiculoId: 'v6', perfil: 'estimable',
+  { id: 'TR-1064', clienteId: 'c19', vehiculoId: 'v24', perfil: 'estimable',
     estado: 'completado', subestado: 'con_incidencia', servicio: 'Cambio de embrague',
     reparacion: 720.0, presEstado: 'aceptada', clienteTieneAuto: false, vehiculoListo: true,
     incidencia: 'Rayón leve en el retrovisor derecho detectado en la entrega. Abierto parte con el seguro.',
@@ -401,13 +431,34 @@ const RUTAS_RAW: RutaRaw[] = [
       { rol: 'vuelta', conductorId: 'd3', dia: 1, franja: '18:00 - 19:00', seguro: true, estado: 'agendado', modo: 'propuesta_taller', importe: 41, confirmado: true },
     ] },
 
-  { id: 'TR-1065', clienteId: 'c1', vehiculoId: 'v1', perfil: 'estimable',
+  { id: 'TR-1065', clienteId: 'c16', vehiculoId: 'v21', perfil: 'estimable',
     estado: 'completado', subestado: 'pendiente_cierre', servicio: 'Cambio de neumáticos',
     reparacion: 310.0, presEstado: 'aceptada', clienteTieneAuto: false, vehiculoListo: true,
     paradas: [cli(), prov('taller'), cli()],
     tramos: [
       { rol: 'ida',    conductorId: 'd2', dia: -4, franja: '10:00 - 11:00', seguro: true, estado: 'completado', modo: 'fija_taller', importe: 42, confirmado: true },
       { rol: 'vuelta', conductorId: 'd2', dia: -4, franja: '18:00 - 19:00', seguro: true, estado: 'completado', modo: 'fija_taller', importe: 42, confirmado: true },
+    ] },
+
+  /* Demo WhatsApp: historial + próximo traslado del contacto c15 (Cristofer). */
+  { id: 'TR-1070', clienteId: 'c15', vehiculoId: 'v19', perfil: 'mismo_dia',
+    estado: 'completado', subestado: 'ok', servicio: 'Diagnóstico de frenos',
+    reparacion: 148.0, presEstado: 'aceptada', clienteTieneAuto: false, vehiculoListo: true,
+    paradas: [cli(), prov('taller'), cli()],
+    tramos: [
+      { rol: 'ida',    conductorId: 'd2', dia: -12, franja: '10:00 - 11:00', seguro: true, estado: 'completado', modo: 'fija_taller', importe: 40, confirmado: true },
+      { rol: 'vuelta', conductorId: 'd2', dia: -12, franja: '17:00 - 18:00', seguro: true, estado: 'completado', modo: 'fija_taller', importe: 40, confirmado: true },
+    ] },
+
+  { id: 'TR-1071', clienteId: 'c15', vehiculoId: 'v19', perfil: 'estimable',
+    estado: 'en_ruta', subestado: 'en_transito', servicio: 'Cambio de aceite y filtros',
+    reparacion: 189.5, presEstado: 'aceptada', campanaOrigenId: 'OP-3011',
+    clienteTieneAuto: false, vehiculoListo: false,
+    link: { token: 'cristofer-wa-demo', dia: 0, hora: '08:10' },
+    paradas: [cli(), prov('taller'), cli()],
+    tramos: [
+      { rol: 'ida',    conductorId: 'd1', dia: 0, franja: '09:00 - 10:00', seguro: true, estado: 'en_curso', modo: 'fija_taller', importe: 45, confirmado: true },
+      { rol: 'vuelta', conductorId: 'd1', dia: 0, franja: '16:00 - 17:00', seguro: true, estado: 'agendado', modo: 'fija_taller', importe: 45, confirmado: true },
     ] },
 ];
 
@@ -455,6 +506,7 @@ RUTAS_RAW.forEach((raw) => {
   const paradas: Parada[] = raw.paradas.map((p, i) => {
     const direccion = p.direccion !== undefined ? p.direccion : (p.tipo === 'cliente' ? dirCli : PROVEEDORES[p.subtipo || 'taller']);
     const loc = localizarDireccion(direccion);
+    const coords = coordsDesdeCatalogo(direccion);
     return {
       id: `PD-${raw.id.replace('TR-', '')}-${i + 1}`,
       rutaId: raw.id,
@@ -465,6 +517,8 @@ RUTAS_RAW.forEach((raw) => {
       direccion,
       localidad: loc.localidad,
       sublocalidad: loc.sublocalidad,
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
       servicios: (p.servicios || (p.tipo === 'proveedor' && i === 1 ? [raw.servicio] : []))
         .map((s) => ({ descripcion: s, presupuestoId: `PR-${raw.id}` })),
       llegadaReal: null,
@@ -499,6 +553,10 @@ RUTAS_RAW.forEach((raw) => {
       importe: t.importe,
       reprogramaciones: t.reprogramaciones || 0,
       comunicaAlCliente: seComunicaAlCliente(origen, destino),
+      posLat: null,
+      posLng: null,
+      posPrecisionM: null,
+      posActualizadaEn: null,
     };
   });
 
@@ -512,6 +570,19 @@ RUTAS_RAW.forEach((raw) => {
     if (o && !o.salidaReal) o.salidaReal = salida;
     if (d && !d.llegadaReal) d.llegadaReal = llegada;
   });
+
+  /* Demo: posición GPS a mitad de camino si la ruta está EN RUTA. */
+  if (raw.estado === 'en_ruta') {
+    const activo = tramos.find((t) => t.estado === 'en_curso') ?? tramos[0];
+    const o = activo ? paradas.find((p) => p.id === activo.paradaOrigenId) : null;
+    const d = activo ? paradas.find((p) => p.id === activo.paradaDestinoId) : null;
+    if (activo && o?.lat != null && o.lng != null && d?.lat != null && d.lng != null) {
+      activo.posLat = o.lat + (d.lat - o.lat) * 0.45;
+      activo.posLng = o.lng + (d.lng - o.lng) * 0.45;
+      activo.posPrecisionM = 18;
+      activo.posActualizadaEn = new Date();
+    }
+  }
 
   /* — RUTA — */
   const cancelada = raw.cancelada ? fechaEn(raw.cancelada.dia, raw.cancelada.hora) : null;
@@ -644,6 +715,19 @@ RutaSchema.array().parse(RUTAS);
    ============================================================== */
 
 export const ruta = (id: string | null | undefined): Ruta | null => RUTAS.find((r) => r.id === id) || null;
+
+/** Asegura un token público `/s/{token}` en la ruta (p. ej. para cotización post check-in). */
+export function asegurarLinkTokenRuta(rutaId: string): string | null {
+  const r = ruta(rutaId);
+  if (!r) return null;
+  if (r.linkToken) return r.linkToken;
+  const token = `s-${rutaId.replace(/^TR-/i, '').toLowerCase()}`;
+  r.linkToken = token;
+  const i = RUTAS_VISTA.findIndex((v) => v.id === rutaId);
+  if (i >= 0) RUTAS_VISTA[i] = vistaRuta(r);
+  return token;
+}
+
 export const rutaVista = (id: string | null | undefined): RutaVista | null => { const r = ruta(id); return r ? vistaRuta(r) : null; };
 export const parada = (id: string | null | undefined): Parada | null => PARADAS.find((p) => p.id === id) || null;
 export const tramo = (id: string | null | undefined): Tramo | null => TRASLADOS.find((t) => t.id === id) || null;
@@ -741,24 +825,47 @@ export function contactosDeVehiculo(vehiculoId: string): ContactoVehiculo[] {
 
 export function tagsDeRuta(r: Ruta | null | undefined, ahora?: number): TagRuta[] {
   if (!r) return [];
+  return tagsDeRutaConDatos(r, tramosDeRuta(r.id), paradasDeRuta(r.id), ahora);
+}
+
+/** Igual que `tagsDeRuta` pero con tramos/paradas ya cargados (Postgres). */
+export function tagsDeRutaConDatos(
+  r: Ruta,
+  tramos: Tramo[],
+  paradas: Parada[],
+  ahora?: number,
+): TagRuta[] {
   const now = ahora || Date.now();
-  const tramos = tramosDeRuta(r.id);
-  const activo = tramoActivo(r.id);
+  const activo = tramoActivoDe(tramos);
   const ctx: TagCtx = {
     ruta: r, tramos, activo,
     vuelta: tramos.find((t) => t.rol === 'vuelta') || null,
-    paradaActual: paradaActual(r.id),
+    paradaActual: paradaActualDe(paradas, tramos),
     inicioActivo: activo && activo.ventana ? activo.ventana.fecha.getTime() : null,
     ahora: now,
   };
   const derivados: TagRuta[] = TAGS_DERIVADOS.filter((t) => {
     try { return !!t.calc(ctx); } catch { return false; }
   }).map((t) => ({ id: t.id, label: t.label, color: t.color, derivado: true }));
-  /* `filter(Boolean)` limpia los ids que ya no existen en el catálogo; TS no lo estrecha solo. */
   const manuales: TagRuta[] = ((r.tagsManual || []).map((id) => TAGS_MANUALES.find((t) => t.id === id))
     .filter(Boolean) as TagManualCfg[])
     .map((t) => ({ id: t.id, label: t.label, color: t.color, emoji: t.emoji || '', derivado: false }));
   return derivados.concat(manuales);
+}
+
+function tramoActivoDe(tramos: Tramo[]): Tramo | null {
+  if (!tramos.length) return null;
+  const enCurso = tramos.find((t) => t.estado === 'en_curso');
+  if (enCurso) return enCurso;
+  const pendiente = tramos.find((t) => t.estado === 'agendado' || t.estado === 'sin_agenda');
+  return pendiente || tramos[tramos.length - 1];
+}
+
+function paradaActualDe(paradas: Parada[], _tramos: Tramo[]): Parada | null {
+  for (let i = paradas.length - 1; i >= 0; i--) {
+    if (paradas[i].llegadaReal && !paradas[i].salidaReal) return paradas[i];
+  }
+  return null;
 }
 
 /* -- Indicador de tramo activo y trayecto de la card -- */
@@ -939,6 +1046,7 @@ const CAMPANA_META: Record<string, CampanaMeta> = {
   'OP-3005': { estado: 'rechazada', rutaOrigenId: 'TR-1043', inspeccionId: 'CHK-9971', modo: 'detallado' },
   'OP-3006': { estado: 'valorada',  rutaOrigenId: 'TR-1047', inspeccionId: null, modo: 'detallado' },
   'OP-3007': { estado: 'nueva',     rutaOrigenId: 'TR-1045', inspeccionId: null, modo: 'detallado' },
+  'OP-3011': { estado: 'enviada',   rutaOrigenId: 'TR-1070', rutaGeneradaId: 'TR-1071', inspeccionId: null, modo: 'detallado', conTraslado: true },
 };
 
 /** Campaña escrita a mano (no nace de una oportunidad detectada en una inspección). */
@@ -982,6 +1090,23 @@ const CAMPANAS_EXTRA: CampanaExtraRaw[] = [
     lineas: [
       { descripcion: 'Pulido y sellado cerámico de focos', importe: 45, origen: 'inspeccion' },
       { descripcion: 'Recarga o venta de extintor PQS 1 kg', importe: 25, origen: 'inspeccion' },
+    ] },
+
+  { id: 'CMP-3012', clienteId: 'c13', vehiculoId: 'v13', estado: 'caducada',
+    rutaOrigenId: null, modo: 'detallado',
+    falla: 'Oferta de pastillas enviada hace 15 días sin respuesta',
+    fotoSeed: 'cmp3012-caducada', ultimo: { dow: 1, hora: 18 },
+    lineas: [
+      { descripcion: 'Pastillas delanteras + discos', importe: 285, origen: 'manual' },
+      { descripcion: 'Traslado a domicilio · ida y vuelta', importe: 90, origen: 'traslado' },
+    ] },
+
+  { id: 'CMP-3013', clienteId: 'c11', vehiculoId: 'v11', estado: 'valorada',
+    rutaOrigenId: null, modo: 'detallado',
+    falla: 'Presupuesto valorado pendiente de enviar al cliente',
+    fotoSeed: 'cmp3013-valorada', ultimo: { dow: 4, hora: 12 },
+    lineas: [
+      { descripcion: 'Kit de distribución', importe: 420, origen: 'manual' },
     ] },
 ];
 
@@ -1100,6 +1225,7 @@ export function campanaDesdeItvCheckin(input: {
   const sv = servicio(SERVICIO_ITV_ID);
   if (!sv) return null;
   const r = ruta(input.rutaId);
+  if (r) asegurarLinkTokenRuta(input.rutaId);
   const existente = campanaItvAbierta(r ? r.vehiculoId : null, input.rutaId);
   if (existente) return existente;
 
@@ -1139,6 +1265,130 @@ export function campanaDesdeItvCheckin(input: {
     servicio: sv,
     urgente: input.motivo !== 'por_vencer',
     severidad: input.motivo === 'por_vencer' ? 'warning' : 'alert',
+    fecha: item.fecha,
+    habito: '—',
+    motivoFecha: 'Detectado en el check-in',
+    fotoUrl: null,
+    estadoEnvio: 'pendiente',
+    presupuestoId: p.id,
+    presupuesto: p,
+    estado: 'nueva',
+    origenAutomatico: true,
+  };
+  CampanaSchema.parse(c);
+  CAMPANAS.push(c);
+  return c;
+}
+
+function campanaCheckinAbierta(vehiculoId: string | null, rutaId: string): Campana | null {
+  return CAMPANAS.find((c) => {
+    if (c.estado === 'aceptada' || c.estado === 'rechazada' || c.estado === 'caducada') return false;
+    if (!c.origenAutomatico) return false;
+    if ((c.tipos || []).indexOf('itv') >= 0) return false;
+    if (c.rutaOrigenId === rutaId) return true;
+    return !!(vehiculoId && c.vehiculoId === vehiculoId && c.rutaOrigenId === rutaId);
+  }) || null;
+}
+
+function recalcularTotalPresupuesto(p: Presupuesto): void {
+  p.total = Math.round(p.lineas.reduce((a, l) => a + l.importe, 0) * 100) / 100;
+  p.actualizado = new Date();
+}
+
+/**
+ * Check-in: testigo ámbar / ítem o rueda nivel ≥ 2 → oferta del tempario.
+ * Varios hallazgos de la misma ruta se acumulan en una sola campaña (no ITV).
+ */
+export function campanaDesdeHallazgoCheckin(input: {
+  rutaId: string;
+  testigo: string;
+  nivel: number;
+}): Campana | null {
+  const servicioId = servicioIdParaHallazgoCheckin(input.testigo);
+  const tipo = tipoDeteccionParaHallazgo(input.testigo);
+  if (!servicioId || !tipo) return null;
+  const sv = servicio(servicioId);
+  if (!sv) return null;
+
+  const r = ruta(input.rutaId);
+  if (r) asegurarLinkTokenRuta(input.rutaId);
+  const etiqueta = etiquetaHallazgoCheckin(input.testigo);
+  const severidad = severidadDesdeNivel(input.nivel);
+  const urgente = input.nivel >= 3;
+
+  const existente = campanaCheckinAbierta(r ? r.vehiculoId : null, input.rutaId);
+  if (existente) {
+    const ya = existente.presupuesto.lineas.some((l) => l.servicioTemparioId === servicioId);
+    if (!ya) {
+      existente.presupuesto.lineas.push(
+        linea(sv.nombre, sv.totalIva, 'inspeccion', servicioId),
+      );
+      recalcularTotalPresupuesto(existente.presupuesto);
+      existente.valor = existente.presupuesto.total;
+      if ((existente.tipos || []).indexOf(tipo) < 0) existente.tipos = [...(existente.tipos || []), tipo];
+      if ((existente.etiquetas || []).indexOf(etiqueta) < 0) {
+        existente.etiquetas = [...(existente.etiquetas || []), etiqueta];
+      }
+      existente.falla = (existente.etiquetas || []).join(' · ');
+      existente.evidencia = `${existente.presupuesto.lineas.length} hallazgos en el check-in`;
+      if (urgente) existente.urgente = true;
+      if (severidad === 'alert') existente.severidad = 'alert';
+      existente.items = [
+        ...existente.items,
+        {
+          id: `${existente.id}-${existente.items.length + 1}`,
+          tipo,
+          origen: 'confirmado',
+          dias: 0,
+          falla: etiqueta,
+          registroIdx: existente.items.length,
+          datos: { testigo: input.testigo, nivel: input.nivel },
+          etiqueta: CATALOGO_DETECCION[tipo]?.etiqueta ?? etiqueta,
+          servicio: sv,
+          valor: sv.totalIva,
+          fecha: at(9, 0, 7),
+        },
+      ];
+    }
+    CampanaSchema.parse(existente);
+    return existente;
+  }
+
+  const id = `CMP-CHK-${input.rutaId.replace('TR-', '')}`;
+  const item: CampanaItem = {
+    id: `${id}-1`,
+    tipo,
+    origen: 'confirmado',
+    dias: 0,
+    falla: etiqueta,
+    registroIdx: 0,
+    datos: { testigo: input.testigo, nivel: input.nivel },
+    etiqueta: CATALOGO_DETECCION[tipo]?.etiqueta ?? etiqueta,
+    servicio: sv,
+    valor: sv.totalIva,
+    fecha: at(9, 0, 7),
+  };
+  const p = crearPresupuesto(`PR-${id}`, {
+    campanaId: id, vehiculoId: r ? r.vehiculoId : null, rutaOrigenId: input.rutaId,
+    modo: 'detallado', estado: 'nueva', creado: new Date(), actualizado: new Date(),
+    lineas: [linea(sv.nombre, sv.totalIva, 'inspeccion', servicioId)],
+  });
+  const c: Campana = {
+    id,
+    clienteId: r ? r.clienteId : null,
+    vehiculoId: r ? r.vehiculoId : null,
+    rutaOrigenId: input.rutaId,
+    rutaGeneradaId: null,
+    inspeccionId: null,
+    items: [item],
+    tipos: [tipo],
+    etiquetas: [etiqueta],
+    falla: etiqueta,
+    evidencia: 'Detectado en el check-in del conductor',
+    valor: p.total,
+    servicio: sv,
+    urgente,
+    severidad,
     fecha: item.fecha,
     habito: '—',
     motivoFecha: 'Detectado en el check-in',
