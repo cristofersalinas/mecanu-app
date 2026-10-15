@@ -60,6 +60,72 @@ describe('backoffice: actor de sesión, no u-dueno en perfiles.id', () => {
     expect(sinSesion.actor.rol).toBe('dueno');
     expect(supabase).not.toHaveBeenCalled();
   });
+
+  it('invitar, transicionar y automatizaciones no consultan perfiles.id = u-dueno', async () => {
+    const consultas: { tabla: string; col: string; val: unknown }[] = [];
+    vi.spyOn(authServer, 'getPerfilSesion').mockResolvedValue({
+      id: ACTOR_UUID,
+      email: 'dueno@mecanu.com',
+      nombre: 'Dueño',
+      rol: 'dueno',
+      tallerId: 'taller-a',
+      conductorId: null,
+      documento: null,
+    });
+    vi.spyOn(supabaseServer, 'getSupabaseServer').mockReturnValue(
+      clientePerfil(consultas, ACTOR_UUID) as unknown as NonNullable<
+        ReturnType<typeof supabaseServer.getSupabaseServer>
+      >,
+    );
+
+    const conSesion = await Promise.allSettled([
+      supabaseRepo.invitarUsuarioBackoffice('u-dueno', {
+        nombre: 'Nueva', email: 'nueva@mecanu.com', rol: 'operacion',
+      }),
+      supabaseRepo.transicionarUsuarioBackoffice('u-dueno', 'u-otro', 'suspendido'),
+      supabaseRepo.transicionarProcesoConductor('u-dueno', 'd-otro', 'activo'),
+      supabaseRepo.ejecutarAutomatizacionesBackoffice('u-dueno'),
+    ]);
+    for (const r of conSesion) {
+      if (r.status === 'rejected') expect(String(r.reason)).not.toMatch(/22P02/);
+    }
+    expect(consultas).toContainEqual({ tabla: 'perfiles', col: 'id', val: ACTOR_UUID });
+    expect(consultas.some((c) => c.tabla === 'perfiles' && c.col === 'id' && c.val === 'u-dueno')).toBe(false);
+
+    consultas.length = 0;
+    vi.mocked(authServer.getPerfilSesion).mockResolvedValue(null);
+    const supabase = vi.mocked(supabaseServer.getSupabaseServer);
+    supabase.mockClear();
+    const invitar = vi.spyOn(mockRepo, 'invitarUsuarioBackoffice').mockResolvedValue({
+      id: 'u-mock', nombre: 'Nueva', email: 'nueva@mecanu.com', telefono: null, documento: null,
+      rol: 'operacion', estado: 'invitado', conductorId: null, invitadEn: new Date(), activadoEn: null,
+    });
+    const usuario = vi.spyOn(mockRepo, 'transicionarUsuarioBackoffice').mockResolvedValue({
+      id: 'u-otro', nombre: 'Otro', email: 'otro@mecanu.com', telefono: null, documento: null,
+      rol: 'operacion', estado: 'suspendido', conductorId: null, invitadEn: new Date(), activadoEn: null,
+    });
+    const proceso = vi.spyOn(mockRepo, 'transicionarProcesoConductor').mockResolvedValue({
+      id: 'd-otro', nombre: 'Otro', telefono: '', red: 'Interna', furgoneta: '', proceso: 'activo',
+      supervisados: 0, requeridos: 0, alta: new Date(), calificacion: 0, valoraciones: 0,
+      docs: { dni: false, carnet: false, iban: false, seguro: false }, incidencias: [],
+      posLat: null, posLng: null, posPrecisionM: null, posActualizadaEn: null,
+    });
+    const cron = vi.spyOn(mockRepo, 'ejecutarAutomatizacionesBackoffice').mockResolvedValue([]);
+
+    await supabaseRepo.invitarUsuarioBackoffice('u-dueno', {
+      nombre: 'Nueva', email: 'nueva@mecanu.com', rol: 'operacion',
+    });
+    await supabaseRepo.transicionarUsuarioBackoffice('u-dueno', 'u-otro', 'suspendido');
+    await supabaseRepo.transicionarProcesoConductor('u-dueno', 'd-otro', 'activo');
+    await supabaseRepo.ejecutarAutomatizacionesBackoffice('u-dueno');
+
+    expect(invitar).toHaveBeenCalled();
+    expect(usuario).toHaveBeenCalled();
+    expect(proceso).toHaveBeenCalled();
+    expect(cron).toHaveBeenCalled();
+    expect(supabase).not.toHaveBeenCalled();
+    expect(consultas.some((c) => c.val === 'u-dueno')).toBe(false);
+  });
 });
 
 function clientePerfil(
@@ -91,6 +157,15 @@ function clientePerfil(
         limit() {
           return builder;
         },
+        update() {
+          return builder;
+        },
+        upsert() {
+          return builder;
+        },
+        in() {
+          return builder;
+        },
         is() {
           return builder;
         },
@@ -108,6 +183,14 @@ function clientePerfil(
         },
       };
       return builder;
+    },
+    auth: {
+      admin: {
+        createUser: async () => ({
+          data: { user: { id: '22222222-2222-4222-8222-222222222222' } },
+          error: null,
+        }),
+      },
     },
   };
 }

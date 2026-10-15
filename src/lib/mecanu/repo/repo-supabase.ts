@@ -39,6 +39,16 @@ import { geocodificarDireccion } from '../geocode';
 import { gpsPosicionEsquemaAusente } from '../gps-conductor';
 import { efectoAvanceSubestadoEnRuta, efectoEntregaRuta } from '../transicion-en-ruta';
 
+const UUID_ACTOR = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Uuid del argumento o de la sesión. `u-dueno` no es un id de `perfiles`. */
+async function idDeActor(actorId: string): Promise<string | null> {
+  if (UUID_ACTOR.test(actorId)) return actorId;
+  const perfil = await getPerfilSesion();
+  if (perfil?.id && UUID_ACTOR.test(perfil.id)) return perfil.id;
+  return null;
+}
+
 /** Taller del usuario autenticado. `service_role` no aplica RLS. */
 async function tallerDeSesion(): Promise<string> {
   const perfil = await getPerfilSesion();
@@ -1140,7 +1150,9 @@ export const supabaseRepo: MecanuRepo = {
     return data ? mapPerfilAUsuario(data) : null;
   },
   async invitarUsuarioBackoffice(actorId, input) {
-    const actor = await this.getUsuarioBackoffice(actorId);
+    const id = await idDeActor(actorId);
+    if (!id) return mockRepo.invitarUsuarioBackoffice(actorId, input);
+    const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'gestionar_usuarios')) {
       throw new Error('Sin permiso para invitar');
     }
@@ -1176,7 +1188,9 @@ export const supabaseRepo: MecanuRepo = {
     return { ...draft, id: created.user.id };
   },
   async transicionarUsuarioBackoffice(actorId, usuarioId, hacia: EstadoUsuarioBackoffice) {
-    const actor = await this.getUsuarioBackoffice(actorId);
+    const id = await idDeActor(actorId);
+    if (!id) return mockRepo.transicionarUsuarioBackoffice(actorId, usuarioId, hacia);
+    const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'gestionar_usuarios')) {
       throw new Error('Sin permiso');
     }
@@ -1187,7 +1201,9 @@ export const supabaseRepo: MecanuRepo = {
     return next;
   },
   async transicionarProcesoConductor(actorId, conductorId, hacia: ProcesoConductor) {
-    const actor = await this.getUsuarioBackoffice(actorId);
+    const id = await idDeActor(actorId);
+    if (!id) return mockRepo.transicionarProcesoConductor(actorId, conductorId, hacia);
+    const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'cambiar_proceso_conductor')) {
       throw new Error('Sin permiso');
     }
@@ -1199,12 +1215,7 @@ export const supabaseRepo: MecanuRepo = {
     return next;
   },
   async getBackofficeSnapshot(actorId, ahora = new Date()) {
-    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    let id = uuid.test(actorId) ? actorId : '';
-    if (!id) {
-      const perfil = await getPerfilSesion();
-      if (perfil?.id && uuid.test(perfil.id)) id = perfil.id;
-    }
+    const id = await idDeActor(actorId);
     if (!id) return mockRepo.getBackofficeSnapshot(actorId, ahora);
     const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'ver_backoffice')) throw new Error('No puedes entrar al backoffice');
@@ -1228,11 +1239,13 @@ export const supabaseRepo: MecanuRepo = {
     return buildSnapshot(mundo, id);
   },
   async ejecutarAutomatizacionesBackoffice(actorId, ahora = new Date()) {
-    const actor = await this.getUsuarioBackoffice(actorId);
+    const id = await idDeActor(actorId);
+    if (!id) return mockRepo.ejecutarAutomatizacionesBackoffice(actorId, ahora);
+    const actor = await this.getUsuarioBackoffice(id);
     if (!actor || !puede(actor.rol, 'ejecutar_automatizaciones')) {
       throw new Error('Sin permiso');
     }
-    const snap = await this.getBackofficeSnapshot(actorId, ahora);
+    const snap = await this.getBackofficeSnapshot(id, ahora);
     const [tramosRaw, logsRaw, usuarios] = await Promise.all([
       sb().from('traslados').select('*'),
       sb().from('logs').select('*').limit(500),
