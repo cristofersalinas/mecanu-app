@@ -41,6 +41,7 @@ import {
   type EntradaTurno,
 } from './constants';
 import * as D from './data';
+import { firmaClienteDeTrazo, leerTrazoFirma } from './SignatureCanvas';
 import { aplicarSnapshotConductor } from './vivo';
 import {
   accionDe,
@@ -1582,9 +1583,11 @@ export function useConductor(opts: OpcionesConductor = {}) {
     if (!ent) return;
     const nf = Object.keys(ent.fotos).length;
     const pideFirma = ent.tipo === 'devolucion';
-    /* R4: sin las fotos (y sin la firma en devolución) esto no se cierra. */
-    if (nf < ENT_SLOTS.length || (pideFirma && !ent.firma)) return;
-    void enviarEntrega(ent.tid, ent.fotos, pideFirma ? 'firmado' : null).then((r) =>
+    /* R4: sin las fotos (y sin la firma en devolución) esto no se cierra.
+       El contrato pide el data URL del trazo, no un literal. */
+    const firmaCliente = firmaClienteDeTrazo(pideFirma, leerTrazoFirma());
+    if (nf < ENT_SLOTS.length || (pideFirma && (!ent.firma || !firmaCliente))) return;
+    void enviarEntrega(ent.tid, ent.fotos, firmaCliente).then((r) =>
       ackTaller(
         r,
         pideFirma

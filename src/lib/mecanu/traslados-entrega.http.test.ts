@@ -1,4 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import {
+  capturarTrazoFirma,
+  firmaClienteDeTrazo,
+  leerTrazoFirma,
+  olvidarTrazoFirma,
+} from '@/components/conductor/SignatureCanvas';
 import { POST as postCheckin } from '@/app/api/v1/traslados/[id]/checkin/route';
 import { POST as postEntrega } from '@/app/api/v1/traslados/[id]/entrega/route';
 import { GET as getRuta } from '@/app/api/v1/panel/rutas/[id]/route';
@@ -146,5 +152,16 @@ describe('HTTP: POST check-in sin inspección previa', () => {
     });
     expect(res.inspeccion.vehiculo.matricula).toBe('Sin dato');
     expect(res.inspeccion.vehiculo.modelo).toBe('Sin dato');
+  });
+
+  it('la devolución manda el trazo, no el literal firmado', () => {
+    olvidarTrazoFirma();
+    const trazo = 'data:image/png;base64,abc';
+    expect(capturarTrazoFirma({ toDataURL: () => trazo })).toBe(trazo);
+    expect(firmaClienteDeTrazo(true, leerTrazoFirma())).toBe(trazo);
+    expect(firmaClienteDeTrazo(true, leerTrazoFirma())).not.toBe('firmado');
+    expect(firmaClienteDeTrazo(false, trazo)).toBeNull();
+    expect(firmaClienteDeTrazo(true, 'firmado')).toBeNull();
+    olvidarTrazoFirma();
   });
 });
