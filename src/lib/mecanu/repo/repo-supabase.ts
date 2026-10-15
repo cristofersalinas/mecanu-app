@@ -56,6 +56,22 @@ function throwPg(error: { message: string } | null, ctx: string): void {
   if (error) throw new Error(`${ctx}: ${error.message}`);
 }
 
+/** Fila por id solo si es del taller de la sesión. Si no, el mismo vacío que si no existe. */
+async function filaDeEsteTaller(
+  tabla: 'clientes' | 'rutas' | 'presupuestos',
+  id: string,
+): Promise<Record<string, unknown> | null> {
+  const tallerId = await tallerDeSesion();
+  const { data, error } = await sb()
+    .from(tabla)
+    .select('*')
+    .eq('id', id)
+    .eq('taller_id', tallerId)
+    .maybeSingle();
+  throwPg(error, tabla);
+  return (data as Record<string, unknown> | null) ?? null;
+}
+
 async function cargarParadas(rutaId: string): Promise<Parada[]> {
   const client = sb();
   const { data, error } = await client.from('paradas').select('*').eq('ruta_id', rutaId).order('orden');
@@ -346,8 +362,7 @@ export const supabaseRepo: MecanuRepo = {
     return (data ?? []).map((r) => mapCliente(r));
   },
   async getCliente(id) {
-    const { data, error } = await sb().from('clientes').select('*').eq('id', id).maybeSingle();
-    throwPg(error, 'cliente');
+    const data = await filaDeEsteTaller('clientes', id);
     return data ? mapCliente(data) : null;
   },
 
@@ -427,8 +442,7 @@ export const supabaseRepo: MecanuRepo = {
     return Promise.all((data ?? []).map((r) => vistaDeRuta(r)));
   },
   async getRuta(id) {
-    const { data, error } = await sb().from('rutas').select('*').eq('id', id).maybeSingle();
-    throwPg(error, 'ruta');
+    const data = await filaDeEsteTaller('rutas', id);
     return data ? mapRuta(data) : null;
   },
   async getRutaVista(id) {
@@ -613,6 +627,15 @@ export const supabaseRepo: MecanuRepo = {
 
   async cambiarSubestadoTramo({ trasladoId, a, triggerSource }: CambiarSubestadoTramoInput) {
     const t = await requireTramo(trasladoId);
+    const tallerId = await tallerDeSesion();
+    const { data: rutaPropia, error: eruta } = await sb()
+      .from('rutas')
+      .select('id')
+      .eq('id', t.rutaId)
+      .eq('taller_id', tallerId)
+      .maybeSingle();
+    throwPg(eruta, 'tramo taller');
+    if (!rutaPropia) throw new Error(`Tramo ${trasladoId} no encontrado`);
     const efecto = efectoAvanceSubestadoEnRuta(a);
     const patch: Record<string, unknown> = { subestado: a };
     if (efecto) patch.estado = efecto.tramo.estado;
@@ -621,7 +644,7 @@ export const supabaseRepo: MecanuRepo = {
       ? sb().from('rutas').update({
           estado: efecto.ruta.estado,
           subestado: efecto.ruta.subestado,
-        }).eq('id', t.rutaId)
+        }).eq('id', t.rutaId).eq('taller_id', tallerId)
       : Promise.resolve({ error: null });
     const [tramoRes, rutaRes] = await Promise.all([tramoUpdate, rutaUpdate]);
     throwPg(tramoRes.error, 'subestado');
@@ -841,10 +864,12 @@ export const supabaseRepo: MecanuRepo = {
     }
     // campanas no tiene columna estado. El de la cotización vive en presupuestos.
     // Los índices no recortan líneas: CONTRATOS-API.md no pide ese POST.
-    await this.cambiarEstadoPresupuesto({
-      presupuestoId: oferta.presupuesto.id,
-      estado,
-    });
+    // El token ya eligió este presupuesto. No pasa por el filtro de sesión del panel.
+    const { error } = await sb()
+      .from('presupuestos')
+      .update({ estado })
+      .eq('id', oferta.presupuesto.id);
+    throwPg(error, 'presupuesto estado');
     return { campanaId: oferta.id, estado };
   },
 
@@ -861,7 +886,13 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async cambiarEstadoPresupuesto({ presupuestoId, estado }: CambiarEstadoPresupuestoInput) {
-    const { error } = await sb().from('presupuestos').update({ estado }).eq('id', presupuestoId);
+    const propia = await filaDeEsteTaller('presupuestos', presupuestoId);
+    if (!propia) throw new Error(`Presupuesto ${presupuestoId} no encontrado`);
+    const { error } = await sb()
+      .from('presupuestos')
+      .update({ estado })
+      .eq('id', presupuestoId)
+      .eq('taller_id', String(propia.taller_id));
     throwPg(error, 'presupuesto estado');
     const p = await cargarPresupuesto(presupuestoId);
     if (!p) throw new Error(`Presupuesto ${presupuestoId} no encontrado`);
@@ -996,12 +1027,14 @@ export const supabaseRepo: MecanuRepo = {
   },
 
   async cancelarRuta({ rutaId, subestado, motivo }: CancelarRutaInput) {
+    const propia = await filaDeEsteTaller('rutas', rutaId);
+    if (!propia) throw new Error(`Ruta ${rutaId} no encontrada`);
     const { error } = await sb().from('rutas').update({
       estado: 'cancelado',
       subestado,
       motivo,
       cancelada_en: new Date().toISOString(),
-    }).eq('id', rutaId);
+    }).eq('id', rutaId).eq('taller_id', String(propia.taller_id));
     throwPg(error, 'cancelar');
     const r = await this.getRuta(rutaId);
     if (!r) throw new Error(`Ruta ${rutaId} no encontrada`);

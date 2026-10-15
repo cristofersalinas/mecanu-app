@@ -475,7 +475,114 @@ describe('supabase: taller de la sesión', () => {
     expect(filtros).toContainEqual({ tabla: 'rutas', col: 'link_token', val: 'token-otro' });
     expect(filtros.some((f) => f.col === 'taller_id' || f.val === 'taller-rodriguez')).toBe(false);
   });
+
+  it('la sesión del taller A no obtiene ni cancela la ruta del taller B', async () => {
+    const escrituras: { tabla: string; payload: Record<string, unknown> }[] = [];
+    vi.spyOn(authServer, 'getPerfilSesion').mockResolvedValue({
+      id: 'u-a',
+      email: 'a@taller.test',
+      nombre: 'Ana',
+      rol: 'operacion',
+      tallerId: 'taller-a',
+      conductorId: null,
+      documento: null,
+    });
+    vi.spyOn(supabaseServer, 'getSupabaseServer').mockReturnValue(
+      clientePorTaller(escrituras) as unknown as NonNullable<
+        ReturnType<typeof supabaseServer.getSupabaseServer>
+      >,
+    );
+
+    expect((await supabaseRepo.getRuta('TR-A'))?.id).toBe('TR-A');
+    expect(await supabaseRepo.getRuta('TR-B')).toBeNull();
+    expect(await supabaseRepo.getCliente('CL-B')).toBeNull();
+    await expect(supabaseRepo.cancelarRuta({
+      rutaId: 'TR-B',
+      subestado: 'por_cliente',
+      motivo: 'prueba',
+    })).rejects.toThrow('Ruta TR-B no encontrada');
+    await expect(supabaseRepo.cambiarEstadoPresupuesto({
+      presupuestoId: 'PR-B',
+      estado: 'aceptada',
+    })).rejects.toThrow('Presupuesto PR-B no encontrado');
+    await expect(supabaseRepo.cambiarSubestadoTramo({
+      trasladoId: 'TS-B',
+      a: 'en_transito',
+      triggerSource: 'manual',
+    })).rejects.toThrow('Tramo TS-B no encontrado');
+    expect(escrituras).toEqual([]);
+  });
 });
+
+const FILA_RUTA_A = {
+  id: 'TR-A',
+  taller_id: 'taller-a',
+  estado: 'agendado',
+  subestado: 'sin_conductor',
+  perfil_servicio: 'traslado',
+  creada_en: '2026-08-01T10:00:00.000Z',
+  tags_manual: [],
+};
+
+const FILA_RUTA_B = {
+  id: 'TR-B',
+  taller_id: 'taller-b',
+  estado: 'agendado',
+  subestado: 'sin_conductor',
+  perfil_servicio: 'traslado',
+  creada_en: '2026-08-01T10:00:00.000Z',
+  tags_manual: [],
+};
+
+function clientePorTaller(escrituras: { tabla: string; payload: Record<string, unknown> }[]) {
+  const porId: Record<string, Record<string, unknown>> = {
+    'TR-A': FILA_RUTA_A,
+    'TR-B': FILA_RUTA_B,
+    'CL-B': { id: 'CL-B', taller_id: 'taller-b', nombre: 'Cliente B' },
+    'PR-B': { id: 'PR-B', taller_id: 'taller-b', estado: 'enviada', iva_incluido: true, total: 10 },
+    'TS-B': { id: 'TS-B', ruta_id: 'TR-B', estado: 'en_curso', orden: 1, conductor_id: 'd-b' },
+  };
+  return {
+    from(tabla: string) {
+      const eqs: { col: string; val: unknown }[] = [];
+      let payload: Record<string, unknown> | null = null;
+      const builder = {
+        select() {
+          return builder;
+        },
+        update(next: Record<string, unknown>) {
+          payload = next;
+          return builder;
+        },
+        eq(col: string, val: unknown) {
+          eqs.push({ col, val });
+          return builder;
+        },
+        order() {
+          return builder;
+        },
+        maybeSingle() {
+          const id = eqs.find((e) => e.col === 'id')?.val;
+          const taller = eqs.find((e) => e.col === 'taller_id')?.val;
+          const row = typeof id === 'string' ? porId[id] : undefined;
+          if (!row) return Promise.resolve({ data: null, error: null });
+          if (tabla !== 'traslados' && taller && row.taller_id !== taller) {
+            return Promise.resolve({ data: null, error: null });
+          }
+          return Promise.resolve({ data: row, error: null });
+        },
+        then(
+          onFulfilled: (v: { data: unknown; error: null }) => unknown,
+          onRejected?: (e: unknown) => unknown,
+        ) {
+          if (payload) escrituras.push({ tabla, payload });
+          return Promise.resolve({ data: null, error: null }).then(onFulfilled, onRejected);
+        },
+      };
+      return builder;
+    },
+  };
+}
 
 function clienteSoloToken(tokenEsperado: string) {
   return {
