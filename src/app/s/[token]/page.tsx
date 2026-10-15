@@ -61,40 +61,44 @@ async function cargarPorToken(token: string): Promise<Carga> {
   };
 
   const tryFuente = async (fuente: typeof repo): Promise<Carga | null> => {
-    const [rutas, conductores, campanas] = await Promise.all([
-      fuente.listRutasVista(),
-      fuente.listConductores(),
-      fuente.listCampanas(),
-    ]);
-    const ruta = rutaPorLinkToken(rutas, token);
-    if (!ruta) return null;
+    try {
+      const [rutas, conductores, campanas] = await Promise.all([
+        fuente.listRutasVista(),
+        fuente.listConductores(),
+        fuente.listCampanas(),
+      ]);
+      const ruta = rutaPorLinkToken(rutas, token);
+      if (!ruta) return null;
 
-    const [vehiculo, tramos, paradas, actividad, inspecciones, presupuesto] = await Promise.all([
-      ruta.vehiculoId ? fuente.getVehiculo(ruta.vehiculoId) : Promise.resolve(null),
-      fuente.listTramosDeRuta(ruta.id),
-      fuente.listParadasDeRuta(ruta.id),
-      fuente.listActividadDeRuta(ruta.id),
-      fuente.listInspeccionesDeRuta(ruta.id),
-      ruta.presupuestoId
-        ? fuente.getPresupuesto(ruta.presupuestoId)
-        : Promise.resolve(ruta.presupuesto),
-    ]);
+      const [vehiculo, tramos, paradas, actividad, inspecciones, presupuesto] = await Promise.all([
+        ruta.vehiculoId ? fuente.getVehiculo(ruta.vehiculoId) : Promise.resolve(null),
+        fuente.listTramosDeRuta(ruta.id),
+        fuente.listParadasDeRuta(ruta.id),
+        fuente.listActividadDeRuta(ruta.id),
+        fuente.listInspeccionesDeRuta(ruta.id),
+        ruta.presupuestoId
+          ? fuente.getPresupuesto(ruta.presupuestoId)
+          : Promise.resolve(ruta.presupuesto),
+      ]);
 
-    const conductor = ruta.conductorId
-      ? (conductores.find((d) => d.id === ruta.conductorId) ?? null)
-      : null;
+      const conductor = ruta.conductorId
+        ? (conductores.find((d) => d.id === ruta.conductorId) ?? null)
+        : null;
 
-    return {
-      ruta,
-      vehiculo,
-      conductor,
-      tramos,
-      paradas,
-      actividad,
-      inspecciones,
-      presupuesto: presupuesto ?? ruta.presupuesto,
-      campanaOferta: campanaOfertaDeRuta(campanas, ruta.id),
-    };
+      return {
+        ruta,
+        vehiculo,
+        conductor,
+        tramos,
+        paradas,
+        actividad,
+        inspecciones,
+        presupuesto: presupuesto ?? ruta.presupuesto,
+        campanaOferta: campanaOfertaDeRuta(campanas, ruta.id),
+      };
+    } catch {
+      return null;
+    }
   };
 
   return (await tryFuente(repo)) ?? (await tryFuente(mockRepo)) ?? vacio;
