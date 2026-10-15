@@ -82,11 +82,10 @@ export function WhatsAppContactoSidebar({
   }, []);
 
   useEffect(() => {
-    if (!seleccion) {
-      setCtx(null);
-      return;
-    }
-    void cargar(seleccion.id);
+    if (!seleccion) return;
+    queueMicrotask(() => {
+      void cargar(seleccion.id);
+    });
   }, [seleccion, cargar]);
 
   async function guardarFicha() {

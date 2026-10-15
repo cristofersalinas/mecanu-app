@@ -387,6 +387,7 @@ export function PanelProvider({
   const [logsCampana, setLogsCampana] = useState<Record<string, LogCampana[]>>({});
   const [fuenteDatos, setFuenteDatos] = useState<'mock' | 'supabase'>('mock');
   const [cargandoDatos, setCargandoDatos] = useState(false);
+  const [condCfg, setCondCfgState] = useState<Record<string, CondCfg>>(condCfgInicial);
   const snapSeqRef = useRef(0);
   const ahoraMs = useAhora();
   const ahoraRef = useMemo(() => new Date(ahoraMs), [ahoraMs]);
@@ -394,8 +395,8 @@ export function PanelProvider({
   useEffect(() => {
     if (!supabasePanelActivo()) return;
     let cancelado = false;
-    setCargandoDatos(true);
     (async () => {
+      setCargandoDatos(true);
       try {
         const [snapRes, kanbanRes] = await Promise.all([
           fetch('/api/v1/panel/snapshot', FETCH_SNAPSHOT),
@@ -457,7 +458,6 @@ export function PanelProvider({
     ],
   });
 
-  const [condCfg, setCondCfgState] = useState<Record<string, CondCfg>>(condCfgInicial);
   const [conductoresExtra, setConductoresExtra] = useState<{ id: string; nombre: string; telefono: string }[]>([]);
   const [conductoresEliminados, setConductoresEliminados] = useState<string[]>([]);
 
@@ -530,8 +530,10 @@ export function PanelProvider({
   useEffect(() => {
     if (cargandoDatos || !seleccion) return;
     if (!entidadExiste(seleccion, { rutas, conductoresExtra })) {
-      setSeleccion(null);
-      setModoFicha('panel');
+      queueMicrotask(() => {
+        setSeleccion(null);
+        setModoFicha('panel');
+      });
     }
   }, [cargandoDatos, seleccion, rutas, conductoresExtra]);
 
@@ -807,7 +809,7 @@ export function PanelProvider({
 
   useEffect(() => {
     if (supabasePanelActivo()) return;
-    void sincronizarCampanasMock();
+    queueMicrotask(() => { void sincronizarCampanasMock(); });
     const id = window.setInterval(() => { void sincronizarCampanasMock(); }, 6000);
     const onVis = () => {
       if (document.visibilityState === 'visible') void sincronizarCampanasMock();
@@ -1207,14 +1209,14 @@ export function PanelProvider({
 
   const setCondCfg = useCallback((id: string, cfg: Partial<CondCfg>) => {
     setCondCfgState((c) => ({ ...c, [id]: { ...c[id], ...cfg } }));
-  }, []);
+  }, [setCondCfgState]);
 
   const crearConductor = useCallback((nombre: string, telefono: string, cfg: CondCfg) => {
     const id = nextId('d');
     setConductoresExtra((cs) => [...cs, { id, nombre, telefono }]);
     setCondCfgState((c) => ({ ...c, [id]: cfg }));
     toast(`Conductor ${nombre} creado.`);
-  }, [toast]);
+  }, [toast, setCondCfgState]);
 
   const eliminarConductor = useCallback((id: string) => {
     setConductoresEliminados((e) => [...e, id]);

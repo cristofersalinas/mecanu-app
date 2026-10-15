@@ -848,10 +848,10 @@ export const supabaseRepo: MecanuRepo = {
       tramos[0] ??
       null;
     const paradas = await this.listParadasDeRuta(ruta.id);
-    let origen = tramo?.paradaOrigenId
+    const origen = tramo?.paradaOrigenId
       ? paradas.find((p) => p.id === tramo.paradaOrigenId) ?? null
       : ruta.paradaOrigen;
-    let destino = tramo?.paradaDestinoId
+    const destino = tramo?.paradaDestinoId
       ? paradas.find((p) => p.id === tramo.paradaDestinoId) ?? null
       : ruta.paradaDestino;
 

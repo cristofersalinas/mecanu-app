@@ -399,8 +399,8 @@ export function useConductor(opts: OpcionesConductor = {}) {
     if (!montado) return;
     if (process.env.NEXT_PUBLIC_MECANU_USE_SUPABASE !== '1') return;
     let cancelado = false;
-    setHidrandoSupabase(true);
     (async () => {
+      setHidrandoSupabase(true);
       try {
         const res = await fetch(`/api/v1/conductor/snapshot?conductorId=${encodeURIComponent(conductorId)}`);
         if (!res.ok) throw new Error(`snapshot ${res.status}`);
@@ -865,9 +865,11 @@ export function useConductor(opts: OpcionesConductor = {}) {
   /* Gate + watch continuo mientras la app está montada. */
   useEffect(() => {
     if (!geolocationDisponible()) {
-      patch({
-        gpsPermiso: 'no_soportado',
-        gpsError: mensajeErrorGps(null),
+      queueMicrotask(() => {
+        patch({
+          gpsPermiso: 'no_soportado',
+          gpsError: mensajeErrorGps(null),
+        });
       });
       return;
     }
@@ -882,7 +884,7 @@ export function useConductor(opts: OpcionesConductor = {}) {
         })
         .catch(() => {});
     }
-    pedirGps();
+    queueMicrotask(() => pedirGps());
     const id = navigator.geolocation.watchPosition(
       (p) => aplicarFixGps(p),
       (err) => {

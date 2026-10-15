@@ -32,22 +32,26 @@ export function WidgetDonut({
   const r = 58;
   const stroke = 22;
 
-  let angle = -Math.PI / 2;
-  const arcs = slices.map((s, i) => {
-    const frac = total > 0 ? s.valor / total : 0;
-    const sweep = frac * Math.PI * 2;
-    const start = angle;
-    angle += sweep;
-    const large = sweep > Math.PI ? 1 : 0;
-    const x1 = cx + r * Math.cos(start);
-    const y1 = cy + r * Math.sin(start);
-    const x2 = cx + r * Math.cos(start + sweep);
-    const y2 = cy + r * Math.sin(start + sweep);
-    const d = sweep < 0.001
-      ? ''
-      : `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
-    return { ...s, d, color: s.color ?? COLORES[i % COLORES.length]! };
-  });
+  const arcs = slices.reduce<{ angle: number; items: Array<DonutSlice & { d: string; color: string }> }>(
+    (acc, s, i) => {
+      const frac = total > 0 ? s.valor / total : 0;
+      const sweep = frac * Math.PI * 2;
+      const start = acc.angle;
+      const large = sweep > Math.PI ? 1 : 0;
+      const x1 = cx + r * Math.cos(start);
+      const y1 = cy + r * Math.sin(start);
+      const x2 = cx + r * Math.cos(start + sweep);
+      const y2 = cy + r * Math.sin(start + sweep);
+      const d = sweep < 0.001
+        ? ''
+        : `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
+      return {
+        angle: start + sweep,
+        items: [...acc.items, { ...s, d, color: s.color ?? COLORES[i % COLORES.length]! }],
+      };
+    },
+    { angle: -Math.PI / 2, items: [] },
+  ).items;
 
   return (
     <DashboardWidgetShell titulo={titulo} icon="pie_chart" editing={editing} onRemove={onRemove}>

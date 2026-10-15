@@ -120,14 +120,16 @@ export function WhatsAppBandeja({
 
   useEffect(() => {
     let vivo = true;
-    setCargando(true);
-    recargar()
-      .catch(() => {
+    void (async () => {
+      setCargando(true);
+      try {
+        await recargar();
+      } catch {
         if (vivo) setError('Sin red. Reintenta cuando vuelva.');
-      })
-      .finally(() => {
+      } finally {
         if (vivo) setCargando(false);
-      });
+      }
+    })();
     return () => {
       vivo = false;
     };
@@ -147,7 +149,7 @@ export function WhatsAppBandeja({
 
   useEffect(() => {
     if (!selId || fase !== 'lista') {
-      setMensajes([]);
+      queueMicrotask(() => setMensajes([]));
       return;
     }
     let vivo = true;

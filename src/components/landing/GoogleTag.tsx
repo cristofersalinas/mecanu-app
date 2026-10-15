@@ -102,11 +102,11 @@ export function GoogleTag({
 
   useEffect(() => {
     if (!cargarGtm || !rutaPublica) {
-      setContextoListo(false);
+      queueMicrotask(() => setContextoListo(false));
       return;
     }
     emitirContextoDispositivo();
-    setContextoListo(true);
+    queueMicrotask(() => setContextoListo(true));
   }, [cargarGtm, rutaPublica, consent?.analitica, consent?.publicidad]);
 
   useEffect(() => {

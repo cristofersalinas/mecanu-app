@@ -107,10 +107,12 @@ export function GeneralDashboard() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setIconoConductor(leerIconoConductorFlota());
-    const loaded = cargarDashboards(TALLER_ID_DEFAULT, window.localStorage);
-    setSnapshot(loaded);
-    setHydrated(true);
+    queueMicrotask(() => {
+      setIconoConductor(leerIconoConductorFlota());
+      const loaded = cargarDashboards(TALLER_ID_DEFAULT, window.localStorage);
+      setSnapshot(loaded);
+      setHydrated(true);
+    });
   }, []);
 
   const activeId = editing && draft ? draft.id : snapshot.lastDashboardId;
@@ -144,11 +146,10 @@ export function GeneralDashboard() {
     [ahora, rutas],
   );
 
+  const marcadoresVista = supabasePanelActivo() ? marcadores : vistaLocal.marcadores;
+
   useEffect(() => {
-    if (!supabasePanelActivo()) {
-      setMarcadores(vistaLocal.marcadores);
-      return;
-    }
+    if (!supabasePanelActivo()) return;
     let cancelado = false;
     const cargar = async () => {
       try {
@@ -250,7 +251,7 @@ export function GeneralDashboard() {
     if (w.tipo === 'flota_mapa' || w.metricaId === 'flota_mapa') {
       return (
         <WidgetFlotaMapa
-          marcadores={marcadores}
+          marcadores={marcadoresVista}
           tallerFallback={vistaLocal.taller}
           iconoConductor={iconoConductor}
           onIconoConductorChange={(id) => {

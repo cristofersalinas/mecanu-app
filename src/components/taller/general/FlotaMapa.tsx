@@ -345,11 +345,8 @@ function FlotaPlacePhoto({ marcador }: { marcador: MarcadorFlota }) {
     ?? (marcador.marca && marcador.modelo
       ? urlFotoVehiculo({ marca: marcador.marca, modelo: marcador.modelo })
       : null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    setError(false);
-  }, [src]);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const error = failedSrc != null && failedSrc === src;
 
   if (!src || error) {
     return (
@@ -367,7 +364,7 @@ function FlotaPlacePhoto({ marcador }: { marcador: MarcadorFlota }) {
         alt={marcador.marca && marcador.modelo
           ? `${marcador.marca} ${marcador.modelo}`
           : ''}
-        onError={() => setError(true)}
+        onError={() => { if (src) setFailedSrc(src); }}
       />
     </div>
   );
@@ -425,9 +422,11 @@ export function FlotaMapa({
   const [selected, setSelected] = useState<Selected | null>(null);
   const [iconMenuOpen, setIconMenuOpen] = useState(false);
 
-  marcadoresRef.current = marcadores;
-  tallerRef.current = tallerDesdeProps(marcadores, tallerFallback);
-  iconoConductorRef.current = iconoConductor;
+  useEffect(() => {
+    marcadoresRef.current = marcadores;
+    tallerRef.current = tallerDesdeProps(marcadores, tallerFallback);
+    iconoConductorRef.current = iconoConductor;
+  }, [marcadores, tallerFallback, iconoConductor]);
 
   const cancelarRecentrar = useCallback(() => {
     if (recenterTimerRef.current != null) {
@@ -773,14 +772,14 @@ export function FlotaMapa({
     if (selected.kind === 'taller') {
       const t = tallerDesdeProps(marcadores, tallerFallback);
       if (!t || t.countEnTaller !== selected.count) {
-        setSelected(null);
+        queueMicrotask(() => setSelected(null));
         const map = mapRef.current;
         if (map?.isStyleLoaded()) aplicarSeleccion(map, null);
       }
       return;
     }
     if (!marcadores.some((m) => m.rutaId === selected.marcador.rutaId && m.estado === 'en_ruta')) {
-      setSelected(null);
+      queueMicrotask(() => setSelected(null));
       const map = mapRef.current;
       if (map?.isStyleLoaded()) aplicarSeleccion(map, null);
     }

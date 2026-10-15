@@ -160,7 +160,7 @@ function newId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-function useDb(): boolean {
+function dbActiva(): boolean {
   return !!getSupabaseServer() && process.env.MECANU_USE_SUPABASE === '1';
 }
 
@@ -197,7 +197,7 @@ function mapSesion(row: Record<string, unknown>): SesionWaPersonal {
 }
 
 export async function listarSesiones(tallerId: string): Promise<SesionWaPersonal[]> {
-  if (!useDb()) {
+  if (!dbActiva()) {
     return [...store(tallerId).sesiones].sort(
       (a, b) => b.ultimaActividad.localeCompare(a.ultimaActividad),
     );
@@ -238,7 +238,7 @@ export async function crearSesion(
     ultimaActividad: ahora,
   };
 
-  if (!useDb()) {
+  if (!dbActiva()) {
     store(tallerId).sesiones.push(sesion);
     await arrancarPuente(sesion);
     return sesion;
@@ -414,7 +414,7 @@ async function aplicarChats(
   chats: ChatBridge[],
 ): Promise<void> {
   aplicarChatsMem(tallerId, sesionId, chats);
-  if (useDb()) {
+  if (dbActiva()) {
     try {
       await aplicarChatsDb(tallerId, sesionId, chats);
     } catch (e) {
@@ -465,7 +465,7 @@ export async function confirmarSesion(
   sesionId: string,
 ): Promise<SesionWaPersonal> {
   const ahora = new Date().toISOString();
-  if (!useDb()) {
+  if (!dbActiva()) {
     const s = store(tallerId).sesiones.find((x) => x.id === sesionId);
     if (!s || s.tallerId !== tallerId) throw new Error('Sesión no encontrada');
     s.estado = 'activa';
@@ -504,7 +504,7 @@ export async function desconectarSesion(
     await puenteCerrar(sesionId);
   }
   const ahora = new Date().toISOString();
-  if (!useDb()) {
+  if (!dbActiva()) {
     const s = store(tallerId).sesiones.find((x) => x.id === sesionId);
     if (!s || s.tallerId !== tallerId) throw new Error('Sesión no encontrada');
     s.estado = 'desconectada';
@@ -540,7 +540,7 @@ function jidDeConv(c: ConversacionWaPersonal): string | null {
 }
 
 export async function listarConversaciones(tallerId: string): Promise<ConversacionWaPersonal[]> {
-  if (!useDb()) {
+  if (!dbActiva()) {
     const s = store(tallerId);
     const mem = [...s.conversaciones]
       .map((c) => {
@@ -634,7 +634,7 @@ export async function listarMensajes(
   conversacionId: string,
 ): Promise<MensajeWaPersonal[]> {
   let local: MensajeWaPersonal[] = [];
-  if (!useDb()) {
+  if (!dbActiva()) {
     const s = store(tallerId);
     const conv = s.conversaciones.find((c) => c.id === conversacionId);
     if (!conv) throw new Error('Conversación no encontrada');
@@ -717,7 +717,7 @@ export async function enviarMensaje(
     }
   }
 
-  if (!useDb()) {
+  if (!dbActiva()) {
     const s = store(tallerId);
     s.mensajes.push(msg);
     conv.actualizadoEn = ahora;

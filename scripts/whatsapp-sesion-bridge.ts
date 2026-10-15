@@ -22,7 +22,7 @@ import makeWASocket, {
   Browsers,
   DisconnectReason,
   fetchLatestBaileysVersion,
-  useMultiFileAuthState,
+  useMultiFileAuthState as cargarAuthMultiArchivo,
   type WASocket,
 } from 'baileys';
 import QRCode from 'qrcode';
@@ -407,7 +407,7 @@ async function arrancar(id: string, desdeHint?: string): Promise<Slot> {
   const desde = existsSync(metaPath(id)) ? leerDesde(id, desdeDefault) : desdeDefault;
   if (!existsSync(metaPath(id))) guardarDesde(id, desde);
 
-  const { state, saveCreds } = await useMultiFileAuthState(join(AUTH_DIR, id));
+  const { state, saveCreds } = await cargarAuthMultiArchivo(join(AUTH_DIR, id));
   const { version } = await fetchLatestBaileysVersion();
 
   slot = {

@@ -30,11 +30,14 @@ export function usePanelKanbanRealtime(
   activo: boolean,
 ): void {
   const kanbanRef = useRef(refrescarKanban);
-  kanbanRef.current = refrescarKanban;
   const snapRef = useRef(refrescarSnapshot);
-  snapRef.current = refrescarSnapshot;
   const patchRef = useRef(parchearKanban);
-  patchRef.current = parchearKanban;
+
+  useEffect(() => {
+    kanbanRef.current = refrescarKanban;
+    snapRef.current = refrescarSnapshot;
+    patchRef.current = parchearKanban;
+  }, [refrescarKanban, refrescarSnapshot, parchearKanban]);
 
   useEffect(() => {
     if (!activo || !supabasePanelActivo()) return;

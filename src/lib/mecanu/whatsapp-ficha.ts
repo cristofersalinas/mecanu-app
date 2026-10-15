@@ -18,7 +18,7 @@ export function guardarFichaDesdeWhatsApp(
   patch: PatchFichaWa,
   opts?: { crearSiFalta?: boolean },
 ): Cliente {
-  let actual = buscarClientePorTelefono(telefono);
+  const actual = buscarClientePorTelefono(telefono);
   if (!actual && opts?.crearSiFalta) {
     const id = `c-wa-${Date.now().toString(36)}`;
     const nuevo: Cliente = {

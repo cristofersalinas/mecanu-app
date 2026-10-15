@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { ConnectionBanner } from '@/components/ds/ConnectionBanner';
 import { Icon } from '@/components/ds/Icon';
 import { Skeleton } from '@/components/ds/Skeleton';
@@ -20,6 +20,10 @@ import { TrasladoScreen } from './TrasladoScreen';
 import { useConductor, type OpcionesConductor } from './useConductor';
 import css from './conductor.module.css';
 
+function suscribirNada() {
+  return () => {};
+}
+
 /** Controles de simulación: demo explícito o puerto 3001. */
 function usarControlesDemo(): boolean {
   if (typeof window === 'undefined') return esModoDemo();
@@ -36,14 +40,10 @@ function usarControlesDemo(): boolean {
 export function ConductorApp(props: OpcionesConductor) {
   const { s, cargando, clock, politica, redExterna, avisoCola, haySolPendiente, conductorId, listo1, listo2, acciones } =
     useConductor(props);
-  const [demoUi, setDemoUi] = useState(false);
+  const demoUi = useSyncExternalStore(suscribirNada, usarControlesDemo, () => false);
 
   useEffect(() => {
     registerConductorServiceWorker();
-  }, []);
-
-  useEffect(() => {
-    setDemoUi(usarControlesDemo());
   }, []);
 
   const jobSheet = s.sheet ? buildJob(s.sheet.tid, s) : null;
