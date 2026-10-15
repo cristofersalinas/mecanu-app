@@ -316,7 +316,14 @@ function StreetViewPhoto({ taller }: { taller: TallerMapa }) {
   );
 }
 
-export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
+export default function MadridMap({
+  copy,
+  contactoHref,
+}: {
+  copy: LandingCopy["map"];
+  /** Formulario real de taller (`/contacto`), no ancla de sección. */
+  contactoHref: string;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const defaultZoomRef = useRef<number | null>(null);
@@ -839,7 +846,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
               <strong>{nombreCiudad(copy, ciudad)}</strong>
               <p>{copy.comingSoon}</p>
               <div className={styles.mapPlaceActions}>
-                <a className={styles.btnPrimary} href="#contacto">
+                <a className={styles.btnPrimary} href={contactoHref}>
                   {copy.talk}
                 </a>
               </div>
@@ -862,7 +869,7 @@ export default function MadridMap({ copy }: { copy: LandingCopy["map"] }) {
               >
                 {copy.details}
               </a>
-              <a className={styles.btnPrimary} href="#contacto">
+              <a className={styles.btnPrimary} href={contactoHref}>
                 {copy.talk}
               </a>
             </div>

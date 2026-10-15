@@ -11,7 +11,7 @@ Slack en silencio salvo lead, oportunidad, actuación urgente o tarea al agente.
 | Canal | Para qué | Quién escribe |
 |---|---|---|
 | `#ordenes` | Órdenes al agente (`@Cursor …`) | Tú y Cursor |
-| `#leads` | Habla con Mecanu o ITV a domicilio | Mecanu Bot |
+| `#leads` | Habla con Mecanu, postular taller (mapa) o ITV a domicilio | Mecanu Bot |
 | `#oportunidades` | Campañas del taller: creación, estados, nudges | Mecanu Bot |
 | `#csx` | Destacados semanales, upsell, llamada si no ofrecen | Mecanu Bot |
 | `#alertas` | Actúa ahora: CI / deploy / seguridad P0 | Mecanu Bot |
@@ -54,7 +54,7 @@ Comandos útiles: `@Cursor help`, `@Cursor list my agents`.
 
 | Evento | Canal | También |
 |---|---|---|
-| Formulario Habla con Mecanu (`/contacto`) | `#leads` | Email + Sheet |
+| Formulario Habla con Mecanu (`/contacto`), postular (mapa) o abandono 1 h | `#leads` | Email + Sheet |
 | Formulario ITV a domicilio | `#leads` | Email + Sheet |
 | Oportunidad creada / cambio de estado / nudge | `#oportunidades` | Hilo por `CMP-*` |
 | Destacados / upsell / subuso CSX | `#csx` | Cron lunes + `npm run csx:semanal` |

@@ -3,17 +3,17 @@ import { slackEscape } from "./notify";
 
 export type LeadContacto = {
   nombre: string;
-  apellido: string;
-  email: string;
+  apellido?: string;
+  email?: string;
   /** ISO (ES) o prefijo (+34). El formulario manda ISO. */
   paisCodigo?: string;
   telefono: string;
-  objetivo: string;
-  uso: string[];
+  objetivo?: string;
+  uso?: string[];
   ciudad: string;
   volumen: string;
-  negocio: string;
-  canal: string;
+  negocio?: string;
+  canal?: string;
 };
 
 export type LeadItv = {
@@ -78,21 +78,27 @@ export function enlaceWhatsApp(paisCodigo: string | undefined, telefono: string)
 export function textoLeadContacto(data: LeadContacto): string {
   const telefono = telefonoConPrefijo(data.paisCodigo, data.telefono);
   const wa = enlaceWhatsApp(data.paisCodigo, data.telefono);
-  const pares: [string, string][] = [
-    ["Nombre", `${data.nombre} ${data.apellido}`],
-    ["Taller", data.negocio],
-    ["Ciudad", data.ciudad],
-    ["Teléfono", telefono],
-    ["Email", data.email],
-    ["Objetivo", data.objetivo],
-    ["Uso", data.uso.join(", ")],
-    ["Volumen", data.volumen],
-    ["Cómo nos conoció", data.canal],
-  ];
-  const cuerpo = [
-    "*Habla con Mecanu* — nueva solicitud",
-    lineas(pares),
-  ];
+  const nombre = [data.nombre, data.apellido].filter(Boolean).join(" ");
+  const pares = (
+    [
+      ["Nombre", nombre],
+      ["Taller", data.negocio],
+      ["Ciudad", data.ciudad],
+      ["Teléfono", telefono],
+      ["Email", data.email],
+      ["Objetivo", data.objetivo],
+      ["Uso", data.uso?.join(", ")],
+      ["Volumen", data.volumen],
+      ["Cómo nos conoció", data.canal],
+    ] as [string, string | undefined][]
+  ).filter((entry): entry is [string, string] => Boolean(entry[1]?.trim()));
+  const titulo =
+    data.canal === "abandono"
+      ? "*Formulario incompleto* — abandono 1 h"
+      : data.canal === "mapa"
+        ? "*Postular taller* — mapa"
+        : "*Habla con Mecanu* — nueva solicitud";
+  const cuerpo = [titulo, lineas(pares)];
   if (wa) {
     // mrkdwn de Slack: <url|etiqueta>
     cuerpo.push(`*WhatsApp:* <${wa}|Abrir chat>`);

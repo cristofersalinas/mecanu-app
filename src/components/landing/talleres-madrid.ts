@@ -29,8 +29,8 @@ export const TALLERES_MADRID: TallerMadrid[] = [
   {
     name: "Talleres H. Núñez",
     address: "P.º de las Yeserías, 57, 28005 Madrid",
-    lat: 40.396929,
-    lng: -3.6969727,
+    lat: 40.39618,
+    lng: -3.7049,
     svHeading: 180,
   },
   {
@@ -57,8 +57,8 @@ export const TALLERES_MADRID: TallerMadrid[] = [
   {
     name: "Automotor y Ventas",
     address: "C/ de Valentín Beato, 8, 28037 Madrid",
-    lat: 40.4394904,
-    lng: -3.6260904,
+    lat: 40.43835,
+    lng: -3.62555,
     svHeading: 180,
   },
   {
@@ -113,8 +113,8 @@ export const TALLERES_MADRID: TallerMadrid[] = [
   {
     name: "Taller Julián Camarillo",
     address: "C/ de Valentín Beato, 42, 28037 Madrid",
-    lat: 40.4394904,
-    lng: -3.6260904,
+    lat: 40.44055,
+    lng: -3.62655,
     svHeading: 270,
   },
 ];

@@ -6,12 +6,14 @@ import { Logo } from "@/components/ds/Logo";
 import { LanguageSwitch } from "@/components/landing/LanguageSwitch";
 import type { LandingCopy } from "@/lib/landing/copy";
 import { LOCALE_META, pathFor, type Locale } from "@/lib/landing/locales";
+import { CONTACTO_ABANDONO_MS } from "@/lib/landing/contacto-notify";
 import { PHONE_COUNTRIES, DEFAULT_COUNTRY, type PhoneCountry } from "@/lib/landing/phone-countries";
 import { emitirConversionLead } from "@/lib/landing/tracking";
 import styles from "./ContactForm.module.css";
 
-const SESSION_KEY = "mecanu_contacto_answers";
-const SESSION_STEP_KEY = "mecanu_contacto_step";
+const STORAGE_ANSWERS = "mecanu_contacto_answers_v2";
+const STORAGE_META = "mecanu_contacto_meta_v2";
+const STORAGE_CLIENT = "mecanu_contacto_client_id";
 
 type Answers = {
   nombre: string;
@@ -25,6 +27,11 @@ type Answers = {
   volumen: string;
   negocio: string;
   canal: string;
+};
+
+type Meta = {
+  updatedAt: string;
+  abandonoEnviado: boolean;
 };
 
 const INITIAL: Answers = {
@@ -58,49 +65,195 @@ function StepIndex({ step }: { step: number }) {
   );
 }
 
+function leerClientId(): string {
+  try {
+    const existing = localStorage.getItem(STORAGE_CLIENT);
+    if (existing && existing.length >= 8) return existing;
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `c_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(STORAGE_CLIENT, id);
+    return id;
+  } catch {
+    return `c_${Date.now()}`;
+  }
+}
+
+function limpiarCacheLocal() {
+  try {
+    localStorage.removeItem(STORAGE_ANSWERS);
+    localStorage.removeItem(STORAGE_META);
+    sessionStorage.removeItem("mecanu_contacto_answers");
+    sessionStorage.removeItem("mecanu_contacto_step");
+  } catch {
+    /* ignore */
+  }
+}
+
 export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contacto"]; locale?: Locale }) {
   const homeHref = pathFor(locale);
 
-  // Siempre inicializar con valores por defecto — evita hydration mismatch.
-  // La restauración desde sessionStorage ocurre en useEffect (solo cliente).
   const [step, setStep] = useState<number>(1);
   const [answers, setAnswers] = useState<Answers>(INITIAL);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null);
   const restoredRef = useRef(false);
+  const clientIdRef = useRef("");
+  const abandonoEnviadoRef = useRef(false);
+  const syncTimerRef = useRef<number | null>(null);
+  const abandonoTimerRef = useRef<number | null>(null);
 
-  // Restaurar desde sessionStorage solo en el primer montaje en cliente
+  const syncBorrador = useCallback(
+    (payload: Answers, opts?: { forzarAbandono?: boolean }) => {
+      const clientId = clientIdRef.current;
+      if (!clientId) return;
+      if (!payload.nombre.trim() && !payload.telefono.trim()) return;
+
+      void fetch("/api/v1/contacto/borrador", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId,
+          nombre: payload.nombre.trim(),
+          telefono: payload.telefono.trim(),
+          paisCodigo: payload.paisCodigo,
+          ciudad: payload.ciudad,
+          volumen: payload.volumen,
+          step: 1,
+          locale,
+          forzarAbandono: opts?.forzarAbandono ?? false,
+        }),
+        keepalive: Boolean(opts?.forzarAbandono),
+      }).then(async (res) => {
+        if (opts?.forzarAbandono && res.ok) {
+          abandonoEnviadoRef.current = true;
+          try {
+            const metaRaw = localStorage.getItem(STORAGE_META);
+            const meta = metaRaw ? (JSON.parse(metaRaw) as Meta) : { updatedAt: "", abandonoEnviado: false };
+            localStorage.setItem(
+              STORAGE_META,
+              JSON.stringify({ ...meta, abandonoEnviado: true } satisfies Meta)
+            );
+          } catch {
+            /* ignore */
+          }
+        }
+      }).catch(() => {
+        /* red caída: el cron / siguiente visita reintentan */
+      });
+    },
+    [locale]
+  );
+
+  const programarAbandono = useCallback(
+    (updatedAtIso: string, current: Answers) => {
+      if (abandonoTimerRef.current != null) {
+        window.clearTimeout(abandonoTimerRef.current);
+        abandonoTimerRef.current = null;
+      }
+      if (abandonoEnviadoRef.current) return;
+      if (!current.nombre.trim() && !current.telefono.trim()) return;
+
+      const updatedAt = Date.parse(updatedAtIso);
+      if (!Number.isFinite(updatedAt)) return;
+      const restante = CONTACTO_ABANDONO_MS - (Date.now() - updatedAt);
+      const delay = Math.max(restante, 0);
+
+      abandonoTimerRef.current = window.setTimeout(() => {
+        if (abandonoEnviadoRef.current) return;
+        syncBorrador(current, { forzarAbandono: true });
+      }, delay);
+    },
+    [syncBorrador]
+  );
+
+  // Restaurar desde localStorage: siempre paso 1, respuestas autocompletadas.
   useEffect(() => {
     if (restoredRef.current) return;
     restoredRef.current = true;
+    clientIdRef.current = leerClientId();
+
     try {
-      const savedStep = sessionStorage.getItem(SESSION_STEP_KEY);
-      if (savedStep) {
-        const n = Math.max(1, Math.min(TOTAL_STEPS, Number(savedStep)));
-        // Hidratación desde sessionStorage: un setState al montar es el patrón correcto aquí.
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- restore wizard progress
-        if (n !== 1) setStep(n);
-      }
-      const savedAnswers = sessionStorage.getItem(SESSION_KEY);
+      const savedAnswers = localStorage.getItem(STORAGE_ANSWERS);
+      const savedMeta = localStorage.getItem(STORAGE_META);
+      let next = INITIAL;
+      let meta: Meta = { updatedAt: new Date().toISOString(), abandonoEnviado: false };
+
       if (savedAnswers) {
         const parsed = JSON.parse(savedAnswers) as Partial<Answers>;
-        setAnswers((prev) => ({ ...prev, ...parsed }));
+        next = { ...INITIAL, ...parsed, paisCodigo: parsed.paisCodigo || DEFAULT_COUNTRY.code };
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- restore wizard cache
+        setAnswers(next);
+        setStep(1);
+      } else {
+        // Migrar sesión antigua una vez.
+        const legacy = sessionStorage.getItem("mecanu_contacto_answers");
+        if (legacy) {
+          const parsed = JSON.parse(legacy) as Partial<Answers>;
+          next = { ...INITIAL, ...parsed, paisCodigo: parsed.paisCodigo || DEFAULT_COUNTRY.code };
+          setAnswers(next);
+          setStep(1);
+        }
       }
-    } catch { /* sessionStorage no disponible */ }
-  }, []);
 
-  // Persistir respuestas y paso al cambiar (solo tras la restauración inicial)
+      if (savedMeta) {
+        meta = { ...meta, ...(JSON.parse(savedMeta) as Meta) };
+      }
+      abandonoEnviadoRef.current = Boolean(meta.abandonoEnviado);
+
+      const stale =
+        meta.updatedAt &&
+        Date.now() - Date.parse(meta.updatedAt) >= CONTACTO_ABANDONO_MS &&
+        !meta.abandonoEnviado &&
+        (next.nombre.trim() || next.telefono.trim());
+
+      if (stale) {
+        syncBorrador(next, { forzarAbandono: true });
+      } else {
+        programarAbandono(meta.updatedAt || new Date().toISOString(), next);
+        if (next.nombre.trim() || next.telefono.trim()) {
+          syncBorrador(next);
+        }
+      }
+    } catch {
+      /* storage no disponible */
+    } finally {
+      setHydrated(true);
+    }
+
+    return () => {
+      if (abandonoTimerRef.current != null) window.clearTimeout(abandonoTimerRef.current);
+      if (syncTimerRef.current != null) window.clearTimeout(syncTimerRef.current);
+    };
+  }, [programarAbandono, syncBorrador]);
+
+  // Persistir respuestas + sincronizar borrador (debounce).
   useEffect(() => {
-    if (!restoredRef.current) return;
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(answers));
-  }, [answers]);
-  useEffect(() => {
-    if (!restoredRef.current) return;
-    sessionStorage.setItem(SESSION_STEP_KEY, String(step));
-  }, [step]);
+    if (!hydrated) return;
+    const updatedAt = new Date().toISOString();
+    try {
+      localStorage.setItem(STORAGE_ANSWERS, JSON.stringify(answers));
+      const prevMeta = localStorage.getItem(STORAGE_META);
+      const meta: Meta = prevMeta
+        ? { ...(JSON.parse(prevMeta) as Meta), updatedAt }
+        : { updatedAt, abandonoEnviado: abandonoEnviadoRef.current };
+      localStorage.setItem(STORAGE_META, JSON.stringify(meta));
+    } catch {
+      /* ignore */
+    }
+
+    programarAbandono(updatedAt, answers);
+
+    if (syncTimerRef.current != null) window.clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = window.setTimeout(() => {
+      syncBorrador(answers);
+    }, 800);
+  }, [answers, hydrated, programarAbandono, syncBorrador]);
 
   const set = useCallback((field: keyof Answers, value: string) => {
     setAnswers((prev) => ({ ...prev, [field]: value }));
@@ -141,6 +294,7 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
         telefono: overrides?.telefono ?? answers.telefono,
         ciudad: overrides?.ciudad ?? answers.ciudad,
         volumen: overrides?.volumen ?? answers.volumen,
+        clientId: clientIdRef.current || undefined,
         aceptaPrivacidad: true as const,
       };
       const res = await fetch("/api/v1/contacto", {
@@ -150,6 +304,10 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
       });
       if (!res.ok) throw new Error("error");
       emitirConversionLead("contacto");
+      limpiarCacheLocal();
+      if (abandonoTimerRef.current != null) {
+        window.clearTimeout(abandonoTimerRef.current);
+      }
       setSubmitted(true);
     } catch {
       setError("Algo ha ido mal. Inténtalo de nuevo.");
@@ -202,7 +360,6 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
 
       <div className={styles.inner}>
 
-        {/* Paso 1 — Nombre */}
         {step === 1 && (
           <div className={styles.stepWrap}>
             <StepIndex step={1} />
@@ -233,7 +390,6 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           </div>
         )}
 
-        {/* Paso 2 — Teléfono */}
         {step === 2 && (() => {
           const pais: PhoneCountry = PHONE_COUNTRIES.find(c => c.code === answers.paisCodigo) ?? DEFAULT_COUNTRY;
           const digits = answers.telefono.replace(/\D/g, "");
@@ -293,7 +449,6 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           );
         })()}
 
-        {/* Paso 3 — Ciudad */}
         {step === 3 && (
           <div className={styles.stepWrap}>
             <StepIndex step={3} />
@@ -331,7 +486,6 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
           </div>
         )}
 
-        {/* Paso 4 — Volumen + privacidad */}
         {step === 4 && (
           <div className={styles.stepWrap}>
             <StepIndex step={4} />
@@ -386,7 +540,6 @@ export function ContactForm({ copy, locale = "es" }: { copy: LandingCopy["contac
         )}
       </div>
 
-      {/* Botones de navegación inferior */}
       <div className={styles.navButtons}>
         <button
           type="button"

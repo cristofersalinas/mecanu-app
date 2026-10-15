@@ -36,12 +36,25 @@ export type LandingCopy = {
   map: {
     /** Plantilla, no función: `{city}` lo sustituye el cliente. El copy cruza
      *  la frontera servidor→cliente y una función no es serializable. */
+    heading: string;
+    subtext: string;
     sectionAria: string;
     citySwitchAria: string;
     ciudades: Record<LandingMapCityId, string>;
     details: string;
+    /** CTA del formulario corto en la ficha del mapa. */
     talk: string;
     comingSoon: string;
+    postular: {
+      nombrePlaceholder: string;
+      telefonoPlaceholder: string;
+      tallerPlaceholder: string;
+      privacidadLabel: string;
+      privacidadError: string;
+      gracias: string;
+      error: string;
+      enviando: string;
+    };
     resetAria: string;
     zoomInAria: string;
     zoomOutAria: string;
@@ -60,6 +73,10 @@ export type LandingCopy = {
     eyebrow: string;
     heading: string;
     items: { valor: string; etiqueta: string }[];
+  };
+  faq: {
+    eyebrow: string;
+    heading: string;
   };
   hiw: {
     eyebrow: string;
@@ -208,7 +225,7 @@ const es: LandingCopy = {
   ],
   hero: {
     kicker: "",
-    kickerBrand: "Madrid y Barcelona",
+    kickerBrand: "Logística para talleres mecánicos",
     headline: "El cliente no tiene que ir al taller.",
     subtext:
       "Recoges y entregas con tus conductores o con los de Mecanu. Más barato que una grúa, con el coche georreferenciado en tiempo real y control de cada entrega.",
@@ -219,6 +236,8 @@ const es: LandingCopy = {
   logosAria: "Aseguradoras",
   logosLabel: "Cobertura con",
   map: {
+    heading: "Nuestros clientes alrededor de Madrid y Barcelona.",
+    subtext: "Desde una sucursal, atiende sin fricción en toda la ciudad.",
     sectionAria: "Mapa de talleres en {city}",
     citySwitchAria: "Ciudad del mapa",
     ciudades: {
@@ -226,8 +245,18 @@ const es: LandingCopy = {
       barcelona: "Barcelona",
     },
     details: "Detalles",
-    talk: "Hablar con Mecanu",
+    talk: "Postular taller",
     comingSoon: "Recogida y entrega en el área metropolitana.",
+    postular: {
+      nombrePlaceholder: "Tu nombre",
+      telefonoPlaceholder: "Teléfono",
+      tallerPlaceholder: "Nombre del taller",
+      privacidadLabel: "Acepto la política de privacidad",
+      privacidadError: "Marca la casilla de privacidad para enviar.",
+      gracias: "Recibido. Te contactamos en menos de 24 h.",
+      error: "Algo ha ido mal. Inténtalo de nuevo.",
+      enviando: "Enviando…",
+    },
     resetAria: "Volver a la vista de ciudad",
     zoomInAria: "Acercar el mapa",
     zoomOutAria: "Alejar el mapa",
@@ -263,6 +292,10 @@ const es: LandingCopy = {
         etiqueta: "El siguiente servicio, desde el check-in",
       },
     ],
+  },
+  faq: {
+    eyebrow: "Preguntas frecuentes",
+    heading: "Preguntas frecuentes",
   },
   stats: [
     {
@@ -589,7 +622,7 @@ const ca: LandingCopy = {
   ],
   hero: {
     kicker: "",
-    kickerBrand: "Madrid i Barcelona",
+    kickerBrand: "Logística per a tallers mecànics",
     headline: "Trasllada cotxes amb la teva flota o amb la nostra.",
     subtext:
       "Plataforma de logística per a tallers. Assegurança de trasllat a cada viatge, i un check-in visual que converteix cada cotxe en el següent servei.",
@@ -600,6 +633,9 @@ const ca: LandingCopy = {
   logosAria: "Asseguradores",
   logosLabel: "Cobertura amb",
   map: {
+    heading: "Les nostres ubicacions",
+    subtext:
+      "Des d'una sucursal, atens sense fricció a tota la ciutat.\nEls nostres clients al voltant de Madrid i Barcelona.",
     sectionAria: "Mapa de tallers a {city}",
     citySwitchAria: "Ciutat del mapa",
     ciudades: {
@@ -607,8 +643,18 @@ const ca: LandingCopy = {
       barcelona: "Barcelona",
     },
     details: "Detalls",
-    talk: "Parlar amb Mecanu",
+    talk: "Postular taller",
     comingSoon: "Recollida i lliurament a l'àrea metropolitana.",
+    postular: {
+      nombrePlaceholder: "El teu nom",
+      telefonoPlaceholder: "Telèfon",
+      tallerPlaceholder: "Nom del taller",
+      privacidadLabel: "Accepto la política de privacitat",
+      privacidadError: "Marca la casella de privacitat per enviar.",
+      gracias: "Rebut. Et contactem en menys de 24 h.",
+      error: "Alguna cosa ha fallat. Torna-ho a provar.",
+      enviando: "Enviant…",
+    },
     resetAria: "Tornar a la vista de ciutat",
     zoomInAria: "Apropar el mapa",
     zoomOutAria: "Allunyar el mapa",
@@ -644,6 +690,10 @@ const ca: LandingCopy = {
         etiqueta: "Avisos i següent servei",
       },
     ],
+  },
+  faq: {
+    eyebrow: "Preguntes freqüents",
+    heading: "Preguntes freqüents",
   },
   stats: [
     {
@@ -970,7 +1020,7 @@ const en: LandingCopy = {
   ],
   hero: {
     kicker: "",
-    kickerBrand: "Madrid and Barcelona",
+    kickerBrand: "Logistics for auto repair shops",
     headline: "Move cars with your drivers or with ours.",
     subtext:
       "A logistics platform for workshops. Pickup and delivery with your drivers or Mecanu's. Transit cover only if you add it.",
@@ -981,6 +1031,9 @@ const en: LandingCopy = {
   logosAria: "Insurers",
   logosLabel: "Covered with",
   map: {
+    heading: "Where we operate",
+    subtext:
+      "From one branch, serve the whole city without friction.\nOur customers around Madrid and Barcelona.",
     sectionAria: "Shops in {city}",
     citySwitchAria: "City",
     ciudades: {
@@ -988,8 +1041,18 @@ const en: LandingCopy = {
       barcelona: "Barcelona",
     },
     details: "Details",
-    talk: "Talk to Mecanu",
+    talk: "Apply as a shop",
     comingSoon: "Pickup and delivery across the metro area.",
+    postular: {
+      nombrePlaceholder: "Your name",
+      telefonoPlaceholder: "Phone",
+      tallerPlaceholder: "Shop name",
+      privacidadLabel: "I accept the privacy policy",
+      privacidadError: "Check the privacy box to send.",
+      gracias: "Got it. We'll reach out within 24 hours.",
+      error: "Something went wrong. Try again.",
+      enviando: "Sending…",
+    },
     resetAria: "Back to the city view",
     zoomInAria: "Zoom in",
     zoomOutAria: "Zoom out",
@@ -1025,6 +1088,10 @@ const en: LandingCopy = {
         etiqueta: "Reminders and the next job",
       },
     ],
+  },
+  faq: {
+    eyebrow: "Frequently asked questions",
+    heading: "Frequently asked questions",
   },
   stats: [
     {
@@ -1347,7 +1414,7 @@ const pt: LandingCopy = {
   ],
   hero: {
     kicker: "",
-    kickerBrand: "Madrid e Barcelona",
+    kickerBrand: "Logística para oficinas mecânicas",
     headline: "Leva carros com a tua frota ou com a nossa.",
     subtext:
       "Plataforma logística para oficinas. Recolha e entrega com a tua frota ou a da Mecanu. O seguro de traslado acrescenta-se se o quiseres.",
@@ -1358,6 +1425,9 @@ const pt: LandingCopy = {
   logosAria: "Seguradoras",
   logosLabel: "Cobertura com",
   map: {
+    heading: "As nossas localizações",
+    subtext:
+      "A partir de uma sucursal, atende sem atrito em toda a cidade.\nOs nossos clientes à volta de Madrid e Barcelona.",
     sectionAria: "Oficinas em {city}",
     citySwitchAria: "Cidade",
     ciudades: {
@@ -1365,8 +1435,18 @@ const pt: LandingCopy = {
       barcelona: "Barcelona",
     },
     details: "Detalhes",
-    talk: "Falar com Mecanu",
+    talk: "Candidatar oficina",
     comingSoon: "Recolha e entrega na área metropolitana.",
+    postular: {
+      nombrePlaceholder: "O teu nome",
+      telefonoPlaceholder: "Telefone",
+      tallerPlaceholder: "Nome da oficina",
+      privacidadLabel: "Aceito a política de privacidade",
+      privacidadError: "Marca a caixa de privacidade para enviar.",
+      gracias: "Recebido. Contactamos-te em menos de 24 h.",
+      error: "Algo correu mal. Tenta outra vez.",
+      enviando: "A enviar…",
+    },
     resetAria: "Voltar à vista da cidade",
     zoomInAria: "Aproximar o mapa",
     zoomOutAria: "Afastar o mapa",
@@ -1402,6 +1482,10 @@ const pt: LandingCopy = {
         etiqueta: "Cobertura RC em custódia e trajeto",
       },
     ],
+  },
+  faq: {
+    eyebrow: "Perguntas frequentes",
+    heading: "Perguntas frequentes",
   },
   stats: [
     {
