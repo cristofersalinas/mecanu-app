@@ -5,7 +5,7 @@
 
 import * as M from '@/lib/mecanu/mecanu-rutas';
 import * as W from '@/lib/mecanu/mecanu-whatsapp';
-import type { EstadoRuta } from '@/lib/mecanu/types';
+import type { EstadoRuta, ParadaSubtipo } from '@/lib/mecanu/types';
 
 export type { EstadoRuta };
 
@@ -80,7 +80,7 @@ export interface Parada {
   rutaId: string;
   orden: number;
   tipo: 'cliente' | 'proveedor';
-  subtipo: string | null;
+  subtipo: ParadaSubtipo | null;
   etiqueta: string;
   direccion: string | null;
   localidad: string | null;
