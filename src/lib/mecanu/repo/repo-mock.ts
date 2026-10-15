@@ -78,6 +78,11 @@ const m = M as unknown as {
     motivo: 'sin_pegatina' | 'vencida' | 'por_vencer';
     dias: number | null;
   }) => Campana | null;
+  campanaDesdeHallazgoCheckin: (input: {
+    rutaId: string;
+    testigo: string;
+    nivel: number;
+  }) => Campana | null;
 };
 
 const w = W as unknown as {
