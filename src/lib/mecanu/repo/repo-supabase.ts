@@ -1145,7 +1145,9 @@ export const supabaseRepo: MecanuRepo = {
     return (data ?? []).map((r) => mapPerfilAUsuario(r));
   },
   async getUsuarioBackoffice(id) {
-    const { data, error } = await sb().from('perfiles').select('*').eq('id', id).maybeSingle();
+    const resuelto = await idDeActor(id);
+    if (!resuelto) return mockRepo.getUsuarioBackoffice(id);
+    const { data, error } = await sb().from('perfiles').select('*').eq('id', resuelto).maybeSingle();
     throwPg(error, 'perfil');
     return data ? mapPerfilAUsuario(data) : null;
   },
