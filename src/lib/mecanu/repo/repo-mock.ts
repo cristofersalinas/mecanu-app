@@ -15,7 +15,7 @@
 import * as M from '../mecanu-rutas';
 import * as W from '../mecanu-whatsapp';
 import { crearRutaDesdeCampana as construirRutaDesdeCampana } from '../crear-ruta-desde-campana';
-import { cliente as lookupCliente } from '../mecanu-data';
+import { cliente as lookupCliente, TALLER } from '../mecanu-data';
 import type {
   Actividad, AutomatizacionEjecucion, Campana, Cliente, Conductor, Inspeccion, Log, Parada, Presupuesto,
   Ruta, RutaVista, Servicio, Solicitud, TagRuta, Tramo, UsuarioBackoffice, Vehiculo,
@@ -116,6 +116,46 @@ function refrescarVista(rutaId: string) {
    en el prototipo original. Vive en memoria aquí porque es infraestructura nueva. -- */
 const SOLICITUDES: Solicitud[] = [];
 let solicitudSeq = 0;
+
+/** Check-ins sellados en caliente. Las sembradas siguen en `INSPECCIONES_RAW`. */
+const INSPECCIONES_CHECKIN: Inspeccion[] = [];
+let inspeccionSeq = 0;
+
+function inspeccionDeCheckin(t: Tramo, evidencia: Omit<CheckinInput, 'trasladoId'>): Inspeccion {
+  const ruta = m.ruta(t.rutaId);
+  const vehiculo = ruta ? m.vehiculo(ruta.vehiculoId) : null;
+  const conductor = t.conductorId ? m.conductor(t.conductorId) : null;
+  const fecha = new Date();
+  return {
+    id: `CHK-M${++inspeccionSeq}`,
+    tipo: 'check-in',
+    rutaId: t.rutaId,
+    trasladoId: t.id,
+    fecha,
+    inspector: t.conductorId ?? '',
+    inspectorNombre: conductor?.nombre ?? 'Sin dato',
+    sede: `${TALLER.nombre} · ${TALLER.direccion}`,
+    km: evidencia.km,
+    combustible: evidencia.combustible,
+    combustiblePct: evidencia.combustiblePct,
+    limpieza: evidencia.limpieza,
+    vehiculo: {
+      matricula: vehiculo?.matricula ?? 'Sin dato',
+      modelo: vehiculo ? `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio}` : 'Sin dato',
+      vin: 'Sin dato',
+      km: evidencia.km,
+      combustible: evidencia.combustible,
+      combustiblePct: evidencia.combustiblePct,
+    },
+    // El contrato del check-in no trae ITV. `itvVence` es Date obligatorio; no es un vencimiento.
+    itv: { estado: 'Sin dato', vence: [] },
+    itvVence: fecha,
+    zonas: [],
+    danos: [],
+    hallazgos: [],
+    firmas: { cliente: null, conductor: evidencia.firmaConductor },
+  };
+}
 
 const USUARIOS: UsuarioBackoffice[] = [];
 const EJECUCIONES: AutomatizacionEjecucion[] = [];
@@ -249,7 +289,12 @@ export const mockRepo: MecanuRepo = {
   async listCampanas() { return m.CAMPANAS; },
   async getCampana(id) { return m.campana(id); },
 
-  async listInspeccionesDeRuta(rutaId) { return m.inspeccionesDeRuta(rutaId); },
+  async listInspeccionesDeRuta(rutaId) {
+    return [
+      ...m.inspeccionesDeRuta(rutaId),
+      ...INSPECCIONES_CHECKIN.filter((i) => i.rutaId === rutaId),
+    ];
+  },
 
   async getTurnoConductor() {
     // `TURNO`/`POOL` del conductor hoy viven hardcodeados en
@@ -291,15 +336,15 @@ export const mockRepo: MecanuRepo = {
   async checkin({ trasladoId, ...evidencia }: CheckinInput) {
     const t = requireTramo(trasladoId);
     nuevoLog(trasladoId, 'evidencia', t.conductorId ?? 'conductor', 'conductor', {
-      texto: 'Check-in con fotos, testigos e inspección', tipoEvidencia: 'check-in',
+      texto: 'Check-in con fotos, testigos e inspección',
+      tipoEvidencia: 'check-in',
+      detalle: evidencia.nota ?? undefined,
     });
-    const r = m.RUTAS.find((x) => m.tramosDeRuta(x.id).some((tr) => tr.id === trasladoId));
-    const inspecciones = r ? m.inspeccionesDeRuta(r.id) : [];
-    const inspeccion = inspecciones[inspecciones.length - 1] ?? null;
-    if (!inspeccion) {
-      throw new Error('El mock no genera inspecciones nuevas dinámicamente — ver PREGUNTAS-ABIERTAS.md');
-    }
-    void evidencia;
+    const sembradas = m.inspeccionesDeRuta(t.rutaId);
+    const previa = sembradas[sembradas.length - 1] ?? null;
+    if (previa) return { tramo: t, inspeccion: previa };
+    const inspeccion = inspeccionDeCheckin(t, evidencia);
+    INSPECCIONES_CHECKIN.push(inspeccion);
     return { tramo: t, inspeccion };
   },
 
