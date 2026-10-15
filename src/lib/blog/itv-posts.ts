@@ -22,7 +22,7 @@ function post(
     coverAlt,
     publishedAt,
     readingMinutes,
-    authorSlug: "cristofer",
+    authorSlug: "mecanu",
   };
 }
 

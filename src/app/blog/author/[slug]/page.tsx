@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -10,22 +10,43 @@ export const dynamic = "force-static";
 
 type Props = { params: Promise<{ slug: string }> };
 
+/** Slugs de autor persona ya retirados: no indexar ni servir como destino. */
+const RETIRED_PERSON_AUTHORS = new Set(["cristofer"]);
+
 export async function generateStaticParams() {
-  return AUTHORS.map((a) => ({ slug: a.slug }));
+  return [
+    ...AUTHORS.map((a) => ({ slug: a.slug })),
+    ...[...RETIRED_PERSON_AUTHORS].map((slug) => ({ slug })),
+  ];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  if (RETIRED_PERSON_AUTHORS.has(slug)) {
+    return {
+      title: "Blog — Mecanu",
+      robots: { index: false, follow: false },
+      alternates: { canonical: "https://mecanu.com/blog" },
+    };
+  }
   const author = getAuthor(slug);
-  if (!author) return {};
+  if (!author) return { robots: { index: false, follow: false } };
+  // Página de marca, no de persona: no competir con el índice del blog.
   return {
-    title: `${author.name} — Blog Mecanu`,
+    title: `Blog — Mecanu`,
     description: author.bio,
+    robots: { index: false, follow: true },
+    alternates: { canonical: "https://mecanu.com/blog" },
   };
 }
 
 export default async function AuthorPage({ params }: Props) {
   const { slug } = await params;
+
+  if (RETIRED_PERSON_AUTHORS.has(slug)) {
+    redirect("/blog");
+  }
+
   const author = getAuthor(slug);
   if (!author) notFound();
 
@@ -33,7 +54,6 @@ export default async function AuthorPage({ params }: Props) {
 
   return (
     <div className={styles.page}>
-      {/* Nav */}
       <nav className={styles.nav}>
         <Link href="/" className={styles.navLogo} aria-label="Mecanu — volver a la web">
           <Logo height={20} />
@@ -44,30 +64,15 @@ export default async function AuthorPage({ params }: Props) {
         </div>
       </nav>
 
-      {/* Perfil centrado */}
       <div className={styles.authorPage}>
-        <p className={styles.authorPageLabel}>Autor</p>
-        {author.avatar ? (
-          <div className={styles.authorPageAvatar}>
-            <Image
-              src={author.avatar}
-              alt={author.name}
-              width={120}
-              height={120}
-              style={{ objectFit: "cover", objectPosition: "center top" }}
-            />
-          </div>
-        ) : (
-          <div className={styles.authorPageAvatarPlaceholder} aria-hidden="true">👤</div>
-        )}
+        <p className={styles.authorPageLabel}>Blog</p>
         <h1 className={styles.authorPageName}>{author.name}</h1>
         <p className={styles.authorPageBio}>{author.bio}</p>
       </div>
 
-      {/* Posts del autor — cuadrícula a ancho completo */}
       {posts.length > 0 && (
         <div className={styles.postsSection}>
-          <p className={styles.postsSectionLabel}>Artículos de {author.name}</p>
+          <p className={styles.postsSectionLabel}>Artículos</p>
           <div className={styles.postsGrid}>
             {posts.map((p) => (
               <Link key={p.slug} href={`/blog/${p.slug}`} className={styles.postCard}>
@@ -89,7 +94,6 @@ export default async function AuthorPage({ params }: Props) {
         </div>
       )}
 
-      {/* Footer */}
       <footer className={styles.footer}>
         <div className={styles.footerActions}>
           <Link href="/contacto" className={styles.footerBtnBlack}>Hablar con Mecanu</Link>

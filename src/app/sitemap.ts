@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { LOCALES, pathFor, contactoPathFor } from "@/lib/landing/locales";
-import { POSTS, AUTHORS } from "@/lib/blog/data";
+import { POSTS } from "@/lib/blog/data";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mecanu.com";
 
@@ -42,14 +42,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: post.publishedAt,
     changeFrequency: "monthly" as const,
     priority: 0.75,
-  }));
-
-  // Perfiles de autor
-  const authorPages = AUTHORS.map((author) => ({
-    url: `${SITE}/blog/author/${author.slug}`,
-    lastModified: now,
-    changeFrequency: "monthly" as const,
-    priority: 0.6,
   }));
 
   // Money pages: ciudad, caso de uso, comparativas y entidad
@@ -96,7 +88,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...contactoPages,
     blogIndex,
     ...blogPosts,
-    ...authorPages,
     ...staticPages,
   ];
 }

@@ -23,11 +23,11 @@ export const FAQ_LANDING: readonly FaqItem[] = [
   },
   {
     q: "¿Qué pasa si el conductor daña el coche de mi cliente?",
-    a: "Cada traslado incluye cobertura de responsabilidad civil para el vehículo en tránsito, activa desde que el conductor recibe las llaves hasta que el cliente firma la entrega. El taller no asume el riesgo del desplazamiento.",
+    a: "El seguro de traslado no va en todos los viajes. Es un añadido: si el taller lo contrata, cubre el trayecto desde las llaves hasta la entrega, conduzca alguien del taller o de la flota de Mecanu.",
   },
   {
-    q: "¿Tengo que contratar conductores o comprar una furgoneta?",
-    a: "No. Los conductores de Mecanu están verificados y se activan bajo demanda. No hay coste fijo ni alta laboral: pagas por traslado realizado, y en semanas flojas no pagas nada.",
+    q: "¿Tengo que usar los conductores de Mecanu?",
+    a: "No. Con flota propia, tus conductores usan la plataforma logística: rutas, ventana, check-in y check-out. Con flota externa, el traslado lo hace un conductor de Mecanu cuando tú no llegas. Puedes combinar las dos. El seguro de traslado se añade aparte, si lo quieres.",
   },
   {
     q: "¿En qué ciudades funciona Mecanu?",
@@ -78,11 +78,11 @@ const FAQ_CA: readonly FaqItem[] = [
   },
   {
     q: "Què passa si el conductor fa malbé el cotxe del meu client?",
-    a: "Cada trasllat inclou cobertura de responsabilitat civil per al vehicle en trànsit, activa des que el conductor rep les claus fins que el client signa el lliurament. El taller no assumeix el risc del desplaçament.",
+    a: "L'assegurança de trasllat no va en tots els viatges. És un afegit: si el taller la contracta, cobreix el trajecte des de les claus fins al lliurament, condueixi algú del taller o de la flota de Mecanu.",
   },
   {
-    q: "He de contractar conductors o comprar una furgoneta?",
-    a: "No. Els conductors de Mecanu estan verificats i s'activen sota demanda. No hi ha cost fix ni alta laboral: pagues per trasllat fet, i en setmanes fluixes no pagues res.",
+    q: "He d'usar els conductors de Mecanu?",
+    a: "No. Amb flota pròpia, els teus conductors usen la plataforma logística. Amb flota externa, el trasllat el fa un conductor de Mecanu quan tu no arribes. Pots combinar les dues. L'assegurança de trasllat s'afegeix a part, si la vols.",
   },
   {
     q: "En quines ciutats funciona Mecanu?",
@@ -133,11 +133,11 @@ const FAQ_EN: readonly FaqItem[] = [
   },
   {
     q: "What if the driver damages my customer's car?",
-    a: "Every run includes liability cover for the vehicle in transit, from the moment the driver takes the keys until the customer signs the delivery. The shop does not take on the risk of the move.",
+    a: "Transfer insurance is not on every trip. It is an add-on: if the shop opts in, it covers the journey from keys to delivery, whether the driver is the shop's or Mecanu's.",
   },
   {
-    q: "Do I have to hire drivers or buy a van?",
-    a: "No. Mecanu's drivers are checked and called in on demand. There is no fixed cost and no payroll: you pay per completed run, and in quiet weeks you pay nothing.",
+    q: "Do I have to use Mecanu drivers?",
+    a: "No. With your own fleet, your drivers use the logistics platform. With Mecanu's fleet, a Mecanu driver runs the transfer when you cannot. You can mix both. Transfer insurance is optional.",
   },
   {
     q: "Which cities does Mecanu cover?",
@@ -188,11 +188,11 @@ const FAQ_PT: readonly FaqItem[] = [
   },
   {
     q: "O que acontece se o condutor danificar o carro do meu cliente?",
-    a: "Cada recolha inclui cobertura de responsabilidade civil do veículo em trânsito, ativa desde que o condutor recebe as chaves até o cliente assinar a entrega. A oficina não assume o risco do deslocamento.",
+    a: "O seguro de traslado não vai em todas as viagens. É um extra: se a oficina o contratar, cobre o percurso desde as chaves até à entrega, conduza alguém da oficina ou da frota Mecanu.",
   },
   {
-    q: "Tenho de contratar condutores ou comprar uma carrinha?",
-    a: "Não. Os condutores da Mecanu estão verificados e ativam-se a pedido. Não há custo fixo nem vínculo laboral: pagas por recolha feita e, nas semanas fracas, não pagas nada.",
+    q: "Tenho de usar os condutores da Mecanu?",
+    a: "Não. Com frota própria, os teus condutores usam a plataforma logística. Com frota externa, um condutor da Mecanu faz o traslado quando não chegas. Podes combinar as duas. O seguro de traslado é opcional.",
   },
   {
     q: "Em que cidades funciona a Mecanu?",

@@ -34,7 +34,7 @@ export function BlogPostsGrid({ posts }: { posts: Post[] }) {
                 <span className={styles.postCat}>{p.category}</span>
                 <p className={styles.postTitle}>{p.title}</p>
                 <span className={styles.postByline}>
-                  por {auth?.name} · {formatDate(p.publishedAt)}
+                  {auth?.name ?? "Mecanu"} · {formatDate(p.publishedAt)}
                 </span>
                 <span className={styles.postReadLink}>Leer →</span>
               </div>

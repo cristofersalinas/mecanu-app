@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/ds/Logo";
 import { CityPageJsonLd, BreadcrumbJsonLd } from "@/components/landing/JsonLd";
+import { ogImageUrl } from "@/lib/landing/og";
 
 export const dynamic = "force-static";
+
+const OG = ogImageUrl("barcelona");
 
 export const metadata: Metadata = {
   title: "Recogida y entrega de coches para talleres en Barcelona — Mecanu",
   description:
-    "Mecanu coordina la recogida y entrega de vehículos de clientes para talleres mecánicos en Barcelona. Conductores verificados, seguro incluido, trazabilidad en tiempo real. Libera plazas y mejora la experiencia del cliente.",
+    "Plataforma logística: el taller recoge y entrega el coche del cliente en Barcelona y área metropolitana (40 km). Flota propia o de Mecanu. Seguro de traslado opcional.",
   keywords: [
     "recogida coches talleres Barcelona",
     "entrega vehículos taller mecánico Barcelona",
@@ -17,23 +20,33 @@ export const metadata: Metadata = {
     "taller mecánico recogida domicilio Barcelona",
     "liberar plaza taller Barcelona",
     "traslado coches Barcelona",
-    "servicio automotriz Barcelona",
-    "mejor taller mecánico Barcelona",
     "Mecanu Barcelona",
-    "grúa alternativa taller Barcelona",
+    "alternativa grúa taller Barcelona",
     "mecánico a domicilio Barcelona",
-    "escáner automotriz Barcelona",
-    "taller multimarca Barcelona",
-    "diagnóstico electrónico Barcelona",
   ].join(", "),
   alternates: { canonical: "https://mecanu.com/barcelona" },
   openGraph: {
+    type: "website",
     title: "Recogida y entrega de coches para talleres en Barcelona — Mecanu",
     description:
-      "Mecanu coordina la recogida y entrega de vehículos en Barcelona. Conductores verificados y seguro incluido.",
+      "Plataforma logística para talleres en Barcelona. Flota propia o de Mecanu. Seguro de traslado opcional.",
     url: "https://mecanu.com/barcelona",
     siteName: "Mecanu",
-    images: [{ url: "https://mecanu.com/og-image.png", width: 1200, height: 630 }],
+    images: [
+      {
+        url: OG,
+        width: 1200,
+        height: 630,
+        alt: "Mecanu en Barcelona — recogida y entrega para talleres",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Recogida y entrega de coches para talleres en Barcelona — Mecanu",
+    description:
+      "Plataforma logística para talleres en Barcelona. Seguro de traslado opcional.",
+    images: [OG],
   },
 };
 
@@ -44,7 +57,7 @@ export default function BarcelonaPage() {
       <CityPageJsonLd
         city="Barcelona"
         slug="barcelona"
-        description="Mecanu coordina la recogida y entrega de vehículos de clientes para talleres mecánicos en Barcelona. Conductores verificados, seguro incluido, trazabilidad en tiempo real."
+        description="Mecanu coordina la recogida y entrega de vehículos de clientes para talleres mecánicos en Barcelona. Conductores verificados, seguro de traslado opcional, trazabilidad en tiempo real."
         lat={41.3851}
         lng={2.1734}
         postalCode="08001"
@@ -80,7 +93,7 @@ export default function BarcelonaPage() {
           <li><strong>Aparcar y operar en Barcelona es difícil</strong>: los talleres en zonas densas de Barcelona tienen pocos metros cuadrados y mucha demanda. Mecanu devuelve el coche terminado el mismo día y libera la plaza.</li>
           <li><strong>El cliente barcelonés no tiene tiempo</strong>: el perfil del cliente urbano en Barcelona tiene coche por necesidad, no por comodidad. Ofrecer recogida a domicilio es la diferencia entre perder y retener un cliente.</li>
           <li><strong>Zona de bajas emisiones</strong>: los conductores de Mecanu conocen las restricciones de la ZBE de Barcelona y operan con vehículos habilitados.</li>
-          <li><strong>Conductores verificados con seguro</strong>: cada traslado incluye cobertura de responsabilidad civil específica para el vehículo en tránsito.</li>
+          <li><strong>Conductores verificados</strong>: flota propia del taller o flota de Mecanu. El seguro de traslado se añade solo si el taller lo quiere.</li>
           <li><strong>Trazabilidad en tiempo real</strong>: el taller ve el estado del traslado desde el panel, con fotos y registro de cada paso.</li>
         </ul>
 
@@ -113,8 +126,9 @@ export default function BarcelonaPage() {
           <p style={{ fontSize: ".68rem", letterSpacing: ".1em", textTransform: "uppercase", color: "#777770", marginBottom: "1rem" }}>También disponible en</p>
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
             <Link href="/madrid" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>Madrid</Link>
-            <Link href="/blog" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>Blog de operaciones</Link>
-            <Link href="/" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>Cómo funciona Mecanu</Link>
+            <Link href="/alternativa-grua" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>Alternativa a la grúa</Link>
+            <Link href="/capacidad-taller" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>Capacidad del taller</Link>
+            <Link href="/blog/mecanu-en-barcelona" style={{ fontSize: ".85rem", color: "#0f0f0f", textDecoration: "underline", textUnderlineOffset: "3px" }}>Guía en el blog</Link>
           </div>
         </div>
       </article>
