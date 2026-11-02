@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { repo } from '@/lib/mecanu/repo';
 import { withIdempotency } from '@/lib/mecanu/api-helpers';
+import { exigirSesionSiAplica } from '@/lib/security/sesion-operativa';
 
 const BodySchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -13,6 +14,8 @@ const BodySchema = z.object({
 
 /** POST /api/v1/traslados/:id/gps — ping de ubicación del conductor. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await exigirSesionSiAplica();
+  if (denied) return denied;
   const { id } = await params;
   return withIdempotency(request, BodySchema, (body) =>
     repo.registrarGpsTramo({

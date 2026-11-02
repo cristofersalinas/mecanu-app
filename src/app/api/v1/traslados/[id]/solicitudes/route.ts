@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { repo } from '@/lib/mecanu/repo';
-import { withIdempotency } from '@/lib/mecanu/api-helpers';
+import { ApiError, withIdempotency } from '@/lib/mecanu/api-helpers';
+import { exigirConductorSiAplica } from '@/lib/security/sesion-operativa';
 
 const BodySchema = z.object({
   rutaId: z.string(),
@@ -20,5 +21,9 @@ const BodySchema = z.object({
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return withIdempotency(request, BodySchema, (body) => repo.crearSolicitud({ trasladoId: id, ...body }));
+  return withIdempotency(request, BodySchema, async (body) => {
+    const gate = await exigirConductorSiAplica(body.conductorId);
+    if (!gate.ok) throw new ApiError(403, 'forbidden', 'No puedes actuar por otro conductor.');
+    return repo.crearSolicitud({ trasladoId: id, ...body, conductorId: gate.conductorId });
+  });
 }

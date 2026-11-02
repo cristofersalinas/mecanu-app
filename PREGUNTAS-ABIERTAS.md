@@ -17,7 +17,8 @@ Registro `/registro`, recuperar `/recuperar`. El panel queda en
 `npm run demo` sigue sin exigir login. Con keys Supabase y sin demo, `/panel`
 exige sesión y crea taller+perfil (`ensurePerfilPanel`).
 En Supabase → Redirect URLs: `https://negocio.mecanu.com/auth/callback`.
-**Backoffice:** pendiente.
+**Backoffice:** con Supabase y sin demo la página y las acciones exigen la misma sesión que el panel (`/panel/entrar`). Sigue sin rol de dueño: cualquier usuario del panel entra. El actor de las acciones sigue siendo el mock `u-dueno`.
+**Conductor:** las escrituras y el snapshot exigen esa sesión cuando hay Supabase y no es demo. Si el perfil tiene `conductor_id`, no puede pedir otro id. Si no lo tiene, la sesión vale para el id que mande la app (sigue abierto hasta que el login del conductor rellene ese campo). Detalle: `docs/HARDENING-SOC2-ISO27001.md`.
 **Dashboard:** activar «Allow new users to sign up» (panel); Google provider;
 Redirect URLs con `/auth/callback`. Phone opcional (Twilio).
 Hasta RLS+login estables en prod: no `MECANU_EXPONER_APPS=1` a ciegas — el

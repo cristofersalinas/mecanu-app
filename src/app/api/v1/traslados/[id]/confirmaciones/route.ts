@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { repo } from '@/lib/mecanu/repo';
 import { withIdempotency } from '@/lib/mecanu/api-helpers';
+import { exigirSesionSiAplica } from '@/lib/security/sesion-operativa';
 
 const BodySchema = z.object({
   tipo: z.literal('llegada_a_tiempo'),
@@ -10,6 +11,8 @@ const BodySchema = z.object({
 
 /** POST /api/v1/traslados/:id/confirmaciones — informativa, no bloquea (a diferencia de las solicitudes). */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await exigirSesionSiAplica();
+  if (denied) return denied;
   const { id } = await params;
   return withIdempotency(request, BodySchema, async (body) => {
     await repo.registrarConfirmacion({ trasladoId: id, ...body });

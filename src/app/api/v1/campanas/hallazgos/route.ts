@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { repo } from '@/lib/mecanu/repo';
 import { withIdempotency } from '@/lib/mecanu/api-helpers';
+import { exigirSesionSiAplica } from '@/lib/security/sesion-operativa';
 import { publicarEventoOportunidad } from '@/lib/slack/oportunidades-flujo';
 import type { DatosOportunidad } from '@/lib/slack/oportunidades';
 
@@ -19,6 +20,8 @@ const BodySchema = z.object({
  * Si crea campaña, abre hilo en Slack #oportunidades.
  */
 export async function POST(request: Request) {
+  const denied = await exigirSesionSiAplica();
+  if (denied) return denied;
   return withIdempotency(request, BodySchema, async (body) => {
     const campana = await repo.registrarHallazgoCampana(body);
     if (!campana) return campana;

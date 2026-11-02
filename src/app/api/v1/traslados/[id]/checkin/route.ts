@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { repo } from '@/lib/mecanu/repo';
 import { withIdempotency } from '@/lib/mecanu/api-helpers';
+import { exigirSesionSiAplica } from '@/lib/security/sesion-operativa';
 
 const BodySchema = z.object({
   km: z.number().int().nonnegative(),
@@ -23,6 +24,8 @@ const BodySchema = z.object({
  * schema ya lo exige (`fotos.min(4)`), pero la UI es la primera línea de defensa.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await exigirSesionSiAplica();
+  if (denied) return denied;
   const { id } = await params;
   return withIdempotency(request, BodySchema, (body) => repo.checkin({ trasladoId: id, ...body }));
 }

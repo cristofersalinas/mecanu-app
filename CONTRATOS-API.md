@@ -215,14 +215,19 @@ El taller resuelve una solicitud.
 ```
 
 ### `POST /api/v1/oportunidades/slack-evento`
-Aviso paternalista a Slack `#oportunidades` (hilo por campaña). Sin
+Aviso paternalista a Slack `#oportunidades` (hilo por campaña). Con Supabase
+y sin demo exige sesión de panel (la cookie del navegador). Sin
 `SLACK_BOT_TOKEN` / `SLACK_CHANNEL_OPORTUNIDADES` responde 200 con
 `slack: "skipped"`. Tipos: `creada` | `cambio_estado` | `ruta_creada` |
-`nudge` | `escanear_nudges`. Ver `docs/SLACK.md`.
+`nudge` | `escanear_nudges`. Ver `docs/SLACK.md`. El GET solo responde
+`{ "ok": true }` y no dice si el token está puesto.
 
 ### `POST /api/v1/csx/slack`
 Destacados / upsell / subuso → `#csx`. Body:
 `{ "tipo": "paquete_semanal" | "destacados" | "upsell" | "subuso" }`.
+El cron de GitHub no llama a esta ruta: corre `scripts/csx-semanal.ts`.
+Si alguien la llama por HTTP con Supabase y sin demo, hace falta
+`Authorization: Bearer` y `CSX_CRON_SECRET`. Sin ese secreto, 401.
 Ver `docs/SLACK-CSX.md`.
 
 ### `GET /api/v1/panel/flota`
@@ -278,10 +283,18 @@ Lectura de una ruta y mutaciones del panel. Idempotency-Key recomendado en POST.
 
 ### `GET /api/v1/conductor/snapshot?conductorId=d1`
 Turno + pool + entidades para hidratar la app del conductor.
+`Cache-Control: no-store`. Con Supabase y sin demo exige sesión. Si el
+perfil tiene `conductor_id`, la query tiene que ser ese id. Un 500 no
+devuelve el mensaje interno.
+
+### `GET /api/v1/streetview?lat=&lng=&heading=`
+Proxy de una imagen fija (640×320) para la landing. Lat −90…90, lng −180…180,
+heading numérico. Cualquier otra query → 400. La key de Google no sale en la respuesta.
 
 ## Lo que falta y por qué (resumen — ver PREGUNTAS-ABIERTAS.md)
 
-- Auth fina en APIs del conductor (JWT debe coincidir con `conductorId`).
+- Auth fina del conductor cuando el perfil aún no tiene `conductor_id`
+  (mientras tanto basta una sesión cualquiera). Ver `docs/HARDENING-SOC2-ISO27001.md`.
 - Escrituras del conductor: el POST de subestado persiste `ruta.estado = en_ruta`.
   El check-in sellado dispara `en_transito`. La entrega persiste `en_taller` (ida)
   o `completado` (vuelta). Fotos de check-in a Storage aún no van en el mismo ciclo.

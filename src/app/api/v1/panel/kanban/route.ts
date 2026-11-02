@@ -27,7 +27,10 @@ export async function GET() {
       { headers: SIN_CACHE },
     );
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'kanban_error';
-    return NextResponse.json({ error: message }, { status: 500, headers: SIN_CACHE });
+    console.error('[panel/kanban]', e);
+    return NextResponse.json(
+      { error: { code: 'internal_error', message: 'Error inesperado del servidor.' } },
+      { status: 500, headers: SIN_CACHE },
+    );
   }
 }

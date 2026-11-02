@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { mensajeProductoOInterno, MENSAJE_ERROR_INTERNO } from '@/lib/security/controles';
 import { exigirSesionPanelSiAplica } from '@/lib/kapso/sesion-panel';
 import { getPerfilSesion } from '@/lib/supabase/auth-server';
 import { repo } from '@/lib/mecanu/repo';
@@ -113,8 +114,12 @@ export async function GET(request: Request) {
       desde: sesiones.find((s) => s.estado === 'activa' || s.estado === 'pendiente')?.creadaEn ?? null,
     });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'whatsapp_error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[panel/whatsapp]', e);
+    const seguro = mensajeProductoOInterno(e, /no encontrada/i);
+    return NextResponse.json(
+      { error: seguro ?? MENSAJE_ERROR_INTERNO },
+      { status: seguro ? 400 : 500 },
+    );
   }
 }
 
@@ -205,15 +210,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: 'Acción no reconocida' }, { status: 400 });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'whatsapp_error';
-    const status =
-      /Máximo 5|no encontrada|Escribe|Arranca el puente|Teléfono inválido|ya está|Correo no válido|Nada que guardar|No hay ficha/i.test(
-        message,
-      )
-        ? /Arranca el puente/i.test(message)
-          ? 503
-          : 400
-        : 500;
-    return NextResponse.json({ error: message }, { status });
+    console.error('[panel/whatsapp]', e);
+    const seguro = mensajeProductoOInterno(
+      e,
+      /Máximo 5|no encontrada|Escribe|Arranca el puente|Teléfono inválido|ya está|Correo no válido|Nada que guardar|No hay ficha/i,
+    );
+    const status = !seguro
+      ? 500
+      : /Arranca el puente/i.test(seguro)
+        ? 503
+        : 400;
+    return NextResponse.json({ error: seguro ?? MENSAJE_ERROR_INTERNO }, { status });
   }
 }

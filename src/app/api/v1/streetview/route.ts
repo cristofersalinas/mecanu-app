@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { coordenadasStreetView } from "@/lib/security/controles";
 
 /**
  * Proxy de Street View Static API.
@@ -14,20 +15,21 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = req.nextUrl;
-  const lat = searchParams.get("lat");
-  const lng = searchParams.get("lng");
-  const heading = searchParams.get("heading") ?? "0";
-
-  if (!lat || !lng) {
+  const coords = coordenadasStreetView({
+    lat: searchParams.get("lat"),
+    lng: searchParams.get("lng"),
+    heading: searchParams.get("heading"),
+  });
+  if (!coords) {
     return new NextResponse("lat and lng are required", { status: 400 });
   }
 
   const params = new URLSearchParams({
     size: "640x320",
-    location: `${lat},${lng}`,
+    location: `${coords.lat},${coords.lng}`,
     fov: "80",
     pitch: "0",
-    heading,
+    heading: String(coords.heading),
     key,
   });
 

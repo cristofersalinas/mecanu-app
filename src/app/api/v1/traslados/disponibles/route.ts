@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { repo } from '@/lib/mecanu/repo';
+import { exigirSesionSiAplica } from '@/lib/security/sesion-operativa';
 
 /**
  * GET /api/v1/traslados/disponibles — bolsa de traslados que el taller deja libres.
@@ -9,6 +10,8 @@ import { repo } from '@/lib/mecanu/repo';
  * // que el taller pueda activar. Ver PREGUNTAS-ABIERTAS.md.
  */
 export async function GET() {
+  const denied = await exigirSesionSiAplica();
+  if (denied) return denied;
   const disponibles = await repo.getTrasladosDisponibles();
   return NextResponse.json(disponibles);
 }

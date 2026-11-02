@@ -55,11 +55,18 @@ export async function POST(
       throw e;
     }
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'presupuesto_error';
-    const status = /no válido|no encontrada|cerrada|Selecciona/i.test(message) ? 400 : 500;
+    console.error('[s/presupuesto]', e);
+    const raw = e instanceof Error ? e.message : '';
+    const producto = /no válido|no encontrada|cerrada|Selecciona/i.test(raw)
+      && !/postgres|supabase|relation "|column "/i.test(raw);
     return Response.json(
-      { error: { code: status === 400 ? 'bad_request' : 'server_error', message } },
-      { status },
+      {
+        error: {
+          code: producto ? 'bad_request' : 'server_error',
+          message: producto ? raw : 'Error inesperado del servidor.',
+        },
+      },
+      { status: producto ? 400 : 500 },
     );
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { mensajeProductoOInterno, MENSAJE_ERROR_INTERNO } from '@/lib/security/controles';
 import { exigirSesionPanelSiAplica } from '@/lib/kapso/sesion-panel';
 import { getPerfilSesion } from '@/lib/supabase/auth-server';
 import { crearSesion, sincronizarSesionesConPuente } from '@/lib/mecanu/whatsapp-personal';
@@ -32,8 +33,9 @@ export async function POST(request: Request) {
       qrDataUrl: live.qrDataUrl ?? null,
     });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'whatsapp_setup_error';
-    const status = /Máximo 5/i.test(message) ? 400 : /Arranca el puente/i.test(message) ? 503 : 500;
-    return NextResponse.json({ error: message }, { status });
+    console.error('[panel/whatsapp/setup]', e);
+    const seguro = mensajeProductoOInterno(e, /Máximo 5|Arranca el puente/i);
+    const status = !seguro ? 500 : /Arranca el puente/i.test(seguro) ? 503 : 400;
+    return NextResponse.json({ error: seguro ?? MENSAJE_ERROR_INTERNO }, { status });
   }
 }

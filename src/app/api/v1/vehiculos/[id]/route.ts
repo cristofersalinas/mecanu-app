@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { repo } from '@/lib/mecanu/repo';
 import { withIdempotency } from '@/lib/mecanu/api-helpers';
+import { exigirSesionSiAplica } from '@/lib/security/sesion-operativa';
 
 const BodySchema = z.object({ km: z.number().int().nonnegative() });
 
@@ -9,6 +10,8 @@ const BodySchema = z.object({ km: z.number().int().nonnegative() });
  * El backend real debe avisar (no bloquear) si el km entrante es menor que el actual.
  */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await exigirSesionSiAplica();
+  if (denied) return denied;
   const { id } = await params;
   return withIdempotency(request, BodySchema, ({ km }) => repo.actualizarKmVehiculo(id, km));
 }

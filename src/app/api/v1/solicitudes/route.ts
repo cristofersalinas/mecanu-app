@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { repo } from '@/lib/mecanu/repo';
+import { requirePanelSession } from '@/lib/mecanu/panel-auth';
 
 /**
  * GET /api/v1/solicitudes — bandeja del taller (HANDOFF.md §7.3). Devuelve las solicitudes
@@ -10,6 +11,8 @@ import { repo } from '@/lib/mecanu/repo';
  * integraciones futuras (notificaciones push, etc.).
  */
 export async function GET() {
+  const denied = await requirePanelSession();
+  if (denied) return denied;
   const solicitudes = await repo.listSolicitudesPendientes();
   return NextResponse.json({ solicitudes });
 }

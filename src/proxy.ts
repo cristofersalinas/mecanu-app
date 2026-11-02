@@ -49,6 +49,8 @@ function esApiPublica(pathname: string) {
     pathname.startsWith("/api/v1/itv-leads/") ||
     pathname === "/api/v1/webhooks/kapso" ||
     pathname.startsWith("/api/v1/webhooks/kapso/") ||
+    pathname === "/api/v1/streetview" ||
+    pathname.startsWith("/api/v1/streetview/") ||
     pathname === "/api/v1/panel/snapshot" ||
     pathname.startsWith("/api/v1/panel/") ||
     pathname === "/api/v1/conductor/snapshot" ||

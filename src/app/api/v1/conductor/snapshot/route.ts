@@ -1,25 +1,24 @@
 import { NextResponse } from 'next/server';
 import { repo } from '@/lib/mecanu/repo';
 import type { Tramo } from '@/lib/mecanu/types';
-import { createSupabaseServerAuth } from '@/lib/supabase/auth-server';
-import { supabaseServerConfigured } from '@/lib/supabase/server';
+import { exigirConductorSiAplica, exigirSesionSiAplica } from '@/lib/security/sesion-operativa';
 
 /**
  * Snapshot del conductor para hidratar turno + entidades cuando USE_SUPABASE.
  * ?conductorId=d1 (default d1).
  */
+const SIN_CACHE = { 'Cache-Control': 'no-store' } as const;
+
 export async function GET(request: Request) {
   try {
-    if (supabaseServerConfigured() && process.env.MECANU_DEMO !== '1') {
-      const sb = await createSupabaseServerAuth();
-      const { data: { user } } = sb ? await sb.auth.getUser() : { data: { user: null } };
-      if (!user) {
-        return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-      }
-    }
+    const denied = await exigirSesionSiAplica();
+    if (denied) return denied;
 
     const url = new URL(request.url);
-    const conductorId = url.searchParams.get('conductorId') || 'd1';
+    const pedido = url.searchParams.get('conductorId') || 'd1';
+    const gate = await exigirConductorSiAplica(pedido);
+    if (!gate.ok) return gate.respuesta;
+    const conductorId = gate.conductorId;
 
     const [turno, disponibles] = await Promise.all([
       repo.getTurnoConductor(conductorId),
@@ -122,9 +121,12 @@ export async function GET(request: Request) {
       vehiculos: JSON.parse(JSON.stringify([...vehiculosMap.values()])),
       paradas: JSON.parse(JSON.stringify(paradas)),
       clientesPorVehiculo: JSON.parse(JSON.stringify(clientesPorVehiculo)),
-    });
+    }, { headers: SIN_CACHE });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'snapshot_error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('[conductor/snapshot]', e);
+    return NextResponse.json(
+      { error: { code: 'internal_error', message: 'Error inesperado del servidor.' } },
+      { status: 500, headers: SIN_CACHE },
+    );
   }
 }

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { withIdempotency } from "@/lib/mecanu/api-helpers";
+import { requirePanelSession } from "@/lib/mecanu/panel-auth";
 import { PresupuestoEstadoSchema } from "@/lib/mecanu/types";
 import { publicarEventoOportunidad } from "@/lib/slack/oportunidades-flujo";
 import { debeNudge, type DatosOportunidad, type EventoOportunidad } from "@/lib/slack/oportunidades";
@@ -69,6 +70,8 @@ function aDatos(o: z.infer<typeof OportunidadSchema>): DatosOportunidad {
  * El panel (y hallazgos) notifican aquí. Sin token Slack → 200 skipped.
  */
 export async function POST(request: Request) {
+  const denied = await requirePanelSession();
+  if (denied) return denied;
   return withIdempotency(request, BodySchema, async (body) => {
     if (body.tipo === "escanear_nudges") {
       const ahora = body.ahora ? new Date(body.ahora) : new Date();
@@ -110,11 +113,5 @@ export async function POST(request: Request) {
 
 /** Health: sin body no aplica; evita 405 confuso en probes. */
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    canal: "SLACK_CHANNEL_OPORTUNIDADES",
-    configurado: Boolean(
-      process.env.SLACK_BOT_TOKEN?.trim() && process.env.SLACK_CHANNEL_OPORTUNIDADES?.trim(),
-    ),
-  });
+  return NextResponse.json({ ok: true });
 }

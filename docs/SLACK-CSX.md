@@ -41,7 +41,7 @@ Un mensaje con:
 | Snapshot desde mock | `src/lib/slack/csx-desde-repo.ts` |
 | Cron lunes | `.github/workflows/csx-semanal.yml` |
 | Manual | `npm run csx:semanal` |
-| API | `POST /api/v1/csx/slack` |
+| API | `POST /api/v1/csx/slack` (con Supabase y sin demo: `CSX_CRON_SECRET` en `Authorization: Bearer`) |
 
 Env: `SLACK_BOT_TOKEN` + `SLACK_CHANNEL_CSX` (bootstrap + Vercel + GitHub var).
 

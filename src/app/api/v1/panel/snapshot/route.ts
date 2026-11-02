@@ -54,7 +54,10 @@ export async function GET() {
         : { configurado: false, display: null, nombre: null },
     }, { headers: SIN_CACHE });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'snapshot_error';
-    return NextResponse.json({ error: message }, { status: 500, headers: SIN_CACHE });
+    console.error('[panel/snapshot]', e);
+    return NextResponse.json(
+      { error: { code: 'internal_error', message: 'Error inesperado del servidor.' } },
+      { status: 500, headers: SIN_CACHE },
+    );
   }
 }

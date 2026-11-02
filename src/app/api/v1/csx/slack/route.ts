@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { withIdempotency } from "@/lib/mecanu/api-helpers";
+import { cronBearerPermitido } from "@/lib/security/controles";
+import { sesionOperativaObligatoria } from "@/lib/security/sesion-operativa";
 import { ejecutarCsxSemanal, snapshotDemoDesdeRepo } from "@/lib/slack/csx-desde-repo";
 import {
   publicarDestacadosSemana,
@@ -17,9 +19,23 @@ const BodySchema = z.object({
 /**
  * POST /api/v1/csx/slack
  * Destacados semanales, upsell y llamada por subuso → canal #csx.
- * Protegido como el resto de /api (solo local / MECANU_EXPONER_APPS).
+ * El cron de GitHub no llama aquí: ejecuta `scripts/csx-semanal.ts`.
+ * Esta ruta, con Supabase y sin demo, exige `Authorization: Bearer`
+ * con `CSX_CRON_SECRET`. Sin el secreto configurado, deniega.
  */
 export async function POST(request: Request) {
+  if (
+    !cronBearerPermitido({
+      exigir: sesionOperativaObligatoria(),
+      secreto: process.env.CSX_CRON_SECRET,
+      authorization: request.headers.get("authorization"),
+    })
+  ) {
+    return NextResponse.json(
+      { error: { code: "unauthorized", message: "Sesión requerida." } },
+      { status: 401, headers: { "Cache-Control": "no-store" } },
+    );
+  }
   return withIdempotency(request, BodySchema, async (body) => {
     const ahora = body.ahora ? new Date(body.ahora) : new Date();
     const snap = await snapshotDemoDesdeRepo(ahora);
@@ -42,11 +58,5 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    canal: "SLACK_CHANNEL_CSX",
-    configurado: Boolean(
-      process.env.SLACK_BOT_TOKEN?.trim() && process.env.SLACK_CHANNEL_CSX?.trim(),
-    ),
-  });
+  return NextResponse.json({ ok: true });
 }

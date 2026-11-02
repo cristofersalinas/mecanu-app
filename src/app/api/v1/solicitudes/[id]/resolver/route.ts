@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { repo } from '@/lib/mecanu/repo';
 import { withIdempotency } from '@/lib/mecanu/api-helpers';
+import { requirePanelSession } from '@/lib/mecanu/panel-auth';
 
 const BodySchema = z.object({
   estado: z.enum(['resuelta_reagenda', 'resuelta_reasignada', 'resuelta_cancelada', 'descartada']),
@@ -10,6 +11,8 @@ const BodySchema = z.object({
 
 /** POST /api/v1/solicitudes/:id/resolver — el taller resuelve una solicitud del conductor. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await requirePanelSession();
+  if (denied) return denied;
   const { id } = await params;
   return withIdempotency(request, BodySchema, ({ estado, resolucion }) =>
     repo.resolverSolicitud(id, resolucion, estado));

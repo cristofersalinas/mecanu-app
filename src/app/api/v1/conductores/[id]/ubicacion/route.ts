@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withIdempotency } from '@/lib/mecanu/api-helpers';
 import { repo } from '@/lib/mecanu/repo';
+import { exigirConductorSiAplica } from '@/lib/security/sesion-operativa';
 
 const BodySchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -13,6 +13,8 @@ const BodySchema = z.object({
 /** POST /api/v1/conductores/:id/ubicacion — última vista al abrir la app. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const gate = await exigirConductorSiAplica(id);
+  if (!gate.ok) return gate.respuesta;
   return withIdempotency(request, BodySchema, async (body) => {
     await repo.registrarUbicacionConductor({
       conductorId: id,
